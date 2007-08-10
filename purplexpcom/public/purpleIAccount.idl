@@ -1,0 +1,31 @@
+#include "nsISupports.idl"
+#include "purpleIProtocol.idl"
+
+/* 
+ * This is a proxy to libpurple PurpleAccount
+ */
+
+[scriptable, uuid(3c01ec75-6504-40df-af18-b8dc402c75a6)]
+interface purpleIAccount: nsISupports {
+  void connect();
+  void disconnect();
+
+  readonly attribute string name;
+  readonly attribute string accountId;
+  readonly attribute purpleIProtocol protocol;
+
+  // FIXME password should be in password manager
+  attribute string password;
+  attribute boolean rememberPassword;
+
+  attribute string alias;
+
+  // protocol specific options: those functions set the protocol
+  // specific options for the PurpleAccount and save the new values of
+  // the preferences
+  void setBool(in string aName, in boolean aVal);
+  void setInt(in string aName, in long aVal);
+  void setString(in string aName, in string aVal);
+
+  // FIXME proxy info
+};

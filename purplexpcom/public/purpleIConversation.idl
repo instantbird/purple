@@ -1,0 +1,17 @@
+/* Copyright (c) 2007 instantbird.queze.net
+   See the file LICENSE.txt for licensing information. */
+
+#include "nsISupports.idl"
+
+/* 
+ * This is the XPCOM purple conversation component, a proxy for PurpleConversation.
+ */
+
+[scriptable, uuid(74fca337-b8e7-4e5d-81cd-8aba3dba9208)]
+interface purpleIConversation: nsISupports {
+  readonly attribute string name;
+  readonly attribute string title;
+  readonly attribute long idConv;
+  void sendMsg(in wstring aMsg);
+};
+

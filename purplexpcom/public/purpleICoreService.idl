@@ -1,0 +1,38 @@
+/* Copyright (c) 2006 mook.moz.googlepages.com
+   See the file LICENSE.txt for licensing information. */
+
+#include "nsISupports.idl"
+#include "nsIArray.idl"
+#include "nsISimpleEnumerator.idl"
+#include "purpleIConversation.idl"
+#include "purpleIAccount.idl"
+
+/* 
+ * This is the libpurple core
+ */
+
+[scriptable, uuid(b82583f1-307b-4034-b5c7-9f727fab7d8c)]
+interface purpleICoreService: nsISupports {
+  void init();
+  void quit();
+  readonly attribute string version;
+  readonly attribute nsIArray conversations;
+  purpleIConversation findConversationById(in long aId);
+
+  // returns an enumerator on a purpleIProtocol array
+  nsISimpleEnumerator getProtocols();
+
+  purpleIProtocol getProtocolById(in string aProtocolId);
+
+  /* accounts */
+  purpleIAccount getAccountById(in string aAccountId);
+
+  nsISimpleEnumerator getAccounts();
+
+  // both createAccount and deleteAccount will produce event that can
+  // be observed with an nsIObserver
+  purpleIAccount createAccount(in string aName, in purpleIProtocol aPrpl);
+
+  void deleteAccount(in string aAccountId);
+  //could have taken in purpleIAccount
+};
