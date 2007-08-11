@@ -62,6 +62,8 @@
 #include "nsComponentManagerUtils.h"
 
 //#include "defines.h"
+//#define DEBUG_PURPLE_INIT
+//#define DEBUG_PURPLE
 
 /**
  * The following eventloop functions are used in both pidgin and purple-text. If your
@@ -302,7 +304,11 @@ init_libpurple()
 	purple_util_set_user_dir(CUSTOM_USER_DIRECTORY);
 
 	/* We do not want any debugging for now to keep the noise to a minimum. */
+#ifdef DEBUG_PURPLE
+	purple_debug_set_enabled(TRUE);
+#else
 	purple_debug_set_enabled(FALSE);
+#endif
 
 	/* Set the core-uiops, which is used to
 	 * 	- initialize the ui specific preferences.

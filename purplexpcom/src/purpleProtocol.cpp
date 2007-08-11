@@ -6,6 +6,7 @@
 #include<nsArrayEnumerator.h>
 
 //#define DEBUG_PURPLE_PROTOCOL
+//#define DEBUG_DUMP_PREF_TEXT
 
 /* Implementation file */
 NS_IMPL_ISUPPORTS1(purpleProtocol, purpleIProtocol)
@@ -32,6 +33,11 @@ void purpleProtocol::Init(PurplePluginInfo *aInfo)
   GList *l;
   for (l = prpl_info->protocol_options; l; l = l->next) {
     nsCOMPtr<purplePref> pref = do_CreateInstance(PURPLE_PREF_CONTRACTID);
+
+#ifdef DEBUG_DUMP_PREF_TEXT   
+    PurpleAccountOption *pao = (PurpleAccountOption *) l->data;
+    printf("%s.%s=%s\n", mInfo->id, pao->pref_name, pao->text);
+#endif
     pref->Init((PurpleAccountOption *) l->data);
     mOptions.AppendObject(pref);
   }
