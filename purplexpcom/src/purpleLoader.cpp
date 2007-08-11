@@ -10,6 +10,8 @@
 
 #include "nsCOMPtr.h"
 
+//#define DEBUG_PURPLE_LOADER
+
 #define PRPL_PREFIX ""
 
 static char const *const kDependentLibraries[] =
@@ -86,16 +88,29 @@ NSGetModule(nsIComponentManager* aCompMgr,
        *dependent;
        ++dependent) {
     library->SetNativeLeafName(nsDependentCString(*dependent));
-    PRLibrary *lib;
+
+    nsCString pathName;
+    library->GetNativePath(pathName);
+
 #ifdef DEBUG_PURPLE_LOADER
-    printf("opening lib %s: ", *dependent);
+    printf("opening lib %s: ", pathName.get());
     PRBool exists;
     library->Exists(&exists);
     if (exists)
       printf("found ");
 #endif
-    rv = library->Load(&lib);
+
+    PRLibSpec libSpec;
+    libSpec.type = PR_LibSpec_Pathname;
+    libSpec.value.pathname = pathName.get();
+
 #ifdef DEBUG_PURPLE_LOADER
+    PRLibrary *lib = 
+#endif
+      PR_LoadLibraryWithFlags(libSpec, PR_LD_NOW|PR_LD_GLOBAL);
+    //    rv = library->Load(&lib);
+#ifdef DEBUG_PURPLE_LOADER
+    rv = lib ? NS_OK : NS_ERROR_FAILURE;
     if (NS_FAILED(rv))
       printf("KO\n");
     else

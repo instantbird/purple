@@ -13,6 +13,8 @@
 
 #include<nsArrayEnumerator.h>
 
+//#define DEBUG_PURPLE_CORE_SERVICE
+
 NS_IMPL_ISUPPORTS1(purpleCoreService, purpleICoreService)
 
 extern nsresult init_libpurple();
@@ -57,6 +59,19 @@ void purpleCoreService::InitProtocols()
 {
 #ifdef DEBUG_PURPLE_CORE_SERVICE
   printf("start init protocols\n");
+
+#if 1
+  //this code demonstrate how to enumerate protocols from libpurple
+  GList *iter = purple_plugins_get_protocols();
+  for (int i = 0; iter; iter = iter->next) {
+    PurplePlugin *plugin = (PurplePlugin *) iter->data;
+    PurplePluginInfo *info = plugin->info;
+    if (info && info->name) {
+      printf("\t%d: %s (%s)\n", i++, info->name, info->id);
+    }
+  }
+#endif
+
 #endif
   for (GList *iter = purple_plugins_get_protocols();
        iter; iter = iter->next) {

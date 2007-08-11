@@ -21,9 +21,8 @@
  *
  */
 #define CUSTOM_USER_DIRECTORY  "/dev/null"
-#define CUSTOM_PLUGIN_PATH     "/home/florian/goinfre/instantbird/instantbird/testapp/libraries/"
+#define CUSTOM_PLUGIN_PATH     "libraries/prpl"
 #define PLUGIN_SAVE_PREF       "/purple/nullclient/plugins/saved"
-
 
 #include <libpurple/account.h>
 #include <libpurple/accountopt.h>
@@ -303,7 +302,7 @@ init_libpurple()
 	purple_util_set_user_dir(CUSTOM_USER_DIRECTORY);
 
 	/* We do not want any debugging for now to keep the noise to a minimum. */
-	purple_debug_set_enabled(TRUE);
+	purple_debug_set_enabled(FALSE);
 
 	/* Set the core-uiops, which is used to
 	 * 	- initialize the ui specific preferences.
@@ -322,7 +321,9 @@ init_libpurple()
 	 * any path here, but it might be desired, especially for ui-specific plugins. */
 	purple_plugins_add_search_path(CUSTOM_PLUGIN_PATH);
 
+#ifdef DEBUG_PURPLE_INIT
 	printf("before purple_core_init\n");
+#endif
 	/* Now that all the essential stuff has been set, let's try to init the core. It's
 	 * necessary to provide a non-NULL name for the current ui to the core. This name
 	 * is used by stuff that depends on this ui, for example the ui-specific plugins. */
@@ -333,7 +334,9 @@ init_libpurple()
 				"Please report this!\n");
 		return NS_ERROR_FAILURE;
 	}
+#ifdef DEBUG_PURPLE_INIT
 	printf("after purple_core_init\n");
+#endif
 
  	/* Create and load the buddylist. */
  	purple_set_blist(purple_blist_new());

@@ -26,18 +26,6 @@ void purpleProtocol::Init(PurplePluginInfo *aInfo)
   printf("setting mInfo to %i (%s, %s)\n",
 	 (PRInt32) mInfo, mInfo->name, mInfo->id);
 
-#ifdef 0
-  //this code demonstrate how to enumerate protocols from libpurple
-  GList *iter = purple_plugins_get_protocols();
-  for (int i = 0; iter; iter = iter->next) {
-    PurplePlugin *plugin = (PurplePlugin *) iter->data;
-    PurplePluginInfo *info = plugin->info;
-    if (info && info->name) {
-      printf("\t%d: %s (%s)\n", i++, info->name, info->id);
-    }
-  }
-#endif
-
   printf("start init protocol options\n");
 #endif
   PurplePluginProtocolInfo *prpl_info = (PurplePluginProtocolInfo *) mInfo->extra_info;
