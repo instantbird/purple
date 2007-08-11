@@ -64,7 +64,7 @@ NS_IMETHODIMP purplePref::GetMasked(PRBool *aMasked)
   return NS_OK;
 }
 
-/* boolean getBoolValue (); */
+/* boolean getBool (); */
 NS_IMETHODIMP purplePref::GetBool(PRBool *_retval)
 {
   if (!mOpt) {
@@ -79,7 +79,7 @@ NS_IMETHODIMP purplePref::GetBool(PRBool *_retval)
   return NS_OK;
 }
 
-/* long getIntValue (); */
+/* long getInt (); */
 NS_IMETHODIMP purplePref::GetInt(PRInt32 *_retval)
 {
   if (!mOpt) {
@@ -95,7 +95,7 @@ NS_IMETHODIMP purplePref::GetInt(PRInt32 *_retval)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* string getStringValue (); */
+/* string getString (); */
 NS_IMETHODIMP purplePref::GetString(char **_retval)
 {
   if (!mOpt) {
@@ -106,5 +106,6 @@ NS_IMETHODIMP purplePref::GetString(char **_retval)
     return NS_ERROR_FAILURE;
   }
 
-  return returnString(_retval, mOpt->default_value.string);
+  const char *res = mOpt->default_value.string;
+  return returnString(_retval, res ? res : "");
 }
