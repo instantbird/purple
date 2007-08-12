@@ -11,7 +11,7 @@ interface purpleIAccount: nsISupports {
   void disconnect();
 
   readonly attribute string name;
-  readonly attribute string accountId;
+  readonly attribute string id;
   readonly attribute purpleIProtocol protocol;
 
   // FIXME password should be in password manager
@@ -26,6 +26,7 @@ interface purpleIAccount: nsISupports {
   void setBool(in string aName, in boolean aVal);
   void setInt(in string aName, in long aVal);
   void setString(in string aName, in string aVal);
+  void save();
 
   // FIXME proxy info
 };

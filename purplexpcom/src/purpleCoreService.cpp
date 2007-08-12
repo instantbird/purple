@@ -1,5 +1,6 @@
 #include "purpleCoreService.h"
 #include "purpleProtocol.h"
+#include "purpleUtils.h"
 #include "nsXPCOM.h"
 #include <glib.h>
 #include <libpurple/core.h>
@@ -8,12 +9,16 @@
 #include<nsServiceManagerUtils.h>
 #include<nsComponentManagerUtils.h>
 #include<nsIObserverService.h>
+#include<nsIPrefService.h>
 #include<nsCOMPtr.h>
+#include<nsCRTGlue.h>
 #include<stdio.h>
 
 #include<nsArrayEnumerator.h>
 
 //#define DEBUG_PURPLE_CORE_SERVICE
+
+#define PREF_MESSENGER_ACCOUNTS "messenger.accounts"
 
 NS_IMPL_ISUPPORTS1(purpleCoreService, purpleICoreService)
 
@@ -24,6 +29,7 @@ purpleCoreService::purpleCoreService()
    mConversations(nsnull),
    mProtocols(nsnull)
 {
+  mPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
 }
 
 purpleCoreService::~purpleCoreService()
@@ -34,19 +40,28 @@ purpleCoreService::~purpleCoreService()
 /* boolean Init (); */
 NS_IMETHODIMP purpleCoreService::Init()
 {
+  /* We shouldn't init the core twice. If the core service is already
+     initialized, return with an error */
   if (mInitialized) {
     return NS_ERROR_ALREADY_INITIALIZED;
   }
 
+  /* Init the core of libpurple */
   nsresult rv = init_libpurple();
   NS_ENSURE_SUCCESS(rv, rv);
 
   mConversations = do_CreateInstance(NS_ARRAY_CONTRACTID);
 
+  /* Load the list of protocol plugins and their specific options */
   InitProtocols();
-  //FIXME InitAccounts();
 
+  /* Set to true before the end of the initialization because
+     InitAccounts calls GetProtoById that ensures the core is
+     initialized */
   mInitialized = PR_TRUE;
+
+  /* Load saved accounts */
+  InitAccounts();
 
 #ifdef DEBUG_PURPLE_CORE_SERVICE
   printf("libpurple initialized\n");
@@ -94,15 +109,13 @@ void purpleCoreService::InitProtocols()
 /* void Quit (); */
 NS_IMETHODIMP purpleCoreService::Quit()
 {
-  if (!mInitialized) {
-    return NS_ERROR_FAILURE;
-  }
+  PURPLE_ENSURE_INIT(mInitialized);
 
-  purple_core_quit();
   mConversations = nsnull;
   mAccounts.Clear();
   mProtocols.Clear();
   mInitialized = PR_FALSE;
+  purple_core_quit();
   printf("purple_core_quit\n");
 
   return NS_OK;
@@ -111,20 +124,7 @@ NS_IMETHODIMP purpleCoreService::Quit()
 /* readonly attribute string version; */
 NS_IMETHODIMP purpleCoreService::GetVersion(char * *aVersion)
 {
-  const char* version = purple_core_get_version();
-  if (!version)
-    return NS_ERROR_FAILURE;
-
-  size_t len = strlen(version) + 1;
-
-  *aVersion = (char*)NS_Alloc(len);
-  if (!*aVersion) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  memcpy(*aVersion, version, len);
-
-  return NS_OK;
+  return returnString(aVersion, purple_core_get_version());
 }
 
 /* readonly attribute nsIArray conversations; */
@@ -170,9 +170,7 @@ void purpleCoreService::AddConversation(purpleIConversation* aConv)
 /* nsISimpleEnumerator getProtocols (); */
 NS_IMETHODIMP purpleCoreService::GetProtocols(nsISimpleEnumerator **aResult)
 {
-  if (!mInitialized) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
+  PURPLE_ENSURE_INIT(mInitialized);
 
   return NS_NewArrayEnumerator(aResult, mProtocols);
 }
@@ -180,9 +178,7 @@ NS_IMETHODIMP purpleCoreService::GetProtocols(nsISimpleEnumerator **aResult)
 /* purpleIProtocol getProtocolById (in string aProtocolId); */
 NS_IMETHODIMP purpleCoreService::GetProtocolById(const char *aProtocolId, purpleIProtocol **aResult)
 {
-  if (!mInitialized) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
+  PURPLE_ENSURE_INIT(mInitialized);
 
   nsCString id(aProtocolId);
   for (PRInt32 i = mProtocols.Count() - 1; i >= 0; --i) {
@@ -197,12 +193,28 @@ NS_IMETHODIMP purpleCoreService::GetProtocolById(const char *aProtocolId, purple
   return NS_OK;
 }
 
+/* [noscript] purpleNativeProtocol getProtoById (in string aProtocolId); */
+NS_IMETHODIMP purpleCoreService::GetProtoById(const char *aProtocolId, purpleProtocol * *aResult)
+{
+  PURPLE_ENSURE_INIT(mInitialized);
+
+  nsCString id(aProtocolId);
+  for (PRInt32 i = mProtocols.Count() - 1; i >= 0; --i) {
+    if (id.Equals(mProtocols[i]->GetId())) {
+      *aResult = mProtocols[i];
+      NS_ADDREF(*aResult);
+      return NS_OK;
+    }
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+
 /* purpleIAccount getAccountById (in string accountId); */
 NS_IMETHODIMP purpleCoreService::GetAccountById(const char *aAccountId, purpleIAccount **aResult)
 {
-  if (!mInitialized) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
+  PURPLE_ENSURE_INIT(mInitialized);
 
   for (PRInt32 i = mAccounts.Count() - 1; i >= 0; --i) {
     if (mAccounts[i]->GetKey().Equals(aAccountId)) {
@@ -219,33 +231,148 @@ NS_IMETHODIMP purpleCoreService::GetAccountById(const char *aAccountId, purpleIA
 /* nsISimpleEnumerator getAccounts (); */
 NS_IMETHODIMP purpleCoreService::GetAccounts(nsISimpleEnumerator **aResult)
 {
-  if (!mInitialized) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
+  PURPLE_ENSURE_INIT(mInitialized);
 
   return NS_NewArrayEnumerator(aResult, mAccounts);
 }
 
+nsresult purpleCoreService::InitAccounts()
+{
+  /* Get the list of accounts */
+  nsCString accountList;
+  nsresult rv = mPrefService->GetCharPref(PREF_MESSENGER_ACCOUNTS,
+					  getter_Copies(accountList));
+
+  printf("InitAccounts list = %s\n", accountList.get());
+
+  nsCOMPtr<purpleAccount> account;
+  char *newStr = accountList.BeginWriting();
+  nsCAutoString key;
+  for (char *token = NS_strtok(",", &newStr);
+       token;
+       token = NS_strtok(",", &newStr)) {
+    key = token;
+    key.StripWhitespace();
+    
+    if (key.IsEmpty()) {
+      continue;
+    }
+
+    /* create the purpleAccount object */
+    account = do_CreateInstance(PURPLE_ACCOUNT_CONTRACTID);
+    rv = account->load(key);
+    if (NS_FAILED(rv)) {
+      continue;
+    }
+
+    /* Keep it the local account list */
+    mAccounts.AppendObject(account);
+  }
+
+  return NS_OK;
+}
+
 /* purpleIAccount createAccount (in string name, in purpleIProtocol prpl); */
 NS_IMETHODIMP purpleCoreService::CreateAccount(const char *name,
-					       purpleIProtocol *prpl,
+					       const char *prpl,
 					       purpleIAccount **aResult)
 {
-  nsCOMPtr<purpleAccount> account = do_CreateInstance(PURPLE_ACCOUNT_CONTRACTID);
-  purpleProtocol *proto = dynamic_cast<purpleProtocol *> (prpl); // :-(
-  nsresult rv = account->create(name, proto);
+  /* Get the list of accounts */
+  nsCString accountList;
+  nsresult rv = mPrefService->GetCharPref(PREF_MESSENGER_ACCOUNTS,
+					  getter_Copies(accountList));
   NS_ENSURE_SUCCESS(rv, rv);
+
+  /* First get a new unique account key */
+  nsCString key;
+  PRInt32 i = 1;
+  PRBool found = PR_FALSE;
+  do {
+    key = "account";
+    key.AppendInt(i++);
+    for (PRInt32 j = mAccounts.Count() - 1; j >= 0; --j) {
+      if ((found = mAccounts[j]->GetKey().Equals(key))) {
+	break;
+      }
+    }
+  } while (found);
+
+  /* Get the prpl */
+  nsCOMPtr<purpleProtocol> proto;
+  rv = GetProtoById(prpl, getter_AddRefs(proto));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  /* Actually create the new account */
+  nsCOMPtr<purpleAccount> account = do_CreateInstance(PURPLE_ACCOUNT_CONTRACTID);
+  rv = account->create(name, proto, key);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  /* Save the account list pref */
+  if (accountList.IsEmpty())
+    accountList = key;
+  else {
+    accountList.Append(',');
+    accountList.Append(key);
+  }
+  mPrefService->SetCharPref(PREF_MESSENGER_ACCOUNTS, accountList.get());
+
+  /* Keep it in the local account list */
   mAccounts.AppendObject(account);
 
+  /* And return the new account as result */
   *aResult = account;
   NS_ADDREF(*aResult);
   return NS_OK;
 }
 
 /* void deleteAccount (in string accountId); */
-NS_IMETHODIMP purpleCoreService::DeleteAccount(const char *accountId)
+NS_IMETHODIMP purpleCoreService::DeleteAccount(const char *aAccountId)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
+#ifdef DEBUG_PURPLE_CORE_SERVICE
+  printf("attempting to delete %s\n", aAccountId);
+#endif
+  /* delete the account */
+  for (PRInt32 i = mAccounts.Count() - 1; i >= 0; --i) {
+    if (mAccounts[i]->GetKey().Equals(aAccountId)) {
+      mAccounts[i]->remove();
+      mAccounts.RemoveObjectAt(i);
+      break;
+    }
+  }
 
-//FIXME: save new accounts. Load accounts at startup.
+  /*Update the list of accounts in the prefs */
+
+  /* Get the list of accounts */
+  nsCString accountList;
+  nsresult rv = mPrefService->GetCharPref(PREF_MESSENGER_ACCOUNTS,
+					  getter_Copies(accountList));
+  NS_ENSURE_SUCCESS(rv, rv);
+ 
+  // reconstruct the new account list, re-adding all accounts except
+  // the one with 'key'
+  nsCString newAccountList;
+  char *newStr = accountList.BeginWriting();
+  
+  for (char *token = NS_strtok(",", &newStr);
+       token;
+       token = NS_strtok(",", &newStr)) {
+    nsCString testKey(token);
+    testKey.StripWhitespace();
+
+    // re-add the candidate key only if it's not the key we're looking for
+    if (!testKey.IsEmpty() && !testKey.Equals(aAccountId)) {
+      if (!newAccountList.IsEmpty())
+	newAccountList.Append(',');
+      newAccountList += testKey;
+    }
+  }
+
+  // now write the new account list back to the prefs
+  rv = mPrefService->SetCharPref(PREF_MESSENGER_ACCOUNTS,
+				newAccountList.get());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // ensure the change is written to the disk now
+  nsCOMPtr<nsIPrefService> prefs = do_QueryInterface(mPrefService);
+  return prefs->SavePrefFile(nsnull);
+}

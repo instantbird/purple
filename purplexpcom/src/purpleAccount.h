@@ -5,6 +5,7 @@
 #include "purpleProtocol.h"
 #include "nsCOMPtr.h"
 #include <libpurple/account.h>
+#include<nsIPrefBranch.h>
 
 // very dirty work around for the error:
 // nsStringAPI.h:953: error: size of arg" is negative array
@@ -30,18 +31,26 @@ public:
 
   purpleAccount();
   const nsCString& GetKey() { return mKey; }
-  nsresult create(const char *name, purpleProtocol *prpl);
+  nsresult create(const char *name, purpleProtocol *prpl,
+       	          const nsCString& aKey);
+  nsresult load(const nsCString& aKey);
+  nsresult remove();
 
 private:
   ~purpleAccount();
-  inline void SetAccountId(const nsCString& aAccountId); 
-  void SetBoolPref(const char *aName, PRBool aValue);
-  void SetIntPref(const char *aName, PRInt32 aValue);
-  void SetStringPref(const char *aName, const char *aValue);
+  inline void SetId(const nsCString& aId);
+  inline nsresult GetPrefBranch();
+  nsresult SetBoolPref(const char *aName, PRBool aValue);
+  nsresult SetIntPref(const char *aName, PRInt32 aValue);
+  nsresult SetStringPref(const char *aName, const char *aValue);
+  inline void GetBoolPref(const char *aName);
+  inline void GetIntPref(const char *aName);
+  inline void GetCharPref(const char *aName);
 
   PurpleAccount *mAccount;
   nsCString mKey;
   nsCOMPtr<purpleProtocol> mProtocol;
+  nsCOMPtr<nsIPrefBranch> mPrefBranch;
 
 protected:
   /* additional members */

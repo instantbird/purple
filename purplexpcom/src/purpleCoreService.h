@@ -1,8 +1,9 @@
+#include "purpleProtocol.h"
 #include "purpleICoreService.h"
 #include "purpleIConversation.h"
-#include "purpleProtocol.h"
 #include "purpleAccount.h"
 #include<nsIMutableArray.h>
+#include<nsIPrefBranch.h>
 #include<nsCOMPtr.h>
 
 // very dirty work around for the error:
@@ -23,6 +24,8 @@ public:
 private:
   ~purpleCoreService();
   void InitProtocols();
+  nsresult InitAccounts();
+  nsCOMPtr<nsIPrefBranch> mPrefService;
 
 protected:
   PRBool mInitialized;

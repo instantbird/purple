@@ -10,6 +10,7 @@
 /* 
  * This is the libpurple core
  */
+[ptr] native purpleNativeProtocol(purpleProtocol);
 
 [scriptable, uuid(b82583f1-307b-4034-b5c7-9f727fab7d8c)]
 interface purpleICoreService: nsISupports {
@@ -23,6 +24,7 @@ interface purpleICoreService: nsISupports {
   nsISimpleEnumerator getProtocols();
 
   purpleIProtocol getProtocolById(in string aProtocolId);
+  [noscript] purpleNativeProtocol getProtoById(in string aProtocolId);
 
   /* accounts */
   purpleIAccount getAccountById(in string aAccountId);
@@ -31,7 +33,7 @@ interface purpleICoreService: nsISupports {
 
   // both createAccount and deleteAccount will produce event that can
   // be observed with an nsIObserver
-  purpleIAccount createAccount(in string aName, in purpleIProtocol aPrpl);
+  purpleIAccount createAccount(in string aName, in string aPrpl);
 
   void deleteAccount(in string aAccountId);
   //could have taken in purpleIAccount
