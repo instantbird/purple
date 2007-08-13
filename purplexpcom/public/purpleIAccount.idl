@@ -29,4 +29,54 @@ interface purpleIAccount: nsISupports {
   void save();
 
   // FIXME proxy info
+
+  /* Info about the connection state and flags */
+
+  /* From PurpleAccount */
+  readonly attribute boolean disconnecting;
+
+  /* From PurpleConnectionState */
+
+  //   PURPLE_DISCONNECTED 	Disconnected.
+  readonly attribute boolean disconnected;
+
+  //   PURPLE_CONNECTED 	Connected.
+  readonly attribute boolean connected;
+
+  //   PURPLE_CONNECTING 	Connecting. 
+  readonly attribute boolean connecting;
+
+  /* From PurpleConnectionFlags */
+
+  //   PURPLE_CONNECTION_HTML
+  //    Connection sends/receives in 'HTML'.
+  readonly attribute boolean HTMLEnabled;
+
+  //   PURPLE_CONNECTION_NO_BGCOLOR
+  //    Connection does not send/receive background colors.
+  readonly attribute boolean noBackgroundColors;
+
+  //   PURPLE_CONNECTION_AUTO_RESP
+  //    Send auto responses when away.
+  readonly attribute boolean autoResponses;
+
+  //   PURPLE_CONNECTION_FORMATTING_WBFO
+  //    The text buffer must be formatted as a whole.
+  readonly attribute boolean singleFormatting;
+
+  //   PURPLE_CONNECTION_NO_NEWLINES
+  //    No new lines are allowed in outgoing messages.
+  readonly attribute boolean noNewlines;
+
+  //   PURPLE_CONNECTION_NO_FONTSIZE
+  //    Connection does not send/receive font sizes.
+  readonly attribute boolean noFontSizes;
+
+  //   PURPLE_CONNECTION_NO_URLDESC
+  //    Connection does not support descriptions with links.
+  readonly attribute boolean noUrlDesc;
+
+  //   PURPLE_CONNECTION_NO_IMAGES
+  //    Connection does not support sending of images.
+  readonly attribute boolean noImages;
 };

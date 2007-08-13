@@ -379,3 +379,63 @@ PURPLE_IMPL_SETPREF(Bool, Bool, PRBool)
 PURPLE_IMPL_SETPREF(Int, Int, PRInt32)
 // nsresult purpleAccount::SetStringPref(const char *aName, const char *aValue)
 PURPLE_IMPL_SETPREF(String, Char, const char *)
+
+#define PURPLE_IMPL_GETBOOL(aName, aVal)			\
+  NS_IMETHODIMP purpleAccount::Get##aName(PRBool *a##aName)	\
+  {								\
+    PURPLE_ENSURE_INIT(mAccount);				\
+    								\
+    *a##aName = aVal;						\
+    return NS_OK;						\
+  }
+
+
+/* readonly attribute boolean disconnecting; */
+PURPLE_IMPL_GETBOOL(Disconnecting, mAccount->disconnecting)
+
+/* readonly attribute boolean disconnected; */
+PURPLE_IMPL_GETBOOL(Disconnected,
+		    !mAccount->gc || mAccount->gc->state == PURPLE_DISCONNECTED)
+
+/* readonly attribute boolean connected; */
+PURPLE_IMPL_GETBOOL(Connected,
+		    mAccount->gc && mAccount->gc->state == PURPLE_CONNECTED)
+
+/* readonly attribute boolean connecting; */
+PURPLE_IMPL_GETBOOL(Connecting,
+		    mAccount->gc && mAccount->gc->state == PURPLE_CONNECTING)
+
+/* Get flag from PurpleConnection->flags */
+#define PURPLE_IMPL_GETFLAG(aName, aFlag)				\
+  NS_IMETHODIMP purpleAccount::Get##aName(PRBool *a##aName)		\
+  {									\
+    PURPLE_ENSURE_INIT(mAccount);					\
+    PURPLE_ENSURE_INIT(mAccount->gc);					\
+    PurpleConnectionFlags flags = mAccount->gc->flags;			\
+    *a##aName = (flags & PURPLE_CONNECTION_##aFlag) ? PR_TRUE : PR_FALSE; \
+    return NS_OK;							\
+  }
+
+/* readonly attribute boolean HTMLEnabled; */
+PURPLE_IMPL_GETFLAG(HTMLEnabled, HTML)
+
+/* readonly attribute boolean noBackgroundColors; */
+PURPLE_IMPL_GETFLAG(NoBackgroundColors, NO_BGCOLOR)
+
+/* readonly attribute boolean autoResponses; */
+PURPLE_IMPL_GETFLAG(AutoResponses, AUTO_RESP)
+
+/* readonly attribute boolean singleFormatting; */
+PURPLE_IMPL_GETFLAG(SingleFormatting, FORMATTING_WBFO)
+
+/* readonly attribute boolean noNewlines; */
+PURPLE_IMPL_GETFLAG(NoNewlines, NO_NEWLINES)
+
+/* readonly attribute boolean noFontSizes; */
+PURPLE_IMPL_GETFLAG(NoFontSizes, NO_FONTSIZE)
+
+/* readonly attribute boolean noUrlDesc; */
+PURPLE_IMPL_GETFLAG(NoUrlDesc, NO_URLDESC)
+
+/* readonly attribute boolean noImages; */
+PURPLE_IMPL_GETFLAG(NoImages, NO_IMAGES)
