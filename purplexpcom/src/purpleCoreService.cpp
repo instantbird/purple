@@ -106,14 +106,22 @@ void purpleCoreService::InitProtocols()
 #endif
 }
 
+inline void purpleCoreService::UnInitProtocols()
+{
+  for (PRInt32 i = mProtocols.Count() - 1; i >= 0; --i) {
+    mProtocols[i]->UnInit();
+  }
+  mProtocols.Clear();
+}
+
 /* void Quit (); */
 NS_IMETHODIMP purpleCoreService::Quit()
 {
   PURPLE_ENSURE_INIT(mInitialized);
 
   mConversations = nsnull;
-  mAccounts.Clear();
-  mProtocols.Clear();
+  UnInitAccounts();
+  UnInitProtocols();
   mInitialized = PR_FALSE;
   purple_core_quit();
   printf("purple_core_quit\n");
@@ -270,6 +278,14 @@ nsresult purpleCoreService::InitAccounts()
   }
 
   return NS_OK;
+}
+
+inline void purpleCoreService::UnInitAccounts()
+{
+  for (PRInt32 i = mAccounts.Count() - 1; i >= 0; --i) {
+    mAccounts[i]->UnInit();
+  }
+  mAccounts.Clear();
 }
 
 /* purpleIAccount createAccount (in string name, in purpleIProtocol prpl); */

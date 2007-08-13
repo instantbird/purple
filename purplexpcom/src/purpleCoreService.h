@@ -26,6 +26,8 @@ private:
   void InitProtocols();
   nsresult InitAccounts();
   nsCOMPtr<nsIPrefBranch> mPrefService;
+  inline void UnInitAccounts();
+  inline void UnInitProtocols();
 
 protected:
   PRBool mInitialized;
