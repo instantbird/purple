@@ -35,7 +35,7 @@ public:
        	          const nsCString& aKey);
   nsresult load(const nsCString& aKey);
   nsresult remove();
-  void UnInit() { mAccount = NULL; }
+  void UnInit();
 
 private:
   ~purpleAccount();

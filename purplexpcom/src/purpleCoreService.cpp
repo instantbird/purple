@@ -335,6 +335,14 @@ NS_IMETHODIMP purpleCoreService::CreateAccount(const char *name,
   /* Keep it in the local account list */
   mAccounts.AppendObject(account);
 
+  /* Notify observers */
+  nsCOMPtr<nsIObserverService> os =
+    
+do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv)) {
+    os->NotifyObservers(account, "new account", nsnull);
+  }
+
   /* And return the new account as result */
   *aResult = account;
   NS_ADDREF(*aResult);
@@ -348,12 +356,25 @@ NS_IMETHODIMP purpleCoreService::DeleteAccount(const char *aAccountId)
   printf("attempting to delete %s\n", aAccountId);
 #endif
   /* delete the account */
-  for (PRInt32 i = mAccounts.Count() - 1; i >= 0; --i) {
+  PRInt32 i;
+  for (i = mAccounts.Count() - 1; i >= 0; --i) {
     if (mAccounts[i]->GetKey().Equals(aAccountId)) {
+      /* Notify observers */
+      nsresult rv;
+      nsCOMPtr<nsIObserverService> os =
+	do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+      if (NS_SUCCEEDED(rv)) {
+	os->NotifyObservers(mAccounts[i], "deleting account", nsnull);
+      }
+      /* Remove the pref of the account, and remove it from libpurple */
       mAccounts[i]->remove();
+      /* Remove it from our local array */
       mAccounts.RemoveObjectAt(i);
       break;
     }
+  }
+  if (i < 0) {
+    return NS_ERROR_FAILURE;
   }
 
   /*Update the list of accounts in the prefs */

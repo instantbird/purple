@@ -28,16 +28,24 @@ purpleAccount::purpleAccount()
 purpleAccount::~purpleAccount()
 {
   /* destructor code */
+  UnInit();
+#ifdef DEBUG_PURPLE_ACCOUNT
+  printf("destructing purpleAccount\n");
+#endif
+}
+
+void purpleAccount::UnInit()
+{
   if (mAccount) {
 #ifdef DEBUG_PURPLE_ACCOUNT
-    printf("destructing purpleAccount %s (%s)\n",
+    printf("uninitializing purpleAccount %s (%s)\n",
 	   purple_account_get_username(mAccount), mProtocol->GetId());
 #endif
-    purple_account_destroy(mAccount);
+    purple_accounts_delete(mAccount);
+    mAccount = NULL;
   }
 #ifdef DEBUG_PURPLE_ACCOUNT
-  else
-    printf("destruction uninitialized purpleAccount\n");
+  else printf("uninitializing uninitialized purpleAccount\n");
 #endif
 }
 
@@ -136,7 +144,7 @@ nsresult purpleAccount::load(const nsCString& aKey)
 
   /* Load the password if it was saved */
   nsCString pass;
-  rv = mPrefBranch->GetCharPref(PREF_PASSWORD, getter_Copies(alias));
+  rv = mPrefBranch->GetCharPref(PREF_PASSWORD, getter_Copies(pass));
   if (NS_SUCCEEDED(rv)) {
     purple_account_set_password(mAccount, pass.get());
 #ifdef DEBUG_PURPLE_ACCOUNT
@@ -198,7 +206,11 @@ nsresult purpleAccount::remove()
 	 mProtocol ? mProtocol->GetId() : "(mProtocol = NULL)");
 #endif
 
-  return mPrefBranch->DeleteBranch("");
+  rv = mPrefBranch->DeleteBranch("");
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  UnInit();
+  return NS_OK;
 }
 
 /* void connect (); */
