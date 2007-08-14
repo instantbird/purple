@@ -11,7 +11,7 @@
 interface purpleIConversation: nsISupports {
   readonly attribute string name;
   readonly attribute string title;
-  readonly attribute long idConv;
+  readonly attribute long id;
   void sendMsg(in wstring aMsg);
 };
 

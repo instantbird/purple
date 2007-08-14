@@ -160,7 +160,7 @@ purpleCoreService::FindConversationById(PRInt32 aId,
     mConversations->QueryElementAt(i, NS_GET_IID(purpleIConversation),
 				   getter_AddRefs(conv));
     PRInt32 id;
-    conv->GetIdConv(&id);
+    conv->GetId(&id);
     if (id == aId) {
       *_retval = conv;
       return NS_OK;

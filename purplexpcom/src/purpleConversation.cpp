@@ -50,9 +50,9 @@ NS_IMETHODIMP purpleConversation::GetTitle(char * *aTitle)
 }
 
 /* readonly attribute long idConv; */
-NS_IMETHODIMP purpleConversation::GetIdConv(PRInt32 *aIdConv)
+NS_IMETHODIMP purpleConversation::GetId(PRInt32 *aId)
 {
-  *aIdConv = (PRInt32) mConv;
+  *aId = (PRInt32) mConv;
 
   return NS_OK;
 }
