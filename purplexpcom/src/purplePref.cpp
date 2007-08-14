@@ -107,5 +107,5 @@ NS_IMETHODIMP purplePref::GetString(char **_retval)
   }
 
   const char *res = mOpt->default_value.string;
-  return returnString(_retval, res ? res : "");
+  return returnString(_retval, res);
 }

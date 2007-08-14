@@ -8,7 +8,7 @@ nsresult returnString(char * *aDest, const char *aStr)
   printf("returnString(%s)\n", aStr);
 #endif
   if (!aStr)
-    return NS_ERROR_NULL_POINTER;
+    aStr = "";
 
   size_t len = strlen(aStr) + 1;
 
