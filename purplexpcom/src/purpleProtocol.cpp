@@ -25,7 +25,7 @@ void purpleProtocol::Init(PurplePluginInfo *aInfo)
   mInfo = aInfo;
 #ifdef DEBUG_PURPLE_PROTOCOL
   printf("setting mInfo to %i (%s, %s)\n",
-	 (PRInt32) mInfo, mInfo->name, mInfo->id);
+	 (PRUint32) mInfo, mInfo->name, mInfo->id);
 
   printf("start init protocol options\n");
 #endif

@@ -239,11 +239,52 @@ static PurpleCoreUiOps null_core_uiops =
 	NULL
 };
 
-static void
-signed_on(PurpleConnection *gc, gpointer null)
+
+static void account_signals(PurpleAccount *account, const char *signal)
 {
-	PurpleAccount *account = purple_connection_get_account(gc);
-	printf("Account connected: %s %s\n", account->username, account->protocol_id);
+#ifdef DEBUG_PURPLE_INIT
+  printf("%s: %s (%s)\n", signal,
+	 account->username, account->protocol_id);
+#endif
+  nsCOMPtr<purpleCoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
+  pcs->FireAccountEvent(account, signal);
+}
+
+static void connection_signals(PurpleConnection *gc, const char *signal)
+{
+  account_signals(purple_connection_get_account(gc), signal);
+}
+
+#define PURPLE_CONNECT_CONNECTION_SIGNAL(aSignal, aName)	\
+  purple_signal_connect(instance, aSignal, &handle,		\
+			PURPLE_CALLBACK(connection_signals),	\
+			(void *)aName)
+
+static void
+connect_to_connections_signals()
+{
+  static int handle;
+  void *instance = purple_connections_get_handle();
+  PURPLE_CONNECT_CONNECTION_SIGNAL("signed-on", "account-connected");
+  PURPLE_CONNECT_CONNECTION_SIGNAL("signing-on", "account-signing-on");
+  PURPLE_CONNECT_CONNECTION_SIGNAL("signed-off", "account-disconnected");
+  PURPLE_CONNECT_CONNECTION_SIGNAL("signing-off", "account-disconnecting");
+#ifdef DEBUG_PURPLE_INIT
+  printf("connecting to connections signals\n");
+#endif
+}
+
+static void
+connect_to_accounts_signals()
+{
+  static int handle;
+  void *instance = purple_accounts_get_handle();
+  purple_signal_connect(instance, "account-connecting", &handle,
+			PURPLE_CALLBACK(account_signals),
+			(void *)"account-connecting");
+#ifdef DEBUG_PURPLE_INIT
+  printf("connecting to accounts signals\n");
+#endif
 }
 
 static void
@@ -288,8 +329,6 @@ static void
 connect_to_signals_for_demonstration_purposes_only()
 {
   static int handle;
-  purple_signal_connect(purple_connections_get_handle(), "signed-on", &handle,
-			PURPLE_CALLBACK(signed_on), NULL);
   purple_signal_connect(purple_conversations_get_handle(), "received-im-msg", &handle,
 			PURPLE_CALLBACK(received_im_msg), NULL);
 #ifdef DEBUG_PURPLE_INIT
@@ -363,6 +402,8 @@ init_libpurple()
   	PurpleSavedStatus *status = purple_savedstatus_new(NULL, PURPLE_STATUS_AVAILABLE);
   	purple_savedstatus_activate(status);
 
+	connect_to_connections_signals();
+	connect_to_accounts_signals();
  	connect_to_signals_for_demonstration_purposes_only();
 
 	return NS_OK;

@@ -11,6 +11,7 @@
  * This is the libpurple core
  */
 [ptr] native purpleNativeProtocol(purpleProtocol);
+[ptr] native purpleNativeAccount(PurpleAccount);
 
 [scriptable, uuid(b82583f1-307b-4034-b5c7-9f727fab7d8c)]
 interface purpleICoreService: nsISupports {
@@ -31,10 +32,28 @@ interface purpleICoreService: nsISupports {
 
   nsISimpleEnumerator getAccounts();
 
-  // both createAccount and deleteAccount will produce event that can
-  // be observed with an nsIObserver
+  /* will fire the event account-added */
   purpleIAccount createAccount(in string aName, in string aPrpl);
 
+  /* will fire the event account-removed */
   void deleteAccount(in string aAccountId);
-  //could have taken in purpleIAccount
+
+  [noscript] void fireAccountEvent(in purpleNativeAccount aAccount,
+				   in string aEvent);
+  /* account related event fired:
+      - account-added: a new account has been created
+      - account-removed: the account has been deleted
+      - account-signin-on: a connection is being created for the account
+         This is fired when a connection is created for connecting an account,
+	 but is also fired when a connection is created for registering an account.
+      - account-connecting: the account is being connected
+         This is not fired when registering an account
+	 This event is fired *after* account-signing-on
+      - account-connected: the account is now connected
+      - account-disconnecting: the account is being disconnected
+      - account-disconnected: the account is now disconnected
+
+      These events can be watched using an nsIObserver.
+      The associated purpleIAccount will be given as a parameter.
+  */
 };

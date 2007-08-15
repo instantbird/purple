@@ -251,7 +251,9 @@ nsresult purpleCoreService::InitAccounts()
   nsresult rv = mPrefService->GetCharPref(PREF_MESSENGER_ACCOUNTS,
 					  getter_Copies(accountList));
 
+#ifdef DEBUG_PURPLE_CORE_SERVICE
   printf("InitAccounts list = %s\n", accountList.get());
+#endif
 
   nsCOMPtr<purpleAccount> account;
   char *newStr = accountList.BeginWriting();
@@ -336,12 +338,7 @@ NS_IMETHODIMP purpleCoreService::CreateAccount(const char *name,
   mAccounts.AppendObject(account);
 
   /* Notify observers */
-  nsCOMPtr<nsIObserverService> os =
-    
-do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
-  if (NS_SUCCEEDED(rv)) {
-    os->NotifyObservers(account, "new account", nsnull);
-  }
+  notifyObservers(account, "account-added");
 
   /* And return the new account as result */
   *aResult = account;
@@ -360,12 +357,7 @@ NS_IMETHODIMP purpleCoreService::DeleteAccount(const char *aAccountId)
   for (i = mAccounts.Count() - 1; i >= 0; --i) {
     if (mAccounts[i]->GetKey().Equals(aAccountId)) {
       /* Notify observers */
-      nsresult rv;
-      nsCOMPtr<nsIObserverService> os =
-	do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
-      if (NS_SUCCEEDED(rv)) {
-	os->NotifyObservers(mAccounts[i], "deleting account", nsnull);
-      }
+      notifyObservers(mAccounts[i], "account-removed");
       /* Remove the pref of the account, and remove it from libpurple */
       mAccounts[i]->remove();
       /* Remove it from our local array */
@@ -412,4 +404,30 @@ NS_IMETHODIMP purpleCoreService::DeleteAccount(const char *aAccountId)
   // ensure the change is written to the disk now
   nsCOMPtr<nsIPrefService> prefs = do_QueryInterface(mPrefService);
   return prefs->SavePrefFile(nsnull);
+}
+
+nsresult purpleCoreService::notifyObservers(nsISupports *aObj,
+					    const char *aEvent)
+{
+  nsresult rv;
+  nsCOMPtr<nsIObserverService> os =
+    do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return os->NotifyObservers(aObj, aEvent, nsnull);
+}
+
+/* [noscript] void fireAccountEvent (in purpleNativeAccount aAccount, in string event); */
+NS_IMETHODIMP purpleCoreService::FireAccountEvent(PurpleAccount * aAccount,
+						  const char *aEvent)
+{
+  PURPLE_ENSURE_INIT(mInitialized);
+
+  for (PRInt32 i = mAccounts.Count() - 1; i >= 0; --i) {
+    if (mAccounts[i]->IsPurpleAccount(aAccount)) {
+      return notifyObservers(mAccounts[i], aEvent);
+    }
+  }
+
+  return NS_ERROR_FAILURE;
 }

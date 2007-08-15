@@ -1,7 +1,7 @@
 #include "purpleProtocol.h"
+#include "purpleAccount.h"
 #include "purpleICoreService.h"
 #include "purpleIConversation.h"
-#include "purpleAccount.h"
 #include<nsIMutableArray.h>
 #include<nsIPrefBranch.h>
 #include<nsCOMPtr.h>
@@ -28,6 +28,7 @@ private:
   nsCOMPtr<nsIPrefBranch> mPrefService;
   inline void UnInitAccounts();
   inline void UnInitProtocols();
+  inline nsresult notifyObservers(nsISupports *aObj, const char *aEvent);
 
 protected:
   PRBool mInitialized;

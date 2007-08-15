@@ -163,6 +163,16 @@ nsresult purpleAccount::load(const nsCString& aKey)
 #endif
   }
 
+  /* FIXME: this is a hack so that it is possible to reconnecte after
+     disconnecting an account. When libpurple disconnects an account,
+     if !rememberSavedPassword, the password is removed from the
+     PurpleAccount structure.
+
+     This hack should be removed when the UI for requesting a password
+     from the user will be there
+  */
+  purple_account_set_remember_password(mAccount, TRUE);
+
   //get spec options
   PRUint32 count;
   char **prefs;
@@ -232,8 +242,17 @@ NS_IMETHODIMP purpleAccount::Connect()
 #ifdef DEBUG_PURPLE_ACCOUNT
   printf("attempting to connect %s\n", mAccount->username);
 #endif
-  purple_account_set_enabled(mAccount, UI_ID, TRUE);
-  //  purple_account_connect(mAccount);
+  if (purple_account_get_enabled(mAccount, UI_ID)) {
+    /* The account is already enabled (= we have already connected it once) */
+#ifdef DEBUG_PURPLE_ACCOUNT
+    printf("account already enabled\n");
+#endif
+    purple_account_connect(mAccount);
+  }
+  else {
+    /* enabling an account in libpurple connects it automatically */
+    purple_account_set_enabled(mAccount, UI_ID, TRUE);
+  }
 
   return NS_OK;
 }

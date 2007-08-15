@@ -36,6 +36,9 @@ public:
   nsresult load(const nsCString& aKey);
   nsresult remove();
   void UnInit();
+  PRBool IsPurpleAccount(const PurpleAccount *aAccount) {
+    return mAccount == aAccount;
+  }
 
 private:
   ~purpleAccount();
