@@ -13,6 +13,7 @@ NS_IMPL_ISUPPORTS1(purpleAccount, purpleIAccount)
 #define PREF_PRPL		"prpl"
 #define PREF_NAME		"name"
 #define PREF_ALIAS		"alias"
+#define PREF_AUTOLOGIN          "autoLogin"
 #define PREF_PASSWORD		"password"
 #define PREF_REMEMBER_PASSWORD	"rememberPassword"
 
@@ -191,6 +192,16 @@ nsresult purpleAccount::load(const nsCString& aKey)
     }
   }
 
+  /* Check if we should connect the account automatically */
+  PRBool autoLogin;
+  rv = mPrefBranch->GetBoolPref(PREF_AUTOLOGIN, &autoLogin);
+  if (NS_FAILED(rv) || autoLogin) {
+#ifdef DEBUG_PURPLE_ACCOUNT
+    printf("autologin\n");
+#endif
+    Connect();
+  }
+
   mPrefBranch = nsnull;
   return NS_OK;
 }
@@ -287,6 +298,29 @@ NS_IMETHODIMP purpleAccount::GetProtocol(purpleIProtocol * *aProtocol)
   NS_ADDREF(mProtocol);
   *aProtocol = mProtocol;
   return NS_OK;
+}
+
+/* attribute boolean autoLogin; */
+NS_IMETHODIMP purpleAccount::GetAutoLogin(PRBool *aAutoLogin)
+{
+  PURPLE_ENSURE_INIT(mAccount);
+
+  nsresult rv = GetPrefBranch();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mPrefBranch->GetBoolPref(PREF_AUTOLOGIN, aAutoLogin);
+  /* If the pref isn't set, assume we want to sign-on at startup */
+  if (NS_FAILED(rv)) {
+    *aAutoLogin = PR_TRUE;
+  }
+
+  return NS_OK;
+}
+NS_IMETHODIMP purpleAccount::SetAutoLogin(PRBool aAutoLogin)
+{
+  PURPLE_ENSURE_INIT(mAccount);
+
+  return SetBoolPref(PREF_AUTOLOGIN, aAutoLogin);
 }
 
 /* attribute string password; */

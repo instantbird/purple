@@ -14,6 +14,8 @@ interface purpleIAccount: nsISupports {
   readonly attribute string id;
   readonly attribute purpleIProtocol protocol;
 
+  attribute boolean autoLogin;
+
   // FIXME password should be in password manager
   attribute string password;
   attribute boolean rememberPassword;
