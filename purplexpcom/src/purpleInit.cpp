@@ -429,6 +429,9 @@ init_libpurple()
 
 // 	/* Load the preferences. */
 // 	purple_prefs_load();
+	purple_prefs_set_bool("/purple/logging/log_ims", TRUE);
+	purple_prefs_set_bool("/purple/logging/log_chats", TRUE);
+	purple_prefs_set_bool("/purple/logging/log_system", TRUE);
 
 // 	/* Load the desired plugins. The client should save the list of loaded plugins in
 // 	 * the preferences using purple_plugins_save_loaded(PLUGIN_SAVE_PREF) */
