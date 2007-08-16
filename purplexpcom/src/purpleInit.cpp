@@ -20,7 +20,6 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  */
-#define CUSTOM_USER_DIRECTORY  "/dev/null"
 #define CUSTOM_PLUGIN_PATH     "libraries/prpl"
 #define PLUGIN_SAVE_PREF       "/purple/nullclient/plugins/saved"
 
@@ -60,6 +59,8 @@
 #include"purpleConversation.h"
 #include"purpleCoreService.h"
 #include "nsComponentManagerUtils.h"
+#include "nsDirectoryServiceUtils.h"
+#define NS_APP_USER_PROFILE_50_DIR              "ProfD"
 
 //#include "defines.h"
 //#define DEBUG_PURPLE_INIT
@@ -122,9 +123,35 @@ static guint glib_input_add(gint fd, PurpleInputCondition condition, PurpleInput
 	return closure->result;
 }
 
+static guint timeout_add(guint interval,
+			 GSourceFunc function, gpointer data)
+{
+  /* FIXME This is an horrible hack to prevent libpurple from writting
+     prefs.xml, blist.xml, status.xml and pounces.xml
+
+     Those files are all written with a callback with a timeout of 5
+     secondes.
+
+     The only other 5 seconds callback in libpurple is in
+     oscar/peers.c and fortunately, it passes a non NULL data pointer.
+  */
+  if (interval == 5000 && data == NULL) {
+    /* assume this is a buddy list, accounts or prefs saving */
+#ifdef DEBUG_PURPLE_INIT
+    printf("TIMEOUT REFUSED\n");
+#endif
+    return 0;
+  }
+#ifdef DEBUG_PURPLE_INIT
+  printf("TIMEOUTADD     %i\n", interval);
+#endif
+  return g_timeout_add(interval, function, data);
+}
+
+
 static PurpleEventLoopUiOps glib_eventloops =
 {
-	g_timeout_add,
+	timeout_add, /* hack to prevent from writting .xml files to disk */
 	g_source_remove,
 	glib_input_add,
 	g_source_remove,
@@ -339,8 +366,21 @@ connect_to_signals_for_demonstration_purposes_only()
 nsresult
 init_libpurple()
 {
-	/* Set a custom user directory (optional) */
-	purple_util_set_user_dir(CUSTOM_USER_DIRECTORY);
+  /* Set the instantbird profile folder as libpurple custom user
+     directory */
+
+  nsCOMPtr<nsIFile> profileFolder;
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+				       getter_AddRefs(profileFolder));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCString path;
+  rv = profileFolder->GetNativePath(path);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+#ifdef DEBUG_PURPLE_INIT
+  printf("setting custom user directory to:  %s\n", path.get());
+#endif
+  purple_util_set_user_dir(path.get());
 
 	/* We do not want any debugging for now to keep the noise to a minimum. */
 #ifdef DEBUG_PURPLE
