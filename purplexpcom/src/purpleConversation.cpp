@@ -11,6 +11,8 @@
 #include<nsCOMPtr.h>
 #include<stdio.h>
 
+//#define DEBUG_PURPLE_CONVERSATION
+
 NS_IMPL_ISUPPORTS1(purpleConversation, purpleIConversation)
 
 purpleConversation::purpleConversation()

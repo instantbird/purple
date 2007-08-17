@@ -153,6 +153,10 @@ purpleCoreService::FindConversationById(PRInt32 aId,
   if (!aId)
     return NS_ERROR_NULL_POINTER;
 
+#ifdef DEBUG_PURPLE_CORE_SERVICE
+  printf("FindConversationById(%i)\n", aId);
+#endif
+
   PRUint32 length;
   mConversations->GetLength(&length);
   for (PRUint32 i = 0; i < length; ++i) {
@@ -163,6 +167,7 @@ purpleCoreService::FindConversationById(PRInt32 aId,
     conv->GetId(&id);
     if (id == aId) {
       *_retval = conv;
+      NS_ADDREF(conv);
       return NS_OK;
     }
   }
