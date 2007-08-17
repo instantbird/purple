@@ -123,8 +123,11 @@ NS_IMETHODIMP purpleCoreService::Quit()
   UnInitAccounts();
   UnInitProtocols();
   mInitialized = PR_FALSE;
+  notifyObservers(this, "purple-quit");
   purple_core_quit();
+#ifdef DEBUG_PURPLE_CORE_SERVICE
   printf("purple_core_quit\n");
+#endif
 
   return NS_OK;
 }
@@ -419,6 +422,9 @@ nsresult purpleCoreService::notifyObservers(nsISupports *aObj,
     do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
+#ifdef DEBUG_PURPLE_CORE_SERVICE
+  printf("notifying observers of %s\n", aEvent);
+#endif
   return os->NotifyObservers(aObj, aEvent, nsnull);
 }
 
