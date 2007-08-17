@@ -18,8 +18,9 @@ interface purpleICoreService: nsISupports {
   void init();
   void quit();
   readonly attribute string version;
-  readonly attribute nsIArray conversations;
-  purpleIConversation findConversationById(in long aId);
+
+  nsISimpleEnumerator getConversations();
+  purpleIConversation getConversationById(in long aId);
 
   // returns an enumerator on a purpleIProtocol array
   nsISimpleEnumerator getProtocols();

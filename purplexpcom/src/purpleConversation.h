@@ -1,3 +1,6 @@
+#ifndef PURPLE_CONVERSATION_H_
+#define PURPLE_CONVERSATION_H_
+
 #include "purpleIConversation.h"
 #include <libpurple/conversation.h>
 
@@ -19,6 +22,7 @@ public:
   purpleConversation();
 
   void SetConv(PurpleConversation *aConv);
+  PRInt32 GetId() { return (PRInt32)mConv; }
 
 private:
   ~purpleConversation();
@@ -26,3 +30,5 @@ private:
 protected:
   PurpleConversation *mConv;
 };
+
+#endif /* !PURPLE_CONVERSATION_H_ */

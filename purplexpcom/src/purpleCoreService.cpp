@@ -50,8 +50,6 @@ NS_IMETHODIMP purpleCoreService::Init()
   nsresult rv = init_libpurple();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mConversations = do_CreateInstance(NS_ARRAY_CONTRACTID);
-
   /* Load the list of protocol plugins and their specific options */
   InitProtocols();
 
@@ -119,7 +117,7 @@ NS_IMETHODIMP purpleCoreService::Quit()
 {
   PURPLE_ENSURE_INIT(mInitialized);
 
-  mConversations = nsnull;
+  mConversations.Clear(); // don't know yet if there's a need for uninit
   UnInitAccounts();
   UnInitProtocols();
   mInitialized = PR_FALSE;
@@ -138,49 +136,40 @@ NS_IMETHODIMP purpleCoreService::GetVersion(char * *aVersion)
   return returnString(aVersion, purple_core_get_version());
 }
 
-/* readonly attribute nsIArray conversations; */
-NS_IMETHODIMP
-purpleCoreService::GetConversations(nsIArray * *aConversations)
+/* nsISimpleEnumerator getConversations (); */
+NS_IMETHODIMP purpleCoreService::GetConversations(nsISimpleEnumerator **aResult)
 {
-  *aConversations = mConversations;
-  NS_ADDREF(*aConversations);
+  PURPLE_ENSURE_INIT(mInitialized);
 
-  return NS_OK;
+  return NS_NewArrayEnumerator(aResult, mConversations);
 }
 
-/* purpleIConversation findConversationById (in long id); */
-NS_IMETHODIMP
-purpleCoreService::FindConversationById(PRInt32 aId,
-					purpleIConversation **_retval)
+
+/* purpleIProtocol getConversationById (in string aConversationId); */
+NS_IMETHODIMP purpleCoreService::GetConversationById(PRInt32 aId,
+						     purpleIConversation **aResult)
 {
-  if (!aId)
-    return NS_ERROR_NULL_POINTER;
+  PURPLE_ENSURE_INIT(mInitialized);
 
 #ifdef DEBUG_PURPLE_CORE_SERVICE
-  printf("FindConversationById(%i)\n", aId);
+  printf("GetConversationById(%i)\n", aId);
 #endif
 
-  PRUint32 length;
-  mConversations->GetLength(&length);
-  for (PRUint32 i = 0; i < length; ++i) {
-    nsCOMPtr<purpleIConversation> conv;
-    mConversations->QueryElementAt(i, NS_GET_IID(purpleIConversation),
-				   getter_AddRefs(conv));
-    PRInt32 id;
-    conv->GetId(&id);
-    if (id == aId) {
-      *_retval = conv;
-      NS_ADDREF(conv);
+  for (PRInt32 i = mConversations.Count() - 1; i >= 0; --i) {
+    if (mConversations[i]->GetId() == aId) {
+      *aResult = mConversations[i];
+      NS_ADDREF(*aResult);
       return NS_OK;
     }
   }
 
-  return NS_ERROR_FAILURE;
+  *aResult = nsnull;
+  return NS_OK;
 }
 
-void purpleCoreService::AddConversation(purpleIConversation* aConv)
+void purpleCoreService::AddConversation(purpleConversation* aConv)
 {
-  mConversations->AppendElement(aConv, PR_FALSE);
+  mConversations.AppendObject(aConv);
 }
 
 /* nsISimpleEnumerator getProtocols (); */

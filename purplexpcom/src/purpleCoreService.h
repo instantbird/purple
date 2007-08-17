@@ -1,7 +1,7 @@
 #include "purpleProtocol.h"
 #include "purpleAccount.h"
 #include "purpleICoreService.h"
-#include "purpleIConversation.h"
+#include "purpleConversation.h"
 #include<nsIMutableArray.h>
 #include<nsIPrefBranch.h>
 #include<nsCOMPtr.h>
@@ -19,7 +19,7 @@ public:
 
   purpleCoreService();
 
-  void AddConversation(purpleIConversation* aConv);
+  void AddConversation(purpleConversation* aConv);
 
 private:
   ~purpleCoreService();
@@ -33,7 +33,7 @@ private:
 protected:
   PRBool mInitialized;
   // array of purpleIConversation
-  nsCOMPtr<nsIMutableArray> mConversations;
+  nsCOMArray<purpleConversation> mConversations;
   nsCOMArray<purpleProtocol> mProtocols;
   nsCOMArray<purpleAccount> mAccounts;
 };

@@ -215,7 +215,7 @@ null_write_conv(PurpleConversation *conv, const char *who, const char *alias,
   nsCOMPtr<purpleICoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID, &rv);
 
   purpleIConversation *prplConv = nsnull;
-  rv = pcs->FindConversationById((PRInt32) conv, &prplConv);
+  rv = pcs->GetConversationById((PRInt32) conv, &prplConv);
   os->NotifyObservers(prplConv, "new text", msg.get());
 }
 
@@ -341,7 +341,7 @@ received_im_msg(PurpleAccount *account, char *sender, char *message,
     conv = purple_conversation_new(PURPLE_CONV_TYPE_IM, account, sender);
   }
   purpleIConversation *prplConv = nsnull;
-  rv = pcs->FindConversationById((PRInt32) conv, &prplConv);
+  rv = pcs->GetConversationById((PRInt32) conv, &prplConv);
 #ifdef DEBUG_PURPLE_INIT
   if (NS_FAILED(rv))
     printf("FindConversationById failed \n");
