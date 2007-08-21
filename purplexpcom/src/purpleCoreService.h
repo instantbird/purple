@@ -30,7 +30,6 @@ private:
   nsCOMPtr<nsIPrefBranch> mPrefService;
   inline void UnInitAccounts();
   inline void UnInitProtocols();
-  inline nsresult notifyObservers(nsISupports *aObj, const char *aEvent);
 
 protected:
   PRBool mInitialized;

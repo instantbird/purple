@@ -45,6 +45,8 @@ interface purpleICoreService: nsISupports {
   /* will fire the event account-removed */
   void deleteAccount(in string aAccountId);
 
+  void notifyObservers(in nsISupports aObj, in string aEvent);
+
   [noscript] void fireAccountEvent(in PurpleNativeAccount aAccount,
 				   in string aEvent);
   /* account related event fired:

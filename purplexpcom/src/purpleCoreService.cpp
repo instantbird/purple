@@ -126,7 +126,7 @@ NS_IMETHODIMP purpleCoreService::Quit()
   UnInitAccounts();
   UnInitProtocols();
   mInitialized = PR_FALSE;
-  notifyObservers(this, "purple-quit");
+  NotifyObservers(this, "purple-quit");
   purple_core_quit();
 #ifdef DEBUG_PURPLE_CORE_SERVICE
   printf("purple_core_quit\n");
@@ -236,7 +236,7 @@ NS_IMETHODIMP purpleCoreService::GetConversationById(PRInt32 aId,
 void purpleCoreService::AddConversation(purpleConversation* aConv)
 {
   mConversations.AppendObject(aConv);
-  notifyObservers(aConv, "new-conversation");
+  NotifyObservers(aConv, "new-conversation");
 }
 
 /* nsISimpleEnumerator getProtocols (); */
@@ -402,7 +402,7 @@ NS_IMETHODIMP purpleCoreService::CreateAccount(const char *name,
   mAccounts.AppendObject(account);
 
   /* Notify observers */
-  notifyObservers(account, "account-added");
+  NotifyObservers(account, "account-added");
 
   /* And return the new account as result */
   *aResult = account;
@@ -421,7 +421,7 @@ NS_IMETHODIMP purpleCoreService::DeleteAccount(const char *aAccountId)
   for (i = mAccounts.Count() - 1; i >= 0; --i) {
     if (mAccounts[i]->GetKey().Equals(aAccountId)) {
       /* Notify observers */
-      notifyObservers(mAccounts[i], "account-removed");
+      NotifyObservers(mAccounts[i], "account-removed");
       /* Remove the pref of the account, and remove it from libpurple */
       mAccounts[i]->remove();
       /* Remove it from our local array */
@@ -470,8 +470,9 @@ NS_IMETHODIMP purpleCoreService::DeleteAccount(const char *aAccountId)
   return prefs->SavePrefFile(nsnull);
 }
 
-nsresult purpleCoreService::notifyObservers(nsISupports *aObj,
-					    const char *aEvent)
+/* void notifyObservers (in nsISupports aObj, in string aEvent); */
+NS_IMETHODIMP purpleCoreService::NotifyObservers(nsISupports *aObj,
+						 const char *aEvent)
 {
   nsresult rv;
   nsCOMPtr<nsIObserverService> os =
@@ -509,7 +510,7 @@ NS_IMETHODIMP purpleCoreService::FireAccountEvent(PurpleAccount * aAccount,
   nsresult rv = this->GetAccountByPurpleAccount(aAccount,
 						getter_AddRefs(account));
   NS_ENSURE_SUCCESS(rv, rv);
-  return notifyObservers(account, aEvent);
+  return NotifyObservers(account, aEvent);
 }
 
 /* [noscript] void fireBuddyEvent (in purpleNativeBuddy aBuddy, in string event); */
@@ -522,5 +523,5 @@ NS_IMETHODIMP purpleCoreService::FireBuddyEvent(PurpleBuddy * aBuddy,
   nsCOMPtr<purpleIBuddy> buddy;
   nsresult rv = this->GetBuddyByPurpleBuddy(aBuddy, getter_AddRefs(buddy));
   NS_ENSURE_SUCCESS(rv, rv);
-  return notifyObservers(buddy, aEvent);
+  return NotifyObservers(buddy, aEvent);
 }

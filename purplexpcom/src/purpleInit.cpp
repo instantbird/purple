@@ -59,6 +59,7 @@
 #include"purpleConversation.h"
 #include"purpleCoreService.h"
 #include"purpleBuddy.h"
+#include"purpleMessage.h"
 #include "nsComponentManagerUtils.h"
 #include "nsDirectoryServiceUtils.h"
 #define NS_APP_USER_PROFILE_50_DIR              "ProfD"
@@ -187,37 +188,16 @@ static void
 null_write_conv(PurpleConversation *conv, const char *who, const char *alias,
 		const char *message, PurpleMessageFlags flags, time_t mtime)
 {
-  const char *name;
-  if (alias && *alias)
-    name = alias;
-  else if (who && *who)
-    name = who;
-  else
-    name = NULL;
-
-
-  printf("(%s) %s %s: %s\n", purple_conversation_get_name(conv),
-	 purple_utf8_strftime("(%H:%M:%S)", localtime(&mtime)),
-	 name, message);
-
   nsresult rv;
-  nsCOMPtr<nsIObserverService> os = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
-
+  nsCOMPtr<purpleMessage> msg = do_CreateInstance(PURPLE_MESSAGE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) {
-    printf("nsCOMPtr<nsIObserverService> == null\n");
     return;
   }
 
-  const nsEmbedCString cMsg(message);
-  nsEmbedString        msg;
-
-  NS_CStringToUTF16(cMsg, NS_CSTRING_ENCODING_UTF8, msg);
+  msg->Init(conv, who, alias, message, flags, mtime);
 
   nsCOMPtr<purpleICoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID, &rv);
-
-  purpleIConversation *prplConv = nsnull;
-  rv = pcs->GetConversationById((PRInt32) conv, &prplConv);
-  os->NotifyObservers(prplConv, "new text", msg.get());
+  pcs->NotifyObservers(msg, "new-text");
 }
 
 static PurpleConversationUiOps null_conv_uiops =
