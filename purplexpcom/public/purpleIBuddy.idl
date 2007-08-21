@@ -1,0 +1,24 @@
+#include "nsISupports.idl"
+#include "nsISimpleEnumerator.idl"
+#include "purpleIAccount.idl"
+#include "purpleIConversation.idl"
+
+/* 
+ * This is a proxy for libpurple PurpleBuddy
+ * However, there is a PurpleBuddy for each Screename <-> Account link.
+ * A single purpleIBuddy instance is needed for all accounts.
+ */
+
+[scriptable, uuid(1f0ffdac-3523-4e91-9ffe-d0c2fd08cb3d)]
+interface purpleIBuddy: nsISupports {
+  readonly attribute long id;
+  readonly attribute string name;
+  attribute string alias;
+  readonly attribute short nbOnline;
+  readonly attribute short accountCount;
+  purpleIAccount getAccount(in unsigned short aAccountIndex);
+  //  readonly attribute purpleIContact contact;
+  nsISimpleEnumerator getTags();
+  nsISimpleEnumerator getAccounts();
+  purpleIConversation createConversation(in unsigned short aAccountIndex);
+};

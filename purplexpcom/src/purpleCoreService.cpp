@@ -1,5 +1,6 @@
 #include "purpleCoreService.h"
 #include "purpleProtocol.h"
+#include "purpleBuddy.h"
 #include "purpleUtils.h"
 #include "nsXPCOM.h"
 #include <glib.h>
@@ -30,6 +31,8 @@ purpleCoreService::purpleCoreService()
    mProtocols(nsnull)
 {
   mPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  mBuddiesByPurpleBuddy.Init();
+  mBuddiesById.Init();
 }
 
 purpleCoreService::~purpleCoreService()
@@ -118,6 +121,8 @@ NS_IMETHODIMP purpleCoreService::Quit()
   PURPLE_ENSURE_INIT(mInitialized);
 
   mConversations.Clear(); // don't know yet if there's a need for uninit
+  mBuddiesByPurpleBuddy.Clear();
+  mBuddiesById.Clear();
   UnInitAccounts();
   UnInitProtocols();
   mInitialized = PR_FALSE;
@@ -134,6 +139,67 @@ NS_IMETHODIMP purpleCoreService::Quit()
 NS_IMETHODIMP purpleCoreService::GetVersion(char * *aVersion)
 {
   return returnString(aVersion, purple_core_get_version());
+}
+
+/* purpleIBuddy getBuddyById (in long aId); */
+NS_IMETHODIMP purpleCoreService::GetBuddyById(PRInt32 aId,
+					      purpleIBuddy **aResult)
+{
+#ifdef DEBUG_PURPLE_CORE_SERVICE
+  printf("looking up buddy with id %i\n", aId);
+#endif
+
+  purpleBuddy *buddyPtr = NULL;
+  if (mBuddiesById.Get(aId, &buddyPtr)) {
+    *aResult = buddyPtr;
+#ifdef DEBUG_PURPLE_CORE_SERVICE
+    printf("purpleBuddy found in HashTable (by Id)\n");
+#endif
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+/* [noscript] purpleIBuddy getBuddyByPurpleBuddy (in PurpleNativeBuddy aBuddy); */
+NS_IMETHODIMP purpleCoreService::GetBuddyByPurpleBuddy(PurpleBuddy * aBuddy,
+						       purpleIBuddy **aResult)
+{
+  /* First, lookup the PurpleBuddy pointer in our PurpleBuddy pointers
+   * hash. If we find it, just return the associated purpleBuddy.
+   */
+  purpleBuddy *buddyPtr = NULL;
+  if (mBuddiesByPurpleBuddy.Get((PRUint32) aBuddy, &buddyPtr)) {
+    *aResult = buddyPtr;
+#ifdef DEBUG_PURPLE_CORE_SERVICE
+    printf("purpleBuddy found in HashTable\n");
+#endif
+    return NS_OK;
+  }
+
+  /* If we can't find it in the pointers hash, try to get the Id from
+   * mozStorage. If we find it, append the new PurpleBuddy to it, and
+   * add the new PurpleBuddy pointer to the hash.
+   */
+  //FIXME!!
+
+  /* At this point, if we still haven't found it, this is a NEW
+   * buddy. Create a new purpleBuddy instance, initialize it, store it
+   * in mozStorage and add it in the two hashes.
+   */
+  nsresult rv;
+  nsCOMPtr<purpleBuddy> buddy = do_CreateInstance(PURPLE_BUDDY_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  buddy->Init(aBuddy);
+  mBuddiesByPurpleBuddy.Put((PRUint32) aBuddy, buddy);
+#ifdef DEBUG_PURPLE_CORE_SERVICE
+  printf("purpleBuddy added in HashTable with Id %i\n", buddy->getId());
+#endif
+  mBuddiesById.Put(buddy->getId(), buddy);
+
+  *aResult = buddy;
+  NS_ADDREF(*aResult);
+  return NS_OK;
 }
 
 /* nsISimpleEnumerator getConversations (); */
@@ -170,6 +236,7 @@ NS_IMETHODIMP purpleCoreService::GetConversationById(PRInt32 aId,
 void purpleCoreService::AddConversation(purpleConversation* aConv)
 {
   mConversations.AppendObject(aConv);
+  notifyObservers(aConv, "new-conversation");
 }
 
 /* nsISimpleEnumerator getProtocols (); */
@@ -417,17 +484,43 @@ nsresult purpleCoreService::notifyObservers(nsISupports *aObj,
   return os->NotifyObservers(aObj, aEvent, nsnull);
 }
 
-/* [noscript] void fireAccountEvent (in purpleNativeAccount aAccount, in string event); */
-NS_IMETHODIMP purpleCoreService::FireAccountEvent(PurpleAccount * aAccount,
-						  const char *aEvent)
+/* [noscript] purpleIAccount getAccountByPurpleAccount (in PurpleNativeAccount aAccount); */
+NS_IMETHODIMP purpleCoreService::GetAccountByPurpleAccount(PurpleAccount * aAccount,
+							   purpleIAccount **aResult)
 {
   PURPLE_ENSURE_INIT(mInitialized);
 
   for (PRInt32 i = mAccounts.Count() - 1; i >= 0; --i) {
     if (mAccounts[i]->IsPurpleAccount(aAccount)) {
-      return notifyObservers(mAccounts[i], aEvent);
+      *aResult = mAccounts[i];
+      NS_ADDREF(*aResult);
+      return NS_OK;
     }
   }
 
   return NS_ERROR_FAILURE;
+}
+
+/* [noscript] void fireAccountEvent (in purpleNativeAccount aAccount, in string event); */
+NS_IMETHODIMP purpleCoreService::FireAccountEvent(PurpleAccount * aAccount,
+						  const char *aEvent)
+{
+  nsCOMPtr<purpleIAccount> account;
+  nsresult rv = this->GetAccountByPurpleAccount(aAccount,
+						getter_AddRefs(account));
+  NS_ENSURE_SUCCESS(rv, rv);
+  return notifyObservers(account, aEvent);
+}
+
+/* [noscript] void fireBuddyEvent (in purpleNativeBuddy aBuddy, in string event); */
+NS_IMETHODIMP purpleCoreService::FireBuddyEvent(PurpleBuddy * aBuddy,
+						  const char *aEvent)
+{
+#ifdef DEBUG_PURPLE_CORE_SERVICE
+  printf("attempting to send %s signal\n", aEvent);
+#endif
+  nsCOMPtr<purpleIBuddy> buddy;
+  nsresult rv = this->GetBuddyByPurpleBuddy(aBuddy, getter_AddRefs(buddy));
+  NS_ENSURE_SUCCESS(rv, rv);
+  return notifyObservers(buddy, aEvent);
 }

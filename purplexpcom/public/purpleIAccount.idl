@@ -1,5 +1,6 @@
 #include "nsISupports.idl"
 #include "purpleIProtocol.idl"
+#include "purpleIConversation.idl"
 
 /* 
  * This is a proxy to libpurple PurpleAccount
@@ -9,6 +10,8 @@
 interface purpleIAccount: nsISupports {
   void connect();
   void disconnect();
+
+  purpleIConversation createConversation(in string aName);
 
   readonly attribute string name;
   readonly attribute string id;

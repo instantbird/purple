@@ -6,18 +6,23 @@
 #include "nsISimpleEnumerator.idl"
 #include "purpleIConversation.idl"
 #include "purpleIAccount.idl"
+#include "purpleIBuddy.idl"
 
 /* 
  * This is the libpurple core
  */
 [ptr] native purpleNativeProtocol(purpleProtocol);
-[ptr] native purpleNativeAccount(PurpleAccount);
+[ptr] native PurpleNativeAccount(PurpleAccount);
+[ptr] native PurpleNativeBuddy(PurpleBuddy);
 
 [scriptable, uuid(b82583f1-307b-4034-b5c7-9f727fab7d8c)]
 interface purpleICoreService: nsISupports {
   void init();
   void quit();
   readonly attribute string version;
+
+  purpleIBuddy getBuddyById(in long aId);
+  [noscript] purpleIBuddy getBuddyByPurpleBuddy(in PurpleNativeBuddy aBuddy);
 
   nsISimpleEnumerator getConversations();
   purpleIConversation getConversationById(in long aId);
@@ -30,6 +35,7 @@ interface purpleICoreService: nsISupports {
 
   /* accounts */
   purpleIAccount getAccountById(in string aAccountId);
+  [noscript] purpleIAccount getAccountByPurpleAccount(in PurpleNativeAccount aAccount);
 
   nsISimpleEnumerator getAccounts();
 
@@ -39,7 +45,7 @@ interface purpleICoreService: nsISupports {
   /* will fire the event account-removed */
   void deleteAccount(in string aAccountId);
 
-  [noscript] void fireAccountEvent(in purpleNativeAccount aAccount,
+  [noscript] void fireAccountEvent(in PurpleNativeAccount aAccount,
 				   in string aEvent);
   /* account related event fired:
       - account-added: a new account has been created
@@ -57,4 +63,13 @@ interface purpleICoreService: nsISupports {
       These events can be watched using an nsIObserver.
       The associated purpleIAccount will be given as a parameter.
   */
+
+  [noscript] void fireBuddyEvent(in PurpleNativeBuddy aBuddy,
+				   in string aEvent);
+  /* buddy related event fired:
+      - buddy-added: a new buddy has been added to the buddy list
+      - buddy-signed-on: this buddy has just signed on
+      - buddy-signed-off: this buddy has just signed off
+      - buddy-removed: this buddy has been removed from the buddy list
+   */
 };

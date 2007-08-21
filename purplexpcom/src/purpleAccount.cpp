@@ -266,6 +266,20 @@ NS_IMETHODIMP purpleAccount::Disconnect()
   return NS_OK;
 }
 
+/* purpleIConversation createConversation (in string aName); */
+NS_IMETHODIMP purpleAccount::CreateConversation(const char *aName,
+						purpleIConversation **aResult)
+{
+  PurpleConversation *conv;
+  conv = purple_conversation_new(PURPLE_CONV_TYPE_IM, this->mAccount, aName);
+  if (!conv) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<purpleICoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
+  return pcs->GetConversationById((PRInt32) conv, aResult);
+}
+
 /* readonly attribute string name; */
 NS_IMETHODIMP purpleAccount::GetName(char * *aName)
 {

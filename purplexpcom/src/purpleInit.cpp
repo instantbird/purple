@@ -58,6 +58,7 @@
 #include<nsEmbedString.h>
 #include"purpleConversation.h"
 #include"purpleCoreService.h"
+#include"purpleBuddy.h"
 #include "nsComponentManagerUtils.h"
 #include "nsDirectoryServiceUtils.h"
 #define NS_APP_USER_PROFILE_50_DIR              "ProfD"
@@ -314,6 +315,32 @@ connect_to_accounts_signals()
 #endif
 }
 
+static void buddy_signals(PurpleBuddy *buddy, const char *signal)
+{
+  nsCOMPtr<purpleCoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
+  pcs->FireBuddyEvent(buddy, signal);
+}
+
+#define PURPLE_CONNECT_BUDDY_SIGNAL(aSignal)			\
+  purple_signal_connect(instance, aSignal, &handle,		\
+			PURPLE_CALLBACK(buddy_signals),		\
+			(void *)aSignal)
+
+static void
+connect_to_blist_signals()
+{
+  static int handle;
+  void *instance = purple_blist_get_handle();
+  PURPLE_CONNECT_BUDDY_SIGNAL("buddy-added");
+  //  PURPLE_CONNECT_BUDDY_SIGNAL("buddy-removed");
+  PURPLE_CONNECT_BUDDY_SIGNAL("buddy-signed-on");
+  PURPLE_CONNECT_BUDDY_SIGNAL("buddy-signed-off");
+#ifdef DEBUG_PURPLE_INIT
+  printf("connecting to blist signals\n");
+#endif
+}
+
+
 static void
 received_im_msg(PurpleAccount *account, char *sender, char *message,
 		PurpleConversation *conv, PurpleMessageFlags flags)
@@ -447,6 +474,7 @@ init_libpurple()
 
 	connect_to_connections_signals();
 	connect_to_accounts_signals();
+	connect_to_blist_signals();
  	connect_to_signals_for_demonstration_purposes_only();
 
 	return NS_OK;

@@ -4,12 +4,14 @@
 #include "purpleProtocol.h"
 #include "purplePref.h"
 #include "purpleAccount.h"
+#include "purpleBuddy.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleCoreService);
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleConversation);
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleProtocol);
 NS_GENERIC_FACTORY_CONSTRUCTOR(purplePref);
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleAccount);
+NS_GENERIC_FACTORY_CONSTRUCTOR(purpleBuddy);
 
 static nsModuleComponentInfo components[] =
 {
@@ -42,6 +44,12 @@ static nsModuleComponentInfo components[] =
     PURPLE_ACCOUNT_CID,
     PURPLE_ACCOUNT_CONTRACTID,
     purpleAccountConstructor
+  },
+  {
+    "PURPLE buddy",
+    PURPLE_BUDDY_CID,
+    PURPLE_BUDDY_CONTRACTID,
+    purpleBuddyConstructor
   }
 };
 

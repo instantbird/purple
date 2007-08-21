@@ -5,6 +5,8 @@
 #include<nsIMutableArray.h>
 #include<nsIPrefBranch.h>
 #include<nsCOMPtr.h>
+#include"nsInterfaceHashtable.h"
+#include"purpleBuddy.h"
 
 // very dirty work around for the error:
 // nsStringAPI.h:953: error: size of arg" is negative array
@@ -36,6 +38,8 @@ protected:
   nsCOMArray<purpleConversation> mConversations;
   nsCOMArray<purpleProtocol> mProtocols;
   nsCOMArray<purpleAccount> mAccounts;
+  nsInterfaceHashtable<nsUint32HashKey, purpleBuddy> mBuddiesByPurpleBuddy;
+  nsInterfaceHashtable<nsUint32HashKey, purpleBuddy> mBuddiesById;
 };
 
 #define PURPLE_CORE_SERVICE_CID \
