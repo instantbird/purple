@@ -328,8 +328,8 @@ NS_IMETHODIMP purpleAccount::GetProtocol(purpleIProtocol * *aProtocol)
 {
   PURPLE_ENSURE_INIT(mProtocol)
 
-  NS_ADDREF(mProtocol);
   *aProtocol = mProtocol;
+  NS_ADDREF(*aProtocol);
   return NS_OK;
 }
 
