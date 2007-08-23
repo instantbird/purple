@@ -44,7 +44,10 @@
 #include <glib.h>
 
 #include <string.h>
+
+#ifndef _WIN32
 #include <unistd.h>
+#endif
 
 #include <xpcom-config.h>
 
