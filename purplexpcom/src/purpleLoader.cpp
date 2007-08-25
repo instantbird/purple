@@ -18,7 +18,24 @@ static char const *const kDependentLibraries[] =
   {
     // dependent1.dll on windows, libdependent1.so on linux
 
+#ifdef XP_WIN
+	"zlib1" DLL_SUFFIX,
+	"iconv" DLL_SUFFIX,
+	 "libxml2" DLL_SUFFIX,
+     "intl" DLL_SUFFIX,
+	  "libglib-2.0-0" DLL_SUFFIX,
+      "libgmodule-2.0-0" DLL_SUFFIX,
+	  "libgthread-2.0-0" DLL_SUFFIX,
+       "libpurple" DLL_SUFFIX,
+        "liboscar" DLL_SUFFIX,
+        "libjabber" DLL_SUFFIX,
+		"dnssd" DLL_SUFFIX,
+		"libmeanwhile-1" DLL_SUFFIX,
+		"silc" DLL_SUFFIX,
+		"silcclient" DLL_SUFFIX,
+#else /* not XP_WIN */
     "libpurple" DLL_SUFFIX,
+#endif
 #if 0
     PRPL_PREFIX "autoaccept" DLL_SUFFIX,
     PRPL_PREFIX "buddynote" DLL_SUFFIX,
