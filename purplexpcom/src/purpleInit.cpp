@@ -70,6 +70,7 @@
 #include"purpleCoreService.h"
 #include"purpleBuddy.h"
 #include"purpleMessage.h"
+#include"purpleTimer.h"
 #include "nsComponentManagerUtils.h"
 #include "nsDirectoryServiceUtils.h"
 #define NS_APP_USER_PROFILE_50_DIR              "ProfD"
@@ -135,36 +136,10 @@ static guint glib_input_add(gint fd, PurpleInputCondition condition, PurpleInput
 	return closure->result;
 }
 
-static guint timeout_add(guint interval,
-			 GSourceFunc function, gpointer data)
-{
-  /* FIXME This is an horrible hack to prevent libpurple from writting
-     prefs.xml, blist.xml, status.xml and pounces.xml
-
-     Those files are all written with a callback with a timeout of 5
-     secondes.
-
-     The only other 5 seconds callback in libpurple is in
-     oscar/peers.c and fortunately, it passes a non NULL data pointer.
-  */
-  if (interval == 5000 && data == NULL) {
-    /* assume this is a buddy list, accounts or prefs saving */
-#ifdef DEBUG_PURPLE_INIT
-    printf("TIMEOUT REFUSED\n");
-#endif
-    return 0;
-  }
-#ifdef DEBUG_PURPLE_INIT
-  printf("TIMEOUTADD     %i\n", interval);
-#endif
-  return g_timeout_add(interval, function, data);
-}
-
-
 static PurpleEventLoopUiOps glib_eventloops =
 {
-	timeout_add, /* hack to prevent from writting .xml files to disk */
-	g_source_remove,
+  purpleTimer::AddTimeout, /* hack to prevent from writting .xml files to disk */
+  purpleTimer::CancelTimer,
 	glib_input_add,
 	g_source_remove,
 	NULL,
