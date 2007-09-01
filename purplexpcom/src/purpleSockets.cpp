@@ -40,7 +40,7 @@ purpleSocket::~purpleSocket()
   mFunction = NULL; // if we don't do this, C++ tries to delete the
                     // function
 
-  //  NS_RELEASE(mInternal);
+  NS_RELEASE(mInternal);
 }
 
 NS_IMETHODIMP purpleSocket::Init(PurpleInputFunction aFunction,
@@ -160,7 +160,6 @@ nsresult purpleSocketInternal::PostEvent()
   nsCOMPtr<nsIEventTarget> eventTarget = do_QueryInterface(purpleSocketWatcher::getSts(), &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_ADDREF(static_cast<nsIRunnable *>(this));
   rv = eventTarget->Dispatch(this, NS_DISPATCH_NORMAL);
 #ifdef DEBUG_PURPLE_SOCKET
   if (NS_FAILED(rv))
