@@ -1,0 +1,21 @@
+#include "nsISupports.idl"
+
+/* 
+ * This is a proxy for purpleSocket so that it can be called from the
+ * socket thread.
+ */
+
+native purpleInputFunction(PurpleInputFunction);
+native gpointer(gpointer);
+native purpleInputCondition(PurpleInputCondition);
+
+[uuid(ebbf2a86-6378-4d4d-8f0a-8f7544a876b2)]
+interface purpleISocket: nsISupports {
+  void notifyLibPurple(in short aPollFlags, in short aOutFlags);
+  long Init(in purpleInputFunction aFunction,
+            in gpointer aData,
+            in long aFd,
+            in purpleInputCondition aCondition);
+  readonly attribute unsigned long id;
+  void cancel();
+};

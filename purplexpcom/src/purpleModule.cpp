@@ -6,6 +6,7 @@
 #include "purpleAccount.h"
 #include "purpleBuddy.h"
 #include "purpleMessage.h"
+#include "purpleSockets.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleCoreService);
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleConversation);
@@ -14,6 +15,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(purplePref);
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleAccount);
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleBuddy);
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleMessage);
+NS_GENERIC_FACTORY_CONSTRUCTOR(purpleSocket);
 
 static nsModuleComponentInfo components[] =
 {
@@ -58,6 +60,12 @@ static nsModuleComponentInfo components[] =
     PURPLE_MESSAGE_CID,
     PURPLE_MESSAGE_CONTRACTID,
     purpleMessageConstructor
+  },
+  {
+    "PURPLE socket",
+    PURPLE_SOCKET_CID,
+    PURPLE_SOCKET_CONTRACTID,
+    purpleSocketConstructor
   }
 };
 
