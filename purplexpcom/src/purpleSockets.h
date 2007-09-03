@@ -7,13 +7,9 @@
 #undef HAVE_CPP_2BYTE_WCHAR_T
 #include<nsStringAPI.h>
 #include"purpleISocket.h"
+#include "include/nsSocketTransportService2.h"
 
 //#define DEBUG_PURPLE_SOCKET
-
-class nsASocketHandler;
-struct PRFileDesc;
-
-#include "include/nsSocketTransportService2.h"
 
 // 2e8f828f-2b2f-4a82-9efe-3cf8d983fbbf
 #define PURPLE_SOCKET_CID \
