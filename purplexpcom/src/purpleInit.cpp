@@ -23,6 +23,10 @@
 #define CUSTOM_PLUGIN_PATH     "libraries/prpl"
 #define PLUGIN_SAVE_PREF       "/purple/nullclient/plugins/saved"
 
+#ifdef XP_WIN
+# define _USE_32BIT_TIME_T
+#endif
+
 #include <libpurple/account.h>
 #include <libpurple/accountopt.h>
 #include <libpurple/conversation.h>

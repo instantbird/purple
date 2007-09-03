@@ -1,6 +1,10 @@
 #ifndef PURPLE_MESSAGE_H_
 #define PURPLE_MESSAGE_H_
 
+#ifdef XP_WIN
+# define _USE_32BIT_TIME_T
+#endif
+
 #include "purpleIMessage.h"
 #include <libpurple/conversation.h>
 // very dirty work around for the error:
