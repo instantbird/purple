@@ -1,7 +1,7 @@
 #include<nsCOMPtr.h>
 #include "nsTArray.h"
 #include <glib.h>
-#include"nsITimer.h"
+#include"include/nsITimer.h"
 
 struct purpleTimeout
 {
