@@ -81,12 +81,16 @@
 #include "nsComponentManagerUtils.h"
 #include "nsDirectoryServiceUtils.h"
 #define NS_APP_USER_PROFILE_50_DIR              "ProfD"
+#define NS_XPCOM_CURRENT_PROCESS_DIR            "XCurProcD"
 
-//#include "defines.h"
 //#define DEBUG_PURPLE_INIT
-//#define DEBUG_PURPLE
+//#define DEBUG_PURPLE_STDERR
+//#define DEBUG_PURPLE_CONSOLE
+#ifdef DEBUG_PURPLE_CONSOLE
+# include "include/nsIConsoleService.h"
+#endif
 
-static PurpleEventLoopUiOps glib_eventloops =
+static PurpleEventLoopUiOps eventloops =
 {
   purpleTimer::AddTimeout, /* hack to prevent from writting .xml files to disk */
   purpleTimer::CancelTimer,
@@ -306,11 +310,24 @@ connect_to_signals_for_demonstration_purposes_only()
 #endif
 }
 
-#if defined(XP_WIN) && defined(DEBUG_PURPLE)
+#ifdef DEBUG_PURPLE_CONSOLE
 static void debug_print(PurpleDebugLevel level, const char *category,
 			const char *arg)
 {
+# ifdef DEBUG_PURPLE_INIT
   printf("pp-%s: %s", category, arg);
+# endif
+  nsCOMPtr<nsIConsoleService> consoleService = 
+    do_GetService( "@mozilla.org/consoleservice;1" );
+
+  nsCString message(category);
+  message.Append(": ");
+  message.Append(arg);
+
+  nsString msg;
+  NS_CStringToUTF16(message, NS_CSTRING_ENCODING_UTF8, msg);
+
+  consoleService->LogStringMessage(msg.get());
 }
 
 static gboolean debug_enabled(PurpleDebugLevel level,
@@ -319,7 +336,7 @@ static gboolean debug_enabled(PurpleDebugLevel level,
   return true;
 }
 
-static PurpleDebugUiOps debuguiops = {
+static PurpleDebugUiOps debugconsoleuiops = {
   debug_print,
   debug_enabled,
   NULL,NULL,NULL,NULL
@@ -380,12 +397,12 @@ init_libpurple()
   /* Set the instantbird profile folder as libpurple custom user
      directory */
 
-  nsCOMPtr<nsIFile> profileFolder;
+  nsCOMPtr<nsIFile> folder;
   nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-				       getter_AddRefs(profileFolder));
+				       getter_AddRefs(folder));
   NS_ENSURE_SUCCESS(rv, rv);
   nsCString path;
-  rv = profileFolder->GetNativePath(path);
+  rv = folder->GetNativePath(path);
   NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef DEBUG_PURPLE_INIT
@@ -393,11 +410,10 @@ init_libpurple()
 #endif
   purple_util_set_user_dir(path.get());
 
-	/* We do not want any debugging for now to keep the noise to a minimum. */
-#ifdef DEBUG_PURPLE
-	purple_debug_set_enabled(TRUE);
+#ifdef DEBUG_PURPLE_STDOUT
+  purple_debug_set_enabled(TRUE);
 #else
-	purple_debug_set_enabled(FALSE);
+  purple_debug_set_enabled(FALSE);
 #endif
 
 	/* Set the core-uiops, which is used to
@@ -408,39 +424,44 @@ init_libpurple()
 	 */
 	purple_core_set_ui_ops(&null_core_uiops);
 
-#if defined(XP_WIN) && defined(DEBUG_PURPLE)
-	purple_debug_set_ui_ops(&debuguiops);
+#ifdef DEBUG_PURPLE_CONSOLE
+  purple_debug_set_ui_ops(&debugconsoleuiops);
 #endif
 
 #ifdef PURPLE_MOZ_DNS
-	purple_dnsquery_set_ui_ops(&dnsUiOps);
+  purple_dnsquery_set_ui_ops(&dnsUiOps);
 #endif
 
-	/* Set the uiops for the eventloop. If your client is glib-based, you can safely
-	 * copy this verbatim. */
-	purple_eventloop_set_ui_ops(&glib_eventloops);
+  /* The eventloop uiops use nsTimer and
+   * nsSocketTransportService. purpleTimer and purpleSocket are proxy
+   * so that we can have the right prototypes for libpurple.
+   */
+  purple_eventloop_set_ui_ops(&eventloops);
 
-	/* Set path to search for plugins. The core (libpurple) takes care of loading the
-	 * core-plugins, which includes the protocol-plugins. So it is not essential to add
-	 * any path here, but it might be desired, especially for ui-specific plugins. */
-	purple_plugins_add_search_path(CUSTOM_PLUGIN_PATH);
+  /* Add CUSTOM_PLUGIN_PATH as search folder. On some plateform (for
+   * example MACOSX), we can't hope that the current working directory
+   * of libpurple will be set to a correct folder, so we need to find
+   * the absolute path ourselves
+   */
+  rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR,
+                              getter_AddRefs(folder));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = folder->GetNativePath(path);
+  NS_ENSURE_SUCCESS(rv, rv);
+  path.Append("/");
+  path.Append(CUSTOM_PLUGIN_PATH);
+  purple_plugins_add_search_path(path.get());
 
+  /* Here "instantbird" stands for the UI_ID. libpurple
+   * sometimes need this id (for example for some plugins and
+   * some preferences)
+   */
+  if (!purple_core_init("instantbird")) {
 #ifdef DEBUG_PURPLE_INIT
-	printf("before purple_core_init\n");
+    printf("purple_core_init failed!!!\n");
 #endif
-	/* Now that all the essential stuff has been set, let's try to init the core. It's
-	 * necessary to provide a non-NULL name for the current ui to the core. This name
-	 * is used by stuff that depends on this ui, for example the ui-specific plugins. */
-	if (!purple_core_init(UI_ID)) {
-		/* Initializing the core failed. Terminate. */
-		fprintf(stderr,
-				"libpurple initialization failed. Dumping core.\n"
-				"Please report this!\n");
-		return NS_ERROR_FAILURE;
-	}
-#ifdef DEBUG_PURPLE_INIT
-	printf("after purple_core_init\n");
-#endif
+    return NS_ERROR_FAILURE;
+  }
 
  	/* Create and load the buddylist. */
  	purple_set_blist(purple_blist_new());
@@ -451,10 +472,6 @@ init_libpurple()
 	purple_prefs_set_bool("/purple/logging/log_ims", TRUE);
 	purple_prefs_set_bool("/purple/logging/log_chats", TRUE);
 	purple_prefs_set_bool("/purple/logging/log_system", TRUE);
-
-// 	/* Load the desired plugins. The client should save the list of loaded plugins in
-// 	 * the preferences using purple_plugins_save_loaded(PLUGIN_SAVE_PREF) */
-// 	purple_plugins_load_saved(PLUGIN_SAVE_PREF);
 
 // 	/* Load the pounces. */
 // 	purple_pounces_load();

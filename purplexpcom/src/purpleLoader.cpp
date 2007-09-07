@@ -2,6 +2,9 @@
 #include "nsModule.h"
 #include "prlink.h"
 #include "nsILocalFile.h"
+#ifdef XP_MACOSX
+# include <mach-o/dyld.h>
+#endif
 
 // very dirty work around for the error:
 // nsStringAPI.h:953: error: size of arg" is negative array
@@ -33,37 +36,22 @@ static char const *const kDependentLibraries[] =
 		"libmeanwhile-1" DLL_SUFFIX,
 		"silc" DLL_SUFFIX,
 		"silcclient" DLL_SUFFIX,
-#else /* not XP_WIN */
-    "libpurple" DLL_SUFFIX,
 #endif
-#if 0
-    PRPL_PREFIX "autoaccept" DLL_SUFFIX,
-    PRPL_PREFIX "buddynote" DLL_SUFFIX,
-    PRPL_PREFIX "dbus-example" DLL_SUFFIX,
-    PRPL_PREFIX "idle" DLL_SUFFIX,
-    PRPL_PREFIX "joinpart" DLL_SUFFIX,
-    PRPL_PREFIX "liboscar" DLL_SUFFIX,
-    PRPL_PREFIX "libaim" DLL_SUFFIX,
-    PRPL_PREFIX "libgg" DLL_SUFFIX,
-    PRPL_PREFIX "libicq" DLL_SUFFIX,
-    PRPL_PREFIX "libirc" DLL_SUFFIX,
-    PRPL_PREFIX "libjabber" DLL_SUFFIX,
-    PRPL_PREFIX "libmsn" DLL_SUFFIX,
-    PRPL_PREFIX "libnovell" DLL_SUFFIX,
-    PRPL_PREFIX "libqq" DLL_SUFFIX,
-    PRPL_PREFIX "libsilcpurple" DLL_SUFFIX,
-    PRPL_PREFIX "libsimple" DLL_SUFFIX,
-    PRPL_PREFIX "libxmpp" DLL_SUFFIX,
-    PRPL_PREFIX "libyahoo" DLL_SUFFIX,
-    PRPL_PREFIX "libzephyr" DLL_SUFFIX,
-    PRPL_PREFIX "log_reader" DLL_SUFFIX,
-    PRPL_PREFIX "newline" DLL_SUFFIX,
-    PRPL_PREFIX "offlinemsg" DLL_SUFFIX,
-    PRPL_PREFIX "psychic" DLL_SUFFIX,
-    PRPL_PREFIX "ssl-gnutls" DLL_SUFFIX,
-    PRPL_PREFIX "ssl-nss" DLL_SUFFIX,
-    PRPL_PREFIX "ssl" DLL_SUFFIX,
-    PRPL_PREFIX "statenotify" DLL_SUFFIX,
+#ifdef XP_MACOSX
+    DLL_PREFIX "z.1" DLL_SUFFIX,
+    DLL_PREFIX "iconv.2" DLL_SUFFIX,
+    DLL_PREFIX "xml2.2" DLL_SUFFIX,
+    DLL_PREFIX "intl.8" DLL_SUFFIX,
+    DLL_PREFIX "glib-2.0.0" DLL_SUFFIX,
+    DLL_PREFIX "gobject-2.0.0" DLL_SUFFIX,
+    DLL_PREFIX "gmodule-2.0.0" DLL_SUFFIX,
+    DLL_PREFIX "gthread-2.0.0" DLL_SUFFIX,
+    DLL_PREFIX "purple" DLL_SUFFIX,
+    DLL_PREFIX "jabber.0" DLL_SUFFIX,
+    DLL_PREFIX "oscar.0" DLL_SUFFIX,
+#endif
+#if !(defined(XP_WIN)) && !(defined(XP_MACOSX))
+    DLL_PREFIX "purple" DLL_SUFFIX,
 #endif
   nsnull
 
@@ -117,21 +105,33 @@ NSGetModule(nsIComponentManager* aCompMgr,
       printf("found ");
 #endif
 
+#ifdef XP_MACOSX
+# ifdef DEBUG_PURPLE_LOADER
+    void* lib = 
+# endif
+      (void *) NSAddImage(pathName.get(),
+                          NSADDIMAGE_OPTION_RETURN_ON_ERROR |
+                          NSADDIMAGE_OPTION_MATCH_FILENAME_BY_INSTALLNAME);
+# ifdef DEBUG_PURPLE_LOADER
+    printf(lib ? "ok\n" : "KO\n");
+# endif
+#else // not XP_MACOSX
     PRLibSpec libSpec;
     libSpec.type = PR_LibSpec_Pathname;
     libSpec.value.pathname = pathName.get();
 
-#ifdef DEBUG_PURPLE_LOADER
+# ifdef DEBUG_PURPLE_LOADER
     PRLibrary *lib = 
-#endif
+# endif
       PR_LoadLibraryWithFlags(libSpec, PR_LD_NOW|PR_LD_GLOBAL);
     //    rv = library->Load(&lib);
-#ifdef DEBUG_PURPLE_LOADER
+# ifdef DEBUG_PURPLE_LOADER
     rv = lib ? NS_OK : NS_ERROR_FAILURE;
     if (NS_FAILED(rv))
       printf("KO\n");
     else
       printf("ok\n");
+# endif
 #endif
     // 1) We don't care if this failed!
     // 2) We are going to leak this library. We don't care about that either.
