@@ -103,6 +103,44 @@ static PurpleEventLoopUiOps eventloops =
 };
 /*** End of the eventloop functions. ***/
 
+/*** Connection uiops ***/
+static void setAccountConnectionStateMsg(PurpleConnection *gc, const char *text,
+                                         const char *aEvent)
+{
+  nsCOMPtr<purpleCoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
+  nsCOMPtr<purpleIAccount> account;
+  nsresult rv = pcs->GetAccountByPurpleAccount(purple_connection_get_account(gc),
+                                               getter_AddRefs(account));
+  if (NS_FAILED(rv)) {
+    return;
+  }
+  account->SetConnectionStateMsg(text);
+  pcs->NotifyObservers(account, aEvent);
+}
+
+static void connect_progress(PurpleConnection *gc, const char *text,
+                             size_t step, size_t step_count)
+{
+  setAccountConnectionStateMsg(gc, text, "account-connect-progress");
+}
+
+static void report_disconnect(PurpleConnection *gc, const char *text)
+{
+  setAccountConnectionStateMsg(gc, text, "account-connect-error");
+}
+
+PurpleConnectionUiOps connection_uiops = {
+  connect_progress,
+  NULL, /* connected */
+  NULL, /* disconnected */
+  NULL, /* notice = dead code ? */
+  report_disconnect,
+  NULL, /* network_connected */
+  NULL, /* network_disconnected */
+
+  NULL, NULL, NULL, NULL
+};
+
 /*** Conversation uiops ***/
 static void
 null_create_conv(PurpleConversation *aConv)
@@ -410,7 +448,7 @@ init_libpurple()
 #endif
   purple_util_set_user_dir(path.get());
 
-#ifdef DEBUG_PURPLE_STDOUT
+#ifdef DEBUG_PURPLE_STDERR
   purple_debug_set_enabled(TRUE);
 #else
   purple_debug_set_enabled(FALSE);
@@ -423,6 +461,8 @@ init_libpurple()
 	 * 	- uninitialize the ui components for all the modules when the core terminates.
 	 */
 	purple_core_set_ui_ops(&null_core_uiops);
+
+  purple_connections_set_ui_ops(&connection_uiops);
 
 #ifdef DEBUG_PURPLE_CONSOLE
   purple_debug_set_ui_ops(&debugconsoleuiops);

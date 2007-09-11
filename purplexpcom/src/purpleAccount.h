@@ -58,6 +58,7 @@ private:
 
 protected:
   /* additional members */
+  nsCString mConnectionStateMsg;
 };
 
 #endif /* !PURPLE_ACCOUNT_H_ */

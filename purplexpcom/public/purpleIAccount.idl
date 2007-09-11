@@ -36,6 +36,7 @@ interface purpleIAccount: nsISupports {
   // FIXME proxy info
 
   /* Info about the connection state and flags */
+  attribute string connectionStateMsg;
 
   /* From PurpleAccount */
   readonly attribute boolean disconnecting;

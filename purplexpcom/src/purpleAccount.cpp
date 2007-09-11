@@ -459,6 +459,19 @@ PURPLE_IMPL_SETPREF(Int, Int, PRInt32)
 // nsresult purpleAccount::SetStringPref(const char *aName, const char *aValue)
 PURPLE_IMPL_SETPREF(String, Char, const char *)
 
+
+/* attribute string connectionStateMsg; */
+NS_IMETHODIMP purpleAccount::GetConnectionStateMsg(char * *aConnectionStateMsg)
+{
+  return returnString(aConnectionStateMsg, mConnectionStateMsg.get());
+}
+NS_IMETHODIMP purpleAccount::SetConnectionStateMsg(const char * aConnectionStateMsg)
+{
+  mConnectionStateMsg = aConnectionStateMsg;
+  return NS_OK;
+}
+
+
 #define PURPLE_IMPL_GETBOOL(aName, aVal)			\
   NS_IMETHODIMP purpleAccount::Get##aName(PRBool *a##aName)	\
   {								\
