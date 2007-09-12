@@ -72,6 +72,8 @@
 #undef HAVE_CPP_2BYTE_WCHAR_T
 #include<nsStringAPI.h>
 #include<nsEmbedString.h>
+#include<nsIPromptService.h>
+#include"include/nsIStringBundle.h"
 #include"purpleConversation.h"
 #include"purpleCoreService.h"
 #include"purpleBuddy.h"
@@ -137,6 +139,84 @@ PurpleConnectionUiOps connection_uiops = {
   report_disconnect,
   NULL, /* network_connected */
   NULL, /* network_disconnected */
+
+  NULL, NULL, NULL, NULL
+};
+
+/*** Account uiops ***/
+typedef void (*GCallback) (void);
+
+static void *request_authorize(PurpleAccount *account, const char *remote_user,
+                               const char *id, const char *alias,
+                               const char *message, gboolean on_list, 
+                               PurpleAccountRequestAuthorizationCb authorize_cb,
+                               PurpleAccountRequestAuthorizationCb deny_cb,
+                               void *user_data)
+{
+  nsresult rv;
+  nsCOMPtr<nsIPromptService> promptService =
+    do_GetService("@mozilla.org/embedcomp/prompt-service;1", &rv);
+  NS_ENSURE_SUCCESS(rv, NULL);
+
+  nsCOMPtr<nsIStringBundleService> bundleService =
+    do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, NULL);
+
+  nsCOMPtr<nsIStringBundle> stringBundle;
+  rv = bundleService->CreateBundle("chrome://instantbird/locale/accounts.properties",
+                                   getter_AddRefs(stringBundle));
+  NS_ENSURE_SUCCESS(rv, NULL);
+
+  nsString title;
+  rv = stringBundle->GetStringFromName(NS_LITERAL_STRING("requestAuthorizeTitle").get(),
+                                       getter_Copies(title));
+  NS_ENSURE_SUCCESS(rv, NULL);
+
+  nsString allow;
+  rv = stringBundle->GetStringFromName(NS_LITERAL_STRING("requestAuthorizeAllow").get(),
+                                       getter_Copies(allow));
+  NS_ENSURE_SUCCESS(rv, NULL);
+
+  nsString deny;
+  rv = stringBundle->GetStringFromName(NS_LITERAL_STRING("requestAuthorizeDeny").get(),
+                                       getter_Copies(deny));
+  NS_ENSURE_SUCCESS(rv, NULL);
+
+  nsCString cRemoteUser(remote_user);
+  nsString who;
+  NS_CStringToUTF16(cRemoteUser, NS_CSTRING_ENCODING_UTF8, who);
+  const PRUnichar *whoFlat = who.get();
+
+  nsString msg;
+  rv = stringBundle->FormatStringFromName(NS_LITERAL_STRING("requestAuthorizeText").get(),
+                                          &whoFlat, 1, getter_Copies(msg));
+
+  PRInt32 result;
+  PRUint32 flags = (nsIPromptService::BUTTON_POS_0 +
+                    nsIPromptService::BUTTON_POS_1) *
+                   nsIPromptService::BUTTON_TITLE_IS_STRING;
+  promptService->ConfirmEx(nsnull, title.get(), msg.get(), flags, allow.get(),
+                           deny.get(), nsnull, nsnull, nsnull, &result);
+  NS_ENSURE_SUCCESS(rv, NULL);
+
+  if (result) {
+    // Index 1 means "deny"
+    deny_cb(user_data);
+  }
+  else {
+    authorize_cb(user_data);
+    //FIXME Prompt to add to blist
+  }
+
+  return NULL;
+}
+
+PurpleAccountUiOps account_uiops = {
+  NULL, /* notify_added, nearly dead code ? */
+  NULL, /* status_changed */
+  NULL, /* request_add, nearly dead */
+  request_authorize,
+  NULL, /* close_account_request --> FIXME */
 
   NULL, NULL, NULL, NULL
 };
@@ -463,6 +543,7 @@ init_libpurple()
 	purple_core_set_ui_ops(&null_core_uiops);
 
   purple_connections_set_ui_ops(&connection_uiops);
+  purple_accounts_set_ui_ops(&account_uiops);
 
 #ifdef DEBUG_PURPLE_CONSOLE
   purple_debug_set_ui_ops(&debugconsoleuiops);
