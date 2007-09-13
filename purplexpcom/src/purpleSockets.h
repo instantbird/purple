@@ -1,4 +1,5 @@
 #include<nsCOMPtr.h>
+#include"include/nsAutoPtr.h"
 #include "nsTArray.h"
 #include <glib.h>
 #include <libpurple/eventloop.h>
@@ -69,7 +70,7 @@ class purpleSocket : public purpleISocket
   PurpleInputFunction mFunction;
   gpointer mData;
   PurpleInputCondition mCondition;
-  purpleSocketInternal *mInternal;
+  nsRefPtr<purpleSocketInternal> mInternal;
 #ifdef DEBUG_PURPLE_SOCKET
   static PRUint32 sInstances;
 #endif

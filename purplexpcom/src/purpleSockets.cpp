@@ -36,10 +36,7 @@ purpleSocket::~purpleSocket()
 #ifdef DEBUG_PURPLE_SOCKET
   printf("[%i] destructing purpleSocket [remains: %u]\n", mId, --sInstances);
 #endif
-  mFunction = NULL; // if we don't do this, C++ tries to delete the
-                    // function
-
-  NS_RELEASE(mInternal);
+  mFunction = NULL; // if we don't do this, C++ tries to delete the function
 }
 
 NS_IMETHODIMP purpleSocket::Init(PurpleInputFunction aFunction,
@@ -74,9 +71,8 @@ NS_IMETHODIMP purpleSocket::Init(PurpleInputFunction aFunction,
 #ifdef DEBUG_PURPLE_SOCKET
   mInternal = new purpleSocketInternal(mId);
 #else
-  mInternal = new purpleSocketInternal();
+  NS_NEWXPCOM(mInternal, purpleSocketInternal);
 #endif
-  NS_ADDREF(mInternal);
   return mInternal->Init(PR_CreateSocketPollFd(mFd), proxy, pollFlags);
 }
 
