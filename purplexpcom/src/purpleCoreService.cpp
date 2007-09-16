@@ -10,7 +10,7 @@
 #include<nsServiceManagerUtils.h>
 #include<nsComponentManagerUtils.h>
 #include<nsIObserverService.h>
-#include<nsIPrefService.h>
+#include<pref/nsIPrefService.h>
 #include<nsCOMPtr.h>
 #include<nsCRTGlue.h>
 #include<stdio.h>

@@ -1,6 +1,6 @@
 #include<nsCOMPtr.h>
-#include"include/nsAutoPtr.h"
-#include "nsTArray.h"
+#include<nsAutoPtr.h>
+#include <nsTArray.h>
 #include <glib.h>
 #include <libpurple/eventloop.h>
 // very dirty work around for the error:
@@ -8,7 +8,7 @@
 #undef HAVE_CPP_2BYTE_WCHAR_T
 #include<nsStringAPI.h>
 #include"purpleISocket.h"
-#include "include/nsSocketTransportService2.h"
+#include<necko/nsSocketTransportService2.h>
 
 //#define DEBUG_PURPLE_SOCKET
 

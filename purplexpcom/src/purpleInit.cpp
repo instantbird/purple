@@ -63,8 +63,8 @@
 
 #ifdef PURPLE_MOZ_DNS
 # include <libpurple/dnsquery.h>
-# include"include/nsIDNSService.h"
-# include"include/nsIDNSRecord.h"
+# include<necko/nsIDNSService.h>
+# include<necko/nsIDNSRecord.h>
 # include<prio.h>
 #endif
 // very dirty work around for the error:
@@ -72,8 +72,8 @@
 #undef HAVE_CPP_2BYTE_WCHAR_T
 #include<nsStringAPI.h>
 #include<nsEmbedString.h>
-#include<nsIPromptService.h>
-#include"include/nsIStringBundle.h"
+#include<windowwatcher/nsIPromptService.h>
+#include<intl/nsIStringBundle.h>
 #include"purpleConversation.h"
 #include"purpleCoreService.h"
 #include"purpleBuddy.h"
@@ -89,7 +89,7 @@
 //#define DEBUG_PURPLE_STDERR
 //#define DEBUG_PURPLE_CONSOLE
 #ifdef DEBUG_PURPLE_CONSOLE
-# include "include/nsIConsoleService.h"
+# include <nsIConsoleService.h>
 #endif
 
 static PurpleEventLoopUiOps eventloops =

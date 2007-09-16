@@ -3,7 +3,6 @@
 #include "purpleICoreService.h"
 #include "purpleConversation.h"
 #include<nsIMutableArray.h>
-#include<nsIPrefBranch.h>
 #include<nsCOMPtr.h>
 #include"nsInterfaceHashtable.h"
 #include"purpleBuddy.h"

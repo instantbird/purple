@@ -1,7 +1,7 @@
 #include "purpleAccount.h"
 #include "purpleUtils.h"
 #include "purpleCoreService.h"
-#include <nsIPrefService.h>
+#include <pref/nsIPrefService.h>
 #include <nsServiceManagerUtils.h>
 
 NS_IMPL_ISUPPORTS1(purpleAccount, purpleIAccount)

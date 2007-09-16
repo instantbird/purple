@@ -2,7 +2,7 @@
 #include <private/pprio.h>
 #include<nsComponentManagerUtils.h>
 #include<nsServiceManagerUtils.h>
-#include"include/nsIProxyObjectManager.h"
+#include<nsIProxyObjectManager.h>
 
 //#define DEBUG_PURPLE_SOCKET <-- Should be defined in purpleSockets.h
 //because there are additionnal fields when it's defined
