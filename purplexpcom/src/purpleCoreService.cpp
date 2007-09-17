@@ -2,6 +2,7 @@
 #include "purpleProtocol.h"
 #include "purpleBuddy.h"
 #include "purpleUtils.h"
+#include "purpleStorage.h"
 #include "nsXPCOM.h"
 #include <glib.h>
 #include <libpurple/core.h>
@@ -10,6 +11,7 @@
 #include<nsServiceManagerUtils.h>
 #include<nsComponentManagerUtils.h>
 #include<nsIObserverService.h>
+#include <nsIConsoleService.h>
 #include<pref/nsIPrefService.h>
 #include<nsCOMPtr.h>
 #include<nsCRTGlue.h>
@@ -365,18 +367,49 @@ NS_IMETHODIMP purpleCoreService::CreateAccount(const char *name,
 					  getter_Copies(accountList));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  /* Prepare the statement that will be used to check that the key
+     isn't already used in the database */
+  purpleStorage *storageInstance = purpleStorage::GetInstance();
+  NS_ENSURE_TRUE(storageInstance, NS_ERROR_OUT_OF_MEMORY);
+
+  mozIStorageConnection *DBConn = storageInstance->GetConnection();
+  nsCOMPtr<mozIStorageStatement> statement;
+  rv = DBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT id FROM accounts WHERE id = ?1"),
+    getter_AddRefs(statement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   /* First get a new unique account key */
   nsCString key;
   PRInt32 i = 1;
   PRBool found = PR_FALSE;
   do {
-    key = "account";
-    key.AppendInt(i++);
+    key = ACCOUNT_KEY;
+    key.AppendInt(i);
     for (PRInt32 j = mAccounts.Count() - 1; j >= 0; --j) {
       if ((found = mAccounts[j]->GetKey().Equals(key))) {
 	break;
       }
     }
+    if (!found) {
+      /* We have found a key that isn't used in the pref, double check
+         it isn't already saved in the sqlite database. This should
+         never happen. */
+      statement->BindInt32Parameter(0, i);
+      rv = statement->ExecuteStep(&found);
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (found) {
+        /* This should never happen so log a string to the error console */
+        nsCOMPtr<nsIConsoleService> consoleService = 
+          do_GetService( "@mozilla.org/consoleservice;1" );
+
+        nsString msg(NS_LITERAL_STRING("No account "));
+        msg.AppendInt(i);
+        msg.Append(NS_LITERAL_STRING(" but there is some data in the buddy list for an account with this number. Your profile may be corrupted."));
+        consoleService->LogStringMessage(msg.get());
+      }
+    }
+    ++i;
   } while (found);
 
   /* Get the prpl */

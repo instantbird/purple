@@ -23,6 +23,8 @@
 #define PURPLE_ACCOUNT_CONTRACTID \
     "@instantbird.org/purple/account;1"
 
+#define ACCOUNT_KEY "account"
+
 class purpleAccount : public purpleIAccount
 {
 public:
@@ -44,6 +46,9 @@ private:
   ~purpleAccount();
   inline void SetId(const nsCString& aId);
   inline nsresult GetPrefBranch();
+  nsresult ensureStored(const nsCString& aName, const nsCString& aPrpl);
+  nsresult storeAccount(PRUint32 aKey, const nsCString& aName, const nsCString& aPrpl);
+  nsresult unstoreAccount();
   nsresult SetBoolPref(const char *aName, PRBool aValue);
   nsresult SetIntPref(const char *aName, PRInt32 aValue);
   nsresult SetStringPref(const char *aName, const char *aValue);

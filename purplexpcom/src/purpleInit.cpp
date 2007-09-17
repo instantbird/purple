@@ -82,8 +82,8 @@
 #include"purpleSockets.h"
 #include "nsComponentManagerUtils.h"
 #include "nsDirectoryServiceUtils.h"
-#define NS_APP_USER_PROFILE_50_DIR              "ProfD"
-#define NS_XPCOM_CURRENT_PROCESS_DIR            "XCurProcD"
+#include "nsAppDirectoryServiceDefs.h"
+#include "nsDirectoryServiceDefs.h"
 
 //#define DEBUG_PURPLE_INIT
 //#define DEBUG_PURPLE_STDERR

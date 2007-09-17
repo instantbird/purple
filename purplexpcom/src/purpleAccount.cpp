@@ -1,8 +1,11 @@
 #include "purpleAccount.h"
 #include "purpleUtils.h"
 #include "purpleCoreService.h"
+#include "purpleStorage.h"
 #include <pref/nsIPrefService.h>
+#include <storage/mozStorageHelper.h>
 #include <nsServiceManagerUtils.h>
+#include <prprf.h>
 
 NS_IMPL_ISUPPORTS1(purpleAccount, purpleIAccount)
 
@@ -65,27 +68,39 @@ PURPLE_IMPL_GETPREF(Bool, bool, PRBool)
 PURPLE_IMPL_GETPREF(Char, string, char *)
 PURPLE_IMPL_GETPREF(Int, int, PRInt32)
 
-nsresult purpleAccount::create(const char *name, purpleProtocol *prpl,
+nsresult purpleAccount::create(const char *aName, purpleProtocol *aPrpl,
 			       const nsCString& aKey)
 {
-  NS_ENSURE_ARG_POINTER(prpl);
-  if (!name || !*name)
+  NS_ENSURE_ARG_POINTER(aPrpl);
+  if (!aName || !*aName)
     return NS_ERROR_UNEXPECTED;
 
-  mAccount = purple_account_new(name, prpl->GetId());
+  mAccount = purple_account_new(aName, aPrpl->GetId());
   if (!mAccount) {
     return NS_ERROR_FAILURE;
   }
 
   SetId(aKey);
-  mProtocol = prpl;
+  mProtocol = aPrpl;
 
   nsresult rv = GetPrefBranch();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mPrefBranch->SetCharPref(PREF_NAME, name);
-  mPrefBranch->SetCharPref(PREF_PRPL, prpl->GetId());
-  return NS_OK;
+  mPrefBranch->SetCharPref(PREF_NAME, aName);
+  mPrefBranch->SetCharPref(PREF_PRPL, aPrpl->GetId());
+
+  PRUint32 key;
+  if (PR_sscanf(aKey.get(), ACCOUNT_KEY "%u", &key) != 1) {
+    mPrefBranch->DeleteBranch("");
+    return NS_ERROR_UNEXPECTED;
+  }
+  nsCString name(aName);
+  nsCString prpl(aPrpl->GetId());
+  rv = storeAccount(key, name, prpl);
+  if (NS_FAILED(rv)) {
+    mPrefBranch->DeleteBranch("");
+  }
+  return rv;
 }
 
 nsresult purpleAccount::load(const nsCString& aKey)
@@ -117,6 +132,9 @@ nsresult purpleAccount::load(const nsCString& aKey)
 #ifdef DEBUG_PURPLE_ACCOUNT
   printf("prpl = %s\n", prpl.get());
 #endif
+
+  rv = ensureStored(name, prpl);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   /* Init the mProtocol member */
   nsCOMPtr<purpleICoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
@@ -206,6 +224,113 @@ nsresult purpleAccount::load(const nsCString& aKey)
   return NS_OK;
 }
 
+nsresult purpleAccount::ensureStored(const nsCString& aName, const nsCString& aPrpl)
+{
+  PRUint32 key;
+  if (PR_sscanf(mKey.get(), ACCOUNT_KEY "%u", &key) != 1) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  purpleStorage *storageInstance = purpleStorage::GetInstance();
+  NS_ENSURE_TRUE(storageInstance, NS_ERROR_OUT_OF_MEMORY);
+
+  mozIStorageStatement *statement = storageInstance->mEnsureAccountStoredStatement;
+  mozStorageStatementScoper scoper(statement);
+  nsresult rv = statement->BindInt32Parameter(0, key);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool hasMoreData;
+  while (NS_SUCCEEDED(statement->ExecuteStep(&hasMoreData)) && hasMoreData) {
+    nsCString name;
+    rv = statement->GetUTF8String(0, name);
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCString prpl;
+    rv = statement->GetUTF8String(1, prpl);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!name.Equals(aName) || !prpl.Equals(aPrpl)) {
+#ifdef DEBUG_PURPLE_ACCOUNT
+      printf("checking account %u failed\n", key);
+      printf(" aName = %s; name = %s\n", aName.get(), name.get());
+      printf(" aPrpl = %s; prpl = %s\n", aPrpl.get(), prpl.get());
+#endif
+      return NS_ERROR_FAILURE;
+    }
+
+#ifdef DEBUG_PURPLE_ACCOUNT
+    printf("checking account (%u, %s, %s) OK\n", key, name.get(), prpl.get());
+#endif
+    return NS_OK;
+  }
+
+#ifdef DEBUG_PURPLE_ACCOUNT
+  printf("account not found in mozStorage\n");
+#endif
+
+  return storeAccount(key, aName, aPrpl);
+}
+
+nsresult purpleAccount::storeAccount(PRUint32 aKey, const nsCString& aName, const nsCString& aPrpl)
+{
+  purpleStorage *storageInstance = purpleStorage::GetInstance();
+  NS_ENSURE_TRUE(storageInstance, NS_ERROR_OUT_OF_MEMORY);
+
+  mozIStorageConnection *DBConn = storageInstance->GetConnection();
+  nsCOMPtr<mozIStorageStatement> statement;
+  nsresult rv = DBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "INSERT INTO accounts (id, name, prpl) VALUES(?1, ?2, ?3)"),
+    getter_AddRefs(statement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  statement->BindInt32Parameter(0, aKey);
+  statement->BindUTF8StringParameter(1, aName);
+  statement->BindUTF8StringParameter(2, aPrpl);
+
+  rv = statement->Execute();
+#ifdef DEBUG_PURPLE_ACCOUNT
+  if (NS_FAILED(rv)) {
+    printf("adding account %u (%s, %s) failed\n", aKey, aName.get(), aPrpl.get());
+  }
+  else {
+    printf("account %u (%s, %s) added\n", aKey, aName.get(), aPrpl.get());
+  }
+#endif
+  return rv;
+}
+
+nsresult purpleAccount::unstoreAccount()
+{
+  PRUint32 key;
+  if (PR_sscanf(mKey.get(), ACCOUNT_KEY "%u", &key) != 1) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  purpleStorage *storageInstance = purpleStorage::GetInstance();
+  NS_ENSURE_TRUE(storageInstance, NS_ERROR_OUT_OF_MEMORY);
+
+  mozIStorageConnection *DBConn = storageInstance->GetConnection();
+  nsCOMPtr<mozIStorageStatement> statement;
+  nsresult rv = DBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "DELETE FROM accounts WHERE id = ?1"),
+    getter_AddRefs(statement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = statement->BindInt32Parameter(0, key);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = statement->Execute();
+#ifdef DEBUG_PURPLE_ACCOUNT
+  if (NS_FAILED(rv)) {
+    printf("removing account %u from mozStorage failed\n", key);
+  }
+  else {
+    printf("account %u removed from mozStorage\n", key);
+  }
+#endif
+
+  return rv;
+}
+
 nsresult purpleAccount::remove()
 {
   nsresult rv = GetPrefBranch();
@@ -217,9 +342,14 @@ nsresult purpleAccount::remove()
 	 mProtocol ? mProtocol->GetId() : "(mProtocol = NULL)");
 #endif
 
+  /* Remove data from the pref branch */
   rv = mPrefBranch->DeleteBranch("");
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, rv); // FIXME Should we really return here?
 
+  /* Remove the data from the accounts table in mozStorage */
+  unstoreAccount();
+
+  /* Remove the account from libpurple */
   UnInit();
   return NS_OK;
 }
