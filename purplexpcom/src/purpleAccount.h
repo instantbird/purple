@@ -33,6 +33,8 @@ public:
 
   purpleAccount();
   const nsCString& GetKey() { return mKey; }
+  PRUint32 GetId() { return mId; }
+  PurpleAccount *GetPurpleAccount() { return mAccount; }
   nsresult create(const char *name, purpleProtocol *prpl,
        	          const nsCString& aKey);
   nsresult load(const nsCString& aKey);
@@ -44,7 +46,7 @@ public:
 
 private:
   ~purpleAccount();
-  inline void SetId(const nsCString& aId);
+  inline nsresult SetId(const nsCString& aId);
   inline nsresult GetPrefBranch();
   nsresult ensureStored(const nsCString& aName, const nsCString& aPrpl);
   nsresult storeAccount(PRUint32 aKey, const nsCString& aName, const nsCString& aPrpl);
@@ -58,6 +60,7 @@ private:
 
   PurpleAccount *mAccount;
   nsCString mKey;
+  PRUint32 mId;
   nsCOMPtr<purpleProtocol> mProtocol;
   nsCOMPtr<nsIPrefBranch> mPrefBranch;
 

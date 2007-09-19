@@ -16,8 +16,12 @@
   "@instantbird.org/purple/buddy;1"
 
 struct purpleAccountBuddy {
-  nsCOMPtr<purpleIAccount> account;
-  PurpleBuddy *buddy;
+  void Init(purpleIAccount *aAccount, PurpleBuddy *aBuddy);
+  nsresult Store(PRInt32 aBuddyId, PRInt32 aGroupId);
+
+  //should be private
+  nsCOMPtr<purpleIAccount> mAccount;
+  PurpleBuddy *mBuddy;
 };
 
 class purpleBuddy : public purpleIBuddy
@@ -28,11 +32,14 @@ public:
 
   purpleBuddy();
   nsresult Init(PurpleBuddy *aBuddy);
+  nsresult load(PurpleBuddy *aBuddy, purpleIAccount *aAccount, PRUint32 aId);
+  nsresult AddAccount(PurpleBuddy *aBuddy);
+  purpleAccountBuddy *AddAccount(purpleIAccount *aAccount,
+                                 PurpleBuddy *aBuddy);
   PRUint32 getId() { return mId; }
 
 private:
   ~purpleBuddy();
-  static PRUint32 lastId;
 
 protected:
   /* additional members */

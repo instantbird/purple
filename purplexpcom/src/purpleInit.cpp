@@ -360,7 +360,7 @@ static void buddy_signals(PurpleBuddy *buddy, const char *signal)
 			PURPLE_CALLBACK(buddy_signals),		\
 			(void *)aSignal)
 
-static void
+void
 connect_to_blist_signals()
 {
   static int handle;
@@ -584,10 +584,6 @@ init_libpurple()
     return NS_ERROR_FAILURE;
   }
 
- 	/* Create and load the buddylist. */
- 	purple_set_blist(purple_blist_new());
- 	purple_blist_load();
-
 // 	/* Load the preferences. */
 // 	purple_prefs_load();
 	purple_prefs_set_bool("/purple/logging/log_ims", TRUE);
@@ -604,7 +600,7 @@ init_libpurple()
 
 	connect_to_connections_signals();
 	connect_to_accounts_signals();
-	connect_to_blist_signals();
+        //	connect_to_blist_signals();
  	connect_to_signals_for_demonstration_purposes_only();
 
 	return NS_OK;

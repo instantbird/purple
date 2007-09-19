@@ -4,7 +4,8 @@
 #include "purpleConversation.h"
 #include<nsIMutableArray.h>
 #include<nsCOMPtr.h>
-#include"nsInterfaceHashtable.h"
+#include <nsInterfaceHashtable.h>
+#include <nsDataHashtable.h>
 #include"purpleBuddy.h"
 
 // very dirty work around for the error:
@@ -21,23 +22,29 @@ public:
   purpleCoreService();
 
   void AddConversation(purpleConversation* aConv);
+  nsresult GetTagIdFromName(const nsCString& aName,
+                            PRInt32 *aResult);
+  nsresult GetGroupIdFromPurpleBuddy(PurpleBuddy *aBuddy,
+                                     PRInt32 *aResult);
 
 private:
   ~purpleCoreService();
   void InitProtocols();
   nsresult InitAccounts();
+  nsresult InitBuddyList();
   nsCOMPtr<nsIPrefBranch> mPrefService;
   inline void UnInitAccounts();
   inline void UnInitProtocols();
+  nsresult GetAccountById(PRUint32 aAccountId, purpleAccount **aResult);
 
 protected:
   PRBool mInitialized;
-  // array of purpleIConversation
   nsCOMArray<purpleConversation> mConversations;
   nsCOMArray<purpleProtocol> mProtocols;
   nsCOMArray<purpleAccount> mAccounts;
   nsInterfaceHashtable<nsUint32HashKey, purpleBuddy> mBuddiesByPurpleBuddy;
   nsInterfaceHashtable<nsUint32HashKey, purpleBuddy> mBuddiesById;
+  nsDataHashtable<nsUint32HashKey, PurpleGroup *> mGroupById;
 };
 
 #define PURPLE_CORE_SERVICE_CID \

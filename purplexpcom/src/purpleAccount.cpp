@@ -3,7 +3,6 @@
 #include "purpleCoreService.h"
 #include "purpleStorage.h"
 #include <pref/nsIPrefService.h>
-#include <storage/mozStorageHelper.h>
 #include <nsServiceManagerUtils.h>
 #include <prprf.h>
 
@@ -80,23 +79,20 @@ nsresult purpleAccount::create(const char *aName, purpleProtocol *aPrpl,
     return NS_ERROR_FAILURE;
   }
 
-  SetId(aKey);
+  nsresult rv = SetId(aKey);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
   mProtocol = aPrpl;
 
-  nsresult rv = GetPrefBranch();
+  rv = GetPrefBranch();
   NS_ENSURE_SUCCESS(rv, rv);
 
   mPrefBranch->SetCharPref(PREF_NAME, aName);
   mPrefBranch->SetCharPref(PREF_PRPL, aPrpl->GetId());
 
-  PRUint32 key;
-  if (PR_sscanf(aKey.get(), ACCOUNT_KEY "%u", &key) != 1) {
-    mPrefBranch->DeleteBranch("");
-    return NS_ERROR_UNEXPECTED;
-  }
   nsCString name(aName);
   nsCString prpl(aPrpl->GetId());
-  rv = storeAccount(key, name, prpl);
+  rv = storeAccount(mId, name, prpl);
   if (NS_FAILED(rv)) {
     mPrefBranch->DeleteBranch("");
   }
@@ -105,12 +101,13 @@ nsresult purpleAccount::create(const char *aName, purpleProtocol *aPrpl,
 
 nsresult purpleAccount::load(const nsCString& aKey)
 {
-  SetId(aKey);
 #ifdef DEBUG_PURPLE_ACCOUNT
   printf("loading account : %s\n", aKey.get());
 #endif
+  nsresult rv = SetId(aKey);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsresult rv = GetPrefBranch();
+  rv = GetPrefBranch();
   NS_ENSURE_SUCCESS(rv, rv);
 
   /* Get the name */
@@ -226,17 +223,12 @@ nsresult purpleAccount::load(const nsCString& aKey)
 
 nsresult purpleAccount::ensureStored(const nsCString& aName, const nsCString& aPrpl)
 {
-  PRUint32 key;
-  if (PR_sscanf(mKey.get(), ACCOUNT_KEY "%u", &key) != 1) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
   purpleStorage *storageInstance = purpleStorage::GetInstance();
   NS_ENSURE_TRUE(storageInstance, NS_ERROR_OUT_OF_MEMORY);
 
   mozIStorageStatement *statement = storageInstance->mEnsureAccountStoredStatement;
   mozStorageStatementScoper scoper(statement);
-  nsresult rv = statement->BindInt32Parameter(0, key);
+  nsresult rv = statement->BindInt32Parameter(0, mId);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool hasMoreData;
@@ -258,7 +250,7 @@ nsresult purpleAccount::ensureStored(const nsCString& aName, const nsCString& aP
     }
 
 #ifdef DEBUG_PURPLE_ACCOUNT
-    printf("checking account (%u, %s, %s) OK\n", key, name.get(), prpl.get());
+    printf("checking account (%u, %s, %s) OK\n", mId, name.get(), prpl.get());
 #endif
     return NS_OK;
   }
@@ -267,7 +259,7 @@ nsresult purpleAccount::ensureStored(const nsCString& aName, const nsCString& aP
   printf("account not found in mozStorage\n");
 #endif
 
-  return storeAccount(key, aName, aPrpl);
+  return storeAccount(mId, aName, aPrpl);
 }
 
 nsresult purpleAccount::storeAccount(PRUint32 aKey, const nsCString& aName, const nsCString& aPrpl)
@@ -300,11 +292,6 @@ nsresult purpleAccount::storeAccount(PRUint32 aKey, const nsCString& aName, cons
 
 nsresult purpleAccount::unstoreAccount()
 {
-  PRUint32 key;
-  if (PR_sscanf(mKey.get(), ACCOUNT_KEY "%u", &key) != 1) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
   purpleStorage *storageInstance = purpleStorage::GetInstance();
   NS_ENSURE_TRUE(storageInstance, NS_ERROR_OUT_OF_MEMORY);
 
@@ -315,16 +302,16 @@ nsresult purpleAccount::unstoreAccount()
     getter_AddRefs(statement));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = statement->BindInt32Parameter(0, key);
+  rv = statement->BindInt32Parameter(0, mId);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = statement->Execute();
 #ifdef DEBUG_PURPLE_ACCOUNT
   if (NS_FAILED(rv)) {
-    printf("removing account %u from mozStorage failed\n", key);
+    printf("removing account %u from mozStorage failed\n", mId);
   }
   else {
-    printf("account %u removed from mozStorage\n", key);
+    printf("account %u removed from mozStorage\n", mId);
   }
 #endif
 
@@ -430,10 +417,15 @@ NS_IMETHODIMP purpleAccount::GetId(char * *aId)
 }
 
 /* private */
-inline void purpleAccount::SetId(const nsCString& aId)
+inline nsresult purpleAccount::SetId(const nsCString& aId)
 {
   /* Save the id of the account */
   mKey.Assign(aId);
+
+  if (PR_sscanf(aId.get(), ACCOUNT_KEY "%u", &mId) != 1)
+    return NS_ERROR_FAILURE;
+
+  return NS_OK;
 }
 
 inline nsresult purpleAccount::GetPrefBranch()

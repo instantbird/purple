@@ -26,6 +26,7 @@
 NS_IMPL_ISUPPORTS1(purpleCoreService, purpleICoreService)
 
 extern nsresult init_libpurple();
+extern void connect_to_blist_signals();
 
 purpleCoreService::purpleCoreService()
   :mInitialized(PR_FALSE),
@@ -35,6 +36,7 @@ purpleCoreService::purpleCoreService()
   mPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
   mBuddiesByPurpleBuddy.Init();
   mBuddiesById.Init();
+  mGroupById.Init();
 }
 
 purpleCoreService::~purpleCoreService()
@@ -66,10 +68,114 @@ NS_IMETHODIMP purpleCoreService::Init()
   /* Load saved accounts */
   InitAccounts();
 
+  /* Load the buddy list from mozStorage */
+  InitBuddyList();
+
 #ifdef DEBUG_PURPLE_CORE_SERVICE
   printf("libpurple initialized\n");
 #endif
 
+  return NS_OK;
+}
+
+nsresult purpleCoreService::InitBuddyList()
+{
+  /* Create the purple buddylist. */
+  purple_set_blist(purple_blist_new());
+  /* This returns early because the file blist.xml can't be found, but
+     the important thing is that it sets blist_loaded to TRUE */
+  purple_blist_load();
+
+  /* Now, let's read the real data from mozStorage */
+  purpleStorage *storageInstance = purpleStorage::GetInstance();
+  NS_ENSURE_TRUE(storageInstance, NS_ERROR_OUT_OF_MEMORY);
+
+  mozIStorageConnection *DBConn = storageInstance->GetConnection();
+  nsCOMPtr<mozIStorageStatement> statement;
+  nsresult rv = DBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT id, name FROM tags"),
+    getter_AddRefs(statement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool hasMoreData;
+  while (NS_SUCCEEDED(statement->ExecuteStep(&hasMoreData)) && hasMoreData) {
+    PRInt32 id = statement->AsInt32(0);
+    nsCString name;
+    rv = statement->GetUTF8String(1, name);
+    NS_ENSURE_SUCCESS(rv, rv);
+#ifdef DEBUG_PURPLE_CORE_SERVICE 
+    printf("pcs::InitBuddyList: reading group %s (id %i)\n",
+           name.get(), id);
+#endif
+    PurpleGroup *group = purple_group_new(name.get());
+    mGroupById.Put(id, group);
+    purple_blist_add_group(group, NULL);
+  }
+
+  rv = DBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT id, name, srv_alias, tag_id, account_id FROM buddies JOIN account_buddy ON buddy_id = id"),
+    getter_AddRefs(statement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  while (NS_SUCCEEDED(statement->ExecuteStep(&hasMoreData)) && hasMoreData) {
+    PRInt32 id = statement->AsInt32(0);
+    nsCString name;
+    rv = statement->GetUTF8String(1, name);
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCString alias;
+    rv = statement->GetUTF8String(2, alias);
+    NS_ENSURE_SUCCESS(rv, rv);
+    PRInt32 tagId = statement->AsInt32(3);
+    PRInt32 accountId = statement->AsInt32(4);
+#ifdef DEBUG_PURPLE_CORE_SERVICE 
+    printf("pcs::InitBuddyList: reading buddy %s of account %i, group %i\n",
+           name.get(), accountId, tagId);
+#endif
+    PurpleGroup *group;
+    if (!mGroupById.Get(tagId, &group)) {
+      // Should never happen. Corrupted blist.sqlite ?
+#ifdef DEBUG_PURPLE_CORE_SERVICE 
+      printf("pcs::InitBuddyList: Cannot get group with id %i\n", tagId);
+#endif
+      continue; 
+    }
+    nsCOMPtr<purpleAccount> account;
+    rv = GetAccountById(accountId, getter_AddRefs(account));
+    if (NS_FAILED(rv)) {
+      // Should never happen. Corrupted blist.sqlite ?
+#ifdef DEBUG_PURPLE_CORE_SERVICE 
+      printf("pcs::InitBuddyList: Cannot get account with id %i\n", accountId);
+#endif
+      continue; 
+    }
+    PurpleBuddy *buddy = purple_buddy_new(account->GetPurpleAccount(),
+                                          name.get(), alias.get());
+    purple_blist_add_buddy(buddy, NULL, group, NULL);
+
+#ifdef DEBUG_PURPLE_CORE_SERVICE 
+    printf("Looking for purpleBuddy with id %i in HashTable\n", id);
+#endif
+    nsCOMPtr<purpleBuddy> purpleBuddy;
+    if (!mBuddiesById.Get(id, getter_AddRefs(purpleBuddy))) {
+      purpleBuddy = do_CreateInstance(PURPLE_BUDDY_CONTRACTID, &rv);
+      if (NS_FAILED(rv))
+        continue;
+      purpleBuddy->load(buddy, account, id);
+      mBuddiesById.Put(id, purpleBuddy);
+#ifdef DEBUG_PURPLE_CORE_SERVICE
+      printf("purpleBuddy added in HashTable with Id %i\n", id);
+#endif
+    }
+    else {
+#ifdef DEBUG_PURPLE_CORE_SERVICE 
+      printf("found purpleBuddy with id %i in HashTable, adding account\n", id);
+#endif
+      purpleBuddy->AddAccount(account, buddy);
+    }
+    mBuddiesByPurpleBuddy.Put((PRUint32) buddy, purpleBuddy);
+  }
+
+  connect_to_blist_signals();
   return NS_OK;
 }
 
@@ -148,7 +254,7 @@ NS_IMETHODIMP purpleCoreService::GetBuddyById(PRInt32 aId,
 					      purpleIBuddy **aResult)
 {
 #ifdef DEBUG_PURPLE_CORE_SERVICE
-  printf("looking up buddy with id %i\n", aId);
+  printf("pcs->GetBuddyById(%i)\n", aId);
 #endif
 
   purpleBuddy *buddyPtr = NULL;
@@ -167,6 +273,11 @@ NS_IMETHODIMP purpleCoreService::GetBuddyById(PRInt32 aId,
 NS_IMETHODIMP purpleCoreService::GetBuddyByPurpleBuddy(PurpleBuddy * aBuddy,
 						       purpleIBuddy **aResult)
 {
+#ifdef DEBUG_PURPLE_CORE_SERVICE 
+  printf("pcs::GetBuddyByPurpleBuddy(buddy = %s, group = %s)\n", aBuddy->name,
+         purple_group_get_name(purple_buddy_get_group(aBuddy)));
+#endif
+
   /* First, lookup the PurpleBuddy pointer in our PurpleBuddy pointers
    * hash. If we find it, just return the associated purpleBuddy.
    */
@@ -183,13 +294,37 @@ NS_IMETHODIMP purpleCoreService::GetBuddyByPurpleBuddy(PurpleBuddy * aBuddy,
    * mozStorage. If we find it, append the new PurpleBuddy to it, and
    * add the new PurpleBuddy pointer to the hash.
    */
-  //FIXME!!
+  purpleStorage *storageInstance = purpleStorage::GetInstance();
+  mozIStorageStatement *statement = storageInstance->mGetBuddyIdFromNameAndPrpl;
+  mozStorageStatementScoper scoper(statement);
+  nsCString name(purple_normalize(aBuddy->account, aBuddy->name));
+  nsresult rv = statement->BindUTF8StringParameter(0, name);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCString prpl(aBuddy->account->protocol_id);
+  rv = statement->BindUTF8StringParameter(1, prpl);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+#ifdef DEBUG_PURPLE_CORE_SERVICE 
+  printf("pcs->GetBuddyByPurpleBuddy(buddy = %s (%s)) Searching in mozStorage\n",
+         name.get(), prpl.get());
+#endif
+
+  PRBool found;
+  rv = statement->ExecuteStep(&found);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (found) {
+    PRInt32 id = statement->AsInt32(0);
+    rv = GetBuddyById(id, aResult);
+    NS_ENSURE_SUCCESS(rv, rv);
+    purpleBuddy *buddy = static_cast<purpleBuddy *>(*aResult);
+    mBuddiesByPurpleBuddy.Put((PRUint32) aBuddy, buddy);
+    return buddy->AddAccount(aBuddy);
+  }
 
   /* At this point, if we still haven't found it, this is a NEW
    * buddy. Create a new purpleBuddy instance, initialize it, store it
    * in mozStorage and add it in the two hashes.
    */
-  nsresult rv;
   nsCOMPtr<purpleBuddy> buddy = do_CreateInstance(PURPLE_BUDDY_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   buddy->Init(aBuddy);
@@ -202,6 +337,57 @@ NS_IMETHODIMP purpleCoreService::GetBuddyByPurpleBuddy(PurpleBuddy * aBuddy,
   *aResult = buddy;
   NS_ADDREF(*aResult);
   return NS_OK;
+}
+
+nsresult purpleCoreService::GetTagIdFromName(const nsCString& aName,
+                                             PRInt32 *aResult)
+{
+  //FIXME The result should be cached.
+  purpleStorage *storageInstance = purpleStorage::GetInstance();
+  NS_ENSURE_TRUE(storageInstance, NS_ERROR_OUT_OF_MEMORY);
+
+  mozIStorageStatement *statement = storageInstance->mGetGroupIdFromName;
+  mozStorageStatementScoper scoper(statement);
+  nsresult rv = statement->BindUTF8StringParameter(0, aName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool hasMoreData;
+  if (NS_SUCCEEDED(statement->ExecuteStep(&hasMoreData)) && hasMoreData) {
+    *aResult = statement->AsInt32(0);
+#ifdef DEBUG_PURPLE_CORE_SERVICE 
+    printf("pcs::GetTagIdFromName(name = %s), found at id %i\n", aName.get(), *aResult);
+#endif
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+nsresult purpleCoreService::GetGroupIdFromPurpleBuddy(PurpleBuddy *aBuddy,
+                                                      PRInt32 *aResult)
+{
+  PurpleGroup *group = purple_buddy_get_group(aBuddy);
+  nsCString groupName(purple_group_get_name(group));
+
+  nsresult rv = GetTagIdFromName(groupName, aResult);
+  if (NS_FAILED(rv)) {
+    purpleStorage *storageInstance = purpleStorage::GetInstance();
+    mozIStorageStatement *statement = storageInstance->mInsertGroup;
+    mozStorageStatementScoper scoper(statement);
+    rv = statement->BindUTF8StringParameter(0, groupName);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = statement->BindInt32Parameter(1, 0); // FIXME (0 = not visible);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = statement->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
+#ifdef DEBUG_PURPLE_CORE_SERVICE 
+    printf("pcs::GetGroupIdFromPurpleBuddy: stored group %s\n", groupName.get());
+#endif
+    rv = GetTagIdFromName(groupName, aResult);
+    mGroupById.Put(*aResult, group);
+  }
+  return rv;
 }
 
 /* nsISimpleEnumerator getConversations (); */
@@ -292,6 +478,22 @@ NS_IMETHODIMP purpleCoreService::GetAccountById(const char *aAccountId, purpleIA
 
   for (PRInt32 i = mAccounts.Count() - 1; i >= 0; --i) {
     if (mAccounts[i]->GetKey().Equals(aAccountId)) {
+      *aResult = mAccounts[i];
+      NS_ADDREF(*aResult);
+      return NS_OK;
+    }
+  }
+
+  *aResult = nsnull;
+  return NS_OK;
+}
+
+nsresult purpleCoreService::GetAccountById(PRUint32 aAccountId, purpleAccount **aResult)
+{
+  PURPLE_ENSURE_INIT(mInitialized);
+
+  for (PRInt32 i = mAccounts.Count() - 1; i >= 0; --i) {
+    if (mAccounts[i]->GetId() == aAccountId) {
       *aResult = mAccounts[i];
       NS_ADDREF(*aResult);
       return NS_OK;
@@ -550,8 +752,9 @@ NS_IMETHODIMP purpleCoreService::FireAccountEvent(PurpleAccount * aAccount,
 NS_IMETHODIMP purpleCoreService::FireBuddyEvent(PurpleBuddy * aBuddy,
 						  const char *aEvent)
 {
-#ifdef DEBUG_PURPLE_CORE_SERVICE
-  printf("attempting to send %s signal\n", aEvent);
+#ifdef DEBUG_PURPLE_CORE_SERVICE 
+  printf("attempting to send %s signal, group = %s, buddy = %s\n", aEvent,
+         purple_group_get_name(purple_buddy_get_group(aBuddy)), aBuddy->name);
 #endif
   nsCOMPtr<purpleIBuddy> buddy;
   nsresult rv = this->GetBuddyByPurpleBuddy(aBuddy, getter_AddRefs(buddy));

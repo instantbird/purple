@@ -2,6 +2,7 @@
 #include <storage/mozIStorageService.h>
 #include <storage/mozIStorageConnection.h>
 #include <storage/mozIStorageStatement.h>
+#include <storage/mozStorageHelper.h>
 
 class purpleStorage
 {
@@ -11,6 +12,12 @@ class purpleStorage
     return mDBConn;
   }
   nsCOMPtr<mozIStorageStatement> mEnsureAccountStoredStatement;
+  nsCOMPtr<mozIStorageStatement> mGetGroupIdFromName;
+  nsCOMPtr<mozIStorageStatement> mGetBuddyIdFromNameAndPrpl;
+  nsCOMPtr<mozIStorageStatement> mInsertGroup;
+  nsCOMPtr<mozIStorageStatement> mInsertBuddy;
+  nsCOMPtr<mozIStorageStatement> mInsertAccountBuddy;
+  nsCOMPtr<mozIStorageStatement> mLastId;
 
  private:
   static purpleStorage *mInstance;

@@ -28,6 +28,11 @@ purpleStorage *purpleStorage::GetInstance()
   rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(aRequest)); \
   NS_ENSURE_SUCCESS(rv, rv)
 
+#define CREATE_STATEMENT(aName, aStatement)                     \
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(aStatement), \
+                                getter_AddRefs(aName));         \
+  NS_ENSURE_SUCCESS(rv, rv)
+
 nsresult purpleStorage::Init()
 {
   nsCOMPtr<nsIFile> dbFile;
@@ -65,8 +70,7 @@ nsresult purpleStorage::Init()
 
   DO_SQL("CREATE TABLE IF NOT EXISTS tags ("
          "id INTEGER PRIMARY KEY, "
-         "name VARCHAR NOT NULL, "
-         "visible BOOLEAN, "
+         "name VARCHAR UNIQUE NOT NULL, "
          "position INTEGER)");
 
   DO_SQL("CREATE TABLE IF NOT EXISTS contact_tag ("
@@ -87,10 +91,28 @@ nsresult purpleStorage::Init()
   DO_SQL("CREATE INDEX IF NOT EXISTS account_buddy_buddyindex "
          "ON account_buddy (buddy_id)");
 
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT name, prpl FROM accounts WHERE id = ?1"),
-    getter_AddRefs(mEnsureAccountStoredStatement));
-  NS_ENSURE_SUCCESS(rv, rv);
+  CREATE_STATEMENT(mEnsureAccountStoredStatement,
+                   "SELECT name, prpl FROM accounts WHERE id = ?1");
+
+  CREATE_STATEMENT(mGetGroupIdFromName,
+                   "SELECT id FROM tags WHERE name = ?1");
+
+  CREATE_STATEMENT(mGetBuddyIdFromNameAndPrpl,
+                   "SELECT b.id FROM buddies b "
+                               "JOIN account_buddy ab ON buddy_id = b.id "
+                               "JOIN accounts a ON account_id = a.id "
+                               "WHERE b.name = ?1 and a.prpl = ?2");
+
+  CREATE_STATEMENT(mInsertGroup,
+                   "INSERT INTO tags (name, position) VALUES(?1, ?2)");
+
+  CREATE_STATEMENT(mInsertBuddy,
+                   "INSERT INTO buddies (name, srv_alias, position) VALUES(?1, ?2, ?3)");
+
+  CREATE_STATEMENT(mInsertAccountBuddy,
+                   "INSERT INTO account_buddy (account_id, buddy_id, tag_id) VALUES(?1, ?2, ?3)");
+
+  CREATE_STATEMENT(mLastId, "SELECT last_insert_rowid()");
 
   return NS_OK;
 }
