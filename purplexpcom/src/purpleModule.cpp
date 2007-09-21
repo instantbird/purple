@@ -5,6 +5,8 @@
 #include "purplePref.h"
 #include "purpleAccount.h"
 #include "purpleBuddy.h"
+#include "purpleTag.h"
+#include "purpleAccountBuddy.h"
 #include "purpleMessage.h"
 #include "purpleSockets.h"
 
@@ -16,6 +18,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(purpleAccount);
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleBuddy);
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleMessage);
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleSocket);
+NS_GENERIC_FACTORY_CONSTRUCTOR(purpleTag);
+NS_GENERIC_FACTORY_CONSTRUCTOR(purpleAccountBuddy);
 
 static nsModuleComponentInfo components[] =
 {
@@ -56,6 +60,18 @@ static nsModuleComponentInfo components[] =
     purpleBuddyConstructor
   },
   {
+    "PURPLE tag",
+    PURPLE_TAG_CID,
+    PURPLE_TAG_CONTRACTID,
+    purpleTagConstructor
+  },
+  {
+    "PURPLE account buddy",
+    PURPLE_ACCOUNTBUDDY_CID,
+    PURPLE_ACCOUNTBUDDY_CONTRACTID,
+    purpleAccountBuddyConstructor
+  },
+  {
     "PURPLE message",
     PURPLE_MESSAGE_CID,
     PURPLE_MESSAGE_CONTRACTID,
@@ -68,10 +84,5 @@ static nsModuleComponentInfo components[] =
     purpleSocketConstructor
   }
 };
-
-/* prevent this dll from actually being loaded by Mozilla
- * (the platform-specific loader is used to get this instead)
- */
-//#define NSGetModule REAL_NSGetModule
 
 NS_IMPL_NSGETMODULE(purpleModule, components)

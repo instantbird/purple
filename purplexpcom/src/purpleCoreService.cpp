@@ -36,7 +36,7 @@ purpleCoreService::purpleCoreService()
   mPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
   mBuddiesByPurpleBuddy.Init();
   mBuddiesById.Init();
-  mGroupById.Init();
+  mTagById.Init();
 }
 
 purpleCoreService::~purpleCoreService()
@@ -108,7 +108,9 @@ nsresult purpleCoreService::InitBuddyList()
            name.get(), id);
 #endif
     PurpleGroup *group = purple_group_new(name.get());
-    mGroupById.Put(id, group);
+    nsCOMPtr<purpleTag> tag = do_CreateInstance(PURPLE_TAG_CONTRACTID);
+    tag->Init(id, group);
+    mTagById.Put(id, tag);
     purple_blist_add_group(group, NULL);
   }
 
@@ -131,8 +133,8 @@ nsresult purpleCoreService::InitBuddyList()
     printf("pcs::InitBuddyList: reading buddy %s of account %i, group %i\n",
            name.get(), accountId, tagId);
 #endif
-    PurpleGroup *group;
-    if (!mGroupById.Get(tagId, &group)) {
+    nsCOMPtr<purpleTag> tag;
+    if (!mTagById.Get(tagId, getter_AddRefs(tag))) {
       // Should never happen. Corrupted blist.sqlite ?
 #ifdef DEBUG_PURPLE_CORE_SERVICE 
       printf("pcs::InitBuddyList: Cannot get group with id %i\n", tagId);
@@ -150,7 +152,7 @@ nsresult purpleCoreService::InitBuddyList()
     }
     PurpleBuddy *buddy = purple_buddy_new(account->GetPurpleAccount(),
                                           name.get(), alias.get());
-    purple_blist_add_buddy(buddy, NULL, group, NULL);
+    tag->addBuddy(buddy);
 
 #ifdef DEBUG_PURPLE_CORE_SERVICE 
     printf("Looking for purpleBuddy with id %i in HashTable\n", id);
@@ -160,7 +162,7 @@ nsresult purpleCoreService::InitBuddyList()
       purpleBuddy = do_CreateInstance(PURPLE_BUDDY_CONTRACTID, &rv);
       if (NS_FAILED(rv))
         continue;
-      purpleBuddy->load(buddy, account, id);
+      purpleBuddy->load(buddy, account, id, tag);
       mBuddiesById.Put(id, purpleBuddy);
 #ifdef DEBUG_PURPLE_CORE_SERVICE
       printf("purpleBuddy added in HashTable with Id %i\n", id);
@@ -170,7 +172,7 @@ nsresult purpleCoreService::InitBuddyList()
 #ifdef DEBUG_PURPLE_CORE_SERVICE 
       printf("found purpleBuddy with id %i in HashTable, adding account\n", id);
 #endif
-      purpleBuddy->AddAccount(account, buddy);
+      purpleBuddy->AddAccount(account, buddy, tag);
     }
     mBuddiesByPurpleBuddy.Put((PRUint32) buddy, purpleBuddy);
   }
@@ -363,14 +365,36 @@ nsresult purpleCoreService::GetTagIdFromName(const nsCString& aName,
   return NS_ERROR_FAILURE;
 }
 
-nsresult purpleCoreService::GetGroupIdFromPurpleBuddy(PurpleBuddy *aBuddy,
-                                                      PRInt32 *aResult)
+nsresult purpleCoreService::GetTagFromName(const nsCString& aName,
+                                           purpleTag **aResult)
+{
+  /* First, get the id from mozStorage */
+  PRInt32 id;
+  nsresult rv = GetTagIdFromName(aName, &id);
+
+  if (NS_SUCCEEDED(rv)) {
+    /* We found the id, just get the tag from the hashtable */
+    if (mTagById.Get(id, aResult))
+      return NS_OK;
+
+    /* if the tag isn't in the hashtable, this means we are still
+       loading the buddy list from mozStorage, and this method
+       shouldn't have been called */
+  }
+
+  /* This tag doesn't exist yet */
+  return NS_ERROR_FAILURE;
+}
+
+nsresult purpleCoreService::GetTagFromPurpleBuddy(PurpleBuddy *aBuddy,
+                                                  purpleTag **aResult)
 {
   PurpleGroup *group = purple_buddy_get_group(aBuddy);
   nsCString groupName(purple_group_get_name(group));
 
-  nsresult rv = GetTagIdFromName(groupName, aResult);
+  nsresult rv = GetTagFromName(groupName, aResult);
   if (NS_FAILED(rv)) {
+    /* Ok, we didn't find it, so this is a new tag */
     purpleStorage *storageInstance = purpleStorage::GetInstance();
     mozIStorageStatement *statement = storageInstance->mInsertGroup;
     mozStorageStatementScoper scoper(statement);
@@ -382,11 +406,18 @@ nsresult purpleCoreService::GetGroupIdFromPurpleBuddy(PurpleBuddy *aBuddy,
     rv = statement->Execute();
     NS_ENSURE_SUCCESS(rv, rv);
 #ifdef DEBUG_PURPLE_CORE_SERVICE 
-    printf("pcs::GetGroupIdFromPurpleBuddy: stored group %s\n", groupName.get());
+    printf("pcs::GetTagFromPurpleBuddy: stored group %s\n", groupName.get());
 #endif
-    rv = GetTagIdFromName(groupName, aResult);
-    mGroupById.Put(*aResult, group);
+    PRInt32 id;
+    rv = GetTagIdFromName(groupName, &id);
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<purpleTag> tag = do_CreateInstance(PURPLE_TAG_CONTRACTID);
+    tag->Init(id, group);
+    mTagById.Put(id, tag);
+    *aResult = tag;
+    NS_ADDREF(*aResult);
   }
+
   return rv;
 }
 
@@ -759,5 +790,10 @@ NS_IMETHODIMP purpleCoreService::FireBuddyEvent(PurpleBuddy * aBuddy,
   nsCOMPtr<purpleIBuddy> buddy;
   nsresult rv = this->GetBuddyByPurpleBuddy(aBuddy, getter_AddRefs(buddy));
   NS_ENSURE_SUCCESS(rv, rv);
-  return NotifyObservers(buddy, aEvent);
+
+  nsCOMPtr<purpleIAccountBuddy> pab;
+  rv = buddy->GetAccountBuddyForPurpleBuddy(aBuddy, getter_AddRefs(pab));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  return NotifyObservers(pab, aEvent);
 }

@@ -3,11 +3,20 @@
 #include "purpleIAccount.idl"
 #include "purpleIConversation.idl"
 
+interface purpleIAccountBuddy;
+
 /* 
  * This is a proxy for libpurple PurpleBuddy
  * However, there is a PurpleBuddy for each Screename <-> Account link.
  * A single purpleIBuddy instance is needed for all accounts.
  */
+
+%{C++
+  struct _PurpleBuddy;
+  typedef _PurpleBuddy PurpleBuddy;
+%}
+
+[ptr] native PurpleNativeBuddy(PurpleBuddy);
 
 [scriptable, uuid(1f0ffdac-3523-4e91-9ffe-d0c2fd08cb3d)]
 interface purpleIBuddy: nsISupports {
@@ -21,4 +30,5 @@ interface purpleIBuddy: nsISupports {
   nsISimpleEnumerator getTags();
   nsISimpleEnumerator getAccounts();
   purpleIConversation createConversation(in unsigned short aAccountIndex);
+  [noscript] purpleIAccountBuddy getAccountBuddyForPurpleBuddy(in PurpleNativeBuddy aBuddy);
 };

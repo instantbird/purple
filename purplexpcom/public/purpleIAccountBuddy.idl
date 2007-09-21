@@ -1,0 +1,18 @@
+#include "nsISupports.idl"
+#include "purpleIAccount.idl"
+#include "purpleIBuddy.idl"
+#include "purpleITag.idl"
+
+/* 
+ * This interface provides access to the link between an account and a
+ * buddy.
+ */
+
+[scriptable, uuid(5a532eea-0382-46b1-a861-78015c26acda)]
+interface purpleIAccountBuddy: nsISupports {
+  readonly attribute purpleIBuddy buddy;
+  readonly attribute purpleIAccount account;
+  readonly attribute purpleITag tag;
+  readonly attribute string buddyName;
+  purpleIConversation createConversation();
+};

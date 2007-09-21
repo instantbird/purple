@@ -1,0 +1,14 @@
+#include "nsISupports.idl"
+
+/* 
+ * This is a proxy for libpurple PurpleGroup but is also used for tags
+ * that aren't stored on the servers (and on libpurple's data
+ * structures)
+ */
+
+[scriptable, uuid(29225656-fbea-4df2-9d61-0339b1c20c65)]
+interface purpleITag: nsISupports {
+  readonly attribute long id;
+  readonly attribute string name;
+  readonly attribute boolean visible;
+};

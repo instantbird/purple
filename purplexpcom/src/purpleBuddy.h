@@ -4,6 +4,7 @@
 #include "purpleIBuddy.h"
 #include "nsCOMPtr.h"
 #include "purpleAccount.h"
+#include "purpleAccountBuddy.h"
 #include "nsTArray.h"
 
 // 9090b5e6-51fb-4495-92d1-a0f713f4f7f9
@@ -15,15 +16,6 @@
 #define PURPLE_BUDDY_CONTRACTID			\
   "@instantbird.org/purple/buddy;1"
 
-struct purpleAccountBuddy {
-  void Init(purpleIAccount *aAccount, PurpleBuddy *aBuddy);
-  nsresult Store(PRInt32 aBuddyId, PRInt32 aGroupId);
-
-  //should be private
-  nsCOMPtr<purpleIAccount> mAccount;
-  PurpleBuddy *mBuddy;
-};
-
 class purpleBuddy : public purpleIBuddy
 {
 public:
@@ -32,10 +24,12 @@ public:
 
   purpleBuddy();
   nsresult Init(PurpleBuddy *aBuddy);
-  nsresult load(PurpleBuddy *aBuddy, purpleIAccount *aAccount, PRUint32 aId);
+  nsresult load(PurpleBuddy *aBuddy, purpleIAccount *aAccount,
+                PRUint32 aId, purpleTag *aTag);
   nsresult AddAccount(PurpleBuddy *aBuddy);
   purpleAccountBuddy *AddAccount(purpleIAccount *aAccount,
-                                 PurpleBuddy *aBuddy);
+                                 PurpleBuddy *aBuddy,
+                                 purpleTag *aTag);
   PRUint32 getId() { return mId; }
 
 private:
@@ -45,7 +39,7 @@ protected:
   /* additional members */
   PRUint32 mId;
   nsCString mAlias;
-  nsTArray<purpleAccountBuddy> mBuddies;
+  nsCOMArray<purpleAccountBuddy> mBuddies;
 };
 
 #endif /* !PURPLE_BUDDY_H_ */
