@@ -1,6 +1,11 @@
 #include "purpleTag.h"
 #include "purpleUtils.h"
 
+// very dirty work around for the error:
+// nsStringAPI.h:953: error: size of arg" is negative array
+#undef HAVE_CPP_2BYTE_WCHAR_T
+#include "nsStringAPI.h"
+
 NS_IMPL_ISUPPORTS1(purpleTag, purpleITag)
 
 purpleTag::purpleTag()
@@ -40,14 +45,19 @@ NS_IMETHODIMP purpleTag::GetId(PRInt32 *aId)
   return NS_OK;
 }
 
-/* readonly attribute string name; */
-NS_IMETHODIMP purpleTag::GetName(char * *aName)
+/* readonly attribute wstring name; */
+NS_IMETHODIMP purpleTag::GetName(PRUnichar * *aName)
 {
   if (!mGroup) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  return returnString(aName, purple_group_get_name(mGroup));
+  nsCString cName(purple_group_get_name(mGroup));
+  nsString name;
+  NS_CStringToUTF16(cName, NS_CSTRING_ENCODING_UTF8, name);
+
+  *aName = NS_StringCloneData(name);
+  return NS_OK;
 }
 
 /* readonly attribute boolean visible; */

@@ -60,6 +60,7 @@ nsresult purpleStorage::Init()
 
   DO_SQL("CREATE TABLE IF NOT EXISTS buddies ("
          "id INTEGER PRIMARY KEY, "
+         "key VARCHAR NOT NULL, "
          "name VARCHAR NOT NULL, "
          "srv_alias VARCHAR, "
          "position INTEGER, "
@@ -101,13 +102,13 @@ nsresult purpleStorage::Init()
                    "SELECT b.id FROM buddies b "
                                "JOIN account_buddy ab ON buddy_id = b.id "
                                "JOIN accounts a ON account_id = a.id "
-                               "WHERE b.name = ?1 and a.prpl = ?2");
+                               "WHERE b.key = ?1 and a.prpl = ?2");
 
   CREATE_STATEMENT(mInsertGroup,
                    "INSERT INTO tags (name, position) VALUES(?1, ?2)");
 
   CREATE_STATEMENT(mInsertBuddy,
-                   "INSERT INTO buddies (name, srv_alias, position) VALUES(?1, ?2, ?3)");
+                   "INSERT INTO buddies (key, name, srv_alias, position) VALUES(?1, ?2, ?3, ?4)");
 
   CREATE_STATEMENT(mInsertAccountBuddy,
                    "INSERT INTO account_buddy (account_id, buddy_id, tag_id) VALUES(?1, ?2, ?3)");

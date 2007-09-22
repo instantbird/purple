@@ -48,13 +48,17 @@ nsresult purpleBuddy::Init(PurpleBuddy *aBuddy)
   {
     mozIStorageStatement *statement = storageInstance->mInsertBuddy;
     mozStorageStatementScoper scoper(statement);
-    nsCString name(purple_normalize(aBuddy->account, aBuddy->name));
+    nsCString name(purple_normalize(aBuddy->account,
+                                    purple_buddy_get_name(aBuddy)));
     nsresult rv = statement->BindUTF8StringParameter(0, name);
     NS_ENSURE_SUCCESS(rv, rv);
-    nsCString prettyName(aBuddy->name);
+    nsCString prettyName(purple_buddy_get_name(aBuddy));
     rv = statement->BindUTF8StringParameter(1, prettyName);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = statement->BindInt32Parameter(2, 0); // FIXME (0 = not visible);
+    nsCString alias(purple_buddy_get_alias(aBuddy));
+    rv = statement->BindUTF8StringParameter(2, alias);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = statement->BindInt32Parameter(3, 0); // FIXME (0 = not visible);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = statement->Execute();
