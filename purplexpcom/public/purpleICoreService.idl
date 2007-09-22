@@ -7,9 +7,12 @@
 #include "purpleIConversation.idl"
 #include "purpleIAccount.idl"
 #include "purpleIBuddy.idl"
+#include "purpleITag.idl"
+
+interface mozIStorageConnection; //forward declaration
 
 /* 
- * This is the libpurple core
+ * This is a proxy to the libpurple core
  */
 [ptr] native purpleNativeProtocol(purpleProtocol);
 [ptr] native PurpleNativeAccount(PurpleAccount);
@@ -22,6 +25,9 @@ interface purpleICoreService: nsISupports {
 
   purpleIBuddy getBuddyById(in long aId);
   [noscript] purpleIBuddy getBuddyByPurpleBuddy(in PurpleNativeBuddy aBuddy);
+  void addBuddy(in purpleIAccount aAccount, in purpleITag aTag, in string aName);
+
+  purpleITag getTagById(in long aId);
 
   nsISimpleEnumerator getConversations();
   purpleIConversation getConversationById(in long aId);
@@ -73,4 +79,7 @@ interface purpleICoreService: nsISupports {
       - buddy-signed-off: this buddy has just signed off
       - buddy-removed: this buddy has been removed from the buddy list
    */
+
+  // FIXME: this should really go in a purpleStorage service
+  readonly attribute mozIStorageConnection storageConnection;
 };

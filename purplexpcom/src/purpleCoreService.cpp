@@ -341,6 +341,33 @@ NS_IMETHODIMP purpleCoreService::GetBuddyByPurpleBuddy(PurpleBuddy * aBuddy,
   return NS_OK;
 }
 
+/* void addBuddy (in purpleIAccount aAccount, in purpleITag aTag, in string aName); */
+NS_IMETHODIMP purpleCoreService::AddBuddy(purpleIAccount *aAccount,
+                                          purpleITag *aTag, const char *aName)
+{
+  NS_ENSURE_ARG_POINTER(aAccount);
+  NS_ENSURE_ARG_POINTER(aTag);
+
+  purpleTag *tag = static_cast<purpleTag *>(aTag);
+  PurpleAccount *account = static_cast<purpleAccount *>(aAccount)->GetPurpleAccount();
+  PurpleBuddy *buddy = purple_buddy_new(account, aName, NULL);
+  tag->addBuddy(buddy);
+  purple_account_add_buddy(account, buddy);
+  return NS_OK;
+}
+
+/* purpleITag getTagById (in long aId); */
+NS_IMETHODIMP purpleCoreService::GetTagById(PRInt32 aId, purpleITag **aResult)
+{
+  purpleTag *tag;
+  if (mTagById.Get(aId, &tag)) {
+    *aResult = tag;
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
 nsresult purpleCoreService::GetTagIdFromName(const nsCString& aName,
                                              PRInt32 *aResult)
 {
@@ -796,4 +823,15 @@ NS_IMETHODIMP purpleCoreService::FireBuddyEvent(PurpleBuddy * aBuddy,
   NS_ENSURE_SUCCESS(rv, rv);
   
   return NotifyObservers(pab, aEvent);
+}
+
+/* readonly attribute mozIStorageConnection storageConnection; */
+NS_IMETHODIMP purpleCoreService::GetStorageConnection(mozIStorageConnection * *aStorageConnection)
+{
+  purpleStorage *storageInstance = purpleStorage::GetInstance();
+  NS_ENSURE_TRUE(storageInstance, NS_ERROR_OUT_OF_MEMORY);
+
+  *aStorageConnection = storageInstance->GetConnection();
+  NS_ADDREF(*aStorageConnection);
+  return NS_OK;
 }
