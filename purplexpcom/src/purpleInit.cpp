@@ -374,6 +374,27 @@ connect_to_blist_signals()
 #endif
 }
 
+static void remove_blist_node(PurpleBuddyList *aList, PurpleBlistNode *aNode)
+{
+  if (PURPLE_BLIST_NODE_IS_BUDDY(aNode))
+    buddy_signals((PurpleBuddy *)aNode, "buddy-removed");
+}
+
+static PurpleBlistUiOps blist_uiops = {
+  NULL, /* new_list */
+  NULL, /* new_node FIXME: should use it */
+  NULL, /* show */
+  NULL, /* update */
+  remove_blist_node, /* remove */
+  NULL, /* destroy */
+  NULL, /* set_visible */
+  NULL, /* request_add_buddy */
+  NULL, /* request_add_chat */
+  NULL, /* request_add_group */
+
+  NULL, NULL, NULL, NULL
+};
+
 
 static void
 received_im_msg(PurpleAccount *account, char *sender, char *message,
@@ -544,6 +565,7 @@ init_libpurple()
 
   purple_connections_set_ui_ops(&connection_uiops);
   purple_accounts_set_ui_ops(&account_uiops);
+  purple_blist_set_ui_ops(&blist_uiops);
 
 #ifdef DEBUG_PURPLE_CONSOLE
   purple_debug_set_ui_ops(&debugconsoleuiops);
