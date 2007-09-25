@@ -543,7 +543,7 @@ NS_IMETHODIMP purpleCoreService::GetAccountById(const char *aAccountId, purpleIA
   }
 
   *aResult = nsnull;
-  return NS_OK;
+  return NS_OK; // we don't want to throw an exception if called from JS
 }
 
 nsresult purpleCoreService::GetAccountById(PRUint32 aAccountId, purpleAccount **aResult)
@@ -558,8 +558,7 @@ nsresult purpleCoreService::GetAccountById(PRUint32 aAccountId, purpleAccount **
     }
   }
 
-  *aResult = nsnull;
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 /* nsISimpleEnumerator getAccounts (); */
