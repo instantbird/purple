@@ -242,7 +242,7 @@ nsresult purpleAccount::ensureStored(const nsCString& aName, const nsCString& aP
 
     if (!name.Equals(aName) || !prpl.Equals(aPrpl)) {
 #ifdef DEBUG_PURPLE_ACCOUNT
-      printf("checking account %u failed\n", key);
+      printf("checking account %u failed\n", mId);
       printf(" aName = %s; name = %s\n", aName.get(), name.get());
       printf(" aPrpl = %s; prpl = %s\n", aPrpl.get(), prpl.get());
 #endif
@@ -428,6 +428,13 @@ inline nsresult purpleAccount::SetId(const nsCString& aId)
   return NS_OK;
 }
 
+nsresult purpleAccount::sendUpdateNotification()
+{
+  nsCOMPtr<purpleCoreService> pcs =
+    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
+  return pcs->NotifyObservers(this, "account-updated");
+}
+
 inline nsresult purpleAccount::GetPrefBranch()
 {
   /* if we already have the pref branch, return early */
@@ -475,7 +482,10 @@ NS_IMETHODIMP purpleAccount::SetAutoLogin(PRBool aAutoLogin)
 {
   PURPLE_ENSURE_INIT(mAccount);
 
-  return SetBoolPref(PREF_AUTOLOGIN, aAutoLogin);
+  nsresult rv = SetBoolPref(PREF_AUTOLOGIN, aAutoLogin);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return sendUpdateNotification();
 }
 
 /* attribute string password; */
@@ -526,7 +536,8 @@ NS_IMETHODIMP purpleAccount::SetAlias(const char * aAlias)
 
   purple_account_set_alias(mAccount, aAlias);
   SetStringPref(PREF_ALIAS, aAlias);
-  return NS_OK;
+
+  return sendUpdateNotification();
 }
 
 #define PURPLE_IMPL_SET(prettyType, purpleType, PRType)			\

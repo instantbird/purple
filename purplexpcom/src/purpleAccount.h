@@ -47,6 +47,7 @@ public:
 private:
   ~purpleAccount();
   inline nsresult SetId(const nsCString& aId);
+  nsresult sendUpdateNotification();
   inline nsresult GetPrefBranch();
   nsresult ensureStored(const nsCString& aName, const nsCString& aPrpl);
   nsresult storeAccount(PRUint32 aKey, const nsCString& aName, const nsCString& aPrpl);
