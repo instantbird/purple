@@ -110,6 +110,19 @@ nsresult purpleBuddy::AddAccount(PurpleBuddy *aBuddy)
   return pab->Store(mId);
 }
 
+nsresult purpleBuddy::RemoveAccount(PurpleBuddy *aBuddy)
+{
+  for (PRInt32 i = 0; i < mBuddies.Count(); ++i) {
+    if (mBuddies[i]->GetBuddy() == aBuddy) {
+      mBuddies[i]->Uninit();
+      mBuddies.RemoveObjectAt(i);
+      return NS_OK;
+    }
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
 /* readonly attribute long id; */
 NS_IMETHODIMP purpleBuddy::GetId(PRInt32 *aId)
 {

@@ -27,6 +27,11 @@ void purpleAccountBuddy::Init(purpleIAccount *aAccount,
   mTag = aTag;
 }
 
+void purpleAccountBuddy::Uninit()
+{
+  mBuddy = NULL;
+}
+
 nsresult purpleAccountBuddy::Store(PRInt32 aBuddyId)
 {
   char *key;

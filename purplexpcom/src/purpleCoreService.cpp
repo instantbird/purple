@@ -356,6 +356,16 @@ NS_IMETHODIMP purpleCoreService::AddBuddy(purpleIAccount *aAccount,
   return NS_OK;
 }
 
+/* [noscript] void purpleBuddyRemoved (in PurpleNativeBuddy aBuddy); */
+NS_IMETHODIMP purpleCoreService::PurpleBuddyRemoved(PurpleBuddy *aBuddy)
+{
+  nsCOMPtr<purpleBuddy> buddy;
+  if (mBuddiesByPurpleBuddy.Get((PRUint32) aBuddy, getter_AddRefs(buddy)))
+    return buddy->RemoveAccount(aBuddy);
+
+  return NS_ERROR_FAILURE;
+}
+
 /* purpleITag getTagById (in long aId); */
 NS_IMETHODIMP purpleCoreService::GetTagById(PRInt32 aId, purpleITag **aResult)
 {

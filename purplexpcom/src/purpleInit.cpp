@@ -376,8 +376,17 @@ connect_to_blist_signals()
 
 static void remove_blist_node(PurpleBuddyList *aList, PurpleBlistNode *aNode)
 {
-  if (PURPLE_BLIST_NODE_IS_BUDDY(aNode))
-    buddy_signals((PurpleBuddy *)aNode, "buddy-removed");
+  // We are only interested by buddy removal
+  if (!PURPLE_BLIST_NODE_IS_BUDDY(aNode))
+    return;
+
+  PurpleBuddy *buddy = (PurpleBuddy *) aNode;
+
+  // send the signal first, before actually removing the buddy
+  nsCOMPtr<purpleCoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
+  pcs->FireBuddyEvent(buddy, "buddy-removed");
+
+  pcs->PurpleBuddyRemoved(buddy);
 }
 
 static PurpleBlistUiOps blist_uiops = {

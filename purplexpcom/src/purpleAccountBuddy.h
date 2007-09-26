@@ -23,6 +23,7 @@ public:
 
   purpleAccountBuddy();
   void Init(purpleIAccount *aAccount, PurpleBuddy *aBuddy, purpleTag *aTag);
+  void Uninit();
   nsresult Store(PRInt32 aBuddyId);
   PurpleBuddy *GetBuddy() { return mBuddy; }
 

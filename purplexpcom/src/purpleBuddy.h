@@ -30,6 +30,7 @@ public:
   purpleAccountBuddy *AddAccount(purpleIAccount *aAccount,
                                  PurpleBuddy *aBuddy,
                                  purpleTag *aTag);
+  nsresult RemoveAccount(PurpleBuddy *aBuddy);
   PRUint32 getId() { return mId; }
 
 private:
