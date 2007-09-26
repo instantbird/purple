@@ -151,7 +151,7 @@ nsresult purpleAccount::load(const nsCString& aKey)
   /* Load the alias if any */
   nsCString alias;
   rv = mPrefBranch->GetCharPref(PREF_ALIAS, getter_Copies(alias));
-  if (NS_SUCCEEDED(rv)) {
+  if (NS_SUCCEEDED(rv) && alias.Length()) {
     purple_account_set_alias(mAccount, alias.get());
 #ifdef DEBUG_PURPLE_ACCOUNT
     printf("alias = %s\n", alias.get());
@@ -534,8 +534,17 @@ NS_IMETHODIMP purpleAccount::SetAlias(const char * aAlias)
 {
   PURPLE_ENSURE_INIT(mAccount)
 
-  purple_account_set_alias(mAccount, aAlias);
-  SetStringPref(PREF_ALIAS, aAlias);
+  if (*aAlias) {
+    purple_account_set_alias(mAccount, aAlias);
+    SetStringPref(PREF_ALIAS, aAlias);
+  }
+  else {
+    purple_account_set_alias(mAccount, NULL);
+    nsresult rv = GetPrefBranch();
+    if(NS_SUCCEEDED(rv)) {
+      mPrefBranch->DeleteBranch(PREF_ALIAS);
+    }
+  }
 
   return sendUpdateNotification();
 }
