@@ -231,8 +231,6 @@ NS_IMETHODIMP purpleCoreService::Quit()
   PURPLE_ENSURE_INIT(mInitialized);
 
   mConversations.Clear(); // don't know yet if there's a need for uninit
-  mBuddiesByPurpleBuddy.Clear();
-  mBuddiesById.Clear();
   UnInitAccounts();
   UnInitProtocols();
   mInitialized = PR_FALSE;
@@ -241,6 +239,10 @@ NS_IMETHODIMP purpleCoreService::Quit()
 #ifdef DEBUG_PURPLE_CORE_SERVICE
   printf("purple_core_quit\n");
 #endif
+  mBuddiesByPurpleBuddy.Clear(); // FIXME: useless
+  mBuddiesById.Clear(); // FIXME: this can and should be done before
+                        // purple_core_quit() once the blist signal
+                        // handlers are removed properly
 
   return NS_OK;
 }

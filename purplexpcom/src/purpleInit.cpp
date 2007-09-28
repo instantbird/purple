@@ -325,7 +325,7 @@ static void connection_signals(PurpleConnection *gc, const char *signal)
 static void
 connect_to_connections_signals()
 {
-  static int handle;
+  int handle;
   void *instance = purple_connections_get_handle();
   PURPLE_CONNECT_CONNECTION_SIGNAL("signed-on", "account-connected");
   PURPLE_CONNECT_CONNECTION_SIGNAL("signing-on", "account-signing-on");
@@ -339,7 +339,7 @@ connect_to_connections_signals()
 static void
 connect_to_accounts_signals()
 {
-  static int handle;
+  int handle;
   void *instance = purple_accounts_get_handle();
   purple_signal_connect(instance, "account-connecting", &handle,
 			PURPLE_CALLBACK(account_signals),
@@ -360,15 +360,30 @@ static void buddy_signals(PurpleBuddy *buddy, const char *signal)
 			PURPLE_CALLBACK(buddy_signals),		\
 			(void *)aSignal)
 
+static void buddy_removed(PurpleBuddy *buddy, void *null)
+{
+  // This is the buddy-removed purple signal. It is fired when a buddy
+  // is removed permanenty (ie from the server list or if the user
+  // request the deletion of a buddy in her list)
+
+  // send the signal first, before actually removing the buddy
+  nsCOMPtr<purpleCoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
+  pcs->FireBuddyEvent(buddy, "buddy-deleted");
+  pcs->PurpleBuddyRemoved(buddy);
+}
+
 void
 connect_to_blist_signals()
 {
-  static int handle;
+  int handle;
   void *instance = purple_blist_get_handle();
   PURPLE_CONNECT_BUDDY_SIGNAL("buddy-added");
-  //  PURPLE_CONNECT_BUDDY_SIGNAL("buddy-removed");
   PURPLE_CONNECT_BUDDY_SIGNAL("buddy-signed-on");
   PURPLE_CONNECT_BUDDY_SIGNAL("buddy-signed-off");
+
+  purple_signal_connect(instance, "buddy-removed", &handle,
+                        PURPLE_CALLBACK(buddy_removed),
+                        NULL);
 #ifdef DEBUG_PURPLE_INIT
   printf("connecting to blist signals\n");
 #endif
@@ -376,17 +391,19 @@ connect_to_blist_signals()
 
 static void remove_blist_node(PurpleBuddyList *aList, PurpleBlistNode *aNode)
 {
-  // We are only interested by buddy removal
+  // This is the removed blist uiop. It is fired when a possibly
+  // visible element of the buddy list is removed (because the account
+  // got disconnected)
+
+  // For now, we are only interested by buddy removal
   if (!PURPLE_BLIST_NODE_IS_BUDDY(aNode))
     return;
 
   PurpleBuddy *buddy = (PurpleBuddy *) aNode;
-
-  // send the signal first, before actually removing the buddy
-  nsCOMPtr<purpleCoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-  pcs->FireBuddyEvent(buddy, "buddy-removed");
-
-  pcs->PurpleBuddyRemoved(buddy);
+#ifdef DEBUG_PURPLE_INIT
+  printf("purple uiop : remove_blist_node, name = %s\n", buddy->name);
+#endif
+  buddy_signals(buddy, "buddy-removed");
 }
 
 static PurpleBlistUiOps blist_uiops = {
