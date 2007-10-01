@@ -3,6 +3,7 @@
 #include "purpleBuddy.h"
 #include "purpleUtils.h"
 #include "purpleStorage.h"
+#include "purpleSockets.h"
 #include "nsXPCOM.h"
 #include <glib.h>
 #include <libpurple/core.h>
@@ -243,6 +244,8 @@ NS_IMETHODIMP purpleCoreService::Quit()
   mBuddiesById.Clear(); // FIXME: this can and should be done before
                         // purple_core_quit() once the blist signal
                         // handlers are removed properly
+  purpleStorage::unInit();
+  purpleSocketWatcher::unInit();
 
   return NS_OK;
 }

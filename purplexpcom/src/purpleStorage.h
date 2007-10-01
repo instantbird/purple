@@ -8,6 +8,7 @@ class purpleStorage
 {
  public:
   static purpleStorage *GetInstance();
+  static void unInit() { delete mInstance; }
   mozIStorageConnection *GetConnection() {
     return mDBConn;
   }
