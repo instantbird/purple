@@ -349,16 +349,19 @@ connect_to_accounts_signals()
 #endif
 }
 
-static void buddy_signals(PurpleBuddy *buddy, const char *signal)
+static void buddy_signals(PurpleBuddy *aBuddy, const char *aSignal)
 {
   nsCOMPtr<purpleCoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-  pcs->FireBuddyEvent(buddy, signal);
+  pcs->FireBuddyEvent(aBuddy, aSignal);
 }
 
-#define PURPLE_CONNECT_BUDDY_SIGNAL(aSignal)			\
+#define PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER(aSignal, aHandler)  \
   purple_signal_connect(instance, aSignal, &handle,		\
-			PURPLE_CALLBACK(buddy_signals),		\
+			PURPLE_CALLBACK(aHandler),		\
 			(void *)aSignal)
+
+#define PURPLE_CONNECT_BUDDY_SIGNAL(aSignal)			\
+  PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER(aSignal, buddy_signals)
 
 static void buddy_removed(PurpleBuddy *buddy, void *null)
 {
@@ -372,6 +375,17 @@ static void buddy_removed(PurpleBuddy *buddy, void *null)
   pcs->PurpleBuddyRemoved(buddy);
 }
 
+static void buddy_away(PurpleBuddy *aBuddy,
+                       PurpleStatus *old_status, PurpleStatus *status)
+{
+  buddy_signals(aBuddy, "buddy-away");
+}
+
+static void buddy_idle(PurpleBuddy *aBuddy, gboolean old_idle, gboolean idle)
+{
+  buddy_signals(aBuddy, "buddy-idle");
+}
+
 void
 connect_to_blist_signals()
 {
@@ -380,10 +394,10 @@ connect_to_blist_signals()
   PURPLE_CONNECT_BUDDY_SIGNAL("buddy-added");
   PURPLE_CONNECT_BUDDY_SIGNAL("buddy-signed-on");
   PURPLE_CONNECT_BUDDY_SIGNAL("buddy-signed-off");
+  PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER("buddy-removed", buddy_removed);
+  PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER("buddy-status-changed", buddy_away);
+  PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER("buddy-idle-changed", buddy_idle);
 
-  purple_signal_connect(instance, "buddy-removed", &handle,
-                        PURPLE_CALLBACK(buddy_removed),
-                        NULL);
 #ifdef DEBUG_PURPLE_INIT
   printf("connecting to blist signals\n");
 #endif

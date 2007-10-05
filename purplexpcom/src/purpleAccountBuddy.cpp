@@ -118,3 +118,45 @@ NS_IMETHODIMP purpleAccountBuddy::CreateConversation(purpleIConversation **aResu
 
   return mAccount->CreateConversation(purple_buddy_get_name(mBuddy), aResult);
 }
+
+#define PURPLE_PRESENCE_GET_BOOL_IMPL(aName, aFctName)                  \
+  NS_IMETHODIMP purpleAccountBuddy::Get##aName(PRBool *a##aName)        \
+  {                                                                     \
+    if (!mBuddy) {                                                      \
+      return NS_ERROR_NOT_INITIALIZED;                                  \
+    }                                                                   \
+                                                                        \
+    *a##aName = purple_presence_is_##aFctName(purple_buddy_get_presence(mBuddy)); \
+    return NS_OK;                                                       \
+  }
+
+/* readonly attribute boolean online; */
+PURPLE_PRESENCE_GET_BOOL_IMPL(Online, online)
+
+/* readonly attribute boolean available; */
+PURPLE_PRESENCE_GET_BOOL_IMPL(Available, available)
+
+/* readonly attribute boolean idle; */
+PURPLE_PRESENCE_GET_BOOL_IMPL(Idle, idle)
+
+/* readonly attribute string status; */
+NS_IMETHODIMP purpleAccountBuddy::GetStatus(nsACString &aStatus)
+{
+  if (!mBuddy) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  PurplePlugin *prpl = purple_find_prpl(purple_account_get_protocol_id(mBuddy->account));
+  NS_ENSURE_ARG_POINTER(prpl);
+
+  PurplePluginProtocolInfo *prpl_info = PURPLE_PLUGIN_PROTOCOL_INFO(prpl);
+  NS_ENSURE_ARG_POINTER(prpl_info);
+
+  if (prpl_info->status_text && mBuddy->account->gc) {
+    aStatus = prpl_info->status_text(mBuddy);
+  }
+  else
+    aStatus = "";
+
+  return NS_OK;
+}
