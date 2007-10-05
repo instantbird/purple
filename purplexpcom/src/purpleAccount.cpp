@@ -603,11 +603,12 @@ PURPLE_IMPL_SETPREF(String, Char, const char *)
 
 
 /* attribute string connectionStateMsg; */
-NS_IMETHODIMP purpleAccount::GetConnectionStateMsg(char * *aConnectionStateMsg)
+NS_IMETHODIMP purpleAccount::GetConnectionStateMsg(nsACString &aConnectionStateMsg)
 {
-  return returnString(aConnectionStateMsg, mConnectionStateMsg.get());
+  aConnectionStateMsg = mConnectionStateMsg;
+  return NS_OK;
 }
-NS_IMETHODIMP purpleAccount::SetConnectionStateMsg(const char * aConnectionStateMsg)
+NS_IMETHODIMP purpleAccount::SetConnectionStateMsg(const nsACString &aConnectionStateMsg)
 {
   mConnectionStateMsg = aConnectionStateMsg;
   return NS_OK;

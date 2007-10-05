@@ -116,7 +116,8 @@ static void setAccountConnectionStateMsg(PurpleConnection *gc, const char *text,
   if (NS_FAILED(rv)) {
     return;
   }
-  account->SetConnectionStateMsg(text);
+  nsCString msg(text);
+  account->SetConnectionStateMsg(msg);
   pcs->NotifyObservers(account, aEvent);
 }
 
