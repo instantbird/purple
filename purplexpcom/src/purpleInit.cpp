@@ -21,7 +21,6 @@
  *
  */
 #define CUSTOM_PLUGIN_PATH     "libraries/prpl"
-#define PLUGIN_SAVE_PREF       "/purple/nullclient/plugins/saved"
 
 #ifdef XP_WIN
 # define _USE_32BIT_TIME_T
@@ -223,8 +222,7 @@ PurpleAccountUiOps account_uiops = {
 };
 
 /*** Conversation uiops ***/
-static void
-null_create_conv(PurpleConversation *aConv)
+static void create_conv(PurpleConversation *aConv)
 {
 #ifdef DEBUG_PURPLE_INIT
   printf("create conversation with name: %s\n", purple_conversation_get_name(aConv));
@@ -239,9 +237,9 @@ null_create_conv(PurpleConversation *aConv)
   pcs->AddConversation(conv);
 }
 
-static void
-null_write_conv(PurpleConversation *conv, const char *who, const char *alias,
-		const char *message, PurpleMessageFlags flags, time_t mtime)
+static void write_conv(PurpleConversation *conv, const char *who,
+                       const char *alias, const char *message,
+                       PurpleMessageFlags flags, time_t mtime)
 {
   nsresult rv;
   nsCOMPtr<purpleMessage> msg = do_CreateInstance(PURPLE_MESSAGE_CONTRACTID, &rv);
@@ -255,53 +253,26 @@ null_write_conv(PurpleConversation *conv, const char *who, const char *alias,
   pcs->NotifyObservers(msg, "new-text");
 }
 
-static PurpleConversationUiOps null_conv_uiops =
+static PurpleConversationUiOps conversation_uiops =
 {
-	null_create_conv,          /* create_conversation  */
-	NULL,                      /* destroy_conversation */
-	NULL,                      /* write_chat           */
-	NULL,                      /* write_im             */
-	null_write_conv,           /* write_conv           */
-	NULL,                      /* chat_add_users       */
-	NULL,                      /* chat_rename_user     */
-	NULL,                      /* chat_remove_users    */
-	NULL,                      /* chat_update_user     */
-	NULL,                      /* present              */
-	NULL,                      /* has_focus            */
-	NULL,                      /* custom_smiley_add    */
-	NULL,                      /* custom_smiley_write  */
-	NULL,                      /* custom_smiley_close  */
-	NULL,                      /* send_confirm         */
-	NULL,
-	NULL,
-	NULL,
-	NULL
+  create_conv,               /* create_conversation  */
+  NULL,                      /* destroy_conversation */
+  NULL,                      /* write_chat           */
+  NULL,                      /* write_im             */
+  write_conv,                /* write_conv           */
+  NULL,                      /* chat_add_users       */
+  NULL,                      /* chat_rename_user     */
+  NULL,                      /* chat_remove_users    */
+  NULL,                      /* chat_update_user     */
+  NULL,                      /* present              */
+  NULL,                      /* has_focus            */
+  NULL,                      /* custom_smiley_add    */
+  NULL,                      /* custom_smiley_write  */
+  NULL,                      /* custom_smiley_close  */
+  NULL,                      /* send_confirm         */
+
+  NULL, NULL, NULL, NULL
 };
-
-static void
-null_ui_init()
-{
-	/**
-	 * This should initialize the UI components for all the modules. Here we
-	 * just initialize the UI for conversations.
-	 */
-	purple_conversations_set_ui_ops(&null_conv_uiops);
-}
-
-static PurpleCoreUiOps null_core_uiops =
-{
-	NULL,
-	NULL,
-	null_ui_init,
-	NULL,
-
-	/* padding */
-	NULL,
-	NULL,
-	NULL,
-	NULL
-};
-
 
 static void account_signals(PurpleAccount *account, const char *signal)
 {
@@ -479,8 +450,7 @@ received_im_msg(PurpleAccount *account, char *sender, char *message,
 #endif
 }
 
-static void
-connect_to_signals_for_demonstration_purposes_only()
+static void connect_to_conversations_signals()
 {
   static int handle;
   purple_signal_connect(purple_conversations_get_handle(), "received-im-msg", &handle,
@@ -596,14 +566,7 @@ init_libpurple()
   purple_debug_set_enabled(FALSE);
 #endif
 
-	/* Set the core-uiops, which is used to
-	 * 	- initialize the ui specific preferences.
-	 * 	- initialize the debug ui.
-	 * 	- initialize the ui components for all the modules.
-	 * 	- uninitialize the ui components for all the modules when the core terminates.
-	 */
-	purple_core_set_ui_ops(&null_core_uiops);
-
+  purple_conversations_set_ui_ops(&conversation_uiops);
   purple_connections_set_ui_ops(&connection_uiops);
   purple_accounts_set_ui_ops(&account_uiops);
   purple_blist_set_ui_ops(&blist_uiops);
@@ -647,24 +610,22 @@ init_libpurple()
     return NS_ERROR_FAILURE;
   }
 
-// 	/* Load the preferences. */
-// 	purple_prefs_load();
-	purple_prefs_set_bool("/purple/logging/log_ims", TRUE);
-	purple_prefs_set_bool("/purple/logging/log_chats", TRUE);
-	purple_prefs_set_bool("/purple/logging/log_system", TRUE);
+  /* Enable all logs by default. */
+  purple_prefs_set_bool("/purple/logging/log_ims", TRUE);
+  purple_prefs_set_bool("/purple/logging/log_chats", TRUE);
+  purple_prefs_set_bool("/purple/logging/log_system", TRUE);
 
-// 	/* Load the pounces. */
-// 	purple_pounces_load();
+  /* Load the pounces. */
+  purple_pounces_load();
 
+  /* Now, to connect the account(s), create a status and activate it. */
+  PurpleSavedStatus *status = purple_savedstatus_new(NULL, PURPLE_STATUS_AVAILABLE);
+  purple_savedstatus_activate(status);
 
- 	/* Now, to connect the account(s), create a status and activate it. */
-  	PurpleSavedStatus *status = purple_savedstatus_new(NULL, PURPLE_STATUS_AVAILABLE);
-  	purple_savedstatus_activate(status);
+  connect_to_connections_signals();
+  connect_to_accounts_signals();
+  //  connect_to_blist_signals();
+  connect_to_conversations_signals();
 
-	connect_to_connections_signals();
-	connect_to_accounts_signals();
-        //	connect_to_blist_signals();
- 	connect_to_signals_for_demonstration_purposes_only();
-
-	return NS_OK;
+  return NS_OK;
 }
