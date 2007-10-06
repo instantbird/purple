@@ -83,4 +83,7 @@ interface purpleICoreService: nsISupports {
 
   // FIXME: this should really go in a purpleStorage service
   readonly attribute mozIStorageConnection storageConnection;
+
+  void away(in AUTF8String aMessage);
+  void back(in AUTF8String aMessage);
 };

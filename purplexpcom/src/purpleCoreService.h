@@ -39,6 +39,7 @@ private:
   inline void UnInitAccounts();
   inline void UnInitProtocols();
   nsresult GetAccountById(PRUint32 aAccountId, purpleAccount **aResult);
+  nsresult SetStatus(PurpleStatusPrimitive aStatus, const nsACString &aMessage);
 
 protected:
   PRBool mInitialized;

@@ -78,6 +78,7 @@ nsresult purpleAccount::create(const char *aName, purpleProtocol *aPrpl,
   if (!mAccount) {
     return NS_ERROR_FAILURE;
   }
+  purple_accounts_add(mAccount);
 
   nsresult rv = SetId(aKey);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -147,6 +148,7 @@ nsresult purpleAccount::load(const nsCString& aKey)
   if (!mAccount) {
     return NS_ERROR_FAILURE;
   }
+  purple_accounts_add(mAccount);
 
   /* Load the alias if any */
   nsCString alias;

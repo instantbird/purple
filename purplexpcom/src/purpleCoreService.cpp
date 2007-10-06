@@ -8,6 +8,7 @@
 #include <glib.h>
 #include <libpurple/core.h>
 #include <libpurple/account.h>
+#include <libpurple/savedstatuses.h>
 
 #include<nsServiceManagerUtils.h>
 #include<nsComponentManagerUtils.h>
@@ -848,4 +849,28 @@ NS_IMETHODIMP purpleCoreService::GetStorageConnection(mozIStorageConnection * *a
   *aStorageConnection = storageInstance->GetConnection();
   NS_ADDREF(*aStorageConnection);
   return NS_OK;
+}
+
+nsresult purpleCoreService::SetStatus(PurpleStatusPrimitive aStatus,
+                                      const nsACString &aMessage)
+{
+  PurpleSavedStatus *status = purple_savedstatus_get_default();
+  NS_ENSURE_ARG_POINTER(status);
+
+  purple_savedstatus_set_type(status, aStatus);
+  purple_savedstatus_set_message(status, PromiseFlatCString(aMessage).get());
+  purple_savedstatus_activate(status);
+  return NS_OK;
+}
+
+/* void away (in string aMessage); */
+NS_IMETHODIMP purpleCoreService::Away(const nsACString &aMessage)
+{
+  return SetStatus(PURPLE_STATUS_AWAY, aMessage);
+}
+
+/* void back (in string aMessage); */
+NS_IMETHODIMP purpleCoreService::Back(const nsACString &aMessage)
+{
+  return SetStatus(PURPLE_STATUS_AVAILABLE, aMessage);
 }
