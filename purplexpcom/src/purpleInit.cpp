@@ -59,6 +59,7 @@
 #include <libpurple/status.h>
 #include <libpurple/util.h>
 #include <libpurple/whiteboard.h>
+#include <libpurple/certificate.h>
 
 #include <glib.h>
 
@@ -611,9 +612,14 @@ init_libpurple()
   NS_ENSURE_SUCCESS(rv, rv);
   rv = folder->GetNativePath(path);
   NS_ENSURE_SUCCESS(rv, rv);
-  path.Append("/");
-  path.Append(CUSTOM_PLUGIN_PATH);
-  purple_plugins_add_search_path(path.get());
+
+  nsCString pluginPath(path);
+  pluginPath.Append("/" CUSTOM_PLUGIN_PATH);
+  purple_plugins_add_search_path(pluginPath.get());
+
+  /* Set a custom ca cert search path */
+  path.Append("/ca-certs");
+  purple_certificate_set_ca_path(path.get());
 
   /* Here "instantbird" stands for the UI_ID. libpurple
    * sometimes need this id (for example for some plugins and
