@@ -193,8 +193,8 @@ NS_IMETHODIMP purpleAccountBuddy::GetStatus(nsACString &aStatus)
     char *tmp1 = prpl_info->status_text(mBuddy);
     char *tmp2 = purple_unescape_html(tmp1);
     aStatus = tmp2;
-    free(tmp1);
-    free(tmp2);
+    g_free(tmp1);
+    g_free(tmp2);
   }
   else
     aStatus = "";
