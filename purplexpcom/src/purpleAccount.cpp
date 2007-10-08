@@ -89,14 +89,14 @@ void purpleAccount::UnInit()
 #endif
 }
 
-#define PURPLE_IMPL_GETPREF(prettyType, purpleType, PRType)			\
+#define PURPLE_IMPL_GETPREF(prettyType, purpleType, PRType)             \
   inline void purpleAccount::Get##prettyType##Pref(const char *aName)	\
   {									\
     PRType val;								\
-    nsresult rv = mPrefBranch->Get##prettyType##Pref(aName, &val);	\
+    nsresult rv = mPrefOptBranch->Get##prettyType##Pref(aName, &val);	\
     if (NS_SUCCEEDED(rv)) {						\
-      purple_account_set_##purpleType(mAccount, aName, val);		\
-    }									\
+      purple_account_set_##purpleType(mAccount, aName, val);            \
+    }                                                                   \
   }
 
 
@@ -220,14 +220,14 @@ nsresult purpleAccount::load(const nsCString& aKey)
   //get spec options
   PRUint32 count;
   char **prefs;
-  rv = mPrefBranch->GetChildList(PREF_OPTIONS, &count, &prefs);
+  rv = mPrefOptBranch->GetChildList("", &count, &prefs);
   NS_ENSURE_SUCCESS(rv, rv);
 #ifdef DEBUG_PURPLE_ACCOUNT
   printf("number of specific pref: %i\n", count);
 #endif
   while (count--) {
     PRInt32 type;
-    rv = mPrefBranch->GetPrefType(prefs[count], &type);
+    rv = mPrefOptBranch->GetPrefType(prefs[count], &type);
     if (NS_FAILED(rv)) {
       continue;
     }
@@ -246,9 +246,14 @@ nsresult purpleAccount::load(const nsCString& aKey)
     }
   }
 
+  return NS_OK;
+}
+
+nsresult purpleAccount::checkAutoLogin()
+{
   /* Check if we should connect the account automatically */
   PRBool autoLogin;
-  rv = mPrefBranch->GetBoolPref(PREF_AUTOLOGIN, &autoLogin);
+  nsresult rv = mPrefBranch->GetBoolPref(PREF_AUTOLOGIN, &autoLogin);
   if (NS_FAILED(rv) || autoLogin) {
 #ifdef DEBUG_PURPLE_ACCOUNT
     printf("autologin\n");
@@ -488,7 +493,12 @@ inline nsresult purpleAccount::GetPrefBranch()
 
   /* get the branch */
   nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  return prefs->GetBranch(root.get(), getter_AddRefs(mPrefBranch));
+  nsresult rv = prefs->GetBranch(root.get(), getter_AddRefs(mPrefBranch));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  /* get the options pref branch */
+  root.Append(PREF_OPTIONS);
+  return prefs->GetBranch(root.get(), getter_AddRefs(mPrefOptBranch));
 }
 
 /* readonly attribute purpleIProtocol protocol; */
@@ -588,7 +598,7 @@ NS_IMETHODIMP purpleAccount::SetAlias(const char * aAlias)
   return sendUpdateNotification();
 }
 
-#define PURPLE_IMPL_SET(prettyType, purpleType, PRType)			\
+#define PURPLE_IMPL_SET(prettyType, purpleType, PRType, prefType)       \
   NS_IMETHODIMP purpleAccount::Set##prettyType(const char *aName,	\
 					       PRType aVal)		\
   {									\
@@ -598,17 +608,18 @@ NS_IMETHODIMP purpleAccount::SetAlias(const char * aAlias)
     purple_account_set_##purpleType(mAccount, aName, aVal);		\
     									\
     /* Save the pref in our preference system */			\
-    nsCString key(PREF_OPTIONS);					\
-    key.Append(aName);							\
-    return Set##prettyType##Pref(key.get(), aVal);			\
+    nsresult rv = GetPrefBranch();					\
+    NS_ENSURE_SUCCESS(rv, rv);						\
+									\
+    return mPrefOptBranch->Set##prefType##Pref(aName, aVal);		\
   }
 
 /* void setBool (in string aName, in boolean aVal); */
-PURPLE_IMPL_SET(Bool, bool, PRBool)
+PURPLE_IMPL_SET(Bool, bool, PRBool, Bool)
 /* void setInt (in string aName, in long aVal); */
-PURPLE_IMPL_SET(Int, int, PRInt32)
+PURPLE_IMPL_SET(Int, int, PRInt32, Int)
 /* void setString (in string aName, in string aVal); */
-PURPLE_IMPL_SET(String, string, const char *)
+PURPLE_IMPL_SET(String, string, const char *, Char)
 
 /* void savePrefs (); */
 NS_IMETHODIMP purpleAccount::Save()

@@ -360,10 +360,18 @@ NS_IMETHODIMP purpleCoreService::GetBuddyByPurpleBuddy(PurpleBuddy * aBuddy,
   if (found) {
     PRInt32 id = statement->AsInt32(0);
     rv = GetBuddyById(id, aResult);
-    NS_ENSURE_SUCCESS(rv, rv);
-    purpleBuddy *buddy = static_cast<purpleBuddy *>(*aResult);
-    mBuddiesByPurpleBuddy.Put((PRUint32) aBuddy, buddy);
-    return buddy->AddAccount(aBuddy);
+    /* If we fail here, it's probably because the mozStorage entry
+       we found is some junk that should have been removed when an
+       account or a buddy has been deleted, in this case, do as if we
+       didn't find it in the database */
+    if (NS_SUCCEEDED(rv)) {
+      purpleBuddy *buddy = static_cast<purpleBuddy *>(*aResult);
+      mBuddiesByPurpleBuddy.Put((PRUint32) aBuddy, buddy);
+      return buddy->AddAccount(aBuddy);
+    }
+#ifdef DEBUG_PURPLE_CORE_SERVICE
+    printf("Let's ignore the dummy mozStorage entry we found!\n");
+#endif
   }
 
   /* At this point, if we still haven't found it, this is a NEW
@@ -655,6 +663,9 @@ nsresult purpleCoreService::InitAccounts()
 
     /* Keep it the local account list */
     mAccounts.AppendObject(account);
+
+    /* Attempt to connect the account if autoLogin is set */
+    account->checkAutoLogin();
   }
 
   return NS_OK;
@@ -842,6 +853,9 @@ NS_IMETHODIMP purpleCoreService::GetAccountByPurpleAccount(PurpleAccount * aAcco
       NS_ADDREF(*aResult);
       return NS_OK;
     }
+#ifdef DEBUG_PURPLE_CORE_SERVICE
+    printf("mAccounts[%i]: %s\n", i, mAccounts[i]->IsPurpleAccount(NULL) ? "NULL" : "not null");
+#endif
   }
 
   return NS_ERROR_FAILURE;
@@ -851,6 +865,10 @@ NS_IMETHODIMP purpleCoreService::GetAccountByPurpleAccount(PurpleAccount * aAcco
 NS_IMETHODIMP purpleCoreService::FireAccountEvent(PurpleAccount * aAccount,
 						  const char *aEvent)
 {
+#ifdef DEBUG_PURPLE_CORE_SERVICE
+  printf("FireAccountEvent: event: %s, account name: %s\n", aEvent, aAccount->username);
+#endif
+
   nsCOMPtr<purpleIAccount> account;
   nsresult rv = this->GetAccountByPurpleAccount(aAccount,
 						getter_AddRefs(account));

@@ -75,6 +75,7 @@ public:
   nsresult create(const char *name, purpleProtocol *prpl,
        	          const nsCString& aKey);
   nsresult load(const nsCString& aKey);
+  nsresult checkAutoLogin();
   nsresult remove();
   void UnInit();
   PRBool IsPurpleAccount(const PurpleAccount *aAccount) {
@@ -101,6 +102,7 @@ private:
   PRUint32 mId;
   nsCOMPtr<purpleProtocol> mProtocol;
   nsCOMPtr<nsIPrefBranch> mPrefBranch;
+  nsCOMPtr<nsIPrefBranch> mPrefOptBranch;
 
 protected:
   /* additional members */
