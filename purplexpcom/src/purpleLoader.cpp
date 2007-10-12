@@ -71,8 +71,8 @@ static char const *const kDependentLibraries[] =
         "libjabber" DLL_SUFFIX,
 		"dnssd" DLL_SUFFIX,
 		"libmeanwhile-1" DLL_SUFFIX,
-		"silc" DLL_SUFFIX,
-		"silcclient" DLL_SUFFIX,
+		"libsilc-1-1-2" DLL_SUFFIX,
+		"libsilcclient-1-1-2" DLL_SUFFIX,
 #endif
 #ifdef XP_MACOSX
     DLL_PREFIX "z.1" DLL_SUFFIX,

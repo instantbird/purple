@@ -40,6 +40,7 @@
 
 #ifdef XP_WIN
 # define _USE_32BIT_TIME_T
+# define PURPLE_MOZ_DNS
 #endif
 
 #include <libpurple/account.h>
@@ -75,7 +76,6 @@
 #include<nsIObserverService.h>
 #include<nsCOMPtr.h>
 
-//#define PURPLE_MOZ_DNS
 
 #ifdef PURPLE_MOZ_DNS
 # include <libpurple/dnsquery.h>
@@ -103,7 +103,7 @@
 
 //#define DEBUG_PURPLE_INIT
 //#define DEBUG_PURPLE_STDERR
-//#define DEBUG_PURPLE_CONSOLE
+#define DEBUG_PURPLE_CONSOLE
 #ifdef DEBUG_PURPLE_CONSOLE
 # include <nsIConsoleService.h>
 #endif
@@ -568,14 +568,16 @@ init_libpurple()
   nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
 				       getter_AddRefs(folder));
   NS_ENSURE_SUCCESS(rv, rv);
-  nsCString path;
-  rv = folder->GetNativePath(path);
+  nsString path;
+  rv = folder->GetPath(path);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsCString cPath;
+  CopyUTF16toUTF8(path, cPath);
 #ifdef DEBUG_PURPLE_INIT
-  printf("setting custom user directory to:  %s\n", path.get());
+  printf("setting custom user directory to:  %s\n", cPath.get());
 #endif
-  purple_util_set_user_dir(path.get());
+  purple_util_set_user_dir(cPath.get());
 
 #ifdef DEBUG_PURPLE_STDERR
   purple_debug_set_enabled(TRUE);
@@ -610,16 +612,17 @@ init_libpurple()
   rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR,
                               getter_AddRefs(folder));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = folder->GetNativePath(path);
+  rv = folder->GetPath(path);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCString pluginPath(path);
+  CopyUTF16toUTF8(path, cPath);
+  nsCString pluginPath(cPath);
   pluginPath.Append("/" CUSTOM_PLUGIN_PATH);
   purple_plugins_add_search_path(pluginPath.get());
 
   /* Set a custom ca cert search path */
-  path.Append("/ca-certs");
-  purple_certificate_set_ca_path(path.get());
+  cPath.Append("/ca-certs");
+  purple_certificate_set_ca_path(cPath.get());
 
   /* Here "instantbird" stands for the UI_ID. libpurple
    * sometimes need this id (for example for some plugins and
