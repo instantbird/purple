@@ -40,7 +40,6 @@
 
 #ifdef XP_WIN
 # define _USE_32BIT_TIME_T
-# define PURPLE_MOZ_DNS
 #endif
 
 #include <libpurple/account.h>
@@ -61,6 +60,7 @@
 #include <libpurple/util.h>
 #include <libpurple/whiteboard.h>
 #include <libpurple/certificate.h>
+#include <libpurple/dnsquery.h>
 
 #include <glib.h>
 
@@ -76,16 +76,6 @@
 #include<nsIObserverService.h>
 #include<nsCOMPtr.h>
 
-
-#ifdef PURPLE_MOZ_DNS
-# include <libpurple/dnsquery.h>
-# include<necko/nsIDNSService.h>
-# include<necko/nsIDNSRecord.h>
-# include<prio.h>
-#endif
-// very dirty work around for the error:
-// nsStringAPI.h:953: error: size of arg" is negative array
-#undef HAVE_CPP_2BYTE_WCHAR_T
 #include<nsStringAPI.h>
 #include<nsEmbedString.h>
 #include<windowwatcher/nsIPromptService.h>
@@ -96,6 +86,7 @@
 #include"purpleMessage.h"
 #include"purpleTimer.h"
 #include"purpleSockets.h"
+#include"purpleDNS.h"
 #include "nsComponentManagerUtils.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -510,53 +501,12 @@ static PurpleDebugUiOps debugconsoleuiops = {
 };
 #endif
 
-#ifdef PURPLE_MOZ_DNS
-static gboolean resolve(PurpleDnsQueryData *query_data,
-			        PurpleDnsQueryResolvedCallback resolved_cb,
-			        PurpleDnsQueryFailedCallback failed_cb)
-{
-  //FIXME this really shouldn't be blocking!
-  nsCString host(purple_dnsquery_get_host(query_data));
-#ifdef DEBUG_PURPLE_INIT
-  printf("resolving with moz: %s\n", host.get());
-#endif
-  nsCOMPtr<nsIDNSService> dns = do_GetService("@mozilla.org/network/dns-service;1");
-  nsCOMPtr<nsIDNSRecord> record;
-  dns->Resolve(host, 0, getter_AddRefs(record));
-  GSList *hosts = NULL;
-  PRBool more;
-  record->HasMore(&more);
-  if (!more) {
-    failed_cb(query_data, "Not found");
-#ifdef DEBUG_PURPLE_INIT
-    printf("notfound");
-#endif
-    return true;
-  }
-  union PRNetAddr addr;
-  while (more)
-  {
-    record->GetNextAddr(purple_dnsquery_get_port(query_data), &addr);
-#ifdef DEBUG_PURPLE_INIT
-    printf("One adresse found");
-#endif
-    hosts = g_slist_append(hosts, GINT_TO_POINTER(sizeof(addr.inet)));
-    hosts = g_slist_append(hosts, g_memdup(&addr.inet, sizeof(addr.inet)));
-    record->HasMore(&more);
-  }
-#ifdef DEBUG_PURPLE_INIT
-  printf("dns resolution done");
-#endif
-  resolved_cb(query_data, hosts);
-  return true;
-}
-
 static PurpleDnsQueryUiOps dnsUiOps = {
-  resolve,
-  NULL,
+  purpleDNS::Resolve,
+  purpleDNS::Cancel,
+
   NULL,NULL,NULL,NULL
 };
-#endif /* PURPLE_MOZ_DNS */
 
 nsresult
 init_libpurple()
@@ -594,9 +544,7 @@ init_libpurple()
   purple_debug_set_ui_ops(&debugconsoleuiops);
 #endif
 
-#ifdef PURPLE_MOZ_DNS
   purple_dnsquery_set_ui_ops(&dnsUiOps);
-#endif
 
   /* The eventloop uiops use nsTimer and
    * nsSocketTransportService. purpleTimer and purpleSocket are proxy

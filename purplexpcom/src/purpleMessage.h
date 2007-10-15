@@ -44,9 +44,6 @@
 
 #include "purpleIMessage.h"
 #include <libpurple/conversation.h>
-// very dirty work around for the error:
-// nsStringAPI.h:953: error: size of arg" is negative array
-#undef HAVE_CPP_2BYTE_WCHAR_T
 #include "nsStringAPI.h"
 
 // 0ca0b0a3-ab52-434a-9176-a7d7daa74bad

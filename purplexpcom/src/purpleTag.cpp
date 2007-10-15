@@ -37,10 +37,6 @@
 
 #include "purpleTag.h"
 #include "purpleUtils.h"
-
-// very dirty work around for the error:
-// nsStringAPI.h:953: error: size of arg" is negative array
-#undef HAVE_CPP_2BYTE_WCHAR_T
 #include "nsStringAPI.h"
 
 NS_IMPL_ISUPPORTS1(purpleTag, purpleITag)

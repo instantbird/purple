@@ -40,9 +40,6 @@
 #include <nsTArray.h>
 #include <glib.h>
 #include <libpurple/eventloop.h>
-// very dirty work around for the error:
-// nsStringAPI.h:953: error: size of arg" is negative array
-#undef HAVE_CPP_2BYTE_WCHAR_T
 #include<nsStringAPI.h>
 #include"purpleISocket.h"
 #include<necko/nsSocketTransportService2.h>
