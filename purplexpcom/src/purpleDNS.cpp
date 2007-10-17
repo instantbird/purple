@@ -144,9 +144,14 @@ nsresult purpleDNSRequest::OnLookupComplete(nsICancelable *request,
   {
     record->GetNextAddr(purple_dnsquery_get_port(query_data), &addr);
     hosts = g_slist_append(hosts, GINT_TO_POINTER(sizeof(addr.inet)));
+#ifndef XP_WIN
+    //actually this may only be needed on Mac OS X
     sockaddr *addr2 = (sockaddr *) g_memdup(&addr.inet, sizeof(addr.inet));
     addr2->sa_family = addr.inet.family; //very ugly!!
     hosts = g_slist_append(hosts, addr2);
+#else
+    hosts = g_slist_append(hosts, g_memdup(&addr.inet, sizeof(addr.inet)));
+#endif
 
 #ifdef DEBUG_PURPLE_DNS
     char ipaddr[INET6_ADDRSTRLEN];
