@@ -121,6 +121,15 @@ void purpleDNS::Cancel(PurpleDnsQueryData *query_data)
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(purpleDNSRequest, nsIDNSListener)
 
+void purpleDNSRequest::Failed(const char *aMsg)
+{
+  failed_cb(query_data, aMsg);
+#ifdef DEBUG_PURPLE_DNS
+  printf("purpleDNSRequest::Failed with msg: %s\n", aMsg);
+#endif
+  purpleDNS::Remove(query_data);
+}
+
 nsresult purpleDNSRequest::OnLookupComplete(nsICancelable *request,
                                             nsIDNSRecord *record,
                                             nsresult status)
@@ -128,15 +137,16 @@ nsresult purpleDNSRequest::OnLookupComplete(nsICancelable *request,
   NS_ASSERTION(NS_IsMainThread(), "wrong thread");
   NS_ASSERTION(request == asyncResolv, "wrong request");
 
+  if (NS_FAILED(status)) {
+    Failed("DNS query failed\n");
+    return NS_OK;
+  }
+
   GSList *hosts = NULL;
   PRBool more;
   record->HasMore(&more);
   if (!more) {
-    failed_cb(query_data, "Not found\n");
-#ifdef DEBUG_PURPLE_DNS
-    printf("IP not found\n");
-#endif
-    purpleDNS::Remove(query_data);
+    Failed("Not found\n");
     return NS_OK;
   }
   union PRNetAddr addr;

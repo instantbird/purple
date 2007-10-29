@@ -52,6 +52,9 @@ struct purpleDNSRequest: nsIDNSListener
   PurpleDnsQueryResolvedCallback resolved_cb;
   PurpleDnsQueryFailedCallback failed_cb;
   nsCOMPtr<nsICancelable> asyncResolv;
+
+ private:
+  inline void Failed(const char *aMsg);
 };
 
 class purpleDNS
