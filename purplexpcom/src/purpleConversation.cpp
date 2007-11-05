@@ -107,5 +107,13 @@ NS_IMETHODIMP purpleConversation::SendMsg(const PRUnichar *aMsg)
     return NS_OK;
   }
 
+  if (mConv->type == PURPLE_CONV_TYPE_CHAT) {
+    purple_conv_chat_send(mConv->u.chat, cMsg.get());
+#ifdef DEBUG_PURPLE_CONVERSATION
+    printf("chat message sent: %s\n", cMsg.get());
+#endif
+    return NS_OK;
+  }
+
   return NS_ERROR_FAILURE;
 }
