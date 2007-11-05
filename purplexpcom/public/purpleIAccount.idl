@@ -50,6 +50,11 @@ interface purpleIAccount: nsISupports {
 
   purpleIConversation createConversation(in string aName);
 
+  /*
+   * Create a new chat conversation if it doesn't already exist.
+   * Returns the conversation if it already existed, null otherwise
+   */
+  purpleIConversation joinChat(in string aName);
   readonly attribute string name;
   readonly attribute string id;
   readonly attribute purpleIProtocol protocol;

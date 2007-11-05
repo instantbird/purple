@@ -441,6 +441,30 @@ NS_IMETHODIMP purpleAccount::CreateConversation(const char *aName,
   return pcs->GetConversationById((PRInt32) conv, aResult);
 }
 
+/* purpleIConversation joinChat (in string aName); */
+NS_IMETHODIMP purpleAccount::JoinChat(const char *aName,
+                                      purpleIConversation **aResult)
+{
+  PURPLE_ENSURE_INIT(mAccount)
+  PurpleConnection *gc = purple_account_get_connection(mAccount);
+  NS_ENSURE_TRUE(gc, NS_ERROR_FAILURE);
+
+  GHashTable *components = g_hash_table_new(g_str_hash, g_str_equal);
+  g_hash_table_insert(components, (void *)"channel", g_strdup(aName)); // this cast sucks
+  serv_join_chat(gc, components);
+  g_hash_table_destroy(components);
+
+  PurpleConversation *conv =
+    purple_find_conversation_with_account(PURPLE_CONV_TYPE_CHAT, aName, mAccount);
+  if (conv) {
+    nsCOMPtr<purpleICoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
+    return pcs->GetConversationById((PRInt32) conv, aResult);
+  }
+
+  *aResult = nsnull;
+  return NS_OK;
+}
+
 /* readonly attribute string name; */
 NS_IMETHODIMP purpleAccount::GetName(char * *aName)
 {
