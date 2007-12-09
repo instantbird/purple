@@ -58,8 +58,8 @@ interface purpleIAccountBuddy;
 [scriptable, uuid(1f0ffdac-3523-4e91-9ffe-d0c2fd08cb3d)]
 interface purpleIBuddy: nsISupports {
   readonly attribute long id;
-  readonly attribute string name;
-  attribute string alias;
+  readonly attribute AUTF8String name;
+  attribute AUTF8String alias;
   readonly attribute short nbOnline;
   readonly attribute short accountCount;
   purpleIAccount getAccount(in unsigned short aAccountIndex);

@@ -71,39 +71,31 @@ nsresult purpleMessage::Init(PurpleConversation *conv, const char *who, const ch
   mConv = conv;
   mWho = who;
   mAlias = alias;
-  const nsCString cMsg(message);
-  NS_CStringToUTF16(cMsg, NS_CSTRING_ENCODING_UTF8, mMessage);
-
+  mMessage = message;
   mFlags = flags;
   mTime = mtime;
   return NS_OK;
 }
 
 #define PURPLE_IMPL_GETSTRING(aName, aString)			\
-  NS_IMETHODIMP purpleMessage::Get##aName(char * *a##aName)	\
+  NS_IMETHODIMP purpleMessage::Get##aName(nsACString& a##aName)	\
   {								\
-    return returnString(a##aName, aString);			\
+    a##aName = aString;                                         \
+    return NS_OK;                                               \
   }
 
-/* readonly attribute string who; */
-PURPLE_IMPL_GETSTRING(Who, mWho.get())
+/* readonly attribute AUTF8String who; */
+PURPLE_IMPL_GETSTRING(Who, mWho)
 
-/* readonly attribute string alias; */
-PURPLE_IMPL_GETSTRING(Alias, mAlias.get())
+/* readonly attribute AUTF8String alias; */
+PURPLE_IMPL_GETSTRING(Alias, mAlias)
 
-/* readonly attribute string message; */
-//PURPLE_IMPL_GETSTRING(Message, ToNewUTF8String(mMessage))
+/* readonly attribute AUTF8String message; */
+PURPLE_IMPL_GETSTRING(Message, mMessage)
 
-/* readonly attribute string time; */
-PURPLE_IMPL_GETSTRING(Time, 
-		      purple_utf8_strftime("(%H:%M:%S)", localtime(&mTime)))
-
-/* readonly attribute wstring message; */
-NS_IMETHODIMP purpleMessage::GetMessage(PRUnichar * *aMessage)
-{
-  *aMessage = ToNewUnicode(mMessage);
-  return NS_OK;
-}
+/* readonly attribute AUTF8String time; */
+PURPLE_IMPL_GETSTRING(Time, purple_utf8_strftime("(%H:%M:%S)",
+                                                 localtime(&mTime)))
 
 /* readonly attribute purpleIConversation conversation; */
 NS_IMETHODIMP purpleMessage::GetConversation(purpleIConversation * *aConversation)

@@ -78,18 +78,14 @@ NS_IMETHODIMP purpleTag::GetId(PRInt32 *aId)
   return NS_OK;
 }
 
-/* readonly attribute wstring name; */
-NS_IMETHODIMP purpleTag::GetName(PRUnichar * *aName)
+/* readonly attribute AUTF8String name; */
+NS_IMETHODIMP purpleTag::GetName(nsACString &aName)
 {
   if (!mGroup) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  nsCString cName(purple_group_get_name(mGroup));
-  nsString name;
-  NS_CStringToUTF16(cName, NS_CSTRING_ENCODING_UTF8, name);
-
-  *aName = NS_StringCloneData(name);
+  aName = purple_group_get_name(mGroup);
   return NS_OK;
 }
 

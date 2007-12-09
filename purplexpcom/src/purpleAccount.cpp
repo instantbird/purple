@@ -104,14 +104,15 @@ PURPLE_IMPL_GETPREF(Bool, bool, PRBool)
 PURPLE_IMPL_GETPREF(Char, string, char *)
 PURPLE_IMPL_GETPREF(Int, int, PRInt32)
 
-nsresult purpleAccount::create(const char *aName, purpleProtocol *aPrpl,
-			       const nsCString& aKey)
+nsresult purpleAccount::create(const nsACString& aName, purpleProtocol *aPrpl,
+                               const nsCString& aKey)
 {
   NS_ENSURE_ARG_POINTER(aPrpl);
-  if (!aName || !*aName)
+  if (!aName.Length())
     return NS_ERROR_UNEXPECTED;
 
-  mAccount = purple_account_new(aName, aPrpl->GetId());
+  PromiseFlatCString flatName(aName);
+  mAccount = purple_account_new(flatName.get(), aPrpl->GetId());
   if (!mAccount) {
     return NS_ERROR_FAILURE;
   }
@@ -125,12 +126,11 @@ nsresult purpleAccount::create(const char *aName, purpleProtocol *aPrpl,
   rv = GetPrefBranch();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mPrefBranch->SetCharPref(PREF_NAME, aName);
+  mPrefBranch->SetCharPref(PREF_NAME, flatName.get());
   mPrefBranch->SetCharPref(PREF_PRPL, aPrpl->GetId());
 
-  nsCString name(aName);
   nsCString prpl(aPrpl->GetId());
-  rv = storeAccount(mId, name, prpl);
+  rv = storeAccount(mId, flatName, prpl);
   if (NS_FAILED(rv)) {
     mPrefBranch->DeleteBranch("");
   }
@@ -173,7 +173,7 @@ nsresult purpleAccount::load(const nsCString& aKey)
 
   /* Init the mProtocol member */
   nsCOMPtr<purpleICoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-  rv = pcs->GetProtoById(prpl.get(), getter_AddRefs(mProtocol));
+  rv = pcs->GetProtoById(prpl, getter_AddRefs(mProtocol));
 #ifdef DEBUG_PURPLE_ACCOUNT
   if (NS_FAILED(rv)) {
     printf("GetProtoById failed!\n");
@@ -427,12 +427,13 @@ NS_IMETHODIMP purpleAccount::Disconnect()
   return NS_OK;
 }
 
-/* purpleIConversation createConversation (in string aName); */
-NS_IMETHODIMP purpleAccount::CreateConversation(const char *aName,
-						purpleIConversation **aResult)
+/* purpleIConversation createConversation (in AUTF8String aName); */
+NS_IMETHODIMP purpleAccount::CreateConversation(const nsACString& aName,
+                                                purpleIConversation **aResult)
 {
   PurpleConversation *conv;
-  conv = purple_conversation_new(PURPLE_CONV_TYPE_IM, this->mAccount, aName);
+  conv = purple_conversation_new(PURPLE_CONV_TYPE_IM, this->mAccount,
+                                 PromiseFlatCString(aName).get());
   if (!conv) {
     return NS_ERROR_FAILURE;
   }
@@ -441,21 +442,22 @@ NS_IMETHODIMP purpleAccount::CreateConversation(const char *aName,
   return pcs->GetConversationById((PRInt32) conv, aResult);
 }
 
-/* purpleIConversation joinChat (in string aName); */
-NS_IMETHODIMP purpleAccount::JoinChat(const char *aName,
+/* purpleIConversation joinChat (in AUTF8String aName); */
+NS_IMETHODIMP purpleAccount::JoinChat(const nsACString& aName,
                                       purpleIConversation **aResult)
 {
   PURPLE_ENSURE_INIT(mAccount)
   PurpleConnection *gc = purple_account_get_connection(mAccount);
   NS_ENSURE_TRUE(gc, NS_ERROR_FAILURE);
 
+  PromiseFlatCString flatName(aName);
   GHashTable *components = g_hash_table_new(g_str_hash, g_str_equal);
-  g_hash_table_insert(components, (void *)"channel", g_strdup(aName)); // this cast sucks
+  g_hash_table_insert(components, (void *)"channel", g_strdup(flatName.get())); // this cast sucks
   serv_join_chat(gc, components);
   g_hash_table_destroy(components);
 
   PurpleConversation *conv =
-    purple_find_conversation_with_account(PURPLE_CONV_TYPE_CHAT, aName, mAccount);
+    purple_find_conversation_with_account(PURPLE_CONV_TYPE_CHAT, flatName.get(), mAccount);
   if (conv) {
     nsCOMPtr<purpleICoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
     return pcs->GetConversationById((PRInt32) conv, aResult);
@@ -465,22 +467,23 @@ NS_IMETHODIMP purpleAccount::JoinChat(const char *aName,
   return NS_OK;
 }
 
-/* readonly attribute string name; */
-NS_IMETHODIMP purpleAccount::GetName(char * *aName)
+/* readonly attribute AUTF8String name; */
+NS_IMETHODIMP purpleAccount::GetName(nsACString& aName)
 {
   PURPLE_ENSURE_INIT(mProtocol)
 
-  return returnString(aName, purple_account_get_username(mAccount));
+  aName = purple_account_get_username(mAccount);
+  return NS_OK;
 }
 
-/* readonly attribute string id; */
-NS_IMETHODIMP purpleAccount::GetId(char * *aId)
+/* readonly attribute AUTF8String id; */
+NS_IMETHODIMP purpleAccount::GetId(nsACString& aId)
 {
   if (mKey.IsEmpty()) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  *aId = ToNewCString(mKey);
+  aId = mKey;
   return NS_OK;
 }
 
@@ -561,19 +564,22 @@ NS_IMETHODIMP purpleAccount::SetAutoLogin(PRBool aAutoLogin)
   return sendUpdateNotification();
 }
 
-/* attribute string password; */
-NS_IMETHODIMP purpleAccount::GetPassword(char * *aPassword)
+/* attribute AUTF8String password; */
+NS_IMETHODIMP purpleAccount::GetPassword(nsACString& aPassword)
 {
   PURPLE_ENSURE_INIT(mAccount)
 
-  return returnString(aPassword, purple_account_get_password(mAccount));
+  aPassword = purple_account_get_password(mAccount);
+  return NS_OK;
 }
-NS_IMETHODIMP purpleAccount::SetPassword(const char * aPassword)
+NS_IMETHODIMP purpleAccount::SetPassword(const nsACString& aPassword)
 {
   PURPLE_ENSURE_INIT(mAccount)
 
-  purple_account_set_password(mAccount, aPassword);
-  SetStringPref(PREF_PASSWORD, aPassword);
+  PromiseFlatCString flatPassword(aPassword);
+  const char *pass = flatPassword.get();
+  purple_account_set_password(mAccount, pass);
+  SetStringPref(PREF_PASSWORD, pass);
 
   return NS_OK;
 }
@@ -597,19 +603,21 @@ NS_IMETHODIMP purpleAccount::SetRememberPassword(PRBool aRememberPassword)
 }
 
 /* attribute string alias; */
-NS_IMETHODIMP purpleAccount::GetAlias(char * *aAlias)
+NS_IMETHODIMP purpleAccount::GetAlias(nsACString& aAlias)
 {
   PURPLE_ENSURE_INIT(mAccount)
 
-  return returnString(aAlias, purple_account_get_alias(mAccount));
+  aAlias = purple_account_get_alias(mAccount);
+  return NS_OK;
 }
-NS_IMETHODIMP purpleAccount::SetAlias(const char * aAlias)
+NS_IMETHODIMP purpleAccount::SetAlias(const nsACString& aAlias)
 {
   PURPLE_ENSURE_INIT(mAccount)
 
-  if (*aAlias) {
-    purple_account_set_alias(mAccount, aAlias);
-    SetStringPref(PREF_ALIAS, aAlias);
+  if (aAlias.Length()) {
+    PromiseFlatCString flatCString(aAlias);
+    purple_account_set_alias(mAccount, flatCString.get());
+    SetStringPref(PREF_ALIAS, flatCString.get());
   }
   else {
     purple_account_set_alias(mAccount, NULL);

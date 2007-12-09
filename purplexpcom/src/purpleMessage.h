@@ -71,7 +71,7 @@ private:
 protected:
   /* additional members */
   PurpleConversation *mConv;
-  nsString mMessage;
+  nsCString mMessage;
   nsCString mWho, mAlias;
   PurpleMessageFlags mFlags;
   time_t mTime;

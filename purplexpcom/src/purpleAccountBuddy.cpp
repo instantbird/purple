@@ -71,12 +71,12 @@ void purpleAccountBuddy::Uninit()
 
 nsresult purpleAccountBuddy::Store(PRInt32 aBuddyId)
 {
-  char *key;
-  nsresult rv = mAccount->GetId(&key);
+  nsCString key;
+  nsresult rv = mAccount->GetId(key);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRInt32 accountId;
-  if (PR_sscanf(key, ACCOUNT_KEY "%u", &accountId) != 1) {
+  if (PR_sscanf(key.get(), ACCOUNT_KEY "%u", &accountId) != 1) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -136,14 +136,15 @@ NS_IMETHODIMP purpleAccountBuddy::GetTag(purpleITag * *aTag)
   return NS_OK;
 }
 
-/* readonly attribute string buddyName; */
-NS_IMETHODIMP purpleAccountBuddy::GetBuddyName(char * *aBuddyName)
+/* readonly attribute AUTF8String buddyName; */
+NS_IMETHODIMP purpleAccountBuddy::GetBuddyName(nsACString& aBuddyName)
 {
   if (!mBuddy) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  return returnString(aBuddyName, mBuddy->name);
+  aBuddyName = purple_buddy_get_name(mBuddy);
+  return NS_OK;
 }
 
 /* purpleIConversation createConversation (); */
@@ -153,7 +154,8 @@ NS_IMETHODIMP purpleAccountBuddy::CreateConversation(purpleIConversation **aResu
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  return mAccount->CreateConversation(purple_buddy_get_name(mBuddy), aResult);
+  nsCString buddyName(purple_buddy_get_name(mBuddy));
+  return mAccount->CreateConversation(buddyName, aResult);
 }
 
 #define PURPLE_PRESENCE_GET_BOOL_IMPL(aName, aFctName)                  \

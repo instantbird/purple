@@ -48,24 +48,24 @@ interface purpleIAccount: nsISupports {
   void connect();
   void disconnect();
 
-  purpleIConversation createConversation(in string aName);
+  purpleIConversation createConversation(in AUTF8String aName);
 
   /*
    * Create a new chat conversation if it doesn't already exist.
    * Returns the conversation if it already existed, null otherwise
    */
-  purpleIConversation joinChat(in string aName);
-  readonly attribute string name;
-  readonly attribute string id;
+  purpleIConversation joinChat(in AUTF8String aName);
+  readonly attribute AUTF8String name;
+  readonly attribute AUTF8String id;
   readonly attribute purpleIProtocol protocol;
 
   attribute boolean autoLogin;
 
   // FIXME password should be in password manager
-  attribute string password;
+  attribute AUTF8String password;
   attribute boolean rememberPassword;
 
-  attribute string alias;
+  attribute AUTF8String alias;
 
   // protocol specific options: those functions set the protocol
   // specific options for the PurpleAccount and save the new values of

@@ -288,10 +288,11 @@ NS_IMETHODIMP purpleCoreService::Quit()
   return NS_OK;
 }
 
-/* readonly attribute string version; */
-NS_IMETHODIMP purpleCoreService::GetVersion(char * *aVersion)
+/* readonly attribute AUTF8String version; */
+NS_IMETHODIMP purpleCoreService::GetVersion(nsACString& aVersion)
 {
-  return returnString(aVersion, purple_core_get_version());
+  aVersion = purple_core_get_version();
+  return NS_OK;
 }
 
 /* purpleIBuddy getBuddyById (in long aId); */
@@ -392,16 +393,16 @@ NS_IMETHODIMP purpleCoreService::GetBuddyByPurpleBuddy(PurpleBuddy * aBuddy,
   return NS_OK;
 }
 
-/* void addBuddy (in purpleIAccount aAccount, in purpleITag aTag, in string aName); */
+/* void addBuddy (in purpleIAccount aAccount, in purpleITag aTag, in AUTF8String aName); */
 NS_IMETHODIMP purpleCoreService::AddBuddy(purpleIAccount *aAccount,
-                                          purpleITag *aTag, const char *aName)
+                                          purpleITag *aTag, const nsACString& aName)
 {
   NS_ENSURE_ARG_POINTER(aAccount);
   NS_ENSURE_ARG_POINTER(aTag);
 
   purpleTag *tag = static_cast<purpleTag *>(aTag);
   PurpleAccount *account = static_cast<purpleAccount *>(aAccount)->GetPurpleAccount();
-  PurpleBuddy *buddy = purple_buddy_new(account, aName, NULL);
+  PurpleBuddy *buddy = purple_buddy_new(account, PromiseFlatCString(aName).get(), NULL);
   tag->addBuddy(buddy);
   purple_account_add_buddy(account, buddy);
   return NS_OK;
@@ -554,14 +555,13 @@ NS_IMETHODIMP purpleCoreService::GetProtocols(nsISimpleEnumerator **aResult)
   return NS_NewArrayEnumerator(aResult, mProtocols);
 }
 
-/* purpleIProtocol getProtocolById (in string aProtocolId); */
-NS_IMETHODIMP purpleCoreService::GetProtocolById(const char *aProtocolId, purpleIProtocol **aResult)
+/* purpleIProtocol getProtocolById (in AUTF8String aProtocolId); */
+NS_IMETHODIMP purpleCoreService::GetProtocolById(const nsACString& aProtocolId, purpleIProtocol **aResult)
 {
   PURPLE_ENSURE_INIT(mInitialized);
 
-  nsCString id(aProtocolId);
   for (PRInt32 i = mProtocols.Count() - 1; i >= 0; --i) {
-    if (id.Equals(mProtocols[i]->GetId())) {
+    if (aProtocolId.Equals(mProtocols[i]->GetId())) {
       *aResult = mProtocols[i];
       NS_ADDREF(*aResult);
       return NS_OK;
@@ -572,14 +572,13 @@ NS_IMETHODIMP purpleCoreService::GetProtocolById(const char *aProtocolId, purple
   return NS_OK;
 }
 
-/* [noscript] purpleNativeProtocol getProtoById (in string aProtocolId); */
-NS_IMETHODIMP purpleCoreService::GetProtoById(const char *aProtocolId, purpleProtocol * *aResult)
+/* [noscript] purpleNativeProtocol getProtoById (in AUTF8String aProtocolId); */
+NS_IMETHODIMP purpleCoreService::GetProtoById(const nsACString& aProtocolId, purpleProtocol * *aResult)
 {
   PURPLE_ENSURE_INIT(mInitialized);
 
-  nsCString id(aProtocolId);
   for (PRInt32 i = mProtocols.Count() - 1; i >= 0; --i) {
-    if (id.Equals(mProtocols[i]->GetId())) {
+    if (aProtocolId.Equals(mProtocols[i]->GetId())) {
       *aResult = mProtocols[i];
       NS_ADDREF(*aResult);
       return NS_OK;
@@ -590,8 +589,8 @@ NS_IMETHODIMP purpleCoreService::GetProtoById(const char *aProtocolId, purplePro
 }
 
 
-/* purpleIAccount getAccountById (in string accountId); */
-NS_IMETHODIMP purpleCoreService::GetAccountById(const char *aAccountId, purpleIAccount **aResult)
+/* purpleIAccount getAccountById (in AUTF8String accountId); */
+NS_IMETHODIMP purpleCoreService::GetAccountById(const nsACString& aAccountId, purpleIAccount **aResult)
 {
   PURPLE_ENSURE_INIT(mInitialized);
 
@@ -679,9 +678,9 @@ inline void purpleCoreService::UnInitAccounts()
   mAccounts.Clear();
 }
 
-/* purpleIAccount createAccount (in string name, in purpleIProtocol prpl); */
-NS_IMETHODIMP purpleCoreService::CreateAccount(const char *name,
-					       const char *prpl,
+/* purpleIAccount createAccount(in AUTF8String aName, in AUTF8String aPrpl); */
+NS_IMETHODIMP purpleCoreService::CreateAccount(const nsACString &aName,
+					       const nsACString &aPrpl,
 					       purpleIAccount **aResult)
 {
   /* Get the list of accounts */
@@ -737,12 +736,12 @@ NS_IMETHODIMP purpleCoreService::CreateAccount(const char *name,
 
   /* Get the prpl */
   nsCOMPtr<purpleProtocol> proto;
-  rv = GetProtoById(prpl, getter_AddRefs(proto));
+  rv = GetProtoById(aPrpl, getter_AddRefs(proto));
   NS_ENSURE_SUCCESS(rv, rv);
 
   /* Actually create the new account */
   nsCOMPtr<purpleAccount> account = do_CreateInstance(PURPLE_ACCOUNT_CONTRACTID);
-  rv = account->create(name, proto, key);
+  rv = account->create(aName, proto, key);
   NS_ENSURE_SUCCESS(rv, rv);
 
   /* Save the account list pref */
@@ -766,11 +765,11 @@ NS_IMETHODIMP purpleCoreService::CreateAccount(const char *name,
   return NS_OK;
 }
 
-/* void deleteAccount (in string accountId); */
-NS_IMETHODIMP purpleCoreService::DeleteAccount(const char *aAccountId)
+/* void deleteAccount (in AUTF8String accountId); */
+NS_IMETHODIMP purpleCoreService::DeleteAccount(const nsACString& aAccountId)
 {
 #ifdef DEBUG_PURPLE_CORE_SERVICE
-  printf("attempting to delete %s\n", aAccountId);
+  printf("attempting to delete %s\n", PromiseFlatCString(aAccountId).get());
 #endif
   /* delete the account */
   PRInt32 i;

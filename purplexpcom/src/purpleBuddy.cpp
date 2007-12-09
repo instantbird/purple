@@ -169,22 +169,23 @@ NS_IMETHODIMP purpleBuddy::GetId(PRInt32 *aId)
   return NS_OK;
 }
 
-/* readonly attribute string name; */
-NS_IMETHODIMP purpleBuddy::GetName(char * *aName)
+/* readonly attribute AUTF8String name; */
+NS_IMETHODIMP purpleBuddy::GetName(nsACString& aName)
 {
   PURPLE_ENSURE_INIT(mId);
 
   return mBuddies[0]->GetBuddyName(aName);
 }
 
-/* attribute string alias; */
-NS_IMETHODIMP purpleBuddy::GetAlias(char * *aAlias)
+/* attribute AUTF8String alias; */
+NS_IMETHODIMP purpleBuddy::GetAlias(nsACString& aAlias)
 {
   PURPLE_ENSURE_INIT(mId);
 
-  return returnString(aAlias, mAlias.get());
+  aAlias = mAlias;
+  return NS_OK;
 }
-NS_IMETHODIMP purpleBuddy::SetAlias(const char * aAlias)
+NS_IMETHODIMP purpleBuddy::SetAlias(const nsACString& aAlias)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

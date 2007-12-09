@@ -44,9 +44,9 @@
 
 [scriptable, uuid(74fca337-b8e7-4e5d-81cd-8aba3dba9208)]
 interface purpleIConversation: nsISupports {
-  readonly attribute string name;
-  readonly attribute string title;
+  readonly attribute AUTF8String name;
+  readonly attribute AUTF8String title;
   readonly attribute long id;
-  void sendMsg(in wstring aMsg);
+  void sendMsg(in AUTF8String aMsg);
 };
 

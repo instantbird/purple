@@ -102,24 +102,26 @@ purpleProtocol::~purpleProtocol()
   /* destructor code */
 }
 
-/* readonly attribute string name; */
-NS_IMETHODIMP purpleProtocol::GetName(char * *aName)
+/* readonly attribute AUTF8String name; */
+NS_IMETHODIMP purpleProtocol::GetName(nsACString& aName)
 {
   if (!mInfo) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  return returnString(aName, mInfo->name);
+  aName = mInfo->name;
+  return NS_OK;
 }
 
-/* readonly attribute string id; */
-NS_IMETHODIMP purpleProtocol::GetId(char * *aId)
+/* readonly attribute AUTF8String id; */
+NS_IMETHODIMP purpleProtocol::GetId(nsACString& aId)
 {
   if (!mInfo) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  return returnString(aId, mInfo->id);
+  aId = mInfo->id;
+  return NS_OK;
 }
 
 /* nsISimpleEnumerator getOptionEnumerator (); */

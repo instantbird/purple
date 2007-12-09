@@ -44,10 +44,10 @@
 
 [scriptable, uuid(d9f0ca7f-ee59-4657-a3dd-f458c204ca45)]
 interface purpleIMessage: nsISupports {
-  readonly attribute string who;
-  readonly attribute string alias;
-  readonly attribute wstring message;
-  readonly attribute string time;
+  readonly attribute AUTF8String who;
+  readonly attribute AUTF8String alias;
+  readonly attribute AUTF8String message;
+  readonly attribute AUTF8String time;
   readonly attribute purpleIConversation conversation;
 
   /*  PURPLE_MESSAGE_SEND        = 0x0001, /**< Outgoing message. */

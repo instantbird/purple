@@ -56,11 +56,11 @@ interface mozIStorageConnection; //forward declaration
 interface purpleICoreService: nsISupports {
   void init();
   void quit();
-  readonly attribute string version;
+  readonly attribute AUTF8String version;
 
   purpleIBuddy getBuddyById(in long aId);
   [noscript] purpleIBuddy getBuddyByPurpleBuddy(in PurpleNativeBuddy aBuddy);
-  void addBuddy(in purpleIAccount aAccount, in purpleITag aTag, in string aName);
+  void addBuddy(in purpleIAccount aAccount, in purpleITag aTag, in AUTF8String aName);
   [noscript] void purpleBuddyRemoved(in PurpleNativeBuddy aBuddy);
 
   purpleITag getTagById(in long aId);
@@ -71,20 +71,20 @@ interface purpleICoreService: nsISupports {
   // returns an enumerator on a purpleIProtocol array
   nsISimpleEnumerator getProtocols();
 
-  purpleIProtocol getProtocolById(in string aProtocolId);
-  [noscript] purpleNativeProtocol getProtoById(in string aProtocolId);
+  purpleIProtocol getProtocolById(in AUTF8String aProtocolId);
+  [noscript] purpleNativeProtocol getProtoById(in AUTF8String aProtocolId);
 
   /* accounts */
-  purpleIAccount getAccountById(in string aAccountId);
+  purpleIAccount getAccountById(in AUTF8String aAccountId);
   [noscript] purpleIAccount getAccountByPurpleAccount(in PurpleNativeAccount aAccount);
 
   nsISimpleEnumerator getAccounts();
 
   /* will fire the event account-added */
-  purpleIAccount createAccount(in string aName, in string aPrpl);
+  purpleIAccount createAccount(in AUTF8String aName, in AUTF8String aPrpl);
 
   /* will fire the event account-removed */
-  void deleteAccount(in string aAccountId);
+  void deleteAccount(in AUTF8String aAccountId);
 
   void notifyObservers(in nsISupports aObj, in string aEvent);
 

@@ -72,16 +72,18 @@ void purpleConversation::SetConv(PurpleConversation *aConv)
 #endif
 }
 
-/* readonly attribute string name; */
-NS_IMETHODIMP purpleConversation::GetName(char * *aName)
+/* readonly attribute AUTF8String name; */
+NS_IMETHODIMP purpleConversation::GetName(nsACString& aName)
 {
-  return returnString(aName, purple_conversation_get_name(mConv));
+  aName = purple_conversation_get_name(mConv);
+  return NS_OK;
 }
 
-/* readonly attribute string title; */
-NS_IMETHODIMP purpleConversation::GetTitle(char * *aTitle)
+/* readonly attribute AUTF8String title; */
+NS_IMETHODIMP purpleConversation::GetTitle(nsACString& aTitle)
 {
-  return returnString(aTitle, purple_conversation_get_title(mConv));
+  aTitle = purple_conversation_get_title(mConv);
+  return NS_OK;
 }
 
 /* readonly attribute long idConv; */
@@ -92,28 +94,27 @@ NS_IMETHODIMP purpleConversation::GetId(PRInt32 *aId)
   return NS_OK;
 }
 
-/* void sendMsg (in string aMsg); */
-NS_IMETHODIMP purpleConversation::SendMsg(const PRUnichar *aMsg)
+/* void sendMsg (in AUTF8String aMsg); */
+NS_IMETHODIMP purpleConversation::SendMsg(const nsACString& aMsg)
 {
-  const nsEmbedString msg(aMsg);
-  nsEmbedCString cMsg;
-  CopyUTF16toUTF8(msg, cMsg);
+  PromiseFlatCString flatMsg(aMsg);
 
-  if (mConv->type == PURPLE_CONV_TYPE_IM) {
-    purple_conv_im_send(mConv->u.im, cMsg.get());
+  switch (mConv->type) {
+  case PURPLE_CONV_TYPE_IM:
+    purple_conv_im_send(mConv->u.im, flatMsg.get());
 #ifdef DEBUG_PURPLE_CONVERSATION
-    printf("message sent: %s\n", cMsg.get());
+    printf("message sent: %s\n", flatMsg.get());
 #endif
     return NS_OK;
-  }
 
-  if (mConv->type == PURPLE_CONV_TYPE_CHAT) {
-    purple_conv_chat_send(mConv->u.chat, cMsg.get());
+  case PURPLE_CONV_TYPE_CHAT:
+    purple_conv_chat_send(mConv->u.chat, flatMsg.get());
 #ifdef DEBUG_PURPLE_CONVERSATION
-    printf("chat message sent: %s\n", cMsg.get());
+    printf("chat message sent: %s\n", flatMsg.get());
 #endif
     return NS_OK;
-  }
 
-  return NS_ERROR_FAILURE;
+  default:
+    return NS_ERROR_FAILURE;
+  }
 }

@@ -50,7 +50,7 @@ interface purpleIAccountBuddy: nsISupports {
   readonly attribute purpleIBuddy buddy;
   readonly attribute purpleIAccount account;
   readonly attribute purpleITag tag;
-  readonly attribute string buddyName;
+  readonly attribute AUTF8String buddyName;
   purpleIConversation createConversation();
   readonly attribute boolean online;
   readonly attribute boolean available;

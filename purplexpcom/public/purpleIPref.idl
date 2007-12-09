@@ -47,11 +47,11 @@ interface purpleIPref: nsISupports {
   const short typeInt    = 2;
   const short typeString = 3;
 
-  readonly attribute string name;
+  readonly attribute AUTF8String name;
   readonly attribute short type;
   readonly attribute boolean masked;
 
-  boolean getBool();
-  long    getInt();
-  string  getString();
+  boolean     getBool();
+  long        getInt();
+  AUTF8String getString();
 };

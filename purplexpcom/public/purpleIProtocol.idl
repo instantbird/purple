@@ -44,8 +44,8 @@
 
 [scriptable, uuid(0a51b511-4ce7-4f4c-a109-43023b72fc5a)]
 interface purpleIProtocol: nsISupports {
-  readonly attribute string name;
-  readonly attribute string id;
+  readonly attribute AUTF8String name;
+  readonly attribute AUTF8String id;
 
   // returns an enumerator on a purpleIPref array
   nsISimpleEnumerator getOptions();

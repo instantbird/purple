@@ -68,8 +68,8 @@ public:
   const nsCString& GetKey() { return mKey; }
   PRUint32 GetId() { return mId; }
   PurpleAccount *GetPurpleAccount() { return mAccount; }
-  nsresult create(const char *name, purpleProtocol *prpl,
-       	          const nsCString& aKey);
+  nsresult create(const nsACString& name, purpleProtocol *prpl,
+                  const nsCString& aKey);
   nsresult load(const nsCString& aKey);
   nsresult checkAutoLogin();
   nsresult remove();

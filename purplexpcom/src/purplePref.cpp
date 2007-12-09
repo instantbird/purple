@@ -37,8 +37,11 @@
 
 #include "purplePref.h"
 #include "purpleUtils.h"
-#include <stdio.h>
+#include <nsStringAPI.h>
 
+#ifdef DEBUG_PURPLE_PREF
+# include <stdio.h>
+#endif
 
 NS_IMPL_ISUPPORTS1(purplePref, purpleIPref)
 
@@ -67,14 +70,15 @@ purplePref::~purplePref()
   /* destructor code */
 }
 
-/* readonly attribute string name; */
-NS_IMETHODIMP purplePref::GetName(char * *aName)
+/* readonly attribute AUTF8String name; */
+NS_IMETHODIMP purplePref::GetName(nsACString& aName)
 {
   if (!mOpt) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  return returnString(aName, mOpt->pref_name);
+  aName = mOpt->pref_name;
+  return NS_OK;
 }
 
 /* readonly attribute short type; */
@@ -132,8 +136,8 @@ NS_IMETHODIMP purplePref::GetInt(PRInt32 *_retval)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* string getString (); */
-NS_IMETHODIMP purplePref::GetString(char **_retval)
+/* AUTF8String getString (); */
+NS_IMETHODIMP purplePref::GetString(nsACString& _retval)
 {
   if (!mOpt) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -143,6 +147,6 @@ NS_IMETHODIMP purplePref::GetString(char **_retval)
     return NS_ERROR_FAILURE;
   }
 
-  const char *res = mOpt->default_value.string;
-  return returnString(_retval, res);
+  _retval = mOpt->default_value.string;
+  return NS_OK;
 }
