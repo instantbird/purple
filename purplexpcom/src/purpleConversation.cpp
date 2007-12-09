@@ -36,10 +36,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "purpleConversation.h"
-#include "purpleUtils.h"
 #include "nsXPCOM.h"
 #include<nsStringAPI.h>
-#include<nsEmbedString.h>
 
 #include<nsCOMPtr.h>
 #include<stdio.h>

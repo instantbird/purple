@@ -36,7 +36,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "purpleAccount.h"
-#include "purpleUtils.h"
 #include "purpleCoreService.h"
 #include "purpleStorage.h"
 #include <pref/nsIPrefService.h>
@@ -388,7 +387,7 @@ nsresult purpleAccount::remove()
 /* void connect (); */
 NS_IMETHODIMP purpleAccount::Connect()
 {
-  PURPLE_ENSURE_INIT(mAccount)
+  PURPLE_ENSURE_INIT(mAccount);
 
 #ifdef DEBUG_PURPLE_ACCOUNT
   printf("attempting to connect %s\n", mAccount->username);
@@ -411,7 +410,7 @@ NS_IMETHODIMP purpleAccount::Connect()
 /* void disconnect (); */
 NS_IMETHODIMP purpleAccount::Disconnect()
 {
-  PURPLE_ENSURE_INIT(mAccount)
+  PURPLE_ENSURE_INIT(mAccount);
 
   /* FIXME: this is a hack so that it is possible to reconnect after
      disconnecting an account. When libpurple disconnects an account,
@@ -446,7 +445,7 @@ NS_IMETHODIMP purpleAccount::CreateConversation(const nsACString& aName,
 NS_IMETHODIMP purpleAccount::JoinChat(const nsACString& aName,
                                       purpleIConversation **aResult)
 {
-  PURPLE_ENSURE_INIT(mAccount)
+  PURPLE_ENSURE_INIT(mAccount);
   PurpleConnection *gc = purple_account_get_connection(mAccount);
   NS_ENSURE_TRUE(gc, NS_ERROR_FAILURE);
 
@@ -470,7 +469,7 @@ NS_IMETHODIMP purpleAccount::JoinChat(const nsACString& aName,
 /* readonly attribute AUTF8String name; */
 NS_IMETHODIMP purpleAccount::GetName(nsACString& aName)
 {
-  PURPLE_ENSURE_INIT(mProtocol)
+  PURPLE_ENSURE_INIT(mProtocol);
 
   aName = purple_account_get_username(mAccount);
   return NS_OK;
@@ -531,7 +530,7 @@ inline nsresult purpleAccount::GetPrefBranch()
 /* readonly attribute purpleIProtocol protocol; */
 NS_IMETHODIMP purpleAccount::GetProtocol(purpleIProtocol * *aProtocol)
 {
-  PURPLE_ENSURE_INIT(mProtocol)
+  PURPLE_ENSURE_INIT(mProtocol);
 
   *aProtocol = mProtocol;
   NS_ADDREF(*aProtocol);
@@ -567,14 +566,14 @@ NS_IMETHODIMP purpleAccount::SetAutoLogin(PRBool aAutoLogin)
 /* attribute AUTF8String password; */
 NS_IMETHODIMP purpleAccount::GetPassword(nsACString& aPassword)
 {
-  PURPLE_ENSURE_INIT(mAccount)
+  PURPLE_ENSURE_INIT(mAccount);
 
   aPassword = purple_account_get_password(mAccount);
   return NS_OK;
 }
 NS_IMETHODIMP purpleAccount::SetPassword(const nsACString& aPassword)
 {
-  PURPLE_ENSURE_INIT(mAccount)
+  PURPLE_ENSURE_INIT(mAccount);
 
   PromiseFlatCString flatPassword(aPassword);
   const char *pass = flatPassword.get();
@@ -587,14 +586,14 @@ NS_IMETHODIMP purpleAccount::SetPassword(const nsACString& aPassword)
 /* attribute boolean rememberPassword; */
 NS_IMETHODIMP purpleAccount::GetRememberPassword(PRBool *aRememberPassword)
 {
-  PURPLE_ENSURE_INIT(mAccount)
+  PURPLE_ENSURE_INIT(mAccount);
 
   *aRememberPassword = purple_account_get_remember_password(mAccount);
   return NS_OK;
 }
 NS_IMETHODIMP purpleAccount::SetRememberPassword(PRBool aRememberPassword)
 {
-  PURPLE_ENSURE_INIT(mAccount)
+  PURPLE_ENSURE_INIT(mAccount);
 
   purple_account_set_remember_password(mAccount, aRememberPassword);
   SetBoolPref(PREF_REMEMBER_PASSWORD, aRememberPassword);
@@ -605,14 +604,14 @@ NS_IMETHODIMP purpleAccount::SetRememberPassword(PRBool aRememberPassword)
 /* attribute string alias; */
 NS_IMETHODIMP purpleAccount::GetAlias(nsACString& aAlias)
 {
-  PURPLE_ENSURE_INIT(mAccount)
+  PURPLE_ENSURE_INIT(mAccount);
 
   aAlias = purple_account_get_alias(mAccount);
   return NS_OK;
 }
 NS_IMETHODIMP purpleAccount::SetAlias(const nsACString& aAlias)
 {
-  PURPLE_ENSURE_INIT(mAccount)
+  PURPLE_ENSURE_INIT(mAccount);
 
   if (aAlias.Length()) {
     PromiseFlatCString flatCString(aAlias);
@@ -634,7 +633,7 @@ NS_IMETHODIMP purpleAccount::SetAlias(const nsACString& aAlias)
   NS_IMETHODIMP purpleAccount::Set##prettyType(const char *aName,	\
 					       PRType aVal)		\
   {									\
-    PURPLE_ENSURE_INIT(mAccount)					\
+    PURPLE_ENSURE_INIT(mAccount);					\
 									\
     /* Give that pref to libpurple */					\
     purple_account_set_##purpleType(mAccount, aName, aVal);		\
@@ -656,9 +655,7 @@ PURPLE_IMPL_SET(String, string, const char *, Char)
 /* void savePrefs (); */
 NS_IMETHODIMP purpleAccount::Save()
 {
-  if (!mPrefBranch) {
-    return NS_ERROR_UNEXPECTED;
-  }
+  NS_ENSURE_TRUE(mPrefBranch, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   nsresult rv = prefs->SavePrefFile(nsnull);

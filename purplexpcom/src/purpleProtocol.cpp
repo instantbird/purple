@@ -37,7 +37,6 @@
 
 #include "purpleProtocol.h"
 #include "purplePref.h"
-#include "purpleUtils.h"
 #include "nsCOMPtr.h"
 #include<nsComponentManagerUtils.h>
 #include<nsArrayEnumerator.h>
@@ -105,9 +104,7 @@ purpleProtocol::~purpleProtocol()
 /* readonly attribute AUTF8String name; */
 NS_IMETHODIMP purpleProtocol::GetName(nsACString& aName)
 {
-  if (!mInfo) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
+  NS_ENSURE_TRUE(mInfo, NS_ERROR_NOT_INITIALIZED);
 
   aName = mInfo->name;
   return NS_OK;
@@ -116,9 +113,7 @@ NS_IMETHODIMP purpleProtocol::GetName(nsACString& aName)
 /* readonly attribute AUTF8String id; */
 NS_IMETHODIMP purpleProtocol::GetId(nsACString& aId)
 {
-  if (!mInfo) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
+  NS_ENSURE_TRUE(mInfo, NS_ERROR_NOT_INITIALIZED);
 
   aId = mInfo->id;
   return NS_OK;
@@ -127,9 +122,7 @@ NS_IMETHODIMP purpleProtocol::GetId(nsACString& aId)
 /* nsISimpleEnumerator getOptionEnumerator (); */
 NS_IMETHODIMP purpleProtocol::GetOptions(nsISimpleEnumerator **aResult)
 { 
-  if (!mInfo) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
+  NS_ENSURE_TRUE(mInfo, NS_ERROR_NOT_INITIALIZED);
 
   return NS_NewArrayEnumerator(aResult, mOptions);
 }

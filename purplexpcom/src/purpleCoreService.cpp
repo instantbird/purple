@@ -38,7 +38,6 @@
 #include "purpleCoreService.h"
 #include "purpleProtocol.h"
 #include "purpleBuddy.h"
-#include "purpleUtils.h"
 #include "purpleStorage.h"
 #include "purpleSockets.h"
 #include "nsXPCOM.h"

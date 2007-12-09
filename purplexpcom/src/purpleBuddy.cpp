@@ -39,7 +39,6 @@
 #include "purpleCoreService.h"
 #include <nsServiceManagerUtils.h>
 #include <nsComponentManagerUtils.h>
-#include "purpleUtils.h"
 #include "purpleStorage.h"
 #include <prprf.h>
 

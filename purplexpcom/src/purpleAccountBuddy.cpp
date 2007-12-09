@@ -39,7 +39,6 @@
 #include "purpleCoreService.h"
 #include "purpleAccount.h"
 #include "purpleStorage.h"
-#include "purpleUtils.h"
 #include <nsServiceManagerUtils.h>
 #include <prprf.h>
 
@@ -104,9 +103,7 @@ nsresult purpleAccountBuddy::Store(PRInt32 aBuddyId)
 /* readonly attribute purpleIBuddy buddy; */
 NS_IMETHODIMP purpleAccountBuddy::GetBuddy(purpleIBuddy * *aBuddy)
 {
-  if (!mBuddy) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
+  NS_ENSURE_TRUE(mBuddy, NS_ERROR_NOT_INITIALIZED);
 
   nsCOMPtr<purpleCoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
   return pcs->GetBuddyByPurpleBuddy(mBuddy, aBuddy);
@@ -115,9 +112,7 @@ NS_IMETHODIMP purpleAccountBuddy::GetBuddy(purpleIBuddy * *aBuddy)
 /* readonly attribute purpleIAccount account; */
 NS_IMETHODIMP purpleAccountBuddy::GetAccount(purpleIAccount * *aAccount)
 {
-  if (!mAccount) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
+  NS_ENSURE_TRUE(mAccount, NS_ERROR_NOT_INITIALIZED);
 
   *aAccount = mAccount;
   NS_ADDREF(*aAccount);
@@ -127,9 +122,7 @@ NS_IMETHODIMP purpleAccountBuddy::GetAccount(purpleIAccount * *aAccount)
 /* readonly attribute purpleITag tag; */
 NS_IMETHODIMP purpleAccountBuddy::GetTag(purpleITag * *aTag)
 {
-  if (!mTag) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
+  NS_ENSURE_TRUE(mTag, NS_ERROR_NOT_INITIALIZED);
 
   *aTag = mTag;
   NS_ADDREF(*aTag);
@@ -139,9 +132,7 @@ NS_IMETHODIMP purpleAccountBuddy::GetTag(purpleITag * *aTag)
 /* readonly attribute AUTF8String buddyName; */
 NS_IMETHODIMP purpleAccountBuddy::GetBuddyName(nsACString& aBuddyName)
 {
-  if (!mBuddy) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
+  NS_ENSURE_TRUE(mBuddy, NS_ERROR_NOT_INITIALIZED);
 
   aBuddyName = purple_buddy_get_name(mBuddy);
   return NS_OK;
@@ -150,9 +141,7 @@ NS_IMETHODIMP purpleAccountBuddy::GetBuddyName(nsACString& aBuddyName)
 /* purpleIConversation createConversation (); */
 NS_IMETHODIMP purpleAccountBuddy::CreateConversation(purpleIConversation **aResult)
 {
-  if (!mAccount || !mBuddy) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
+  NS_ENSURE_TRUE(mAccount && mBuddy, NS_ERROR_NOT_INITIALIZED);
 
   nsCString buddyName(purple_buddy_get_name(mBuddy));
   return mAccount->CreateConversation(buddyName, aResult);
@@ -161,9 +150,7 @@ NS_IMETHODIMP purpleAccountBuddy::CreateConversation(purpleIConversation **aResu
 #define PURPLE_PRESENCE_GET_BOOL_IMPL(aName, aFctName)                  \
   NS_IMETHODIMP purpleAccountBuddy::Get##aName(PRBool *a##aName)        \
   {                                                                     \
-    if (!mBuddy) {                                                      \
-      return NS_ERROR_NOT_INITIALIZED;                                  \
-    }                                                                   \
+    NS_ENSURE_TRUE(mBuddy, NS_ERROR_NOT_INITIALIZED);                   \
                                                                         \
     *a##aName = purple_presence_is_##aFctName(purple_buddy_get_presence(mBuddy)); \
     return NS_OK;                                                       \
@@ -181,9 +168,7 @@ PURPLE_PRESENCE_GET_BOOL_IMPL(Idle, idle)
 /* readonly attribute string status; */
 NS_IMETHODIMP purpleAccountBuddy::GetStatus(nsACString &aStatus)
 {
-  if (!mBuddy) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
+  NS_ENSURE_TRUE(mBuddy, NS_ERROR_NOT_INITIALIZED);
 
   PurplePlugin *prpl = purple_find_prpl(purple_account_get_protocol_id(mBuddy->account));
   NS_ENSURE_ARG_POINTER(prpl);

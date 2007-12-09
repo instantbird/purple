@@ -47,6 +47,9 @@
 #include "purpleTag.h"
 #include<nsCOMArray.h>
 
+#define PURPLE_ENSURE_INIT(x)                   \
+  NS_ENSURE_TRUE(x, NS_ERROR_NOT_INITIALIZED)
+
 class purpleCoreService : public purpleICoreService
 {
 public:

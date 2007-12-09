@@ -36,7 +36,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "purpleTag.h"
-#include "purpleUtils.h"
 #include "nsStringAPI.h"
 
 NS_IMPL_ISUPPORTS1(purpleTag, purpleITag)
@@ -70,9 +69,7 @@ void purpleTag::addBuddy(PurpleBuddy *aBuddy)
 /* readonly attribute long id; */
 NS_IMETHODIMP purpleTag::GetId(PRInt32 *aId)
 {
-  if (!mId) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
+  NS_ENSURE_TRUE(mId, NS_ERROR_NOT_INITIALIZED);
 
   *aId = mId;
   return NS_OK;
@@ -81,9 +78,7 @@ NS_IMETHODIMP purpleTag::GetId(PRInt32 *aId)
 /* readonly attribute AUTF8String name; */
 NS_IMETHODIMP purpleTag::GetName(nsACString &aName)
 {
-  if (!mGroup) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
+  NS_ENSURE_TRUE(mGroup, NS_ERROR_NOT_INITIALIZED);
 
   aName = purple_group_get_name(mGroup);
   return NS_OK;

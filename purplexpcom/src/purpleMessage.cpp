@@ -36,7 +36,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "purpleMessage.h"
-#include "purpleUtils.h"
 #include "nsCOMPtr.h"
 #include "purpleCoreService.h"
 #include<nsServiceManagerUtils.h>
