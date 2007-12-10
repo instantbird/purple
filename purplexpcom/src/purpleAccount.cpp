@@ -393,7 +393,9 @@ NS_IMETHODIMP purpleAccount::Connect()
   printf("attempting to connect %s\n", mAccount->username);
 #endif
   if (purple_account_get_enabled(mAccount, UI_ID)) {
-    /* The account is already enabled (= we have already connected it once) */
+    /* The account is already enabled. This means that we have already
+       connected it and we haven't disconnected it. If it isn't
+       connected then it's because of a connection failure */
 #ifdef DEBUG_PURPLE_ACCOUNT
     printf("account already enabled\n");
 #endif
@@ -422,7 +424,7 @@ NS_IMETHODIMP purpleAccount::Disconnect()
   */
   purple_account_set_remember_password(mAccount, TRUE);
 
-  purple_account_disconnect(mAccount);
+  purple_account_set_enabled(mAccount, UI_ID, FALSE);
   return NS_OK;
 }
 
