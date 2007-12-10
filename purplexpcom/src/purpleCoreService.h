@@ -59,6 +59,7 @@ public:
   purpleCoreService();
 
   void AddConversation(purpleConversation* aConv);
+  void RemoveConversation(PurpleConversation *aConv);
   nsresult GetTagIdFromName(const nsCString& aName,
                             PRInt32 *aResult);
   nsresult GetTagFromName(const nsCString& aName,

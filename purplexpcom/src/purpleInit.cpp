@@ -245,6 +245,16 @@ static void create_conv(PurpleConversation *aConv)
   pcs->AddConversation(conv);
 }
 
+static void destroy_conv(PurpleConversation *aConv)
+{
+#ifdef DEBUG_PURPLE_INIT
+  printf("destroy_conv uiop called\n");
+#endif
+
+  nsCOMPtr<purpleCoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
+  pcs->RemoveConversation(aConv);
+}
+
 static void write_conv(PurpleConversation *conv, const char *who,
                        const char *alias, const char *message,
                        PurpleMessageFlags flags, time_t mtime)
@@ -264,7 +274,7 @@ static void write_conv(PurpleConversation *conv, const char *who,
 static PurpleConversationUiOps conversation_uiops =
 {
   create_conv,               /* create_conversation  */
-  NULL,                      /* destroy_conversation */
+  destroy_conv,              /* destroy_conversation */
   NULL,                      /* write_chat           */
   NULL,                      /* write_im             */
   write_conv,                /* write_conv           */

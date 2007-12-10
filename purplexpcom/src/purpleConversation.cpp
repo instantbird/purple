@@ -116,3 +116,17 @@ NS_IMETHODIMP purpleConversation::SendMsg(const nsACString& aMsg)
     return NS_ERROR_FAILURE;
   }
 }
+
+/* void close (); */
+NS_IMETHODIMP purpleConversation::Close()
+{
+  NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
+
+#ifdef DEBUG_PURPLE_CONVERSATION
+  printf("purpleConversation::Close\n");
+#endif
+  purple_conversation_destroy(mConv);
+  mConv = NULL;
+
+  return NS_OK;
+}

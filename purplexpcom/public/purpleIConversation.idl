@@ -48,5 +48,6 @@ interface purpleIConversation: nsISupports {
   readonly attribute AUTF8String title;
   readonly attribute long id;
   void sendMsg(in AUTF8String aMsg);
+  void close();
 };
 

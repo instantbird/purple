@@ -546,6 +546,22 @@ void purpleCoreService::AddConversation(purpleConversation* aConv)
   NotifyObservers(aConv, "new-conversation");
 }
 
+void purpleCoreService::RemoveConversation(PurpleConversation *aConv)
+{
+  for (PRInt32 i = mConversations.Count() - 1; i >= 0; --i) {
+    if (mConversations[i]->GetId() == (PRInt32) aConv) {
+#ifdef DEBUG_PURPLE_CORE_SERVICE
+      printf("purpleCoreSevice::RemoveConversation: Found\n");
+#endif
+      mConversations.RemoveObjectAt(i);
+      return;
+    }
+  }
+#ifdef DEBUG_PURPLE_CORE_SERVICE
+  printf("purpleCoreSevice::RemoveConversation: Not Found\n");
+#endif
+}
+
 /* nsISimpleEnumerator getProtocols (); */
 NS_IMETHODIMP purpleCoreService::GetProtocols(nsISimpleEnumerator **aResult)
 {
