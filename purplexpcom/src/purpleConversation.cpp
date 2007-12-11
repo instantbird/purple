@@ -70,6 +70,15 @@ void purpleConversation::SetConv(PurpleConversation *aConv)
 #endif
 }
 
+/* call this only from the destroy_conv uiop or when exiting */
+void purpleConversation::UnInit()
+{
+#ifdef DEBUG_PURPLE_CONVERSATION
+  printf("purpleConversation::unInit (mConv == %i)\n", (PRInt32) mConv);
+#endif
+  mConv = NULL;
+}
+
 /* readonly attribute AUTF8String name; */
 NS_IMETHODIMP purpleConversation::GetName(nsACString& aName)
 {

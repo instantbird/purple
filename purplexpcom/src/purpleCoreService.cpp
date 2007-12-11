@@ -255,24 +255,23 @@ void purpleCoreService::InitProtocols()
 #endif
 }
 
-inline void purpleCoreService::UnInitProtocols()
-{
-  for (PRInt32 i = mProtocols.Count() - 1; i >= 0; --i) {
-    mProtocols[i]->UnInit();
-  }
-  mProtocols.Clear();
-}
-
 /* void Quit (); */
 NS_IMETHODIMP purpleCoreService::Quit()
 {
   PURPLE_ENSURE_INIT(mInitialized);
 
-  mConversations.Clear(); // don't know yet if there's a need for uninit
-  UnInitAccounts();
-  UnInitProtocols();
-  mInitialized = PR_FALSE;
   NotifyObservers(this, "purple-quit");
+
+#define UNINIT(aThing)                                          \
+  for (PRInt32 i = m##aThing.Count() - 1; i >= 0; --i) {        \
+    m##aThing[i]->UnInit();                                     \
+  }                                                             \
+  m##aThing.Clear()
+
+  UNINIT(Conversations);
+  UNINIT(Accounts);
+  UNINIT(Protocols);
+  mInitialized = PR_FALSE;
   purple_core_quit();
 #ifdef DEBUG_PURPLE_CORE_SERVICE
   printf("purple_core_quit\n");
@@ -548,11 +547,16 @@ void purpleCoreService::AddConversation(purpleConversation* aConv)
 
 void purpleCoreService::RemoveConversation(PurpleConversation *aConv)
 {
+#ifdef DEBUG_PURPLE_CORE_SERVICE
+  printf("purpleCoreService::RemoveConversation aConv = %i\n", (PRInt32) aConv);
+#endif
+
   for (PRInt32 i = mConversations.Count() - 1; i >= 0; --i) {
     if (mConversations[i]->GetId() == (PRInt32) aConv) {
 #ifdef DEBUG_PURPLE_CORE_SERVICE
       printf("purpleCoreSevice::RemoveConversation: Found\n");
 #endif
+      mConversations[i]->UnInit();
       mConversations.RemoveObjectAt(i);
       return;
     }
@@ -683,14 +687,6 @@ nsresult purpleCoreService::InitAccounts()
   }
 
   return NS_OK;
-}
-
-inline void purpleCoreService::UnInitAccounts()
-{
-  for (PRInt32 i = mAccounts.Count() - 1; i >= 0; --i) {
-    mAccounts[i]->UnInit();
-  }
-  mAccounts.Clear();
 }
 
 /* purpleIAccount createAccount(in AUTF8String aName, in AUTF8String aPrpl); */

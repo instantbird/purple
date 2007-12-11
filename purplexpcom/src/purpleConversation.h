@@ -59,6 +59,7 @@ public:
   purpleConversation();
 
   void SetConv(PurpleConversation *aConv);
+  void UnInit();
   PRInt32 GetId() { return (PRInt32)mConv; }
 
 private:
