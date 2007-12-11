@@ -93,7 +93,7 @@
 #include "nsDirectoryServiceDefs.h"
 
 //#define DEBUG_PURPLE_INIT
-//#define DEBUG_PURPLE_STDERR
+//#define DEBUG_PURPLE_STDOUT
 #define DEBUG_PURPLE_CONSOLE
 #ifdef DEBUG_PURPLE_CONSOLE
 # include <nsIConsoleService.h>
@@ -482,7 +482,7 @@ static void connect_to_conversations_signals()
 static void debug_print(PurpleDebugLevel level, const char *category,
 			const char *arg)
 {
-# ifdef DEBUG_PURPLE_INIT
+# ifdef DEBUG_PURPLE_STDOUT
   printf("pp-%s: %s", category, arg);
 # endif
   nsCOMPtr<nsIConsoleService> consoleService = 
@@ -539,11 +539,7 @@ init_libpurple()
 #endif
   purple_util_set_user_dir(cPath.get());
 
-#ifdef DEBUG_PURPLE_STDERR
-  purple_debug_set_enabled(TRUE);
-#else
   purple_debug_set_enabled(FALSE);
-#endif
 
   purple_conversations_set_ui_ops(&conversation_uiops);
   purple_connections_set_ui_ops(&connection_uiops);
