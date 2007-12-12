@@ -82,6 +82,8 @@ void purpleConversation::UnInit()
 /* readonly attribute AUTF8String name; */
 NS_IMETHODIMP purpleConversation::GetName(nsACString& aName)
 {
+  NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
+
   aName = purple_conversation_get_name(mConv);
   return NS_OK;
 }
@@ -89,6 +91,8 @@ NS_IMETHODIMP purpleConversation::GetName(nsACString& aName)
 /* readonly attribute AUTF8String title; */
 NS_IMETHODIMP purpleConversation::GetTitle(nsACString& aTitle)
 {
+  NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
+
   aTitle = purple_conversation_get_title(mConv);
   return NS_OK;
 }
@@ -96,16 +100,27 @@ NS_IMETHODIMP purpleConversation::GetTitle(nsACString& aTitle)
 /* readonly attribute long idConv; */
 NS_IMETHODIMP purpleConversation::GetId(PRInt32 *aId)
 {
-  *aId = (PRInt32) mConv;
+  NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
 
+  *aId = (PRInt32) mConv;
   return NS_OK;
+}
+
+/* readonly attribute boolean isChat; */
+NS_IMETHODIMP purpleConversation::GetIsChat(PRBool *aIsChat)
+{
+  NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
+
+  *aIsChat = mConv->type == PURPLE_CONV_TYPE_CHAT;
+  return NS_OK;;
 }
 
 /* void sendMsg (in AUTF8String aMsg); */
 NS_IMETHODIMP purpleConversation::SendMsg(const nsACString& aMsg)
 {
-  PromiseFlatCString flatMsg(aMsg);
+  NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
 
+  PromiseFlatCString flatMsg(aMsg);
   switch (mConv->type) {
   case PURPLE_CONV_TYPE_IM:
     purple_conv_im_send(mConv->u.im, flatMsg.get());
