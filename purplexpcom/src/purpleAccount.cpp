@@ -107,7 +107,7 @@ nsresult purpleAccount::create(const nsACString& aName, purpleProtocol *aPrpl,
                                const nsCString& aKey)
 {
   NS_ENSURE_ARG_POINTER(aPrpl);
-  if (!aName.Length())
+  if (aName.IsEmpty())
     return NS_ERROR_UNEXPECTED;
 
   PromiseFlatCString flatName(aName);
@@ -189,7 +189,7 @@ nsresult purpleAccount::load(const nsCString& aKey)
   /* Load the alias if any */
   nsCString alias;
   rv = mPrefBranch->GetCharPref(PREF_ALIAS, getter_Copies(alias));
-  if (NS_SUCCEEDED(rv) && alias.Length()) {
+  if (NS_SUCCEEDED(rv) && !alias.IsEmpty()) {
     purple_account_set_alias(mAccount, alias.get());
 #ifdef DEBUG_PURPLE_ACCOUNT
     printf("alias = %s\n", alias.get());
@@ -615,7 +615,7 @@ NS_IMETHODIMP purpleAccount::SetAlias(const nsACString& aAlias)
 {
   PURPLE_ENSURE_INIT(mAccount);
 
-  if (aAlias.Length()) {
+  if (!aAlias.IsEmpty()) {
     PromiseFlatCString flatCString(aAlias);
     purple_account_set_alias(mAccount, flatCString.get());
     SetStringPref(PREF_ALIAS, flatCString.get());
