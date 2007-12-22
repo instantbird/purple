@@ -188,8 +188,15 @@ nsresult purpleCoreService::InitBuddyList()
 #endif
       continue; 
     }
-    PurpleBuddy *buddy = purple_buddy_new(account->GetPurpleAccount(),
-                                          name.get(), alias.get());
+
+    // When alias == name, don't set the alias so that when calling
+    // purple_buddy_get_alias this useless alias doesn't override the
+    // server-side alias (needed for MSN that won't send server-side
+    // aliases when syncing the buddy list and will wait until the
+    // buddies are online to send it)
+    PurpleBuddy *buddy =
+      purple_buddy_new(account->GetPurpleAccount(), name.get(),
+                       alias.Equals(name) ? NULL : alias.get());
     tag->addBuddy(buddy);
 
 #ifdef DEBUG_PURPLE_CORE_SERVICE 

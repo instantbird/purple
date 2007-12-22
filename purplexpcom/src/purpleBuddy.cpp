@@ -181,8 +181,12 @@ NS_IMETHODIMP purpleBuddy::GetAlias(nsACString& aAlias)
 {
   PURPLE_ENSURE_INIT(mId);
 
-  aAlias = mAlias;
-  return NS_OK;
+  if (!mAlias.IsEmpty()) {
+    aAlias = mAlias;
+    return NS_OK;
+  }
+
+  return mBuddies[0]->GetBuddyAlias(aAlias);
 }
 NS_IMETHODIMP purpleBuddy::SetAlias(const nsACString& aAlias)
 {

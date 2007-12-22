@@ -138,6 +138,15 @@ NS_IMETHODIMP purpleAccountBuddy::GetBuddyName(nsACString& aBuddyName)
   return NS_OK;
 }
 
+/* readonly attribute AUTF8String buddyAlias; */
+NS_IMETHODIMP purpleAccountBuddy::GetBuddyAlias(nsACString& aBuddyAlias)
+{
+  NS_ENSURE_TRUE(mBuddy, NS_ERROR_NOT_INITIALIZED);
+
+  aBuddyAlias = purple_buddy_get_alias(mBuddy);
+  return NS_OK;
+}
+
 /* purpleIConversation createConversation (); */
 NS_IMETHODIMP purpleAccountBuddy::CreateConversation(purpleIConversation **aResult)
 {
