@@ -357,6 +357,27 @@ nsresult purpleAccount::unstoreAccount()
     printf("account %u removed from mozStorage\n", mId);
   }
 #endif
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // removing the account from the accounts table is not enought,
+  // we need to remove all the associated account_buddy entries too
+  rv = DBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "DELETE FROM account_buddy WHERE account_id = ?1"),
+    getter_AddRefs(statement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = statement->BindInt32Parameter(0, mId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = statement->Execute();
+#ifdef DEBUG_PURPLE_ACCOUNT
+  if (NS_FAILED(rv)) {
+    printf("removing account_buddy entries of account %u from mozStorage failed\n", mId);
+  }
+  else {
+    printf("account_buddy entries of account %u removed from mozStorage\n", mId);
+  }
+#endif
 
   return rv;
 }
