@@ -423,6 +423,48 @@ NS_IMETHODIMP purpleCoreService::PurpleBuddyRemoved(PurpleBuddy *aBuddy)
   return NS_ERROR_FAILURE;
 }
 
+/* purpleITag createTag (in AUTF8String aName); */
+NS_IMETHODIMP purpleCoreService::CreateTag(const nsACString& aName,
+                                           purpleITag **aResult)
+{
+  //FIXME unacceptable code duplication from GetTagFromPurpleBuddy
+
+  // if the tag already exists, we don't want to create a duplicate
+  nsCString groupName = PromiseFlatCString(aName);
+
+  nsCOMPtr<purpleTag> tag;
+  nsresult rv = GetTagFromName(groupName, getter_AddRefs(tag));
+  if (NS_FAILED(rv)) {
+    /* Ok, we didn't find it, so this is a new tag */
+    purpleStorage *storageInstance = purpleStorage::GetInstance();
+    mozIStorageStatement *statement = storageInstance->mInsertGroup;
+    mozStorageStatementScoper scoper(statement);
+    rv = statement->BindUTF8StringParameter(0, groupName);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = statement->BindInt32Parameter(1, 0); // FIXME (0 = not visible);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = statement->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
+#ifdef DEBUG_PURPLE_CORE_SERVICE 
+    printf("pcs::CreateTag: stored group %s\n", groupName.get());
+#endif
+    PRInt32 id;
+    rv = GetTagIdFromName(groupName, &id);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PurpleGroup *group = purple_group_new(groupName.get());
+    tag = do_CreateInstance(PURPLE_TAG_CONTRACTID);
+    tag->Init(id, group);
+    mTagById.Put(id, tag);
+    purple_blist_add_group(group, NULL);
+  }
+  *aResult = tag;
+  NS_ADDREF(*aResult);
+
+  return NS_OK;
+}
+
 /* purpleITag getTagById (in long aId); */
 NS_IMETHODIMP purpleCoreService::GetTagById(PRInt32 aId, purpleITag **aResult)
 {
