@@ -404,6 +404,9 @@ NS_IMETHODIMP purpleCoreService::AddBuddy(purpleIAccount *aAccount,
 {
   NS_ENSURE_ARG_POINTER(aAccount);
   NS_ENSURE_ARG_POINTER(aTag);
+  if (aName.IsEmpty()) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
   purpleTag *tag = static_cast<purpleTag *>(aTag);
   PurpleAccount *account = static_cast<purpleAccount *>(aAccount)->GetPurpleAccount();
@@ -427,6 +430,10 @@ NS_IMETHODIMP purpleCoreService::PurpleBuddyRemoved(PurpleBuddy *aBuddy)
 NS_IMETHODIMP purpleCoreService::CreateTag(const nsACString& aName,
                                            purpleITag **aResult)
 {
+  if (aName.IsEmpty()) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   //FIXME unacceptable code duplication from GetTagFromPurpleBuddy
 
   // if the tag already exists, we don't want to create a duplicate
