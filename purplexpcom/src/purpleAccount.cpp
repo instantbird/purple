@@ -111,6 +111,12 @@ nsresult purpleAccount::create(const nsACString& aName, purpleProtocol *aPrpl,
     return NS_ERROR_UNEXPECTED;
 
   PromiseFlatCString flatName(aName);
+  if (purple_accounts_find(flatName.get(), aPrpl->GetId())) {
+    // adding a duplicate account would confuse libpurple
+    // XXX: Should this test be included inside purple_account_new?
+    return NS_ERROR_ALREADY_INITIALIZED;
+  }
+
   mAccount = purple_account_new(flatName.get(), aPrpl->GetId());
   if (!mAccount) {
     return NS_ERROR_FAILURE;
