@@ -1,0 +1,27 @@
+--- libaim.c~	2008-02-29 13:09:26.000000000 +0100
++++ libaim.c	2008-03-17 16:53:23.000000000 +0100
+@@ -137,10 +137,13 @@
+ 	NULL
+ };
+ 
++gboolean purple_init_icq_plugin(void);
++
+ static void
+ init_plugin(PurplePlugin *plugin)
+ {
+ 	oscar_init(PURPLE_PLUGIN_PROTOCOL_INFO(plugin));
++	purple_init_icq_plugin();
+ }
+ 
+-PURPLE_INIT_PLUGIN(aim, init_plugin, info);
++PURPLE_INIT_PLUGIN(aim, init_plugin, info)
+--- libicq.c~	2008-02-29 13:09:26.000000000 +0100
++++ libicq.c	2008-03-17 16:54:22.000000000 +0100
+@@ -25,6 +25,7 @@
+  */
+ 
+ 
++#define PURPLE_STATIC_PRPL
+ #include "oscarcommon.h"
+ 
+ static PurplePluginProtocolInfo prpl_info =

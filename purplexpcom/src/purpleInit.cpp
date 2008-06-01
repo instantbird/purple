@@ -1,0 +1,617 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the Instantbird messenging client, released
+ * 2007.
+ *
+ * The Initial Developer of the Original Code is
+ * Florian QUEZE <florian@instantbird.org>.
+ * Portions created by the Initial Developer are Copyright (C) 2007
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+
+#define CUSTOM_PLUGIN_PATH     "libraries/prpl"
+
+#ifdef XP_WIN
+# define _USE_32BIT_TIME_T
+#endif
+
+#include <libpurple/account.h>
+#include <libpurple/accountopt.h>
+#include <libpurple/conversation.h>
+#include <libpurple/core.h>
+#include <libpurple/debug.h>
+#include <libpurple/eventloop.h>
+#include <libpurple/ft.h>
+#include <libpurple/log.h>
+#include <libpurple/notify.h>
+#include <libpurple/prefs.h>
+#include <libpurple/prpl.h>
+#include <libpurple/pounce.h>
+#include <libpurple/savedstatuses.h>
+#include <libpurple/sound.h>
+#include <libpurple/status.h>
+#include <libpurple/util.h>
+#include <libpurple/whiteboard.h>
+#include <libpurple/certificate.h>
+#include <libpurple/dnsquery.h>
+
+#include <glib.h>
+
+#include <string.h>
+
+#ifndef _WIN32
+#include <unistd.h>
+#endif
+
+#include <xpcom-config.h>
+
+#include<nsServiceManagerUtils.h>
+#include<nsIObserverService.h>
+#include<nsCOMPtr.h>
+
+#include<nsStringAPI.h>
+#include<nsEmbedString.h>
+#include<windowwatcher/nsIPromptService.h>
+#include<intl/nsIStringBundle.h>
+#include"purpleConversation.h"
+#include"purpleCoreService.h"
+#include"purpleBuddy.h"
+#include"purpleMessage.h"
+#include"purpleTimer.h"
+#include"purpleSockets.h"
+#include"purpleDNS.h"
+#include "nsComponentManagerUtils.h"
+#include "nsDirectoryServiceUtils.h"
+#include "nsAppDirectoryServiceDefs.h"
+#include "nsDirectoryServiceDefs.h"
+
+//#define DEBUG_PURPLE_INIT
+//#define DEBUG_PURPLE_STDOUT
+#define DEBUG_PURPLE_CONSOLE
+#ifdef DEBUG_PURPLE_CONSOLE
+# include <nsIConsoleService.h>
+#endif
+
+static PurpleEventLoopUiOps eventloops =
+{
+  purpleTimer::AddTimeout, /* hack to prevent from writting .xml files to disk */
+  purpleTimer::CancelTimer,
+  purpleSocketWatcher::AddWatch,
+  purpleSocketWatcher::CancelWatch,
+  NULL,
+
+  /* padding */
+  NULL, NULL, NULL, NULL
+};
+/*** End of the eventloop functions. ***/
+
+/*** Connection uiops ***/
+static void setAccountConnectionStateMsg(PurpleConnection *gc, const char *text,
+                                         const char *aEvent)
+{
+  nsCOMPtr<purpleCoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
+  nsCOMPtr<purpleIAccount> account;
+  nsresult rv = pcs->GetAccountByPurpleAccount(purple_connection_get_account(gc),
+                                               getter_AddRefs(account));
+  if (NS_FAILED(rv)) {
+    return;
+  }
+  nsCString msg(text);
+  account->SetConnectionStateMsg(msg);
+  pcs->NotifyObservers(account, aEvent);
+}
+
+static void connect_progress(PurpleConnection *gc, const char *text,
+                             size_t step, size_t step_count)
+{
+  setAccountConnectionStateMsg(gc, text, "account-connect-progress");
+}
+
+static void report_disconnect(PurpleConnection *gc, const char *text)
+{
+  setAccountConnectionStateMsg(gc, text, "account-connect-error");
+}
+
+PurpleConnectionUiOps connection_uiops = {
+  connect_progress,
+  NULL, /* connected */
+  NULL, /* disconnected */
+  NULL, /* notice = dead code ? */
+  report_disconnect,
+  NULL, /* network_connected */
+  NULL, /* network_disconnected */
+
+  NULL, NULL, NULL, NULL
+};
+
+/*** Account uiops ***/
+typedef void (*GCallback) (void);
+
+static void *request_authorize(PurpleAccount *account, const char *remote_user,
+                               const char *id, const char *alias,
+                               const char *message, gboolean on_list, 
+                               PurpleAccountRequestAuthorizationCb authorize_cb,
+                               PurpleAccountRequestAuthorizationCb deny_cb,
+                               void *user_data)
+{
+  nsresult rv;
+  nsCOMPtr<nsIPromptService> promptService =
+    do_GetService("@mozilla.org/embedcomp/prompt-service;1", &rv);
+  NS_ENSURE_SUCCESS(rv, NULL);
+
+  nsCOMPtr<nsIStringBundleService> bundleService =
+    do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, NULL);
+
+  nsCOMPtr<nsIStringBundle> stringBundle;
+  rv = bundleService->CreateBundle("chrome://instantbird/locale/accounts.properties",
+                                   getter_AddRefs(stringBundle));
+  NS_ENSURE_SUCCESS(rv, NULL);
+
+  nsString title;
+  rv = stringBundle->GetStringFromName(NS_LITERAL_STRING("requestAuthorizeTitle").get(),
+                                       getter_Copies(title));
+  NS_ENSURE_SUCCESS(rv, NULL);
+
+  nsString allow;
+  rv = stringBundle->GetStringFromName(NS_LITERAL_STRING("requestAuthorizeAllow").get(),
+                                       getter_Copies(allow));
+  NS_ENSURE_SUCCESS(rv, NULL);
+
+  nsString deny;
+  rv = stringBundle->GetStringFromName(NS_LITERAL_STRING("requestAuthorizeDeny").get(),
+                                       getter_Copies(deny));
+  NS_ENSURE_SUCCESS(rv, NULL);
+
+  nsCString cRemoteUser(remote_user);
+  nsString who;
+  NS_CStringToUTF16(cRemoteUser, NS_CSTRING_ENCODING_UTF8, who);
+  const PRUnichar *whoFlat = who.get();
+
+  nsString msg;
+  rv = stringBundle->FormatStringFromName(NS_LITERAL_STRING("requestAuthorizeText").get(),
+                                          &whoFlat, 1, getter_Copies(msg));
+
+  PRInt32 result;
+  PRUint32 flags = (nsIPromptService::BUTTON_POS_0 +
+                    nsIPromptService::BUTTON_POS_1) *
+                   nsIPromptService::BUTTON_TITLE_IS_STRING;
+  promptService->ConfirmEx(nsnull, title.get(), msg.get(), flags, allow.get(),
+                           deny.get(), nsnull, nsnull, nsnull, &result);
+  NS_ENSURE_SUCCESS(rv, NULL);
+
+  if (result) {
+    // Index 1 means "deny"
+    deny_cb(user_data);
+  }
+  else {
+    authorize_cb(user_data);
+    //FIXME Prompt to add to blist
+  }
+
+  return NULL;
+}
+
+PurpleAccountUiOps account_uiops = {
+  NULL, /* notify_added, nearly dead code ? */
+  NULL, /* status_changed */
+  NULL, /* request_add, nearly dead */
+  request_authorize,
+  NULL, /* close_account_request --> FIXME */
+
+  NULL, NULL, NULL, NULL
+};
+
+/*** Conversation uiops ***/
+static void create_conv(PurpleConversation *aConv)
+{
+#ifdef DEBUG_PURPLE_INIT
+  printf("create conversation with name: %s\n", purple_conversation_get_name(aConv));
+#endif
+
+  nsCOMPtr<purpleConversation> conv;
+  conv = do_CreateInstance("@instantbird.org/purple/conversation;1");
+
+  conv->SetConv(aConv);
+
+  nsCOMPtr<purpleCoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
+  pcs->AddConversation(conv);
+}
+
+static void destroy_conv(PurpleConversation *aConv)
+{
+#ifdef DEBUG_PURPLE_INIT
+  printf("destroy_conv uiop called\n");
+#endif
+
+  nsCOMPtr<purpleCoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
+  pcs->RemoveConversation(aConv);
+}
+
+static void write_conv(PurpleConversation *conv, const char *who,
+                       const char *alias, const char *message,
+                       PurpleMessageFlags flags, time_t mtime)
+{
+  nsresult rv;
+  nsCOMPtr<purpleMessage> msg = do_CreateInstance(PURPLE_MESSAGE_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  msg->Init(conv, who, alias, message, flags, mtime);
+
+  nsCOMPtr<purpleICoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID, &rv);
+  pcs->NotifyObservers(msg, "new-text");
+}
+
+static PurpleConversationUiOps conversation_uiops =
+{
+  create_conv,               /* create_conversation  */
+  destroy_conv,              /* destroy_conversation */
+  NULL,                      /* write_chat           */
+  NULL,                      /* write_im             */
+  write_conv,                /* write_conv           */
+  NULL,                      /* chat_add_users       */
+  NULL,                      /* chat_rename_user     */
+  NULL,                      /* chat_remove_users    */
+  NULL,                      /* chat_update_user     */
+  NULL,                      /* present              */
+  NULL,                      /* has_focus            */
+  NULL,                      /* custom_smiley_add    */
+  NULL,                      /* custom_smiley_write  */
+  NULL,                      /* custom_smiley_close  */
+  NULL,                      /* send_confirm         */
+
+  NULL, NULL, NULL, NULL
+};
+
+static void account_signals(PurpleAccount *account, const char *signal)
+{
+#ifdef DEBUG_PURPLE_INIT
+  printf("%s: %s (%s)\n", signal,
+	 account->username, account->protocol_id);
+#endif
+  nsCOMPtr<purpleCoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
+  pcs->FireAccountEvent(account, signal);
+}
+
+static void connection_signals(PurpleConnection *gc, const char *signal)
+{
+  account_signals(purple_connection_get_account(gc), signal);
+}
+
+#define PURPLE_CONNECT_CONNECTION_SIGNAL(aSignal, aName)	\
+  purple_signal_connect(instance, aSignal, &handle,		\
+			PURPLE_CALLBACK(connection_signals),	\
+			(void *)aName)
+
+static void
+connect_to_connections_signals()
+{
+  int handle;
+  void *instance = purple_connections_get_handle();
+  PURPLE_CONNECT_CONNECTION_SIGNAL("signed-on", "account-connected");
+  PURPLE_CONNECT_CONNECTION_SIGNAL("signing-on", "account-signing-on");
+  PURPLE_CONNECT_CONNECTION_SIGNAL("signed-off", "account-disconnected");
+  PURPLE_CONNECT_CONNECTION_SIGNAL("signing-off", "account-disconnecting");
+#ifdef DEBUG_PURPLE_INIT
+  printf("connecting to connections signals\n");
+#endif
+}
+
+static void
+connect_to_accounts_signals()
+{
+  int handle;
+  void *instance = purple_accounts_get_handle();
+  purple_signal_connect(instance, "account-connecting", &handle,
+			PURPLE_CALLBACK(account_signals),
+			(void *)"account-connecting");
+#ifdef DEBUG_PURPLE_INIT
+  printf("connecting to accounts signals\n");
+#endif
+}
+
+static void buddy_signals(PurpleBuddy *aBuddy, const char *aSignal)
+{
+  nsCOMPtr<purpleCoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
+  pcs->FireBuddyEvent(aBuddy, aSignal);
+}
+
+#define PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER(aSignal, aHandler)  \
+  purple_signal_connect(instance, aSignal, &handle,		\
+			PURPLE_CALLBACK(aHandler),		\
+			(void *)aSignal)
+
+#define PURPLE_CONNECT_BUDDY_SIGNAL(aSignal)			\
+  PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER(aSignal, buddy_signals)
+
+static void buddy_removed(PurpleBuddy *buddy, void *null)
+{
+  // This is the buddy-removed purple signal. It is fired when a buddy
+  // is removed permanenty (ie from the server list or if the user
+  // request the deletion of a buddy in her list)
+
+  // send the signal first, before actually removing the buddy
+  nsCOMPtr<purpleCoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
+  pcs->FireBuddyEvent(buddy, "buddy-deleted");
+  pcs->PurpleBuddyRemoved(buddy);
+}
+
+static void buddy_away(PurpleBuddy *aBuddy,
+                       PurpleStatus *old_status, PurpleStatus *status)
+{
+  buddy_signals(aBuddy, "buddy-away");
+}
+
+static void buddy_idle(PurpleBuddy *aBuddy, gboolean old_idle, gboolean idle)
+{
+  buddy_signals(aBuddy, "buddy-idle");
+}
+
+void
+connect_to_blist_signals()
+{
+  int handle;
+  void *instance = purple_blist_get_handle();
+  PURPLE_CONNECT_BUDDY_SIGNAL("buddy-added");
+  PURPLE_CONNECT_BUDDY_SIGNAL("buddy-signed-on");
+  PURPLE_CONNECT_BUDDY_SIGNAL("buddy-signed-off");
+  PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER("buddy-removed", buddy_removed);
+  PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER("buddy-status-changed", buddy_away);
+  PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER("buddy-idle-changed", buddy_idle);
+
+#ifdef DEBUG_PURPLE_INIT
+  printf("connecting to blist signals\n");
+#endif
+}
+
+static void remove_blist_node(PurpleBuddyList *aList, PurpleBlistNode *aNode)
+{
+  // This is the removed blist uiop. It is fired when a possibly
+  // visible element of the buddy list is removed (because the account
+  // got disconnected)
+
+  // For now, we are only interested by buddy removal
+  if (!PURPLE_BLIST_NODE_IS_BUDDY(aNode))
+    return;
+
+  PurpleBuddy *buddy = (PurpleBuddy *) aNode;
+#ifdef DEBUG_PURPLE_INIT
+  printf("purple uiop : remove_blist_node, name = %s\n", buddy->name);
+#endif
+  buddy_signals(buddy, "buddy-removed");
+}
+
+static PurpleBlistUiOps blist_uiops = {
+  NULL, /* new_list */
+  NULL, /* new_node FIXME: should use it */
+  NULL, /* show */
+  NULL, /* update */
+  remove_blist_node, /* remove */
+  NULL, /* destroy */
+  NULL, /* set_visible */
+  NULL, /* request_add_buddy */
+  NULL, /* request_add_chat */
+  NULL, /* request_add_group */
+
+  NULL, NULL, NULL, NULL
+};
+
+
+static void
+received_im_msg(PurpleAccount *account, char *sender, char *message,
+		PurpleConversation *conv, PurpleMessageFlags flags)
+{
+#ifdef DEBUG_PURPLE_INIT
+  printf("received_im_msg\n");
+#endif
+
+  nsresult rv;
+  nsCOMPtr<nsIObserverService> os = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+
+  if (NS_FAILED(rv)) {
+    printf("nsCOMPtr<nsIObserverService> == null\n");
+    return;
+  }
+
+  const nsEmbedCString cMsg(message);
+  nsEmbedString        msg;
+
+  NS_CStringToUTF16(cMsg, NS_CSTRING_ENCODING_UTF8, msg);
+
+  nsCOMPtr<purpleICoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID, &rv);
+
+  if (!conv) {
+    conv = purple_conversation_new(PURPLE_CONV_TYPE_IM, account, sender);
+  }
+  purpleIConversation *prplConv = nsnull;
+  rv = pcs->GetConversationById((PRInt32) conv, &prplConv);
+#ifdef DEBUG_PURPLE_INIT
+  if (NS_FAILED(rv))
+    printf("FindConversationById failed \n");
+  else
+    printf("FindConversationById OK \n");
+  printf("id : %i\n", (int)conv);
+#endif
+#ifdef XP_WIN
+  os->NotifyObservers(prplConv, "new message", nsnull);
+#else
+  os->NotifyObservers(prplConv, "new message", msg.get());
+#endif
+}
+
+static void connect_to_conversations_signals()
+{
+  static int handle;
+  purple_signal_connect(purple_conversations_get_handle(), "received-im-msg", &handle,
+			PURPLE_CALLBACK(received_im_msg), NULL);
+#ifdef DEBUG_PURPLE_INIT
+  printf("connecting to signals\n");
+#endif
+}
+
+#ifdef DEBUG_PURPLE_CONSOLE
+static void debug_print(PurpleDebugLevel level, const char *category,
+			const char *arg)
+{
+# ifdef DEBUG_PURPLE_STDOUT
+  printf("pp-%s: %s", category, arg);
+# endif
+  nsCOMPtr<nsIConsoleService> consoleService = 
+    do_GetService( "@mozilla.org/consoleservice;1" );
+
+  nsCString message(category);
+  message.Append(": ");
+  message.Append(arg);
+
+  nsString msg;
+  NS_CStringToUTF16(message, NS_CSTRING_ENCODING_UTF8, msg);
+
+  consoleService->LogStringMessage(msg.get());
+}
+
+static gboolean debug_enabled(PurpleDebugLevel level,
+			      const char *category)
+{
+  return true;
+}
+
+static PurpleDebugUiOps debugconsoleuiops = {
+  debug_print,
+  debug_enabled,
+  NULL,NULL,NULL,NULL
+};
+#endif
+
+static PurpleDnsQueryUiOps dnsUiOps = {
+  purpleDNS::Resolve,
+  purpleDNS::Cancel,
+
+  NULL,NULL,NULL,NULL
+};
+
+nsresult
+init_libpurple()
+{
+  /* Set the instantbird profile folder as libpurple custom user
+     directory */
+
+  nsCOMPtr<nsIFile> folder;
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+				       getter_AddRefs(folder));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsString path;
+  rv = folder->GetPath(path);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCString cPath;
+  CopyUTF16toUTF8(path, cPath);
+#ifdef DEBUG_PURPLE_INIT
+  printf("setting custom user directory to:  %s\n", cPath.get());
+#endif
+  purple_util_set_user_dir(cPath.get());
+
+  purple_debug_set_enabled(FALSE);
+
+  purple_conversations_set_ui_ops(&conversation_uiops);
+  purple_connections_set_ui_ops(&connection_uiops);
+  purple_accounts_set_ui_ops(&account_uiops);
+  purple_blist_set_ui_ops(&blist_uiops);
+
+#ifdef DEBUG_PURPLE_CONSOLE
+  purple_debug_set_ui_ops(&debugconsoleuiops);
+#endif
+
+  purple_dnsquery_set_ui_ops(&dnsUiOps);
+
+  /* The eventloop uiops use nsTimer and
+   * nsSocketTransportService. purpleTimer and purpleSocket are proxy
+   * so that we can have the right prototypes for libpurple.
+   */
+  purple_eventloop_set_ui_ops(&eventloops);
+
+  /* Add CUSTOM_PLUGIN_PATH as search folder. On some plateform (for
+   * example MACOSX), we can't hope that the current working directory
+   * of libpurple will be set to a correct folder, so we need to find
+   * the absolute path ourselves
+   */
+  rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR,
+                              getter_AddRefs(folder));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = folder->GetPath(path);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  CopyUTF16toUTF8(path, cPath);
+  nsCString pluginPath(cPath);
+  pluginPath.Append("/" CUSTOM_PLUGIN_PATH);
+  purple_plugins_add_search_path(pluginPath.get());
+#ifdef DEBUG_PURPLE_INIT
+  printf("setting custom plugin path to:  %s\n", pluginPath.get());
+#endif
+
+  /* Set a custom ca cert search path */
+  cPath.Append("/ca-certs");
+  purple_certificate_add_ca_search_path(cPath.get());
+
+  /* Here "instantbird" stands for the UI_ID. libpurple
+   * sometimes need this id (for example for some plugins and
+   * some preferences)
+   */
+  if (!purple_core_init("instantbird")) {
+#ifdef DEBUG_PURPLE_INIT
+    printf("purple_core_init failed!!!\n");
+#endif
+    return NS_ERROR_FAILURE;
+  }
+
+  /* Enable all logs by default. */
+  purple_prefs_set_bool("/purple/logging/log_ims", TRUE);
+  purple_prefs_set_bool("/purple/logging/log_chats", TRUE);
+  purple_prefs_set_bool("/purple/logging/log_system", TRUE);
+
+  /* Disable auto away/idle, it's buddy */
+  purple_prefs_set_string("/purple/away/idle_reporting", "none");
+  purple_prefs_set_bool("/purple/away/away_when_idle", FALSE);
+
+  /* Load the pounces. */
+  purple_pounces_load();
+
+  /* Now, to connect the account(s), create a status and activate it. */
+  PurpleSavedStatus *status = purple_savedstatus_new(NULL, PURPLE_STATUS_AVAILABLE);
+  purple_savedstatus_activate(status);
+
+  connect_to_connections_signals();
+  connect_to_accounts_signals();
+  //  connect_to_blist_signals();
+  connect_to_conversations_signals();
+
+  return NS_OK;
+}
