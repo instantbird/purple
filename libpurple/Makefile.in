@@ -1,4 +1,3 @@
-#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -50,9 +49,12 @@ NO_DIST_INSTALL	= 1
 
 VISIBILITY_FLAGS=
 
-LOCAL_INCLUDES	= $(GLIB_CFLAGS) -I/usr/include/libxml2/
-#NSS_LIBS= -lnss3 -lnssutil3 -lsmime3 -lssl3 -lplds4 -lplc4 -lnspr4
-EXTRA_LIBS	= $(GLIB_LIBS) -lgmodule-2.0 -lxml2 -lresolv -lz $(NSS_LIBS) $(NSPR_LIBS)
+LOCAL_INCLUDES	= $(GLIB_CFLAGS)
+ifneq ($(OS_ARCH),Darwin)
+ LOCAL_INCLUDES += -I/usr/include/libxml2/
+endif
+
+EXTRA_LIBS	= -L$(DIST)/lib -lxml2 $(GLIB_LIBS) -lgmodule-2.0 -lresolv -lz $(NSS_LIBS) $(NSPR_LIBS)
 #EXTRA_DSO_LIBS	= \
 #		xml2 \
 #		$(NULL)

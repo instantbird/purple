@@ -45,8 +45,7 @@ NO_DIST_INSTALL	= 1
 VISIBILITY_FLAGS=
 
 LOCAL_INCLUDES	= $(GLIB_CFLAGS)
-EXTRA_LIBS	= -L../.. -lpurple $(GLIB_LIBS) -lgmodule-2.0 -lz -lxml2
-# -L$(DIST)/lib
+EXTRA_LIBS	= -L../.. -lpurple -L$(DIST)/lib -lxml2 -lz $(GLIB_LIBS) -lgmodule-2.0
 #DSO_LDOPTS	= -shared
 
 DEFINES		+= -DVERSION=\"2.4.0\" -DDISPLAY_VERSION=\"2.4.0\" -DPURPLE_PLUGINS -DPACKAGE_NAME=\"purple\"

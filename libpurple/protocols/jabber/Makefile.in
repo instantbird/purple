@@ -42,8 +42,10 @@ PROTOCOL	= jabber
 
 include $(srcdir)/../prpl.mk
 
-LOCAL_INCLUDES	+= -I/usr/include/libxml2/
-#EXTRA_LIBS	+= -lxml2
+ifneq ($(OS_ARCH),Darwin)
+ LOCAL_INCLUDES	+= -I/usr/include/libxml2/
+endif
+
 DEFINES		+= -DPACKAGE=\"purple\"
 
 CSRCS		= \

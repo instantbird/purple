@@ -41,7 +41,10 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= libpurple purplexpcom
+DIRS		= \
+		libraries \
+		libpurple \
+		purplexpcom \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
