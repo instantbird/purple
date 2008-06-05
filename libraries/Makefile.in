@@ -41,6 +41,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= libxml2
+DIRS		= \
+		libxml2 \
+		glib \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

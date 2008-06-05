@@ -44,10 +44,16 @@ NO_DIST_INSTALL	= 1
 
 VISIBILITY_FLAGS=
 
+REQUIRES	= libpurple
+
+ifneq (,$(filter-out WINNT Darwin,$(OS_ARCH)))
 LOCAL_INCLUDES	= $(GLIB_CFLAGS)
-EXTRA_LIBS	= -L../.. -lpurple -L$(DIST)/lib -lxml2 -lz $(GLIB_LIBS) -lgmodule-2.0
-#DSO_LDOPTS	= -shared
+EXTRA_LIBS	= -L../.. -lpurple $(GLIB_LIBS) -lgmodule-2.0 -lxml2 -lz
+else
+EXTRA_LIBS	= -L../.. -lpurple -L$(DIST)/lib -lglib -lxml2 -lz
+REQUIRES	+= \
+		glib \
+		$(NULL)
+endif
 
 DEFINES		+= -DVERSION=\"2.4.0\" -DDISPLAY_VERSION=\"2.4.0\" -DPURPLE_PLUGINS -DPACKAGE_NAME=\"purple\"
-
-REQUIRES	= libpurple

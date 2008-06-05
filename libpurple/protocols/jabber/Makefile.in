@@ -42,8 +42,10 @@ PROTOCOL	= jabber
 
 include $(srcdir)/../prpl.mk
 
-ifneq ($(OS_ARCH),Darwin)
- LOCAL_INCLUDES	+= -I/usr/include/libxml2/
+ifneq (,$(filter-out WINNT Darwin,$(OS_ARCH)))
+LOCAL_INCLUDES	+= -I/usr/include/libxml2/
+else
+REQUIRES	+= libxml2
 endif
 
 DEFINES		+= -DPACKAGE=\"purple\"

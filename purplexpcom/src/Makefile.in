@@ -49,14 +49,22 @@ MODULE_NAME	= purplexpcom
 NO_DIST_INSTALL	= 1
 VISIBILITY_FLAGS=
 
-LOCAL_INCLUDES	= $(GLIB_CFLAGS)
-EXTRA_LIBS	= $(GLIB_LIBS) -lgmodule-2.0 -L$(DIST)/lib -lpurple -lz -lxml2
-
 REQUIRES	= \
 		xpcom \
 		libpurple \
 		purplexpcom \
 		$(NULL)
+
+ifneq (,$(filter-out WINNT Darwin,$(OS_ARCH)))
+LOCAL_INCLUDES	= $(GLIB_CFLAGS)
+EXTRA_LIBS	= $(GLIB_LIBS) -lgmodule-2.0 -L$(DIST)/lib -lpurple -lz -lxml2
+else
+EXTRA_LIBS	= -L$(DIST)/lib -lpurple -lz -lxml2 -lglib
+REQUIRES	+= \
+		glib \
+		libxml2 \
+		$(NULL)
+endif
 
 CPPSRCS		= \
 		purpleAccount.cpp \

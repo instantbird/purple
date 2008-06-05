@@ -49,19 +49,20 @@ NO_DIST_INSTALL	= 1
 
 VISIBILITY_FLAGS=
 
-LOCAL_INCLUDES	= $(GLIB_CFLAGS)
-ifneq ($(OS_ARCH),Darwin)
- LOCAL_INCLUDES += -I/usr/include/libxml2/
+ifneq (,$(filter-out WINNT Darwin,$(OS_ARCH)))
+LOCAL_INCLUDES	= $(GLIB_CFLAGS) -I/usr/include/libxml2/
+EXTRA_LIBS	= $(GLIB_LIBS) -lgmodule-2.0 -lxml2 -lz
+else
+EXTRA_LIBS	= -L$(DIST)/lib -lglib -lxml2 -lz
+REQUIRES	= \
+		glib \
+		libxml2 \
+		$(NULL)
 endif
 
-EXTRA_LIBS	= -L$(DIST)/lib -lxml2 $(GLIB_LIBS) -lgmodule-2.0 -lresolv -lz $(NSS_LIBS) $(NSPR_LIBS)
-#EXTRA_DSO_LIBS	= \
-#		xml2 \
-#		$(NULL)
+EXTRA_LIBS	+= -lresolv -lz $(NSS_LIBS) $(NSPR_LIBS)
 
 DIRS		= protocols
-
-#CFLAGS		+= -DDATADIR=/dev/null -DLIBDIR=/dev/null -DSYSCONFDIR=/dev/null
 
 DEFINES		+= -DPURPLE_PLUGINS
 
@@ -132,7 +133,6 @@ CSRCS		= \
 		conversation.c \
 		core.c \
 		debug.c \
-		desktopitem.c \
 		eventloop.c \
 		ft.c \
 		idle.c \
@@ -170,6 +170,7 @@ CSRCS		= \
 		whiteboard.c \
 		ssl-nss.c \
 		$(NULL)
+#		desktopitem.c
 
 include $(topsrcdir)/config/rules.mk
 
