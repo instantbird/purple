@@ -40,9 +40,9 @@ ssl_init(void)
 	PurplePlugin *plugin;
 	PurpleSslOps *ops;
 
-#if 0
 	if (_ssl_initialized)
 		return FALSE;
+#if 0
 
 	plugin = purple_plugins_find_with_id("core-ssl");
 
@@ -59,7 +59,7 @@ ssl_init(void)
 		return FALSE;
 	}
 
-	return ops->init();
+	return (_ssl_initialized = ops->init());
 }
 
 gboolean
