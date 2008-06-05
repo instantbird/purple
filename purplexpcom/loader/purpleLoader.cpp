@@ -61,17 +61,12 @@ static char const *const kDependentLibraries[] =
 		"libsilcclient-1-1-2" DLL_SUFFIX,
 #endif
 #ifdef XP_MACOSX
-    DLL_PREFIX "z.1" DLL_SUFFIX,
-    DLL_PREFIX "iconv.2" DLL_SUFFIX,
-    DLL_PREFIX "xml2.2" DLL_SUFFIX,
-    DLL_PREFIX "intl.8" DLL_SUFFIX,
-    DLL_PREFIX "glib-2.0.0" DLL_SUFFIX,
-    DLL_PREFIX "gobject-2.0.0" DLL_SUFFIX,
-    DLL_PREFIX "gmodule-2.0.0" DLL_SUFFIX,
-    DLL_PREFIX "gthread-2.0.0" DLL_SUFFIX,
+        // libz and libiconv are in the system, we don't need to load them
+        //    DLL_PREFIX "z.1" DLL_SUFFIX,
+        //    DLL_PREFIX "iconv.2" DLL_SUFFIX,
+    DLL_PREFIX "xml2" DLL_SUFFIX,
+    DLL_PREFIX "glib" DLL_SUFFIX,
     DLL_PREFIX "purple" DLL_SUFFIX,
-    DLL_PREFIX "jabber.0" DLL_SUFFIX,
-    DLL_PREFIX "oscar.0" DLL_SUFFIX,
 #endif
 #if !(defined(XP_WIN)) && !(defined(XP_MACOSX))
     DLL_PREFIX "purple" DLL_SUFFIX,

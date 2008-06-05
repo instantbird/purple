@@ -37,20 +37,13 @@ extern "C" {
 #ifdef XP_WIN
 #define G_MODULE_IMPL           G_MODULE_IMPL_WIN32
 #else
-#ifdef XP_MACOSX
-#define G_MODULE_IMPL           G_MODULE_IMPL_DYLD
-#else
 #define	G_MODULE_IMPL		G_MODULE_IMPL_DL
-#endif
 #endif
 #undef	G_MODULE_HAVE_DLERROR
 
 #ifdef XP_MACOSX
 #if	(1)
 #define	G_MODULE_HAVE_DLERROR
-#endif
-#ifdef XP_MACOSX
-#define	G_MODULE_NEED_USCORE
 #endif
 #if	(0)
 #define G_MODULE_BROKEN_RTLD_GLOBAL
