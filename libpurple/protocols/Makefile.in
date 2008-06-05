@@ -41,7 +41,19 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= irc jabber gg oscar msnp9 myspace novell qq simple yahoo
+DIRS		= \
+		irc \
+		jabber \
+		gg \
+		oscar \
+		msnp9 \
+		myspace \
+		novell \
+		qq \
+		simple \
+		yahoo \
+		netsoul \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
