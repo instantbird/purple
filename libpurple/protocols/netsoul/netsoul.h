@@ -59,7 +59,6 @@
 #include "debug.h"
 #include "blist.h"
 #include "util.h"
-//#include "pidgin.h"
 #include "version.h"
 #include "cipher.h"
 #include "imgstore.h"
@@ -69,7 +68,7 @@
 #define NETSOUL_DEFAULT_SERVER "ns-server.epita.fr"
 #define NETSOUL_DEFAULT_PORT 4242
 #define NETSOUL_DEFAULT_LOCATION "maison"
-#define NETSOUL_DEFAULT_COMMENT "Netsoul for Purple is Funky!"
+#define NETSOUL_DEFAULT_COMMENT "Netsoul in Instantbird is Funky!"
 
 #define NETSOUL_PHOTO_URL "http://www.epitech.net/intra/photo.php?login="
 
