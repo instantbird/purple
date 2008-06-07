@@ -106,7 +106,7 @@ NS_IMETHODIMP purpleMessage::GetConversation(purpleIConversation * *aConversatio
   NS_ENSURE_SUCCESS(rv, rv);
 
   *aConversation = prplConv;
-  NS_ADDREF(*aConversation);
+  NS_IF_ADDREF(*aConversation);
   return NS_OK;
 }
 
