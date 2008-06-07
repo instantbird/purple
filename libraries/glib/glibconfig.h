@@ -18,9 +18,9 @@
 
 G_BEGIN_DECLS
 
-#ifndef DEBUG
+/* #ifndef DEBUG */
 #define G_DISABLE_ASSERT
-#endif
+/* #endif */
 
 #define G_MINFLOAT	FLT_MIN
 #define G_MAXFLOAT	FLT_MAX
