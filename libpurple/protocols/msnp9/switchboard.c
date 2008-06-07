@@ -111,6 +111,9 @@ msn_switchboard_destroy(MsnSwitchBoard *swboard)
 	for (l = swboard->users; l != NULL; l = l->next)
 		g_free(l->data);
 
+	if (swboard->users != NULL)
+		g_list_free(swboard->users);
+
 	session = swboard->session;
 	session->switches = g_list_remove(session->switches, swboard);
 
@@ -1171,7 +1174,7 @@ xfr_error(MsnCmdProc *cmdproc, MsnTransaction *trans, int error)
 
 	swboard = trans->data;
 
-	purple_debug_info("msn", "xfr_error %i for %s: trans %x, command %s, reason %i\n",
+	purple_debug_info("msn", "xfr_error %i for %s: trans %p, command %s, reason %i\n",
 					error, (swboard->im_user ? swboard->im_user : "(null)"), trans,
 					(trans->command ? trans->command : "(null)"), reason);
 

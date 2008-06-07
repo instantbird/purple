@@ -79,6 +79,10 @@ endif
 
 CYRUS_SASL ?= 1
 
+ifeq ($(CYRUS_SASL), 1)
+DEFINES += -DHAVE_CYRUS_SASL
+endif
+
 DEFINES += -DHAVE_CONFIG_H
 
 # Use -g flag when building debug version of Pidgin (including plugins).
@@ -106,3 +110,6 @@ STRIP ?= strip
 PIDGIN_COMMON_RULES := $(PURPLE_TOP)/win32/rules.mak
 PIDGIN_COMMON_TARGETS := $(PURPLE_TOP)/win32/targets.mak
 MINGW_MAKEFILE := Makefile.mingw
+
+INSTALL_PIXMAPS ?= 1
+

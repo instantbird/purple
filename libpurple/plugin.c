@@ -924,7 +924,7 @@ purple_plugin_get_name(const PurplePlugin *plugin) {
 	g_return_val_if_fail(plugin, NULL);
 	g_return_val_if_fail(plugin->info, NULL);
 
-	return plugin->info->name;
+	return _(plugin->info->name);
 }
 
 const gchar *
@@ -940,7 +940,7 @@ purple_plugin_get_summary(const PurplePlugin *plugin) {
 	g_return_val_if_fail(plugin, NULL);
 	g_return_val_if_fail(plugin->info, NULL);
 
-	return plugin->info->summary;
+	return _(plugin->info->summary);
 }
 
 const gchar *
@@ -948,7 +948,7 @@ purple_plugin_get_description(const PurplePlugin *plugin) {
 	g_return_val_if_fail(plugin, NULL);
 	g_return_val_if_fail(plugin->info, NULL);
 
-	return plugin->info->description;
+	return _(plugin->info->description);
 }
 
 const gchar *
@@ -956,7 +956,7 @@ purple_plugin_get_author(const PurplePlugin *plugin) {
 	g_return_val_if_fail(plugin, NULL);
 	g_return_val_if_fail(plugin->info, NULL);
 
-	return plugin->info->author;
+	return _(plugin->info->author);
 }
 
 const gchar *
@@ -1214,7 +1214,7 @@ purple_plugins_add_search_path(const char *path)
 	if (g_list_find_custom(search_paths, path, (GCompareFunc)strcmp))
 		return;
 
-	search_paths = g_list_append(search_paths, strdup(path));
+	search_paths = g_list_append(search_paths, g_strdup(path));
 }
 
 void
@@ -1296,7 +1296,7 @@ purple_plugins_load_saved(const char *key)
 
 		/* Strip the extension */
 		if (basename)
-			basename = purple_plugin_get_basename(filename);
+			basename = purple_plugin_get_basename(basename);
 
 		if (((plugin = purple_plugins_find_with_filename(filename)) != NULL) ||
 				(basename && (plugin = purple_plugins_find_with_basename(basename)) != NULL) ||

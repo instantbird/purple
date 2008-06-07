@@ -344,10 +344,12 @@ msim_login_challenge(MsimSession *session, MsimMessage *msg)
 
 	purple_connection_update_progress(session->gc, _("Reading challenge"), 1, 4);
 
-	purple_debug_info("msim", "nc is %d bytes, decoded\n", nc_len);
+	purple_debug_info("msim", "nc is %" G_GSIZE_FORMAT
+			" bytes, decoded\n", nc_len);
 
 	if (nc_len != MSIM_AUTH_CHALLENGE_LENGTH) {
-		purple_debug_info("msim", "bad nc length: %x != 0x%x\n", nc_len, MSIM_AUTH_CHALLENGE_LENGTH);
+		purple_debug_info("msim", "bad nc length: %" G_GSIZE_MODIFIER
+				"x != 0x%x\n", nc_len, MSIM_AUTH_CHALLENGE_LENGTH);
 		purple_connection_error_reason (session->gc,
 			PURPLE_CONNECTION_ERROR_NETWORK_ERROR,
 			_("Unexpected challenge length from server"));
@@ -493,8 +495,8 @@ msim_compute_login_response(const gchar nonce[2 * NONCE_SIZE],
 
 	if (data_out_len != data_len) {
 		purple_debug_info("msim", "msim_compute_login_response: "
-				"data length mismatch: %d != %d\n",
-				data_out_len, data_len);
+				"data length mismatch: %" G_GSIZE_FORMAT " != %"
+				G_GSIZE_FORMAT "\n", data_out_len, data_len);
 	}
 
 #ifdef MSIM_DEBUG_LOGIN_CHALLENGE
@@ -686,6 +688,13 @@ msim_incoming_im(MsimSession *session, MsimMessage *msg)
 	username = msim_msg_get_string(msg, "_username");
 	g_return_val_if_fail(username != NULL, FALSE);
 
+	if (msim_is_userid(username)) {
+		purple_debug_info("msim", "Ignoring message from spambot (%s) on account %s\n",
+				username, purple_account_get_username(session->account));
+		g_free(username);
+		return FALSE;
+	}
+
 	msg_msim_markup = msim_msg_get_string(msg, "msg");
 	g_return_val_if_fail(msg_msim_markup != NULL, FALSE);
 
@@ -764,7 +773,7 @@ msim_incoming_action(MsimSession *session, MsimMessage *msg)
 	username = msim_msg_get_string(msg, "_username");
 	g_return_val_if_fail(username != NULL, FALSE);
 
-	purple_debug_info("msim", "msim_incoming_action: action <%s> from <%d>\n", 
+	purple_debug_info("msim", "msim_incoming_action: action <%s> from <%s>\n",
 			msg_text, username);
 
 	if (g_str_equal(msg_text, "%typing%")) {
@@ -1862,7 +1871,7 @@ msim_error(MsimSession *session, MsimMessage *msg)
 				if (!purple_account_get_remember_password(session->account))
 					purple_account_set_password(session->account, NULL);
 #ifdef MSIM_MAX_PASSWORD_LENGTH
-				if (strlen(session->account->password) > MSIM_MAX_PASSWORD_LENGTH) {
+				if (session->account->password && (strlen(session->account->password) > MSIM_MAX_PASSWORD_LENGTH)) {
 					gchar *suggestion;
 
 					suggestion = g_strdup_printf(_("%s Your password is "
@@ -2796,7 +2805,7 @@ msim_add_contact_from_server_cb(MsimSession *session, MsimMessage *user_lookup_i
 	guint uid;
 
 	contact_info = (MsimMessage *)data;
-	purple_debug_info("msim_add_contact_from_server_cb", "contact_info addr=%X\n", contact_info);
+	purple_debug_info("msim_add_contact_from_server_cb", "contact_info addr=%p\n", contact_info);
 	uid = msim_msg_get_integer(contact_info, "ContactID");
 
 	if (!user_lookup_info) {
@@ -2815,21 +2824,18 @@ msim_add_contact_from_server_cb(MsimSession *session, MsimMessage *user_lookup_i
 	/* 1. Creates a new group, or gets existing group if it exists (or so
 	 * the documentation claims). */
 	group_name = msim_msg_get_string(contact_info, "GroupName");
-	if (group_name) {
-		group = purple_find_group(group_name);
-		if (!group) {
-			group = purple_group_new(group_name);
-			/* Add group to beginning. See #2752. */
-			purple_blist_add_group(group, NULL);
-
-		}
-
-		purple_debug_info("msim_add_contact_from_server_cb",
-				"adding to GroupName: %s\n", group_name);
+	if (!group_name || (*group_name == '\0')) {
 		g_free(group_name);
-	} else {
-		group = purple_group_new(_("IM Friends"));
+		group_name = g_strdup(_("IM Friends"));
+		purple_debug_info("myspace", "No GroupName specified, defaulting to '%s'.\n", group_name);
 	}
+	group = purple_find_group(group_name);
+	if (!group) {
+		group = purple_group_new(group_name);
+		/* Add group to beginning. See #2752. */
+		purple_blist_add_group(group, NULL);
+	}
+	g_free(group_name);
 
 	/* 2. Get or create buddy */
 	buddy = purple_find_buddy(session->account, username);
@@ -2879,7 +2885,7 @@ msim_add_contact_from_server(MsimSession *session, MsimMessage *contact_info)
 
 		uid_str = g_strdup_printf("%d", uid);
 		purple_debug_info("msim_add_contact_from_server",
-				"contact_info addr=%X\n", contact_info);
+				"contact_info addr=%p\n", contact_info);
 		msim_lookup_user(session, uid_str, msim_add_contact_from_server_cb, (gpointer)msim_msg_clone(contact_info));
 		g_free(uid_str);
 	} else {

@@ -839,9 +839,6 @@ purple_str_to_time(const char *timestamp, gboolean utc,
 				tzoff = tzhrs*60*60 + tzmins*60;
 				if (offset_positive)
 					tzoff *= -1;
-				/* We don't want the C library doing DST calculations
-				 * if we know the UTC offset already. */
-				t.tm_isdst = 0;
 			}
 			else if (utc)
 			{
@@ -903,14 +900,11 @@ purple_str_to_time(const char *timestamp, gboolean utc,
 		}
 	}
 
-	if (tm != NULL)
-	{
-		*tm = t;
-		tm->tm_isdst = -1;
-		mktime(tm);
-	}
-
 	retval = mktime(&t);
+
+	if (tm != NULL)
+		*tm = t;
+
 	if (tzoff != PURPLE_NO_TZ_OFF)
 		retval += tzoff;
 
@@ -1533,6 +1527,8 @@ purple_markup_html_to_xhtml(const char *html, char **xhtml_out,
 					while(*p && *p != '>') {
 						if(!g_ascii_strncasecmp(p, "src=", strlen("src="))) {
 							const char *q = p + strlen("src=");
+							if (src)
+								g_string_free(src, TRUE);
 							src = g_string_new("");
 							if(*q == '\'' || *q == '\"')
 								q++;
@@ -1543,6 +1539,8 @@ purple_markup_html_to_xhtml(const char *html, char **xhtml_out,
 							p = q;
 						} else if(!g_ascii_strncasecmp(p, "alt=", strlen("alt="))) {
 							const char *q = p + strlen("alt=");
+							if (alt)
+								g_string_free(alt, TRUE);
 							alt = g_string_new("");
 							if(*q == '\'' || *q == '\"')
 								q++;
@@ -1580,6 +1578,8 @@ purple_markup_html_to_xhtml(const char *html, char **xhtml_out,
 							if (url)
 								g_string_free(url, TRUE);
 							url = g_string_new("");
+							if (cdata)
+								g_string_free(cdata, TRUE);
 							cdata = g_string_new("");
 							if(*q == '\'' || *q == '\"')
 								q++;
@@ -3718,7 +3718,7 @@ parse_content_len(const char *data, size_t data_len)
 	 */
 	if (p && g_strstr_len(p, data_len - (p - data), "\n")) {
 		sscanf(p, "%" G_GSIZE_FORMAT, &content_len);
-		purple_debug_misc("util", "parsed %u\n", content_len);
+		purple_debug_misc("util", "parsed %" G_GSIZE_FORMAT "\n", content_len);
 	}
 
 	return content_len;
@@ -3795,7 +3795,7 @@ url_fetch_recv_cb(gpointer url_data, gint source, PurpleInputCondition cond)
 					new_data = g_try_malloc(content_len);
 					if(new_data == NULL) {
 						purple_debug_error("util",
-								"Failed to allocate %u bytes: %s\n",
+								"Failed to allocate %" G_GSIZE_FORMAT " bytes: %s\n",
 								content_len, g_strerror(errno));
 						purple_util_fetch_url_error(gfud,
 								_("Unable to allocate enough memory to hold "
@@ -4217,8 +4217,7 @@ purple_uri_list_extract_filenames(const gchar *uri_list)
 			/* not sure if this fallback is useful at all */
 			if (!node->data) node->data = g_strdup (s+5);
 		} else {
-			result = g_list_remove_link(result, node);
-			g_list_free_1 (node);
+			result = g_list_delete_link(result, node);
 		}
 		g_free (s);
 	}
