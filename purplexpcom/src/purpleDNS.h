@@ -65,7 +65,7 @@ class purpleDNS
                           PurpleDnsQueryFailedCallback failed_cb);
   static void Cancel(PurpleDnsQueryData *query_data);
 
-  static void Remove(PurpleDnsQueryData *query_data);
+  static nsresult Remove(PurpleDnsQueryData *query_data);
 
  private:
   static nsCOMArray<purpleDNSRequest> mRequests;

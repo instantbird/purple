@@ -79,7 +79,7 @@ gboolean purpleDNS::Resolve(PurpleDnsQueryData *query_data,
   return true; // We handle the request, libpurple shouldn't try to do it.
 }
 
-void purpleDNS::Remove(PurpleDnsQueryData *query_data)
+nsresult purpleDNS::Remove(PurpleDnsQueryData *query_data)
 {
 #ifdef DEBUG_PURPLE_DNS
   printf("Remove by query_data... ");
@@ -90,12 +90,13 @@ void purpleDNS::Remove(PurpleDnsQueryData *query_data)
 #ifdef DEBUG_PURPLE_DNS
       printf("found at %i\n", i);
 #endif
-      return;
+      return NS_OK;
     }
   }
 #ifdef DEBUG_PURPLE_DNS
   printf("not found\n");
 #endif
+  return NS_ERROR_FAILURE;
 }
 
 void purpleDNS::Cancel(PurpleDnsQueryData *query_data)
@@ -123,11 +124,20 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(purpleDNSRequest, nsIDNSListener)
 
 void purpleDNSRequest::Failed(const char *aMsg)
 {
-  failed_cb(query_data, aMsg);
+  NS_ASSERTION(NS_IsMainThread(), "wrong thread");
+
 #ifdef DEBUG_PURPLE_DNS
   printf("purpleDNSRequest::Failed with msg: %s\n", aMsg);
 #endif
-  purpleDNS::Remove(query_data);
+
+  if (NS_FAILED(purpleDNS::Remove(query_data))) {
+#ifdef DEBUG_PURPLE_DNS
+    printf("purpleDNSRequest::Failed, not calling callback because already cancelled\n");
+#endif
+    return;
+  }
+
+  failed_cb(query_data, aMsg);
 }
 
 nsresult purpleDNSRequest::OnLookupComplete(nsICancelable *request,
@@ -149,6 +159,14 @@ nsresult purpleDNSRequest::OnLookupComplete(nsICancelable *request,
     Failed("Not found\n");
     return NS_OK;
   }
+
+  if (NS_FAILED(purpleDNS::Remove(query_data))) {
+#ifdef DEBUG_PURPLE_DNS
+  printf("dns resolution completed but result discarded because it was cancelled\n");
+#endif
+    return NS_OK;
+  }
+
   union PRNetAddr addr;
   while (more)
   {
@@ -176,6 +194,5 @@ nsresult purpleDNSRequest::OnLookupComplete(nsICancelable *request,
   printf("dns resolution done\n");
 #endif
   resolved_cb(query_data, hosts);
-  purpleDNS::Remove(query_data);
   return NS_OK;
 }
