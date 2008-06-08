@@ -128,10 +128,18 @@ static void netsoul_login_connect (gpointer data, gint source, const gchar *erro
 {
   PurpleConnection *gc = (PurpleConnection *)data;
 
-  purple_debug_info ("netsoul", "netsoul_login_connect starts %u\n", source);
-  if (source < 0 || !g_list_find(purple_connections_get_all(), gc)) {
-    purple_connection_error(gc, _("Couldn't connect to host"));
+  purple_debug_info("netsoul", "netsoul_login_connect starts %u\n", source);
+
+  if (!g_list_find(purple_connections_get_all(), gc)) {
+    // the account was disconnected while we were connecting
+    purple_debug_info("netsoul",
+                      "netsoul_login_connect: the account was disconnected while we were connecting\n");
     closesocket(source);
+    return;
+  }
+
+  if (source < 0) {
+    purple_connection_error(gc, _("Couldn't connect to host"));
     purple_debug_info("netsoul", "error \"%s\"", error);
     return;
   }
