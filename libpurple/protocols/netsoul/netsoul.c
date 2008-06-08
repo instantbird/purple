@@ -232,6 +232,8 @@ static void netsoul_close (PurpleConnection *gc)
 
   purple_debug_info("netsoul", "netsoul_close\n");
 
+#if 0
+  // seems useless and produce valgrind errors
   for(gnode = purple_get_blist()->root; gnode; gnode = gnode->next) {
     if(!PURPLE_BLIST_NODE_IS_GROUP(gnode)) continue;
     for(cnode = gnode->child; cnode; cnode = cnode->next) {
@@ -246,6 +248,7 @@ static void netsoul_close (PurpleConnection *gc)
       }
     }
   }
+#endif
 
   g_free(ns->challenge);
   g_free(ns->host);
