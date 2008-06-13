@@ -60,9 +60,26 @@ REQUIRES	= \
 		$(NULL)
 endif
 
+ifeq ($(OS_ARCH),WINNT)
+LOCAL_INCLUDES += -I$(srcdir)/win32
+
+EXTRA_LIBS	= \
+		ws2_32.lib \
+		$(DIST)/lib/glib.lib \
+		$(DIST)/lib/xml2.lib \
+		$(DIST)/lib/nss3.lib \
+		$(DIST)/lib/nspr4.lib \
+		$(DIST)/lib/ssl3.lib \
+		$(NULL)
+DSO_LDOPTS	+= -DEF:purple.def
+else
 EXTRA_LIBS	+= -lresolv -lz $(NSS_LIBS) $(NSPR_LIBS)
+endif
 
 DIRS		= protocols
+ifeq ($(OS_ARCH),WINNT)
+DIRS		+= win32
+endif
 
 DEFINES		+= -DPURPLE_PLUGINS
 
@@ -120,6 +137,15 @@ EXPORTS		= \
 		version.h \
 		$(NULL)
 
+ifeq ($(OS_ARCH),WINNT)
+EXPORTS		+= \
+		win32/win32dep.h \
+		win32/wpurpleerror.h \
+		win32/libc_interface.h \
+		win32/libc_internal.h \
+		$(NULL)
+endif
+
 CSRCS		= \
 		account.c \
 		accountopt.c \
@@ -172,6 +198,13 @@ CSRCS		= \
 		$(NULL)
 #		desktopitem.c
 
+ifeq ($(OS_ARCH),WINNT)
+CSRCS		+= \
+		win32/libc_interface.c \
+		win32/win32dep.c \
+		$(NULL)
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 libs:: $(SHARED_LIBRARY)
@@ -184,3 +217,15 @@ endif
 
 export:: $(EXPORTS) $(PUBLIC)
 	$(INSTALL) $(IFLAGS1) $^
+
+purple.def: $(EXPORTS)
+	echo EXPORTS > purple.def 
+	(cd $(srcdir); cat $(EXPORTS)) |egrep '^[a-zA-Z].* \*?w?purple_[a-z_0-9]+\(' |sed -e 's/(.*//' -e 's/.* \*\?//' |sort |uniq >> purple.def
+	(cd $(srcdir); cat $(EXPORTS)) |egrep '^w?purple_[a-z_0-9]+ ?\(' |sed -e 's/(.*//' |sort |uniq >> purple.def
+	cat $(srcdir)/server.h |egrep '^[a-zA-Z].* \*?serv_[a-z_0-9]+\(' |sed -e 's/(.*//' -e 's/.* \*\?//' |sort |uniq >> purple.def
+	cat $(srcdir)/signals.h |egrep 'void purple_marshal_[A-Z_]+\(' |sed -e 's/(.*//' -e 's/.* \*\?//' |sort |uniq >> purple.def
+	cat $(srcdir)/xmlnode.h |egrep '^[a-zA-Z].* \*?xmlnode_[a-z_]+\(' |sed -e 's/(.*//' -e 's/.* \*\?//' |sort |uniq >> purple.def
+
+#	cat $(srcdir)/purple.def.in >> purple.def
+
+purple.dll: purple.def

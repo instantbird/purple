@@ -39,6 +39,10 @@
 #include "send_core.h"
 #include "utils.h"
 
+#ifdef _MSC_VER
+#define ssize_t SSIZE_T
+#endif
+
 enum
 {
 	QQ_FILE_TRANS_REQ = 0x0035,

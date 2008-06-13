@@ -49,10 +49,19 @@ NO_DIST_INSTALL	= 1
 
 VISIBILITY_FLAGS=
 
+ifeq ($(OS_ARCH),WINNT)
+DEFINES		+= -DDISABLE_VISIBILITY -DGLIB_COMPILATION
+DSO_LDOPTS	+= -DEF:glib.def
+endif
+
 DIRS		= \
 		libcharset \
 		gobject \
 		$(NULL)
+
+ifeq ($(OS_ARCH),WINNT)
+DIRS		+= gnulib
+endif
 
 EXPORTS		= \
 		gunicodeprivate.h \
@@ -131,6 +140,13 @@ EXPORTS		= \
 		glib-object.h \
 		$(NULL)
 
+ifeq ($(OS_ARCH),WINNT)
+EXPORTS		+= \
+		gwin32.h \
+		dirent-win32.h \
+		$(NULL)
+endif
+
 CSRCS		= \
 		garray.c \
 		gatomic.c \
@@ -162,14 +178,35 @@ CSRCS		= \
 		gunidecomp.c \
 		gutils.c \
 		gprintf.c \
-		gspawn.c \
 		grand.c \
 		libcharset/localcharset.c \
 		gmodule.c \
 		gscanner.c \
 		$(NULL)
 
+ifneq ($(OS_ARCH),WINNT)
+CSRCS		+= gspawn.c
+else
+CSRCS		+= \
+		gspawn-win32.c \
+		giowin32.c \
+		giochannel.c \
+		gwin32.c \
+		wdirent.c \
+		gnulib/asnprintf.c \
+		gnulib/printf-args.c \
+		gnulib/printf-parse.c \
+		gnulib/printf.c \
+		gnulib/vasnprintf.c \
+		gthread-impl.c \
+		$(NULL)
+endif
+
+ifeq ($(OS_ARCH),WINNT)
+EXTRA_LIBS	+= shell32.lib ws2_32.lib ole32.lib
+else
 EXTRA_LIBS	+= -liconv
+endif
 
 include $(topsrcdir)/config/rules.mk
 
@@ -183,3 +220,8 @@ endif
 
 export:: $(EXPORTS) $(PUBLIC)
 	$(INSTALL) $(IFLAGS1) $^
+
+glib.dll: glib.def
+
+glib.def: $(srcdir)/glib.symbols
+	(echo -e EXPORTS; $(CPP) -DINCLUDE_VARIABLES -DINCLUDE_INTERNAL_SYMBOLS -DG_OS_WIN32 -DALL_FILES $(srcdir)/glib.symbols | sed -e '/#/d' -e '/^$$/d' -e 's/^/	/' -e 's/G_GNUC_[^ ]*//g') > glib.def

@@ -222,7 +222,7 @@ ssl_nss_init(void)
 static void
 ssl_nss_uninit(void)
 {
-	PR_Cleanup();
+//	PR_Cleanup();
 
 	_nss_methods = NULL;
 }
@@ -356,7 +356,7 @@ ssl_nss_close(PurpleSslConnection *gsc)
 static size_t
 ssl_nss_read(PurpleSslConnection *gsc, void *data, size_t len)
 {
-	ssize_t ret;
+	PRInt32 ret;
 	PurpleSslNssData *nss_data = PURPLE_SSL_NSS_DATA(gsc);
 
 	ret = PR_Read(nss_data->in, data, len);
@@ -370,7 +370,7 @@ ssl_nss_read(PurpleSslConnection *gsc, void *data, size_t len)
 static size_t
 ssl_nss_write(PurpleSslConnection *gsc, const void *data, size_t len)
 {
-	ssize_t ret;
+	PRInt32 ret;
 	PurpleSslNssData *nss_data = PURPLE_SSL_NSS_DATA(gsc);
 
 	if(!nss_data)
@@ -424,6 +424,8 @@ static PurpleCertificateScheme x509_nss;
 static PurpleCertificate *
 x509_import_from_file(const gchar *filename)
 {
+	return NULL;
+#if 0
 	gchar *rawcert;
 	gsize len = 0;
 	CERTCertificate *crt_dat;
@@ -454,6 +456,7 @@ x509_import_from_file(const gchar *filename)
 	crt->data = crt_dat;
 	
 	return crt;
+#endif
 }
 
 /**

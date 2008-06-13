@@ -30,7 +30,11 @@
 
 #ifdef HAVE_DIRENT_H
 #include <sys/types.h>
+#ifndef XP_WIN
 #include <dirent.h>
+#else
+#include <dirent-win32.h>
+#endif
 #endif
 
 #include "glib.h"

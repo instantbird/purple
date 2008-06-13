@@ -11,11 +11,13 @@
 #define __GG_LIBGADU_BIGENDIAN
 #endif /* WORDS_BIGENDIAN */
 
+#ifndef _WIN32
 /* Defined if this machine has va_copy(). */
 #define __GG_LIBGADU_HAVE_VA_COPY
 
 /* Defined if this machine has __va_copy(). */
 #define __GG_LIBGADU_HAVE___VA_COPY
+#endif
 
 /* Defined if this machine supports long long. */
 #undef __GG_LIBGADU_HAVE_LONG_LONG
@@ -47,6 +49,20 @@
 
 #ifdef _WIN32
 #define random (long) rand
+#endif
+
+#ifdef _MSC_VER
+typedef unsigned __int32 uint32_t;
+typedef unsigned __int16 uint16_t;
+typedef unsigned __int8  uint8_t;
+#define snprintf _snprintf
+#include <libc_interface.h>
+#define EINPROGRESS WSAEINPROGRESS
+#define ECONNRESET WSAECONNRESET
+#define ENOTCONN WSAENOTCONN
+#define strncasecmp strnicmp
+#define strcasecmp stricmp
+#define ssize_t SSIZE_T
 #endif
 
 #endif /* __GG_LIBGADU_CONFIG_H */

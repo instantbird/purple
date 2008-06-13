@@ -61,17 +61,6 @@ void purple_upnp_init(void);
  */
 void purple_upnp_discover(PurpleUPnPCallback cb, gpointer cb_data);
 
-#if 0
-/**
- * Retrieve the current UPnP control info, if there is any available.
- * This will only be filled in if purple_upnp_discover() had been called,
- * and finished discovering.
- *
- * @return The control URL for the IGD we'll use to use the IGD services
- */
-const PurpleUPnPControlInfo* purple_upnp_get_control_info(void);
-#endif
-
 /**
  * Gets the IP address from a UPnP enabled IGD that sits on the local
  * network, so when getting the network IP, instead of returning the

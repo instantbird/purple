@@ -45,20 +45,20 @@ static char const *const kDependentLibraries[] =
     // dependent1.dll on windows, libdependent1.so on linux
 
 #ifdef XP_WIN
-	"zlib1" DLL_SUFFIX,
-	"iconv" DLL_SUFFIX,
-	 "libxml2" DLL_SUFFIX,
-     "intl" DLL_SUFFIX,
-	  "libglib-2.0-0" DLL_SUFFIX,
-      "libgmodule-2.0-0" DLL_SUFFIX,
-	  "libgthread-2.0-0" DLL_SUFFIX,
-       "libpurple" DLL_SUFFIX,
-        "liboscar" DLL_SUFFIX,
-        "libjabber" DLL_SUFFIX,
-		"dnssd" DLL_SUFFIX,
-		"libmeanwhile-1" DLL_SUFFIX,
-		"libsilc-1-1-2" DLL_SUFFIX,
-		"libsilcclient-1-1-2" DLL_SUFFIX,
+//	"zlib1" DLL_SUFFIX,
+//	"iconv" DLL_SUFFIX,
+	 "xml2" DLL_SUFFIX,
+//     "intl" DLL_SUFFIX,
+	  "glib" DLL_SUFFIX,
+//      "libgmodule-2.0-0" DLL_SUFFIX,
+//	  "libgthread-2.0-0" DLL_SUFFIX,
+       "purple" DLL_SUFFIX,
+//        "liboscar" DLL_SUFFIX,
+//        "libjabber" DLL_SUFFIX,
+//		"dnssd" DLL_SUFFIX,
+//		"libmeanwhile-1" DLL_SUFFIX,
+//		"libsilc-1-1-2" DLL_SUFFIX,
+//		"libsilcclient-1-1-2" DLL_SUFFIX,
 #endif
 #ifdef XP_MACOSX
         // libz and libiconv are in the system, we don't need to load them

@@ -34,6 +34,12 @@
 #include <sys/ioctl.h>
 #else
 #include <nspapi.h>
+#ifndef SIO_NSP_NOTIFY_CHANGE
+#define SIO_NSP_NOTIFY_CHANGE         _WSAIOW(IOC_WS2,25)
+
+typedef FAR* LPWSACOMPLETION;
+
+#endif
 #endif
 
 /* Solaris */

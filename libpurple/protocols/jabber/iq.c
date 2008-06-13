@@ -35,7 +35,7 @@
 #include "adhoccommands.h"
 
 #ifdef _WIN32
-#include "utsname.h"
+#include "win32/utsname.h"
 #endif
 
 GHashTable *iq_handlers = NULL;

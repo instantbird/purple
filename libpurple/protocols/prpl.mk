@@ -56,4 +56,12 @@ REQUIRES	+= \
 		$(NULL)
 endif
 
+ifeq ($(OS_ARCH),WINNT)
+EXTRA_LIBS	= \
+		../../purple.lib \
+		$(DIST)/lib/glib.lib \
+		$(DIST)/lib/xml2.lib \
+		$(NULL)
+endif
+
 DEFINES		+= -DVERSION=\"2.4.2\" -DDISPLAY_VERSION=\"2.4.2\" -DPURPLE_PLUGINS -DPACKAGE_NAME=\"purple\"

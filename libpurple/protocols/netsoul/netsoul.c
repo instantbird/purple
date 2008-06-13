@@ -114,7 +114,6 @@ char *netsoul_conn_text_html(NetsoulConn *nc)
 
 static void netsoul_tooltip_text(PurpleBuddy *gb, PurpleNotifyUserInfo *user_info, gboolean full)
 {
-  purple_debug_info("netsoul", "netsoul_tooltip_text");
   NetsoulBuddy	*nb = (NetsoulBuddy *)gb->proto_data;
   char	*resp, *nctxt;
   GList	*tmp;
@@ -124,6 +123,7 @@ static void netsoul_tooltip_text(PurpleBuddy *gb, PurpleNotifyUserInfo *user_inf
   PurpleConnection *gc = purple_account_get_connection (purple_buddy_get_account(gb));
   NetsoulData *ns = (NetsoulData *)gc->proto_data;
   PurpleBuddyIcon *icon = purple_buddy_get_icon (gb);
+  purple_debug_info("netsoul", "netsoul_tooltip_text");
 
   if (icon != NULL)
     purple_debug_info("netsoul", "netsoul_tooltip_text %s icon_type: %s\n",
@@ -227,7 +227,9 @@ static void netsoul_set_idle(PurpleConnection *gc, int idletime)
 
 static void netsoul_close (PurpleConnection *gc)
 {
+#if 0
   PurpleBlistNode *gnode, *cnode, *bnode;
+#endif
   NetsoulData	*ns = (NetsoulData *)gc->proto_data;
 
   purple_debug_info("netsoul", "netsoul_close\n");
@@ -359,7 +361,7 @@ static void netsoul_add_buddies(PurpleConnection *gc, GList *buddies, GList *gro
 void netsoul_get_buddies (PurpleConnection* gc)
 {
   PurpleBlistNode *gnode, *cnode, *bnode;
-
+  NetsoulData *ns;
   purple_debug_info("netsoul", "ns_get_buddies\n");
 
   for(gnode = purple_get_blist()->root; gnode; gnode = gnode->next) {
@@ -372,9 +374,10 @@ void netsoul_get_buddies (PurpleConnection* gc)
 	{
 	  PurpleBuddy *buddy = (PurpleBuddy*)bnode;
 	  gchar *photo = NULL;
+	  NetsoulBuddy *nb;
 	  purple_debug_info("netsoul", "netsoul_add_buddy %s\n", buddy->name);
 
-	  NetsoulBuddy *nb = g_new0(NetsoulBuddy, 1);
+	  nb = g_new0(NetsoulBuddy, 1);
 	  buddy->proto_data = nb;
 	  nb->login = g_strdup(buddy->name);
 	  // Get photo
@@ -389,7 +392,7 @@ void netsoul_get_buddies (PurpleConnection* gc)
     }
   }
   // watch_log_user
-  NetsoulData *ns = (NetsoulData *)gc->proto_data;
+  ns = (NetsoulData *)gc->proto_data;
   ns_watch_log_user(gc);
   ns_list_users(gc, ns->watchlist);
 }
@@ -464,6 +467,7 @@ static void netsoul_get_info(PurpleConnection *gc, const char *who)
   int	i;
   GList	*tmp;
   NetsoulConn	*nc;
+  PurpleNotifyUserInfo *user_info;
 
   purple_debug_info("netsoul", "netsoul_get_info %s\n", who);
   if (!(gb = get_good_stored_buddy(gc, (char *) who))) {
@@ -488,7 +492,6 @@ static void netsoul_get_info(PurpleConnection *gc, const char *who)
 			    ns_state_to_text(nb->state), nb->group, text);
   title = g_strdup_printf("Info for %s", who);
 
-  PurpleNotifyUserInfo *user_info;
   user_info = purple_notify_user_info_new();
   purple_notify_user_info_add_pair(user_info, title, primary);
   purple_notify_userinfo(gc, gb->name, user_info, NULL, NULL);

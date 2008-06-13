@@ -134,6 +134,7 @@ void	ns_compute_update_state(PurpleConnection *gc, PurpleBuddy *gb)
   int		nbc, defid, idle, oldid;
   NetsoulBuddy	*nb = (NetsoulBuddy *)gb->proto_data;
   PurpleAccount	*account = purple_connection_get_account (gc);
+  char *state_text;
 
   purple_debug_info("netsoul", "compute_update_state : %s\n", gb->name);
   oldid = nb->defaultid;
@@ -192,7 +193,7 @@ void	ns_compute_update_state(PurpleConnection *gc, PurpleBuddy *gb)
     idle = nb->laststate;
 
   purple_debug_info("netsoul", "idle:%d state:%d\n", idle, nb->state);
-  char *state_text = ns_state_to_text(nb->state);
+  state_text = ns_state_to_text(nb->state);
 //  purple_debug_info("netsoul", "status_update %s, log:%d, signon:%lld, idle:%d, state:%s\n",
 //		  gb->name, loggedin, nb->signon, idle, state_text);
   // Inform Purple that status changed

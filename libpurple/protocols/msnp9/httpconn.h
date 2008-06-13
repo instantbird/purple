@@ -27,6 +27,9 @@
 typedef struct _MsnHttpConn MsnHttpConn;
 
 #include "circbuffer.h"
+#ifdef _MSC_VER
+#define ssize_t SSIZE_T
+#endif
 #include "servconn.h"
 
 /**

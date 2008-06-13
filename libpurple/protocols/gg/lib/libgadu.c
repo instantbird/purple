@@ -27,6 +27,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <unistd.h>
 #ifdef sun
 #  include <sys/filio.h>
 #endif
@@ -50,7 +51,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #ifdef __GG_LIBGADU_HAVE_OPENSSL
 #  include <openssl/err.h>
 #  include <openssl/rand.h>

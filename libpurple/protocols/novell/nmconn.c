@@ -19,7 +19,9 @@
  */
 
 #include <glib.h>
+#ifndef _MSC_VER
 #include <unistd.h>
+#endif
 #include <errno.h>
 #include <string.h>
 #include <ctype.h>

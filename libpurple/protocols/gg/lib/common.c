@@ -34,12 +34,12 @@
 #include <fcntl.h>
 #ifndef _WIN32
 #include <netdb.h>
+#include <unistd.h>
 #endif
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 
 #include "libgadu.h"
 

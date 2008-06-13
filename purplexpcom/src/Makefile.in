@@ -66,6 +66,13 @@ REQUIRES	+= \
 		$(NULL)
 endif
 
+ifeq ($(OS_ARCH),WINNT)
+EXTRA_LIBS	= \
+		$(DIST)/lib/purple.lib \
+		$(DIST)/lib/glib.lib \
+		$(NULL)
+endif
+
 CPPSRCS		= \
 		purpleAccount.cpp \
 		purpleAccountBuddy.cpp \
@@ -88,11 +95,10 @@ EXTRA_DSO_LDOPTS += $(XPCOM_GLUE_LDOPTS) $(MOZ_COMPONENT_NSPR_LIBS)
 
 include $(topsrcdir)/config/rules.mk
 
-libs:: $(SHARED_LIBRARY)
-ifneq (,$(filter OS2 WINNT WINCE,$(OS_ARCH)))
-	$(INSTALL) $(IFLAGS2) $(IMPORT_LIBRARY) $(DIST)/lib
-else
-	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DIST)/lib
+ifeq ($(OS_ARCH),WINNT)
+CXXFLAGS	+= -wd4624
 endif
+
+libs:: $(SHARED_LIBRARY)
 	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(FINAL_TARGET)/libraries
 

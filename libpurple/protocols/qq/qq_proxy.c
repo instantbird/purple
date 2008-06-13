@@ -57,8 +57,9 @@ static void _qq_show_socket(gchar *desc, gint fd) {
 
 void _qq_show_packet(const gchar *desc, const guint8 *buf, gint len)
 {
-	char buf1[8*len+2], buf2[10];
+	char *buf1, buf2[10];
 	int i;
+	buf1 = alloca(8*len+2);
 	buf1[0] = 0;
 	for (i = 0; i < len; i++) {
 		sprintf(buf2, " %02x(%d)", buf[i] & 0xff, buf[i] & 0xff);
