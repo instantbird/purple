@@ -336,7 +336,7 @@ void	ns_listen(gpointer data, gint source, PurpleInputCondition cond)
   buf[len] = '\0';
   purple_debug_info("netsoul", "Netsoul received (%d) : %s\n", len, buf);
   if (len == NS_BUF_LEN)
-    purple_debug_info("netsoul", "The buffer is full!\n", len, buf);
+    purple_debug_info("netsoul", "The buffer is full!\n");
   tab = g_strsplit(buf, " ", 2);
   if (!(strncmp(*tab, "rep", 5)))
     ns_use_rep(gc, tab + 1);
