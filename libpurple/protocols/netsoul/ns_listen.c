@@ -317,14 +317,17 @@ void	ns_listen(gpointer data, gint source, PurpleInputCondition cond)
 {
   PurpleConnection	*gc = (PurpleConnection *)data;
   NetsoulData		*ns = (NetsoulData *)gc->proto_data;
-  char	buf[NS_BUF_LEN];
+  static char	buf[NS_BUF_LEN];
   char	**tab;
-  int	len;
+  static int	len = 0;
 
-  for (len = 0; len < NS_BUF_LEN; len++) {
+  for (; len < NS_BUF_LEN; len++) {
     if ((recv(source, buf + len, 1, 0)) <= 0)
     {
-      purple_connection_error(gc, _("Error reading from server"));
+      if (len)
+        purple_debug_info("netsoul", "Netsoul received (%d), unfinished\n", len);
+      else
+        purple_connection_error(gc, _("Error reading from server"));
       return;
     }
     if (buf[len] == '\n')
@@ -332,6 +335,8 @@ void	ns_listen(gpointer data, gint source, PurpleInputCondition cond)
   }
   buf[len] = '\0';
   purple_debug_info("netsoul", "Netsoul received (%d) : %s\n", len, buf);
+  if (len == NS_BUF_LEN)
+    purple_debug_info("netsoul", "The buffer is full!\n", len, buf);
   tab = g_strsplit(buf, " ", 2);
   if (!(strncmp(*tab, "rep", 5)))
     ns_use_rep(gc, tab + 1);
@@ -342,4 +347,5 @@ void	ns_listen(gpointer data, gint source, PurpleInputCondition cond)
   else if (atoi(*tab) > 0)
     ns_user_update(gc, tab);
   g_strfreev(tab);
+  len = 0;
 }
