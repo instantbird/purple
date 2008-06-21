@@ -35,6 +35,7 @@
 # ***** END LICENSE BLOCK *****
 
 include $(topsrcdir)/config/rules.mk
+_RC_STRING += -SRCDIR .
 
 libs:: $(SHARED_LIBRARY)
 ifneq (,$(filter OS2 WINNT WINCE,$(OS_ARCH)))
@@ -43,3 +44,9 @@ else
 	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DIST)/lib
 endif
 	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(FINAL_TARGET)/libraries/prpl
+
+module.rc: module.ver
+
+module.ver:
+	echo WIN32_MODULE_DESCRIPTION=$(PROTOCOL) PRotocol PLugin > module.ver
+	cat $(srcdir)/../module.ver.in >> module.ver
