@@ -307,6 +307,7 @@ ssl_nss_connect(PurpleSslConnection *gsc)
 
 	SSL_OptionSet(nss_data->in, SSL_SECURITY,            PR_TRUE);
 	SSL_OptionSet(nss_data->in, SSL_HANDSHAKE_AS_CLIENT, PR_TRUE);
+	SSL_OptionSet(nss_data->in, SSL_ENABLE_SESSION_TICKETS, PR_FALSE);
 
 	SSL_AuthCertificateHook(nss_data->in,
 							(SSLAuthCertificate)ssl_auth_cert,
