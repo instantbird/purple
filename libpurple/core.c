@@ -25,7 +25,6 @@
  */
 #include "internal.h"
 #include "cipher.h"
-#include "certificate.h"
 #include "connection.h"
 #include "conversation.h"
 #include "core.h"
@@ -157,7 +156,6 @@ purple_core_init(const char *ui)
 	purple_accounts_init();
 	purple_savedstatuses_init();
 	purple_notify_init();
-	purple_certificate_init();
 	purple_conversations_init();
 	purple_blist_init();
 	purple_log_init();
@@ -207,7 +205,6 @@ purple_core_quit(void)
 	purple_notify_uninit();
 	purple_conversations_uninit();
 	purple_connections_uninit();
-	purple_certificate_uninit();
 	purple_buddy_icons_uninit();
 	purple_accounts_uninit();
 	purple_savedstatuses_uninit();

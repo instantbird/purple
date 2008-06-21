@@ -21,7 +21,6 @@
  */
 #include "internal.h"
 #include "debug.h"
-#include "certificate.h"
 #include "plugin.h"
 #include "sslconn.h"
 #include "util.h"
@@ -59,8 +58,8 @@ typedef struct
 
 #define PURPLE_SSL_NSS_DATA(gsc) ((PurpleSslNssData *)gsc->private_data)
 
-static const PRIOMethods *_nss_methods = NULL;
-static PRDescIdentity _identity;
+//static const PRIOMethods *_nss_methods = NULL;
+//static PRDescIdentity _identity;
 
 /* Thank you, Evolution */
 static void
@@ -127,6 +126,7 @@ static gchar *get_error_text(void)
 static void
 ssl_nss_init_nss(void)
 {
+#if 0
 	char *lib;
 	PR_Init(PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
 	NSS_NoDB_Init(".");
@@ -143,6 +143,7 @@ ssl_nss_init_nss(void)
 
 	_identity = PR_GetUniqueIdentity("Purple");
 	_nss_methods = PR_GetDefaultIOMethods();
+#endif
 }
 
 static SECStatus
@@ -224,7 +225,7 @@ ssl_nss_uninit(void)
 {
 //	PR_Cleanup();
 
-	_nss_methods = NULL;
+//	_nss_methods = NULL;
 }
 
 static void
@@ -309,13 +310,21 @@ ssl_nss_connect(PurpleSslConnection *gsc)
 	SSL_OptionSet(nss_data->in, SSL_HANDSHAKE_AS_CLIENT, PR_TRUE);
 	SSL_OptionSet(nss_data->in, SSL_ENABLE_SESSION_TICKETS, PR_FALSE);
 
+#if 0
 	SSL_AuthCertificateHook(nss_data->in,
 							(SSLAuthCertificate)ssl_auth_cert,
 							(void *)CERT_GetDefaultCertDB());
+#endif
 	SSL_BadCertHook(nss_data->in, (SSLBadCertHandler)ssl_bad_cert, NULL);
 
 	if(gsc->host)
-		SSL_SetURL(nss_data->in, gsc->host);
+	{
+		/* Hack for gtalk connect server */
+		if (!strcmp(gsc->host, "talk.google.com"))
+			SSL_SetURL(nss_data->in, "gmail.com");
+		else
+			SSL_SetURL(nss_data->in, gsc->host);
+	}
 
 #if 0
 	/* This seems like it'd the be the correct way to implement the
@@ -409,6 +418,9 @@ ssl_nss_peer_certs(PurpleSslConnection *gsc)
 	return NULL;
 }
 
+#if 0
+/* No purple_certificate_* stuff for Instantbird */
+
 /************************************************************************/
 /* X.509 functionality                                                  */
 /************************************************************************/
@@ -425,8 +437,6 @@ static PurpleCertificateScheme x509_nss;
 static PurpleCertificate *
 x509_import_from_file(const gchar *filename)
 {
-	return NULL;
-#if 0
 	gchar *rawcert;
 	gsize len = 0;
 	CERTCertificate *crt_dat;
@@ -457,7 +467,6 @@ x509_import_from_file(const gchar *filename)
 	crt->data = crt_dat;
 	
 	return crt;
-#endif
 }
 
 /**
@@ -751,6 +760,7 @@ static PurpleCertificateScheme x509_nss = {
 	NULL,
 	NULL
 };
+#endif
 
 static PurpleSslOps ssl_ops =
 {
@@ -771,17 +781,12 @@ static PurpleSslOps ssl_ops =
 void purple_nss_init(void)
 {
 	purple_ssl_set_ops(&ssl_ops);
-
-	/* Init NSS now, so others can use it even if sslconn never does */
-	ssl_nss_init_nss();
-
-	/* Register the X.509 functions we provide */
-	purple_certificate_register_scheme(&x509_nss);
 }
 
 #endif /* HAVE_NSS */
 
 #if 0
+/* Instantbird does not need the plugin stuff for NSS */
 static gboolean
 plugin_load(PurplePlugin *plugin)
 {
@@ -861,4 +866,3 @@ init_plugin(PurplePlugin *plugin)
 
 PURPLE_INIT_PLUGIN(ssl_nss, init_plugin, info)
 #endif
-

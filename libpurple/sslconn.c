@@ -25,7 +25,6 @@
  */
 #include "internal.h"
 
-#include "certificate.h"
 #include "debug.h"
 #include "sslconn.h"
 
@@ -120,8 +119,10 @@ purple_ssl_connect(PurpleAccount *account, const char *host, int port,
 	gsc->connect_cb      = func;
 	gsc->error_cb        = error_func;
 
+#if 0
 	/* TODO: Move this elsewhere */
 	gsc->verifier = purple_certificate_find_verifier("x509","tls_cached");
+#endif
 
 	gsc->connect_data = purple_proxy_connect(NULL, account, host, port, purple_ssl_connect_cb, gsc);
 
@@ -211,9 +212,10 @@ purple_ssl_connect_with_host_fd(PurpleAccount *account, int fd,
     if(host)
         gsc->host            = g_strdup(host);
 
+#if 0
 	/* TODO: Move this elsewhere */
 	gsc->verifier = purple_certificate_find_verifier("x509","tls_cached");
-
+#endif
     
 	ops = purple_ssl_get_ops();
 	ops->connectfunc(gsc);

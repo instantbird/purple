@@ -34,12 +34,12 @@ typedef enum
 	PURPLE_SSL_CERTIFICATE_INVALID = 3
 } PurpleSslErrorType;
 
-#include "certificate.h"
 #include "proxy.h"
 
 #define PURPLE_SSL_DEFAULT_PORT 443
 
 typedef struct _PurpleSslConnection PurpleSslConnection;
+typedef struct _PurpleCertificateVerifier PurpleCertificateVerifier;
 
 typedef void (*PurpleSslInputFunction)(gpointer, PurpleSslConnection *,
 									 PurpleInputCondition);
