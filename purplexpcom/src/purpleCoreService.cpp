@@ -267,6 +267,7 @@ NS_IMETHODIMP purpleCoreService::Quit()
 {
   PURPLE_ENSURE_INIT(mInitialized);
 
+  mInitialized = PR_FALSE;
   NotifyObservers(this, "purple-quit");
 
 #define UNINIT(aThing)                                          \
