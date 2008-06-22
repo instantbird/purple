@@ -449,6 +449,21 @@ static void netsoul_keepalive(PurpleConnection *gc)
   }
 }
 
+static const char *netsoul_normalize(const PurpleAccount *account,
+                                     const char *str)
+{
+  static char buf[42]; /* 9 should be enough */
+  int i;
+
+  g_return_val_if_fail(str != NULL, NULL);
+
+  for (i = 0; str[i] && str[i] != '@' && i < 41; ++i)
+    buf[i] = str[i];
+  buf[i] = 0;
+
+  return buf;
+}
+
 static unsigned netsoul_send_typing(PurpleConnection *gc, const char *name, PurpleTypingState typing)
 {
   purple_debug_info("netsoul", "netsoul_send_typing\n");
@@ -606,7 +621,7 @@ static PurplePluginProtocolInfo prpl_info =
     NULL,                           /* rename_group     */
     NULL,                           /* buddy_free       */
     NULL,                           /* convo_closed     */
-    NULL,                           /* normalize        */ /*FIXME*/
+    netsoul_normalize,              /* normalize        */
     NULL,                           /* set_buddy_icon   */
     NULL,                           /* remove_group     */
     NULL,                           /* get_cb_real_name */
@@ -676,4 +691,4 @@ static void init_plugin(PurplePlugin *plugin)
     _netsoul_plugin = plugin;
 }
 
-PURPLE_INIT_PLUGIN(netsoul, init_plugin, info);
+PURPLE_INIT_PLUGIN(netsoul, init_plugin, info)
