@@ -68,6 +68,7 @@ extern void connect_to_blist_signals();
 
 purpleCoreService::purpleCoreService()
   :mInitialized(PR_FALSE),
+   mQuitting(PR_FALSE),
    mConversations(nsnull),
    mProtocols(nsnull)
 {
@@ -79,7 +80,8 @@ purpleCoreService::purpleCoreService()
 
 purpleCoreService::~purpleCoreService()
 {
-  this->Quit();
+  if (mInitialized)
+    this->Quit();
 }
 
 /* boolean Init (); */
@@ -266,8 +268,9 @@ void purpleCoreService::InitProtocols()
 NS_IMETHODIMP purpleCoreService::Quit()
 {
   PURPLE_ENSURE_INIT(mInitialized);
+  NS_ENSURE_TRUE(!mQuitting, NS_ERROR_FAILURE);
 
-  mInitialized = PR_FALSE;
+  mQuitting = PR_TRUE;
   NotifyObservers(this, "purple-quit");
 
 #define UNINIT(aThing)                                          \
@@ -291,6 +294,7 @@ NS_IMETHODIMP purpleCoreService::Quit()
   purpleStorage::unInit();
   purpleSocketWatcher::unInit();
 
+  mInitialized = PR_FALSE;
   return NS_OK;
 }
 

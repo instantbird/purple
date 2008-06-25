@@ -80,6 +80,7 @@ private:
 
 protected:
   PRBool mInitialized;
+  PRBool mQuitting;
   nsCOMArray<purpleConversation> mConversations;
   nsCOMArray<purpleProtocol> mProtocols;
   nsCOMArray<purpleAccount> mAccounts;
