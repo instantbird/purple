@@ -60,13 +60,15 @@ public:
 
   void SetConv(PurpleConversation *aConv);
   void UnInit();
-  PRInt32 GetId() { return (PRInt32)mConv; }
+  PRUint32 GetId() { return mId; }
 
 private:
   ~purpleConversation();
+  static PRUint32 sLastId;
 
 protected:
   PurpleConversation *mConv;
+  PRUint32 mId;
 };
 
 #endif /* !PURPLE_CONVERSATION_H_ */

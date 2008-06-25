@@ -46,11 +46,15 @@
 
 NS_IMPL_ISUPPORTS1(purpleConversation, purpleIConversation)
 
+PRUint32 purpleConversation::sLastId = 0;
+
 purpleConversation::purpleConversation()
 {
   /* member initializers and constructor code */
+
+  mId = ++sLastId;
 #ifdef DEBUG_PURPLE_CONVERSATION
-  printf("new purpleConversation\n");
+  printf("new purpleConversation with id %i\n", mId);
 #endif
 }
 
@@ -58,7 +62,7 @@ purpleConversation::~purpleConversation()
 {
   /* destructor code */
 #ifdef DEBUG_PURPLE_CONVERSATION
-  printf("destructing conversation with ptr %i\n", (int)mConv);
+  printf("destructing conversation with id %i\n", mId);
 #endif
 }
 
@@ -66,16 +70,18 @@ void purpleConversation::SetConv(PurpleConversation *aConv)
 {
   mConv = aConv;
 #ifdef DEBUG_PURPLE_CONVERSATION
-  printf("conversion ptr set to : %i\n",(int) mConv);
+  printf("conversion ptr set to : %i\n", (size_t)mConv);
 #endif
+  aConv->ui_data = this;
 }
 
 /* call this only from the destroy_conv uiop or when exiting */
 void purpleConversation::UnInit()
 {
 #ifdef DEBUG_PURPLE_CONVERSATION
-  printf("purpleConversation::unInit (mConv == %i)\n", (PRInt32) mConv);
+  printf("purpleConversation::unInit (mId == %i)\n", (mId);
 #endif
+  mConv->ui_data = NULL;
   mConv = NULL;
 }
 
@@ -98,11 +104,11 @@ NS_IMETHODIMP purpleConversation::GetTitle(nsACString& aTitle)
 }
 
 /* readonly attribute long idConv; */
-NS_IMETHODIMP purpleConversation::GetId(PRInt32 *aId)
+NS_IMETHODIMP purpleConversation::GetId(PRUint32 *aId)
 {
   NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
 
-  *aId = (PRInt32) mConv;
+  *aId = mId;
   return NS_OK;
 }
 
@@ -112,7 +118,7 @@ NS_IMETHODIMP purpleConversation::GetIsChat(PRBool *aIsChat)
   NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
 
   *aIsChat = mConv->type == PURPLE_CONV_TYPE_CHAT;
-  return NS_OK;;
+  return NS_OK;
 }
 
 /* void sendMsg (in AUTF8String aMsg); */

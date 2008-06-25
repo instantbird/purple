@@ -433,36 +433,23 @@ received_im_msg(PurpleAccount *account, char *sender, char *message,
   printf("received_im_msg\n");
 #endif
 
-  nsresult rv;
-  nsCOMPtr<nsIObserverService> os = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
-
-  if (NS_FAILED(rv)) {
-    printf("nsCOMPtr<nsIObserverService> == null\n");
-    return;
-  }
-
-  const nsEmbedCString cMsg(message);
-  nsEmbedString        msg;
-
-  NS_CStringToUTF16(cMsg, NS_CSTRING_ENCODING_UTF8, msg);
-
-  nsCOMPtr<purpleICoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID, &rv);
+  nsCOMPtr<nsIObserverService> os = do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+  NS_ASSERTION(os, "nsCOMPtr<nsIObserverService> == null");
 
   if (!conv) {
     conv = purple_conversation_new(PURPLE_CONV_TYPE_IM, account, sender);
   }
-  purpleIConversation *prplConv = nsnull;
-  rv = pcs->GetConversationById((PRInt32) conv, &prplConv);
-#ifdef DEBUG_PURPLE_INIT
-  if (NS_FAILED(rv))
-    printf("FindConversationById failed \n");
-  else
-    printf("FindConversationById OK \n");
-  printf("id : %i\n", (int)conv);
-#endif
+  purpleIConversation *prplConv = (purpleIConversation *) conv->ui_data;
+  NS_ASSERTION(prplConv, "received IM for conversation without purpleConversation");
+
+  //FIXME Why is this different on Windows?
 #ifdef XP_WIN
   os->NotifyObservers(prplConv, "new message", nsnull);
 #else
+  const nsEmbedCString cMsg(message);
+  nsEmbedString        msg;
+
+  NS_CStringToUTF16(cMsg, NS_CSTRING_ENCODING_UTF8, msg);
   os->NotifyObservers(prplConv, "new message", msg.get());
 #endif
 }

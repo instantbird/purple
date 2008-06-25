@@ -73,7 +73,6 @@ purpleCoreService::purpleCoreService()
    mProtocols(nsnull)
 {
   mPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  mBuddiesByPurpleBuddy.Init();
   mBuddiesById.Init();
   mTagById.Init();
 }
@@ -221,7 +220,7 @@ nsresult purpleCoreService::InitBuddyList()
 #endif
       purpleBuddy->AddAccount(account, buddy, tag);
     }
-    mBuddiesByPurpleBuddy.Put((PRUint32) buddy, purpleBuddy);
+    buddy->node.ui_data = purpleBuddy;
   }
 
   connect_to_blist_signals();
@@ -287,7 +286,6 @@ NS_IMETHODIMP purpleCoreService::Quit()
 #ifdef DEBUG_PURPLE_CORE_SERVICE
   printf("purple_core_quit\n");
 #endif
-  mBuddiesByPurpleBuddy.Clear(); // FIXME: useless
   mBuddiesById.Clear(); // FIXME: this can and should be done before
                         // purple_core_quit() once the blist signal
                         // handlers are removed properly
@@ -334,21 +332,22 @@ NS_IMETHODIMP purpleCoreService::GetBuddyByPurpleBuddy(PurpleBuddy * aBuddy,
          purple_group_get_name(purple_buddy_get_group(aBuddy)));
 #endif
 
-  /* First, lookup the PurpleBuddy pointer in our PurpleBuddy pointers
-   * hash. If we find it, just return the associated purpleBuddy.
+  /* First, check the ui_data pointer, if it is not NULL then just
+   * return the associated purpleBuddy.
    */
-  purpleBuddy *buddyPtr = NULL;
-  if (mBuddiesByPurpleBuddy.Get((PRUint32) aBuddy, &buddyPtr)) {
+  purpleBuddy *buddyPtr = (purpleBuddy *)aBuddy->node.ui_data;
+  if (buddyPtr) {
     *aResult = buddyPtr;
+    NS_ADDREF(*aResult);
 #ifdef DEBUG_PURPLE_CORE_SERVICE
-    printf("purpleBuddy found in HashTable\n");
+    printf("purpleBuddy found in ui_data\n");
 #endif
     return NS_OK;
   }
 
-  /* If we can't find it in the pointers hash, try to get the Id from
-   * mozStorage. If we find it, append the new PurpleBuddy to it, and
-   * add the new PurpleBuddy pointer to the hash.
+  /* If we can't find it with the ui_data pointer, try to get the Id
+   * from mozStorage. If we find it, append the new PurpleBuddy to it,
+   * and add the new PurpleBuddy pointer to the hash.
    */
   purpleStorage *storageInstance = purpleStorage::GetInstance();
   mozIStorageStatement *statement = storageInstance->mGetBuddyIdFromNameAndPrpl;
@@ -377,12 +376,10 @@ NS_IMETHODIMP purpleCoreService::GetBuddyByPurpleBuddy(PurpleBuddy * aBuddy,
        didn't find it in the database */
     if (NS_SUCCEEDED(rv)) {
       purpleBuddy *buddy = static_cast<purpleBuddy *>(*aResult);
-      mBuddiesByPurpleBuddy.Put((PRUint32) aBuddy, buddy);
+      aBuddy->node.ui_data = buddy;
       return buddy->AddAccount(aBuddy);
     }
-#ifdef DEBUG_PURPLE_CORE_SERVICE
-    printf("Let's ignore the dummy mozStorage entry we found!\n");
-#endif
+    NS_WARNING("Let's ignore the dummy mozStorage entry we found!\n");
   }
 
   /* At this point, if we still haven't found it, this is a NEW
@@ -392,7 +389,7 @@ NS_IMETHODIMP purpleCoreService::GetBuddyByPurpleBuddy(PurpleBuddy * aBuddy,
   nsCOMPtr<purpleBuddy> buddy = do_CreateInstance(PURPLE_BUDDY_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   buddy->Init(aBuddy);
-  mBuddiesByPurpleBuddy.Put((PRUint32) aBuddy, buddy);
+  aBuddy->node.ui_data = buddy;
 #ifdef DEBUG_PURPLE_CORE_SERVICE
   printf("purpleBuddy added in HashTable with Id %i\n", buddy->getId());
 #endif
@@ -424,8 +421,8 @@ NS_IMETHODIMP purpleCoreService::AddBuddy(purpleIAccount *aAccount,
 /* [noscript] void purpleBuddyRemoved (in PurpleNativeBuddy aBuddy); */
 NS_IMETHODIMP purpleCoreService::PurpleBuddyRemoved(PurpleBuddy *aBuddy)
 {
-  nsCOMPtr<purpleBuddy> buddy;
-  if (mBuddiesByPurpleBuddy.Get((PRUint32) aBuddy, getter_AddRefs(buddy)))
+  purpleBuddy *buddy = (purpleBuddy *)aBuddy->node.ui_data;
+  if (buddy)
     return buddy->RemoveAccount(aBuddy);
 
   return NS_ERROR_FAILURE;
@@ -579,7 +576,7 @@ NS_IMETHODIMP purpleCoreService::GetConversations(nsISimpleEnumerator **aResult)
 
 
 /* purpleIProtocol getConversationById (in string aConversationId); */
-NS_IMETHODIMP purpleCoreService::GetConversationById(PRInt32 aId,
+NS_IMETHODIMP purpleCoreService::GetConversationById(PRUint32 aId,
 						     purpleIConversation **aResult)
 {
   PURPLE_ENSURE_INIT(mInitialized);
@@ -609,11 +606,12 @@ void purpleCoreService::AddConversation(purpleConversation* aConv)
 void purpleCoreService::RemoveConversation(PurpleConversation *aConv)
 {
 #ifdef DEBUG_PURPLE_CORE_SERVICE
-  printf("purpleCoreService::RemoveConversation aConv = %i\n", (PRInt32) aConv);
+  printf("purpleCoreService::RemoveConversation aConv = %i\n", (size_t) aConv);
 #endif
 
+  purpleConversation *conv = (purpleConversation *)aConv->ui_data;
   for (PRInt32 i = mConversations.Count() - 1; i >= 0; --i) {
-    if (mConversations[i]->GetId() == (PRInt32) aConv) {
+    if (mConversations[i] == conv) {
 #ifdef DEBUG_PURPLE_CORE_SERVICE
       printf("purpleCoreSevice::RemoveConversation: Found\n");
 #endif

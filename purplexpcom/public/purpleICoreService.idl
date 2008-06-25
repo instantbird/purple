@@ -67,7 +67,7 @@ interface purpleICoreService: nsISupports {
   purpleITag getTagById(in long aId);
 
   nsISimpleEnumerator getConversations();
-  purpleIConversation getConversationById(in long aId);
+  purpleIConversation getConversationById(in unsigned long aId);
 
   // returns an enumerator on a purpleIProtocol array
   nsISimpleEnumerator getProtocols();

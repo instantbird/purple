@@ -84,7 +84,6 @@ protected:
   nsCOMArray<purpleConversation> mConversations;
   nsCOMArray<purpleProtocol> mProtocols;
   nsCOMArray<purpleAccount> mAccounts;
-  nsInterfaceHashtable<nsUint32HashKey, purpleBuddy> mBuddiesByPurpleBuddy;
   nsInterfaceHashtable<nsUint32HashKey, purpleBuddy> mBuddiesById;
   nsInterfaceHashtable<nsUint32HashKey, purpleTag> mTagById;
 };
