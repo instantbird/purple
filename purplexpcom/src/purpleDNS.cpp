@@ -75,7 +75,7 @@ gboolean purpleDNS::Resolve(PurpleDnsQueryData *query_data,
   nsCOMPtr<nsICancelable> cancelable;
   nsCOMPtr<nsIThread> thread = do_GetMainThread();
   nsCOMPtr<purpleDNSRequest> listener;
-  NS_NEWXPCOM(listener, purpleDNSRequest);
+  listener = new purpleDNSRequest();
   listener->query_data = query_data;
   listener->resolved_cb = resolved_cb;
   listener->failed_cb = failed_cb;
@@ -131,6 +131,16 @@ void purpleDNS::Cancel(PurpleDnsQueryData *query_data)
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(purpleDNSRequest, nsIDNSListener)
+
+purpleDNSRequest::purpleDNSRequest()
+{
+  MOZ_COUNT_CTOR(purpleDNSRequest);
+}
+
+purpleDNSRequest::~purpleDNSRequest()
+{
+  MOZ_COUNT_DTOR(purpleDNSRequest);
+}
 
 void purpleDNSRequest::Failed(const char *aMsg)
 {

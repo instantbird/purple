@@ -110,7 +110,7 @@ NS_IMETHODIMP purpleSocket::Init(PurpleInputFunction aFunction,
 #ifdef DEBUG_PURPLE_SOCKET
   mInternal = new purpleSocketInternal(mId);
 #else
-  NS_NEWXPCOM(mInternal, purpleSocketInternal);
+  mInternal = new purpleSocketInternal();
 #endif
   return mInternal->Init(PR_CreateSocketPollFd(mFd), proxy, pollFlags);
 }
@@ -161,6 +161,7 @@ purpleSocketInternal::purpleSocketInternal()
   mDetached(PR_FALSE),
   mCanceled(PR_FALSE)
 {
+  MOZ_COUNT_CTOR(purpleSocketInternal);
 #ifdef DEBUG_PURPLE_SOCKET
   printf("[%i]  constructing new purpleSocketInternal\n", mId);
 #endif
@@ -168,6 +169,7 @@ purpleSocketInternal::purpleSocketInternal()
 
 purpleSocketInternal::~purpleSocketInternal()
 {
+  MOZ_COUNT_DTOR(purpleSocketInternal);
 #ifdef DEBUG_PURPLE_SOCKET
   printf("[%i]  destructing purpleSocketInternal\n", mId);
 #endif

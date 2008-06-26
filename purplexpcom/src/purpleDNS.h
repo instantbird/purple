@@ -48,6 +48,8 @@ struct purpleDNSRequest: nsIDNSListener
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDNSLISTENER
 
+  purpleDNSRequest();
+  ~purpleDNSRequest();
   PurpleDnsQueryData *query_data;
   PurpleDnsQueryResolvedCallback resolved_cb;
   PurpleDnsQueryFailedCallback failed_cb;
