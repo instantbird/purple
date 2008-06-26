@@ -60,6 +60,9 @@ struct purpleDNSRequest: nsIDNSListener
 class purpleDNS
 {
  public:
+  static void init();
+  static void unInit();
+
   static gboolean Resolve(PurpleDnsQueryData *query_data,
                           PurpleDnsQueryResolvedCallback resolved_cb,
                           PurpleDnsQueryFailedCallback failed_cb);
@@ -68,5 +71,5 @@ class purpleDNS
   static nsresult Remove(PurpleDnsQueryData *query_data);
 
  private:
-  static nsCOMArray<purpleDNSRequest> mRequests;
+  static nsCOMArray<purpleDNSRequest> *sRequests;
 };

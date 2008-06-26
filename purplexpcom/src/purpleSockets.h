@@ -123,9 +123,10 @@ class purpleSocketWatcher
 			   PurpleInputFunction aFunction, gpointer aData);
   static PRBool CancelWatch(PRUint32 aId);
   static nsISocketTransportService *getSts();
-  static void unInit() { sSts = nsnull; }
+  static void init();
+  static void unInit();
 
  private:
-  static nsTArray<purpleISocket *> sSockets;
+  static nsTArray<purpleISocket *> *sSockets;
   static nsCOMPtr<nsISocketTransportService> sSts;
 };

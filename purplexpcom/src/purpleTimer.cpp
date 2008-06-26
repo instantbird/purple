@@ -45,8 +45,18 @@
 #endif
 
 /* Init static members */
-PRUint32 purpleTimer::mLastTimer = 0;
-nsTArray<purpleTimeout *> purpleTimer::mTimeouts;
+PRUint32 purpleTimer::sLastTimer = 0;
+nsTArray<purpleTimeout *> *purpleTimer::sTimeouts = nsnull;
+
+void purpleTimer::init()
+{
+  sTimeouts = new nsTArray<purpleTimeout *>();
+}
+
+void purpleTimer::unInit()
+{
+  delete sTimeouts;
+}
 
 PRUint32 purpleTimer::AddTimeout(PRUint32 aInterval,
 				   GSourceFunc aFunction,
@@ -70,13 +80,13 @@ PRUint32 purpleTimer::AddTimeout(PRUint32 aInterval,
   }
 
   purpleTimeout *timer = new purpleTimeout();
-  timer->mId = ++mLastTimer;
+  timer->mId = ++sLastTimer;
   timer->mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
   timer->mFunction = aFunction;
   timer->mData = aData;
   timer->mTimer->InitWithFuncCallback(ExecTimer, timer,
 				      aInterval, nsITimer::TYPE_REPEATING_SLACK);
-  mTimeouts.AppendElement(timer);
+  sTimeouts->AppendElement(timer);
 #ifdef DEBUG_PURPLE_TIMER
   printf("TIMEOUTADD id = %i; interval = %ims\n", timer->mId, aInterval);
 #endif
@@ -106,12 +116,12 @@ PRBool purpleTimer::CancelTimer(PRUint32 aId)
 #ifdef DEBUG_PURPLE_TIMER
   printf("Trying to cancel timeout with id %i\n", aId);
 #endif
-  for (PRUint32 i = 0; i < mTimeouts.Length(); ++i) {
-    if (mTimeouts[i]->mId == aId) {
-      purpleTimeout *timeout = mTimeouts[i];
+  for (PRUint32 i = 0; i < sTimeouts->Length(); ++i) {
+    if ((*sTimeouts)[i]->mId == aId) {
+      purpleTimeout *timeout = (*sTimeouts)[i];
       timeout->mTimer->Cancel();
       delete timeout;
-      mTimeouts.RemoveElementAt(i);
+      sTimeouts->RemoveElementAt(i);
 #ifdef DEBUG_PURPLE_TIMER
       printf("Timeout elt found at index %i; canceled and removed\n", i);
 #endif

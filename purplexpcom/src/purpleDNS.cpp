@@ -50,7 +50,17 @@
 #endif
 
 /* Init static members */
-nsCOMArray<purpleDNSRequest> purpleDNS::mRequests;
+nsCOMArray<purpleDNSRequest> *purpleDNS::sRequests = nsnull;
+
+void purpleDNS::init()
+{
+  sRequests = new nsCOMArray<purpleDNSRequest>();
+}
+
+void purpleDNS::unInit()
+{
+  delete sRequests;
+}
 
 gboolean purpleDNS::Resolve(PurpleDnsQueryData *query_data,
                             PurpleDnsQueryResolvedCallback resolved_cb,
@@ -75,7 +85,7 @@ gboolean purpleDNS::Resolve(PurpleDnsQueryData *query_data,
   if (NS_FAILED(rv))
     return false; // The request wasn't handled.
 
-  mRequests.AppendObject(listener);
+  sRequests->AppendObject(listener);
   return true; // We handle the request, libpurple shouldn't try to do it.
 }
 
@@ -84,9 +94,9 @@ nsresult purpleDNS::Remove(PurpleDnsQueryData *query_data)
 #ifdef DEBUG_PURPLE_DNS
   printf("Remove by query_data... ");
 #endif
-  for (PRInt32 i = mRequests.Count() - 1; i >= 0; --i) {
-    if (mRequests[i]->query_data == query_data) {
-      mRequests.RemoveObjectAt(i);
+  for (PRInt32 i = sRequests->Count() - 1; i >= 0; --i) {
+    if ((*sRequests)[i]->query_data == query_data) {
+      sRequests->RemoveObjectAt(i);
 #ifdef DEBUG_PURPLE_DNS
       printf("found at %i\n", i);
 #endif
@@ -105,10 +115,10 @@ void purpleDNS::Cancel(PurpleDnsQueryData *query_data)
   printf("Canceling by query_data... ");
 #endif
 
-  for (PRInt32 i = mRequests.Count() - 1; i >= 0; --i) {
-    if (mRequests[i]->query_data == query_data) {
-      mRequests[i]->asyncResolv->Cancel(NS_ERROR_FAILURE);
-      mRequests.RemoveObjectAt(i);
+  for (PRInt32 i = sRequests->Count() - 1; i >= 0; --i) {
+    if ((*sRequests)[i]->query_data == query_data) {
+      (*sRequests)[i]->asyncResolv->Cancel(NS_ERROR_FAILURE);
+      sRequests->RemoveObjectAt(i);
 #ifdef DEBUG_PURPLE_DNS
       printf("found at %i\n", i);
 #endif

@@ -51,6 +51,9 @@ struct purpleTimeout
 class purpleTimer
 {
  public:
+  static void init();
+  static void unInit();
+
   static PRUint32 AddTimeout(PRUint32 aInterval,
 			     GSourceFunc aFunction,
 			     gpointer aData);
@@ -58,6 +61,6 @@ class purpleTimer
   static PRBool CancelTimer(PRUint32 aId);
 
  private:
-  static nsTArray<purpleTimeout *> mTimeouts;
-  static PRUint32 mLastTimer;
+  static nsTArray<purpleTimeout *> *sTimeouts;
+  static PRUint32 sLastTimer;
 };

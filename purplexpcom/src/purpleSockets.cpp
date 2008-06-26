@@ -337,8 +337,19 @@ nsresult purpleSocketInternal::SetPollFlags(PRInt16 aPollFlags)
 }
 
 /* Init static members */
-nsTArray<purpleISocket *> purpleSocketWatcher::sSockets;
+nsTArray<purpleISocket *> *purpleSocketWatcher::sSockets = nsnull;
 nsCOMPtr<nsISocketTransportService> purpleSocketWatcher::sSts;
+
+void purpleSocketWatcher::init()
+{
+  sSockets = new nsTArray<purpleISocket *>();
+}
+
+void purpleSocketWatcher::unInit()
+{
+  sSts = nsnull;
+  delete sSockets;
+}
 
 nsISocketTransportService *purpleSocketWatcher::getSts()
 {
@@ -372,7 +383,7 @@ PRUint32 purpleSocketWatcher::AddWatch(gint aFd, PurpleInputCondition aCondition
   if (NS_FAILED(rv))
     return 0;
 
-  sSockets.AppendElement(socket);
+  sSockets->AppendElement(socket);
 #ifdef DEBUG_PURPLE_SOCKET
   printf("[%i]SOCKETADD fd = %i\n", id, aFd);
 #endif
@@ -386,12 +397,12 @@ PRBool purpleSocketWatcher::CancelWatch(PRUint32 aId)
   printf("[%u]SOCKETCANCEL\n", aId);
 #endif
 
-  for (PRUint32 i = 0; i < sSockets.Length(); ++i) {
+  for (PRUint32 i = 0; i < sSockets->Length(); ++i) {
     PRUint32 id;
-    sSockets[i]->GetId(&id);
+    (*sSockets)[i]->GetId(&id);
     if (id == aId) {
-      sSockets[i]->Cancel();
-      sSockets.RemoveElementAt(i);
+      (*sSockets)[i]->Cancel();
+      sSockets->RemoveElementAt(i);
 #ifdef DEBUG_PURPLE_SOCKET
       printf("[%u]Socket elt found at index %i; canceled and removed\n", aId, i);
 #endif

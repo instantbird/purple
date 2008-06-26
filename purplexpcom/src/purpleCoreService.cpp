@@ -40,6 +40,8 @@
 #include "purpleBuddy.h"
 #include "purpleStorage.h"
 #include "purpleSockets.h"
+#include "purpleDNS.h"
+#include "purpleTimer.h"
 #include "nsXPCOM.h"
 #include <glib.h>
 #include <libpurple/core.h>
@@ -91,6 +93,10 @@ NS_IMETHODIMP purpleCoreService::Init()
   if (mInitialized) {
     return NS_ERROR_ALREADY_INITIALIZED;
   }
+
+  purpleSocketWatcher::init();
+  purpleDNS::init();
+  purpleTimer::init();
 
   /* Init the core of libpurple */
   nsresult rv = init_libpurple();
@@ -291,6 +297,8 @@ NS_IMETHODIMP purpleCoreService::Quit()
                         // handlers are removed properly
   purpleStorage::unInit();
   purpleSocketWatcher::unInit();
+  purpleDNS::unInit();
+  purpleTimer::unInit();
 
   mInitialized = PR_FALSE;
   return NS_OK;
