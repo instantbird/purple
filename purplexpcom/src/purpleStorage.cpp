@@ -79,6 +79,9 @@ nsresult purpleStorage::Init()
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mDBService->OpenDatabase(dbFile, getter_AddRefs(mDBConn));
   NS_ENSURE_SUCCESS(rv, rv);
+  PRBool ready;
+  mDBConn->GetConnectionReady(&ready);
+  NS_ENSURE_TRUE(ready, NS_ERROR_UNEXPECTED);
 
   DO_SQL("CREATE TABLE IF NOT EXISTS accounts ("
          "id INTEGER PRIMARY KEY, "
