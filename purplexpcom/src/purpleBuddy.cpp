@@ -213,10 +213,7 @@ NS_IMETHODIMP purpleBuddy::GetAccount(PRUint16 aAccountIndex,
 				      purpleIAccount **aResult)
 {
   PURPLE_ENSURE_INIT(mId);
-
-  if (aAccountIndex > mBuddies.Count()) {
-    return NS_ERROR_FAILURE;
-  }
+  NS_ENSURE_TRUE(aAccountIndex < mBuddies.Count(), NS_ERROR_FAILURE);
 
   return mBuddies[aAccountIndex]->GetAccount(aResult);
 }
@@ -238,10 +235,7 @@ NS_IMETHODIMP purpleBuddy::CreateConversation(PRUint16 aAccountIndex,
 					      purpleIConversation **aResult)
 {
   PURPLE_ENSURE_INIT(mId);
-
-  if (aAccountIndex > mBuddies.Count()) {
-    return NS_ERROR_FAILURE;
-  }
+  NS_ENSURE_TRUE(aAccountIndex < mBuddies.Count(), NS_ERROR_FAILURE);
 
   purpleAccountBuddy *pab = mBuddies[aAccountIndex];
   return pab->CreateConversation(aResult);
