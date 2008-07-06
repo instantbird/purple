@@ -39,6 +39,8 @@
 #include "purpleCoreService.h"
 #include "purpleAccount.h"
 #include "purpleStorage.h"
+#include "purpleGListEnumerator.h"
+#include "purpleTooltipInfo.h"
 #include <nsServiceManagerUtils.h>
 #include <prprf.h>
 #include <libpurple/status.h>
@@ -184,6 +186,42 @@ NS_IMETHODIMP purpleAccountBuddy::GetBuddyIconFilename(nsACString& aBuddyIconFil
     aBuddyIconFilename.SetIsVoid(true);
   }
 
+  return NS_OK;
+}
+
+void purpleAccountBuddy::CleanUserInfo(void *aData)
+{
+  if (aData)
+    purple_notify_user_info_destroy((PurpleNotifyUserInfo *)aData);
+}
+
+/*   nsISimpleEnumerator getTooltipInfo(); */
+NS_IMETHODIMP purpleAccountBuddy::GetTooltipInfo(nsISimpleEnumerator** aTooltipInfo)
+{
+  NS_ENSURE_TRUE(mBuddy, NS_ERROR_NOT_INITIALIZED);
+  NS_ENSURE_TRUE(mAccount, NS_ERROR_NOT_INITIALIZED);
+
+  nsCOMPtr<purpleIProtocol> proto;
+  nsresult rv = mAccount->GetProtocol(getter_AddRefs(proto));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PurplePluginProtocolInfo *prpl_info;
+  rv = proto->GetInfo(&prpl_info);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (prpl_info->tooltip_text && mBuddy->account->gc) {
+    PurpleNotifyUserInfo *user_info = purple_notify_user_info_new();
+    prpl_info->tooltip_text(mBuddy, user_info, true);
+    purpleGListEnumerator *enumerator = new purpleGListEnumerator();
+    enumerator->Init(purple_notify_user_info_get_entries(user_info),
+                     purpleTypeToInterface<purpleTooltipInfo,
+		                           PurpleNotifyUserInfoEntry>,
+		     CleanUserInfo, user_info);
+    NS_ADDREF(*aTooltipInfo = enumerator);
+    return NS_OK;
+  }
+
+  *aTooltipInfo = nsnull;
   return NS_OK;
 }
 

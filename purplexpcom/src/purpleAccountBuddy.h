@@ -66,6 +66,7 @@ public:
 
 private:
   ~purpleAccountBuddy();
+  static void CleanUserInfo(void *aData);
 
 protected:
   /* additional members */

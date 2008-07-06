@@ -61,6 +61,10 @@ interface purpleIBuddy: nsISupports {
   readonly attribute AUTF8String name;
   readonly attribute AUTF8String loggedIn;
   readonly attribute AUTF8String buddyIconFilename;
+
+  // enumerator of purpleTooltipInfo components
+  nsISimpleEnumerator getTooltipInfo();
+
   attribute AUTF8String alias;
   readonly attribute short nbOnline;
   readonly attribute short accountCount;

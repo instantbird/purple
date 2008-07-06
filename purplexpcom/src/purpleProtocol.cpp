@@ -130,9 +130,7 @@ NS_IMETHODIMP purpleProtocol::GetOptions(nsISimpleEnumerator **aResult)
 inline nsresult purpleProtocol::GetBoolOpt(PRBool *aRes,
 					   PurpleProtocolOptions aOpt)
 {
-  if (!mInfo) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
+  NS_ENSURE_TRUE(mInfo, NS_ERROR_NOT_INITIALIZED);
 
   PurplePluginProtocolInfo *prpl_info =
     (PurplePluginProtocolInfo *) mInfo->extra_info;
@@ -188,4 +186,13 @@ NS_IMETHODIMP purpleProtocol::GetUsePointSize(PRBool *aUsePointSize)
 NS_IMETHODIMP purpleProtocol::GetRegisterNoScreenName(PRBool *aRegisterNoScreenName)
 {
   return GetBoolOpt(aRegisterNoScreenName, OPT_PROTO_REGISTER_NOSCREENNAME);
+}
+
+/* [noscript] PurpleNativePluginProtocolInfo getInfo (); */
+NS_IMETHODIMP purpleProtocol::GetInfo(PurplePluginProtocolInfo * *aPrplInfo)
+{
+  NS_ENSURE_TRUE(mInfo, NS_ERROR_NOT_INITIALIZED);
+  *aPrplInfo = (PurplePluginProtocolInfo *)mInfo->extra_info;
+
+  return NS_OK;
 }

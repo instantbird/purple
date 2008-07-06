@@ -192,6 +192,14 @@ NS_IMETHODIMP purpleBuddy::GetBuddyIconFilename(nsACString& aBuddyIconFilename)
   return mBuddies[0]->GetBuddyIconFilename(aBuddyIconFilename);
 }
 
+/*  nsISimpleEnumerator getTooltipInfo(); */
+NS_IMETHODIMP purpleBuddy::GetTooltipInfo(nsISimpleEnumerator** aTooltipInfo)
+{
+  PURPLE_ENSURE_INIT(mId);
+
+  return mBuddies[0]->GetTooltipInfo(aTooltipInfo);
+}
+
 /* attribute AUTF8String alias; */
 NS_IMETHODIMP purpleBuddy::GetAlias(nsACString& aAlias)
 {

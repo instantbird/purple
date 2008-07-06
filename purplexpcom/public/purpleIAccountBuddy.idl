@@ -54,6 +54,10 @@ interface purpleIAccountBuddy: nsISupports {
   readonly attribute AUTF8String buddyAlias;
   readonly attribute AUTF8String loggedIn;
   readonly attribute AUTF8String buddyIconFilename;
+
+  // enumerator of purpleTooltipInfo components
+  nsISimpleEnumerator getTooltipInfo();
+
   purpleIConversation createConversation();
   readonly attribute boolean online;
   readonly attribute boolean available;

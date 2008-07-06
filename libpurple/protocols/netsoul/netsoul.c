@@ -65,27 +65,32 @@ static char *netsoul_status_text(PurpleBuddy *gb)
 }
 
 /*
-  netsoul_conn_text
   Returns the description of the given netsoul connection
   used in netsoul_tooltip_text
 */
 
-char *netsoul_conn_text(NetsoulConn *nc)
+void netsoul_conn_tooltip(NetsoulConn *nc, PurpleNotifyUserInfo *user_info)
 {
   char	*loggedin;
   char	*statetime;
   char	*state;
-  char	*resp;
+  char	*state2;
 
   loggedin = ns_readable_time(nc->logintime);
   statetime = ns_readable_time(nc->statetime);
   state = ns_state_to_text(nc->state);
-  resp = g_strdup_printf("\n<b>Location:</b> %s\n<b>IP:</b> %s\n<b>Comment:</b> %s\n<b>Logged in:</b> %s<b>State:</b> %s\n  <b>since:</b> %s",
-			 nc->location, nc->ip, nc->comment, loggedin, state, statetime);
+  state2 = g_strdup_printf("%s (since: %s)", state, statetime);
+
+  purple_notify_user_info_add_pair(user_info, "Location", nc->location);
+  purple_notify_user_info_add_pair(user_info, "IP", nc->ip);
+  purple_notify_user_info_add_pair(user_info, "Comment", nc->comment);
+  purple_notify_user_info_add_pair(user_info, "Logged in", loggedin);
+  purple_notify_user_info_add_pair(user_info, "State", state2);
+
   g_free(loggedin);
   g_free(statetime);
   g_free(state);
-  return resp;
+  g_free(state2);
 }
 
 char *netsoul_conn_text_html(NetsoulConn *nc)
@@ -115,11 +120,7 @@ char *netsoul_conn_text_html(NetsoulConn *nc)
 static void netsoul_tooltip_text(PurpleBuddy *gb, PurpleNotifyUserInfo *user_info, gboolean full)
 {
   NetsoulBuddy	*nb = (NetsoulBuddy *)gb->proto_data;
-  char	*resp, *nctxt;
   GList	*tmp;
-  NetsoulConn	*nc;
-  char	**tab;
-  int	i;
   PurpleConnection *gc = purple_account_get_connection (purple_buddy_get_account(gb));
   NetsoulData *ns = (NetsoulData *)gc->proto_data;
   PurpleBuddyIcon *icon = purple_buddy_get_icon (gb);
@@ -138,23 +139,22 @@ static void netsoul_tooltip_text(PurpleBuddy *gb, PurpleNotifyUserInfo *user_inf
     ns_watch_log_user(gc);
     ns_list_users(gc, ns->watchlist);
   }
-   if (nb->nblocations == 0)
-     return;
+  if (nb->nblocations == 0)
+    return;
 
   purple_debug_info("netsoul", "netsoul_tooltip_text nblocation != 0\n");
-  tab = g_new0(char *, nb->nblocations + 1);
-  for (i = 0, tmp = nb->locationlist; tmp; tmp = tmp->next, i++)
-  {
-    nc = (NetsoulConn *)tmp->data;
-    tab[i] = netsoul_conn_text(nc);
+  purple_notify_user_info_add_pair(user_info, "Status", ns_state_to_text(nb->state));
+  purple_notify_user_info_add_pair(user_info, "Group", nb->group);
+
+  if (full) {
+    purple_notify_user_info_add_section_break(user_info);
+    purple_notify_user_info_add_section_header(user_info, "Connections");
+
+    for (tmp = nb->locationlist; tmp; tmp = tmp->next) {
+      purple_notify_user_info_add_section_break(user_info);
+      netsoul_conn_tooltip((NetsoulConn *)tmp->data, user_info);
+    }
   }
-  nctxt = g_strjoinv("", tab);
-  g_strfreev(tab);
-  resp = g_strdup_printf("\n<b>Status:</b> %s\n<b>Groupe:</b> %s\n<b>Connections:</b>%s",
-			 ns_state_to_text(nb->state), nb->group, nctxt);
-  g_free(nctxt);
-  purple_notify_user_info_add_pair(user_info, "Informations", resp);
-  g_free(resp);
 }
 
 /*
