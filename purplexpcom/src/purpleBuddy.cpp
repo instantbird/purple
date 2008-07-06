@@ -176,6 +176,22 @@ NS_IMETHODIMP purpleBuddy::GetName(nsACString& aName)
   return mBuddies[0]->GetBuddyName(aName);
 }
 
+/* readonly attribute AUTF8String name; */
+NS_IMETHODIMP purpleBuddy::GetLoggedIn(nsACString& aLoggedIn)
+{
+  PURPLE_ENSURE_INIT(mId);
+
+  return mBuddies[0]->GetLoggedIn(aLoggedIn);
+}
+
+/* readonly attribute AUTF8String buddyIconFilename; */
+NS_IMETHODIMP purpleBuddy::GetBuddyIconFilename(nsACString& aBuddyIconFilename)
+{
+  PURPLE_ENSURE_INIT(mId);
+
+  return mBuddies[0]->GetBuddyIconFilename(aBuddyIconFilename);
+}
+
 /* attribute AUTF8String alias; */
 NS_IMETHODIMP purpleBuddy::GetAlias(nsACString& aAlias)
 {

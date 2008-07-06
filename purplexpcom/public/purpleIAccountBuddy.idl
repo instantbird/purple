@@ -52,6 +52,8 @@ interface purpleIAccountBuddy: nsISupports {
   readonly attribute purpleITag tag;
   readonly attribute AUTF8String buddyName;
   readonly attribute AUTF8String buddyAlias;
+  readonly attribute AUTF8String loggedIn;
+  readonly attribute AUTF8String buddyIconFilename;
   purpleIConversation createConversation();
   readonly attribute boolean online;
   readonly attribute boolean available;

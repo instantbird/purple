@@ -41,6 +41,7 @@
 #include "purpleStorage.h"
 #include <nsServiceManagerUtils.h>
 #include <prprf.h>
+#include <libpurple/status.h>
 
 NS_IMPL_ISUPPORTS1(purpleAccountBuddy, purpleIAccountBuddy)
 
@@ -135,6 +136,54 @@ NS_IMETHODIMP purpleAccountBuddy::GetBuddyName(nsACString& aBuddyName)
   NS_ENSURE_TRUE(mBuddy, NS_ERROR_NOT_INITIALIZED);
 
   aBuddyName = purple_buddy_get_name(mBuddy);
+  return NS_OK;
+}
+
+/* readonly attribute AUTF8String loggedIn */
+NS_IMETHODIMP purpleAccountBuddy::GetLoggedIn(nsACString& aLoggedIn)
+{
+  NS_ENSURE_TRUE(mBuddy, NS_ERROR_NOT_INITIALIZED);
+
+  PurplePresence *presence = purple_buddy_get_presence(mBuddy);
+  time_t loginTime = purple_presence_get_login_time(presence);
+
+  if ((PURPLE_BUDDY_IS_ONLINE(mBuddy)) && (loginTime > 0)) {
+    time_t now = time(NULL);
+
+    if (loginTime > now)
+      aLoggedIn = purple_date_format_long(localtime(&loginTime));
+    else {
+      // returns a copy - we need to free it
+      char *tmp = purple_str_seconds_to_string(now - loginTime);
+      aLoggedIn = tmp;
+      g_free(tmp);
+    }
+  }
+  else {
+    // didn't find a valid time - set it to NULL
+    aLoggedIn.SetIsVoid(true);
+  }
+
+  return NS_OK;
+}
+
+/* readonly attribute AUTF8String buddyIconFilename; */
+NS_IMETHODIMP purpleAccountBuddy::GetBuddyIconFilename(nsACString& aBuddyIconFilename)
+{
+  NS_ENSURE_TRUE(mBuddy, NS_ERROR_NOT_INITIALIZED);
+
+  PurpleBuddyIcon *icon = purple_buddy_get_icon(mBuddy);
+  char *fname;
+
+  if (icon && (fname = purple_buddy_icon_get_full_path(icon))) {
+    aBuddyIconFilename = NS_LITERAL_CSTRING("file://");
+    aBuddyIconFilename.Append(fname);
+    g_free(fname);
+  } else {
+    // set it to NULL
+    aBuddyIconFilename.SetIsVoid(true);
+  }
+
   return NS_OK;
 }
 
