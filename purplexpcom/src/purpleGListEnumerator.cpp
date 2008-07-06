@@ -61,10 +61,10 @@ void purpleGListEnumerator::Cleanup()
   mCleanupCallback = NULL;
 }
 
-NS_IMETHODIMP purpleGListEnumerator::Init(GList *aGList,
-                                          converterCallback aDataToSupports,
-                                          cleanupCallback aCleanupCallback,
-                                          void *aCleanupData)
+nsresult purpleGListEnumerator::Init(GList *aGList,
+                                     converterCallback aDataToSupports,
+                                     cleanupCallback aCleanupCallback,
+                                     void *aCleanupData)
 {
   mGList = aGList;
   mDataToSupports  = aDataToSupports;
