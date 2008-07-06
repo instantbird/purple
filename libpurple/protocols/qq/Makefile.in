@@ -69,13 +69,10 @@ CSRCS		= \
 		login_logout.c \
 		packet_parse.c \
 		qq.c \
-		qq_proxy.c \
-		recv_core.c \
-		send_core.c \
+		qq_network.c \
+		qq_trans.c \
 		send_file.c \
-		sendqueue.c \
 		sys_msg.c \
-		udp_proxy_s5.c \
 		utils.c \
 		$(NULL)
 
