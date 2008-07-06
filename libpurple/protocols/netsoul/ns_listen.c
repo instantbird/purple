@@ -116,7 +116,7 @@ void	ns_buddy_typing_notification(PurpleConnection *gc, char *who, int typing_st
     towho = gb->name;
 
   if (typing_state)
-    serv_got_typing(gc, towho, time(NULL), PURPLE_TYPING);
+    serv_got_typing(gc, towho, 0, PURPLE_TYPING);
   else
     serv_got_typing_stopped (gc, towho);
 }

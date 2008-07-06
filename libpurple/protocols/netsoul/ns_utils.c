@@ -255,13 +255,3 @@ char  *crypt_pass(char *password)
 			pass[9],pass[10],pass[11],pass[12],pass[13],pass[14],pass[15]);
   return (out);
 }
-
-/*
-  ns_readable_time
-  Returns readable version of tim (since 01/01/1970 00:00)
-*/
-
-char  *ns_readable_time(long int tim)
-{
-  return (g_strdup(ctime((const time_t *) &tim)));
-}

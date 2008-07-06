@@ -103,7 +103,7 @@ void	ns_watch_log_user(PurpleConnection *gc)
   g_free(tab);
 }
 
-void	ns_send_state(PurpleConnection *gc, int state, long int sincewhen)
+void	ns_send_state(PurpleConnection *gc, int state, time_t sincewhen)
 {
   NetsoulData	*ns = (NetsoulData *)gc->proto_data;
   char		*buf;

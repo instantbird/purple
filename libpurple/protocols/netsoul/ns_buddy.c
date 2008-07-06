@@ -131,7 +131,8 @@ void	ns_compute_update_state(PurpleConnection *gc, PurpleBuddy *gb)
   NetsoulConn	*nc;
   gboolean	loggedin = TRUE;
   gboolean	waschatty;
-  int		nbc, defid, idle, oldid;
+  int		nbc, defid, oldid;
+  time_t    idle;
   NetsoulBuddy	*nb = (NetsoulBuddy *)gb->proto_data;
   PurpleAccount	*account = purple_connection_get_account (gc);
   char *state_text;

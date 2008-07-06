@@ -110,8 +110,8 @@ typedef struct  _NetsoulBuddy {
   char		*login;		// login
   char		*group;		// group
   int		state;		// Buddy global state
-  long int	signon;		// global signon time
-  long int	laststate;	// global last state time
+  time_t	signon;		// global signon time
+  time_t	laststate;	// global last state time
   int		defaultid;	// default communication id
   int		nblocations;	// number of locations
   GList		*locationlist;	// List of NetsoulConn
@@ -119,8 +119,8 @@ typedef struct  _NetsoulBuddy {
 
 typedef struct	_NetsoulConn {
   int		id;		// Connection ID
-  long int	logintime;	// connection login time
-  long int	statetime;	// connection last state time
+  time_t	logintime;	// connection login time
+  time_t	statetime;	// connection last state time
   char		*ip;		// connection ip
   char		*location;	// connection location
   char		*comment;	// connection comment
@@ -166,7 +166,7 @@ void	ns_watch_log_user(PurpleConnection *gc);
 void	ns_list_users(PurpleConnection *gc, GList *list);
 void	ns_list_users_login(PurpleConnection *gc, char *login);
 void	ns_list_users_id(PurpleConnection *gc, int id);
-void	ns_send_state(PurpleConnection *gc, int state, long int sincewhen);
+void	ns_send_state(PurpleConnection *gc, int state, time_t sincewhen);
 void	ns_msg_user(PurpleConnection *gc, const char *who, const char *what);
 void	ns_send_typing(PurpleConnection *gc, const char *who, PurpleTypingState typing);
 NetsoulConn	*find_conn_id(NetsoulBuddy *nb, int id);
@@ -178,7 +178,6 @@ char	*url_decode(char	*msg);
 char	*url_encode(char	*msg);
 char	*convertname(char **fulllogin);
 char	*crypt_pass(char *password);
-char	*ns_readable_time(long int tim);
 
 /*
   ns_chat.c

@@ -76,10 +76,12 @@ void netsoul_conn_tooltip(NetsoulConn *nc, PurpleNotifyUserInfo *user_info)
   char	*state;
   char	*state2;
 
-  loggedin = ns_readable_time(nc->logintime);
-  statetime = ns_readable_time(nc->statetime);
+  time_t now = time(NULL);
+
+  loggedin = purple_str_seconds_to_string(now - nc->logintime);
+  statetime = purple_str_seconds_to_string(now - nc->statetime);
   state = ns_state_to_text(nc->state);
-  state2 = g_strdup_printf("%s (since: %s)", state, statetime);
+  state2 = g_strdup_printf("%s (%s)", state, statetime);
 
   purple_notify_user_info_add_pair(user_info, "Location", nc->location);
   purple_notify_user_info_add_pair(user_info, "IP", nc->ip);
@@ -100,10 +102,12 @@ char *netsoul_conn_text_html(NetsoulConn *nc)
   char	*state;
   char	*resp;
 
-  loggedin = ns_readable_time(nc->logintime);
-  statetime = ns_readable_time(nc->statetime);
+  time_t now = time(NULL);
+
+  loggedin = purple_str_seconds_to_string(now - nc->logintime);
+  statetime = purple_str_seconds_to_string(now - nc->statetime);
   state = ns_state_to_text(nc->state);
-  resp = g_strdup_printf("<b>Location:</b> %s<br><b>IP:</b> %s<br><b>Comment:</b> %s<br><b>Logged in:</b> %s<br><b>State:</b> %s<br>  <b>since:</b> %s",
+  resp = g_strdup_printf("<b>Location:</b> %s<br><b>IP:</b> %s<br><b>Comment:</b> %s<br><b>Logged in:</b> %s<br><b>State:</b> %s (%s)",
 			 nc->location, nc->ip, nc->comment, loggedin, state, statetime);
   g_free(loggedin);
   g_free(statetime);
