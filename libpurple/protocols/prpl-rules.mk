@@ -47,6 +47,6 @@ endif
 
 module.rc: module.ver
 
-module.ver:
+module.ver: $(srcdir)/../module.ver.in
 	echo WIN32_MODULE_DESCRIPTION=$(PROTOCOL) PRotocol PLugin > module.ver
 	cat $(srcdir)/../module.ver.in >> module.ver
