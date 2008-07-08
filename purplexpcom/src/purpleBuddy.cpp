@@ -148,6 +148,11 @@ nsresult purpleBuddy::AddAccount(PurpleBuddy *aBuddy)
 
 nsresult purpleBuddy::RemoveAccount(PurpleBuddy *aBuddy)
 {
+#ifdef DEBUG_PURPLE_BUDDY
+  printf("purpleBuddy::RemoveAccount buddy = %s, account = %s\n",
+	 aBuddy->name, purple_account_get_username(aBuddy->account));
+#endif
+
   for (PRInt32 i = 0; i < mBuddies.Count(); ++i) {
     if (mBuddies[i]->GetBuddy() == aBuddy) {
       mBuddies[i]->Uninit();

@@ -407,7 +407,7 @@ aim_locate_autofetch_away_message(OscarData *od, const char *sn)
 aim_userinfo_t *aim_locate_finduserinfo(OscarData *od, const char *sn) {
 	aim_userinfo_t *cur = NULL;
 
-	if (sn == NULL)
+	if (sn == NULL || od == NULL)
 		return NULL;
 
 	cur = od->locate.userinfo;

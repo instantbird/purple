@@ -201,6 +201,13 @@ NS_IMETHODIMP purpleAccountBuddy::GetTooltipInfo(nsISimpleEnumerator** aTooltipI
   NS_ENSURE_TRUE(mBuddy, NS_ERROR_NOT_INITIALIZED);
   NS_ENSURE_TRUE(mAccount, NS_ERROR_NOT_INITIALIZED);
 
+#ifdef DEBUG_PURPLE_BUDDY
+  nsCString name;
+  mAccount->GetName(name);
+  printf("purpleAccountBuddy::GetTooltipInfo buddy = %s, account = %s\n",
+	 mBuddy->name, name.get());
+#endif
+
   nsCOMPtr<purpleIProtocol> proto;
   nsresult rv = mAccount->GetProtocol(getter_AddRefs(proto));
   NS_ENSURE_SUCCESS(rv, rv);
