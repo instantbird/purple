@@ -33,7 +33,7 @@
 #include "util.h"
 
 #ifdef XP_UNIX
-# ifdef XP_MACOSX
+# if defined(XP_MACOSX) || defined(__FreeBSD__)
 #  define HAVE_TM_GMTOFF
 # else
 #  define HAVE_TIMEZONE

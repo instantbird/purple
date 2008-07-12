@@ -43,7 +43,7 @@ PROTOCOL	= jabber
 include $(srcdir)/../prpl.mk
 
 ifneq (,$(filter-out WINNT Darwin,$(OS_ARCH)))
-LOCAL_INCLUDES	+= -I/usr/include/libxml2/
+LOCAL_INCLUDES	+= -I/usr/include/libxml2/ -I/usr/local/include/libxml2/
 else
 REQUIRES	+= libxml2
 endif

@@ -50,7 +50,7 @@ NO_DIST_INSTALL	= 1
 VISIBILITY_FLAGS=
 
 ifneq (,$(filter-out WINNT Darwin,$(OS_ARCH)))
-LOCAL_INCLUDES	= $(GLIB_CFLAGS) -I/usr/include/libxml2/
+LOCAL_INCLUDES	= $(GLIB_CFLAGS) -I/usr/include/libxml2/ -I/usr/local/include/libxml2/
 EXTRA_LIBS	= $(GLIB_LIBS) -lgmodule-2.0 -lxml2 -lz
 else
 EXTRA_LIBS	= -L$(DIST)/lib -lglib -lxml2 -lz
@@ -73,7 +73,10 @@ EXTRA_LIBS	= \
 		$(NULL)
 DSO_LDOPTS	+= -DEF:purple.def
 else
-EXTRA_LIBS	+= -lresolv -lz $(NSS_LIBS) $(NSPR_LIBS)
+ifneq ($(OS_ARCH),FreeBSD)
+EXTRA_LIBS	+= -lresolv
+endif
+EXTRA_LIBS	+= $(NSS_LIBS) $(NSPR_LIBS)
 endif
 
 DIRS		= protocols
