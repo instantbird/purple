@@ -119,6 +119,17 @@ NS_IMETHODIMP purpleProtocol::GetId(nsACString& aId)
   return NS_OK;
 }
 
+/* boolean accountExists (in AUTF8String aName); */
+NS_IMETHODIMP purpleProtocol::AccountExists(const nsACString& aName,
+					    PRBool *aExists)
+{
+  NS_ENSURE_TRUE(mInfo, NS_ERROR_NOT_INITIALIZED);
+
+  *aExists = !!purple_accounts_find(PromiseFlatCString(aName).get(),
+				    mInfo->id);
+  return NS_OK;
+}
+
 /* nsISimpleEnumerator getOptionEnumerator (); */
 NS_IMETHODIMP purpleProtocol::GetOptions(nsISimpleEnumerator **aResult)
 { 

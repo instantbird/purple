@@ -56,6 +56,9 @@ interface purpleIProtocol: nsISupports {
   // returns an enumerator on a purpleIPref array
   nsISimpleEnumerator getOptions();
 
+  // Use this function to avoid attempting to create duplicate accounts
+  boolean accountExists(in AUTF8String aName);
+
   // These should all be stuff that some plugins can do and others can't.
   
   // OPT_PROTO_UNIQUE_CHATNAME Use a unique name, not an alias, for
