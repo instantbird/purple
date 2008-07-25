@@ -242,7 +242,8 @@ static int jabber_do_send(JabberStream *js, const char *data, int len)
 	if (js->gsc)
 		ret = purple_ssl_write(js->gsc, data, len);
 	else
-		ret = write(js->fd, data, len);
+		if (js->fd > 0)
+			ret = write(js->fd, data, len);
 
 	return ret;
 }
