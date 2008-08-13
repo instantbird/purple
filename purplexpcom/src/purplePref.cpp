@@ -57,7 +57,7 @@ void purplePref::Init(PurpleAccountOption *aOpt)
   mOpt = aOpt;
 #ifdef DEBUG_PURPLE_PREF
   printf("   purplePref (type %i) %s initialized\n",
-	 mOpt->type, mOpt->pref_name);
+         mOpt->type, mOpt->pref_name);
 #endif
 }
 
@@ -69,59 +69,41 @@ purplePref::~purplePref()
   /* destructor code */
 }
 
+#define PURPLE_IMPL_PREF_GETTER(code)                   \
+  {                                                     \
+    NS_ENSURE_TRUE(mOpt, NS_ERROR_NOT_INITIALIZED);     \
+                                                        \
+    code;                                               \
+    return NS_OK;                                       \
+  }
+
 /* readonly attribute AUTF8String name; */
 NS_IMETHODIMP purplePref::GetName(nsACString& aName)
-{
-  NS_ENSURE_TRUE(mOpt, NS_ERROR_NOT_INITIALIZED);
-
-  aName = mOpt->pref_name;
-  return NS_OK;
-}
+  PURPLE_IMPL_PREF_GETTER(aName = mOpt->pref_name)
 
 /* readonly attribute short type; */
 NS_IMETHODIMP purplePref::GetType(PRInt16 *aType)
-{
-  NS_ENSURE_TRUE(mOpt, NS_ERROR_NOT_INITIALIZED);
-
-  *aType = mOpt->type;
-  return NS_OK;
-}
+  PURPLE_IMPL_PREF_GETTER(*aType = mOpt->type)
 
 /* readonly attribute boolean masked (); */
 NS_IMETHODIMP purplePref::GetMasked(PRBool *aMasked)
-{
-  NS_ENSURE_TRUE(mOpt, NS_ERROR_NOT_INITIALIZED);
+  PURPLE_IMPL_PREF_GETTER(*aMasked = mOpt->masked)
 
-  *aMasked = mOpt->masked;
-  return NS_OK;
-}
+#define PURPLE_IMPL_PREF_GET_VALUE(aType, code)                             \
+  PURPLE_IMPL_PREF_GETTER(                                                  \
+    NS_ENSURE_TRUE(mOpt->type == (PurplePrefType) aType, NS_ERROR_FAILURE); \
+                                                                            \
+    code;                                                                   \
+  )
 
 /* boolean getBool (); */
 NS_IMETHODIMP purplePref::GetBool(PRBool *_retval)
-{
-  NS_ENSURE_TRUE(mOpt, NS_ERROR_NOT_INITIALIZED);
-  NS_ENSURE_TRUE(mOpt->type == (PurplePrefType) typeBool, NS_ERROR_FAILURE);
-
-  *_retval = mOpt->default_value.boolean;
-  return NS_OK;
-}
+  PURPLE_IMPL_PREF_GET_VALUE(typeBool, *_retval = mOpt->default_value.boolean)
 
 /* long getInt (); */
 NS_IMETHODIMP purplePref::GetInt(PRInt32 *_retval)
-{
-  NS_ENSURE_TRUE(mOpt, NS_ERROR_NOT_INITIALIZED);
-  NS_ENSURE_TRUE(mOpt->type == (PurplePrefType) typeInt, NS_ERROR_FAILURE);
-
-  *_retval = mOpt->default_value.integer;
-  return NS_OK;
-}
+  PURPLE_IMPL_PREF_GET_VALUE(typeInt, *_retval = mOpt->default_value.integer)
 
 /* AUTF8String getString (); */
 NS_IMETHODIMP purplePref::GetString(nsACString& _retval)
-{
-  NS_ENSURE_TRUE(mOpt, NS_ERROR_NOT_INITIALIZED);
-  NS_ENSURE_TRUE(mOpt->type == (PurplePrefType) typeString, NS_ERROR_FAILURE);
-
-  _retval = mOpt->default_value.string;
-  return NS_OK;
-}
+  PURPLE_IMPL_PREF_GET_VALUE(typeString, _retval = mOpt->default_value.string)
