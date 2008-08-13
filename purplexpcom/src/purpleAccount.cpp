@@ -40,6 +40,7 @@
 #include "purpleStorage.h"
 #include <pref/nsIPrefService.h>
 #include <nsServiceManagerUtils.h>
+#include <nsComponentManagerUtils.h>
 #include <prprf.h>
 
 NS_IMPL_ISUPPORTS1(purpleAccount, purpleIAccount)
@@ -51,6 +52,7 @@ NS_IMPL_ISUPPORTS1(purpleAccount, purpleIAccount)
 #define PREF_PRPL		"prpl"
 #define PREF_NAME		"name"
 #define PREF_ALIAS		"alias"
+#define PREF_PROXY              "proxy"
 #define PREF_AUTOLOGIN          "autoLogin"
 #define PREF_PASSWORD		"password"
 #define PREF_REMEMBER_PASSWORD	"rememberPassword"
@@ -201,6 +203,47 @@ nsresult purpleAccount::load(const nsCString& aKey)
     printf("alias = %s\n", alias.get());
 #endif
   }
+
+  /* Load proxy settings */
+  nsCString proxyKey;
+  rv = mPrefBranch->GetCharPref(PREF_PROXY, getter_Copies(proxyKey));
+  /* Init mProxy */
+  if (NS_SUCCEEDED(rv) &&
+      StringBeginsWith(proxyKey, NS_LITERAL_CSTRING(PROXY_KEY))) {
+    nsCOMPtr<nsISimpleEnumerator> proxies;
+    rv = pcs->GetProxies(getter_AddRefs(proxies));
+    PRBool hasNext;
+    if (NS_SUCCEEDED(rv)) {
+      while (NS_SUCCEEDED(proxies->HasMoreElements(&hasNext)) && hasNext) {
+        nsCOMPtr<purpleIProxy> proxy;
+        rv = proxies->GetNext(getter_AddRefs(proxy));
+        nsCString tmpKey;
+        if (NS_SUCCEEDED(rv) &&
+            NS_SUCCEEDED(proxy->GetKey(tmpKey)) && tmpKey.Equals(proxyKey)) {
+          mProxy = proxy;
+          break;
+        }
+      }
+    }
+  }
+  if (!mProxy) {
+    mProxy = do_CreateInstance(PURPLE_PROXY_INFO_CONTRACTID);
+    if (!mProxy)
+      return NS_ERROR_OUT_OF_MEMORY;
+    if (proxyKey.Equals(PROXY_KEY_ENVVAR))
+      mProxy->SetType(purpleIProxyInfo::useEnvVar);
+    else if (proxyKey.Equals(PROXY_KEY_NONE))
+      mProxy->SetType(purpleIProxyInfo::noProxy);
+    else
+      mProxy->SetType(purpleIProxyInfo::useGlobal);
+  }
+
+  /* Give the information to libpurple */
+  PurpleProxyInfo *info;
+  rv = mProxy->GetPurpleProxy(&info);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (info)
+    purple_account_set_proxy_info(mAccount, info);
 
   /* Load the password if it was saved */
   nsCString pass;
@@ -659,6 +702,37 @@ NS_IMETHODIMP purpleAccount::SetAlias(const nsACString& aAlias)
   }
 
   return sendUpdateNotification();
+}
+
+/* attribute purpleIProxyInfo proxyInfo; */
+NS_IMETHODIMP purpleAccount::GetProxyInfo(purpleIProxyInfo * *aProxyInfo)
+{
+  PURPLE_ENSURE_INIT(mAccount);
+
+  NS_ADDREF(*aProxyInfo = mProxy);
+  return NS_OK;
+}
+NS_IMETHODIMP purpleAccount::SetProxyInfo(purpleIProxyInfo * aProxyInfo)
+{
+  PURPLE_ENSURE_INIT(mAccount);
+
+  mProxy = aProxyInfo;
+
+  // Save the pref
+  nsCString key;
+  nsresult rv = mProxy->GetKey(key);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = SetStringPref(PREF_PROXY, key.get());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Give it to libpurple;
+  PurpleProxyInfo *info;
+  rv = mProxy->GetPurpleProxy(&info);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  purple_account_set_proxy_info(mAccount, info);
+
+  return NS_OK;
 }
 
 #define PURPLE_IMPL_SET(prettyType, purpleType, PRType, prefType)       \

@@ -38,6 +38,7 @@
 #include "nsISupports.idl"
 #include "purpleIProtocol.idl"
 #include "purpleIConversation.idl"
+#include "purpleIProxy.idl"
 
 /* 
  * This is a proxy to libpurple PurpleAccount
@@ -66,6 +67,8 @@ interface purpleIAccount: nsISupports {
   attribute boolean rememberPassword;
 
   attribute AUTF8String alias;
+
+  attribute purpleIProxyInfo proxyInfo;
 
   // protocol specific options: those functions set the protocol
   // specific options for the PurpleAccount and save the new values of

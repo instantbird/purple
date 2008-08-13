@@ -46,6 +46,8 @@
 #include "purpleAccountBuddy.h"
 #include "purpleMessage.h"
 #include "purpleSockets.h"
+#include "purpleProxy.h"
+#include "purpleProxyInfo.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleCoreService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleConversation)
@@ -57,6 +59,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(purpleMessage)
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleSocket)
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleTag)
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleAccountBuddy)
+NS_GENERIC_FACTORY_CONSTRUCTOR(purpleProxy)
+NS_GENERIC_FACTORY_CONSTRUCTOR(purpleProxyInfo)
 
 static nsModuleComponentInfo components[] =
 {
@@ -119,6 +123,18 @@ static nsModuleComponentInfo components[] =
     PURPLE_SOCKET_CID,
     PURPLE_SOCKET_CONTRACTID,
     purpleSocketConstructor
+  },
+  {
+    "PURPLE proxy",
+    PURPLE_PROXY_CID,
+    PURPLE_PROXY_CONTRACTID,
+    purpleProxyConstructor
+  },
+  {
+    "PURPLE proxy info",
+    PURPLE_PROXY_INFO_CID,
+    PURPLE_PROXY_INFO_CONTRACTID,
+    purpleProxyInfoConstructor
   }
 };
 

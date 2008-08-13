@@ -207,6 +207,14 @@ purple_global_proxy_get_info(void)
 	return global_proxy_info;
 }
 
+void
+purple_global_proxy_set_info(PurpleProxyInfo *info)
+{
+        purple_proxy_info_destroy(global_proxy_info);
+
+	global_proxy_info = info;
+}
+
 static PurpleProxyInfo *
 purple_gnome_proxy_get_info(void)
 {
@@ -1816,9 +1824,11 @@ purple_proxy_get_setup(PurpleAccount *account)
 			gpi = NULL;
 	}
 	if (gpi == NULL) {
+#if 0
 		if (purple_running_gnome())
 			gpi = purple_gnome_proxy_get_info();
 		else
+#endif
 			gpi = purple_global_proxy_get_info();
 	}
 

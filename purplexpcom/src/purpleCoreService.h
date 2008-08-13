@@ -36,6 +36,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "purpleProtocol.h"
+#include "purpleProxy.h"
+#include "purpleProxyInfo.h"
 #include "purpleAccount.h"
 #include "purpleICoreService.h"
 #include "purpleConversation.h"
@@ -70,6 +72,7 @@ public:
 private:
   ~purpleCoreService();
   void InitProtocols();
+  nsresult InitProxies();
   nsresult InitAccounts();
   nsresult InitBuddyList();
   nsCOMPtr<nsIPrefBranch> mPrefService;
@@ -81,11 +84,13 @@ private:
 protected:
   PRBool mInitialized;
   PRBool mQuitting;
-  nsCOMArray<purpleConversation> mConversations;
   nsCOMArray<purpleProtocol> mProtocols;
+  nsCOMArray<purpleProxy> mProxies;
   nsCOMArray<purpleAccount> mAccounts;
+  nsCOMArray<purpleConversation> mConversations;
   nsInterfaceHashtable<nsUint32HashKey, purpleBuddy> mBuddiesById;
   nsInterfaceHashtable<nsUint32HashKey, purpleTag> mTagById;
+  nsCOMPtr<purpleIProxyInfo> mGlobalProxy;
 };
 
 #define PURPLE_CORE_SERVICE_CID \

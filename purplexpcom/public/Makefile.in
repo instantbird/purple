@@ -53,6 +53,7 @@ XPIDLSRCS	= \
 		purpleIMessage.idl \
 		purpleIPref.idl \
 		purpleIProtocol.idl \
+		purpleIProxy.idl \
 		purpleISocket.idl \
 		purpleITag.idl \
 		purpleITooltipInfo.idl \

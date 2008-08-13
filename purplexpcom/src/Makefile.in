@@ -86,6 +86,8 @@ CPPSRCS		= \
 		purpleModule.cpp \
 		purplePref.cpp \
 		purpleProtocol.cpp \
+		purpleProxy.cpp \
+		purpleProxyInfo.cpp \
 		purpleSockets.cpp \
 		purpleStorage.cpp \
 		purpleTag.cpp \

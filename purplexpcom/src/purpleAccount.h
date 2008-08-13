@@ -97,6 +97,7 @@ private:
   nsCString mKey;
   PRUint32 mId;
   nsCOMPtr<purpleProtocol> mProtocol;
+  nsCOMPtr<purpleIProxyInfo> mProxy;
   nsCOMPtr<nsIPrefBranch> mPrefBranch;
   nsCOMPtr<nsIPrefBranch> mPrefOptBranch;
 

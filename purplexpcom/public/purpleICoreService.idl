@@ -43,8 +43,10 @@
 #include "purpleIAccount.idl"
 #include "purpleIBuddy.idl"
 #include "purpleITag.idl"
+#include "purpleIProxy.idl"
 
-interface mozIStorageConnection; //forward declaration
+//forward declarations
+interface mozIStorageConnection;
 
 /* 
  * This is a proxy to the libpurple core
@@ -78,6 +80,18 @@ interface purpleICoreService: nsISupports {
   /* accounts */
   purpleIAccount getAccountById(in AUTF8String aAccountId);
   [noscript] purpleIAccount getAccountByPurpleAccount(in PurpleNativeAccount aAccount);
+
+  /* Create a new proxy and store it in the preferences */
+  purpleIProxy createProxy(in short aType, in AUTF8String aHost, in unsigned long aPort,
+                           in AUTF8String aUsername, in AUTF8String aPassword);
+
+  /* returns an enumerator on a purpleIProxy array */
+  nsISimpleEnumerator getProxies();
+
+  /* type of the global proxy used for connecting all accounts that
+     don't have specific proxy settings.
+  */
+  attribute purpleIProxyInfo globalProxy;
 
   nsISimpleEnumerator getAccounts();
 

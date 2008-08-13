@@ -71,8 +71,10 @@ extern void connect_to_blist_signals();
 purpleCoreService::purpleCoreService()
   :mInitialized(PR_FALSE),
    mQuitting(PR_FALSE),
-   mConversations(nsnull),
-   mProtocols(nsnull)
+   mProtocols(nsnull),
+   mProxies(nsnull),
+   mAccounts(nsnull),
+   mConversations(nsnull)
 {
   mPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
   mBuddiesById.Init();
@@ -104,6 +106,9 @@ NS_IMETHODIMP purpleCoreService::Init()
 
   /* Load the list of protocol plugins and their specific options */
   InitProtocols();
+
+  /*Load the list of proxies. Should be done before loading the accounts */
+  InitProxies();
 
   /* Set to true before the end of the initialization because
      InitAccounts calls GetProtoById that ensures the core is
@@ -287,6 +292,7 @@ NS_IMETHODIMP purpleCoreService::Quit()
   UNINIT(Conversations);
   UNINIT(Accounts);
   UNINIT(Protocols);
+  mProxies.Clear();
   mInitialized = PR_FALSE;
   purple_core_quit();
 #ifdef DEBUG_PURPLE_CORE_SERVICE
@@ -672,6 +678,192 @@ NS_IMETHODIMP purpleCoreService::GetProtoById(const nsACString& aProtocolId, pur
   }
 
   return NS_ERROR_FAILURE;
+}
+
+
+nsresult purpleCoreService::InitProxies()
+{
+  /* Get the list of proxies */
+  nsCString proxyList;
+  nsresult rv = mPrefService->GetCharPref(PREF_MESSENGER_PROXIES,
+					  getter_Copies(proxyList));
+
+#ifdef DEBUG_PURPLE_CORE_SERVICE
+  printf("InitProxies list = %s\n", proxyList.get());
+#endif
+
+  nsCOMPtr<purpleProxy> proxy;
+  char *newStr = proxyList.BeginWriting();
+  nsCAutoString key;
+  for (char *token = NS_strtok(",", &newStr);
+       token;
+       token = NS_strtok(",", &newStr)) {
+    key = token;
+    key.StripWhitespace();
+    
+    if (key.IsEmpty()) {
+      continue;
+    }
+
+#ifdef DEBUG_PURPLE_CORE_SERVICE
+    printf("creating proxy %s \n", key.get());
+#endif
+
+    /* create the purpleProxy object */
+    proxy = do_CreateInstance(PURPLE_PROXY_CONTRACTID);
+    if (!proxy)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+#ifdef DEBUG_PURPLE_CORE_SERVICE
+    printf("creating proxy %s \n", key.get());
+#endif
+
+    rv = proxy->Init(key);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("failed to init proxy!\n");
+      continue;
+    }
+
+    /* Keep it in the local proxy list */
+    mProxies.AppendObject(proxy);
+#ifdef DEBUG_PURPLE_CORE_SERVICE
+    printf("adding proxy %s in the list \n", key.get());
+#endif
+  }
+
+  /* Read the pref indicating the global proxy settings */
+  rv = mPrefService->GetCharPref(PREF_MESSENGER_GLOBAL_PROXY,
+                                 getter_Copies(key));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  /* Init mGlobalProxy */
+  if (StringBeginsWith(key, NS_LITERAL_CSTRING(PROXY_KEY))) {
+    for (PRInt32 i = mProxies.Count() - 1; i >= 0; --i) {
+      if (mProxies[i]->GetKey().Equals(key)) {
+        mGlobalProxy = mProxies[i];
+        break;
+      }
+    }
+  }
+
+  if (!mGlobalProxy) {
+    mGlobalProxy = do_CreateInstance(PURPLE_PROXY_INFO_CONTRACTID);
+    if (!mGlobalProxy)
+      return NS_ERROR_OUT_OF_MEMORY;
+    if (key.Equals(PROXY_KEY_ENVVAR))
+      mGlobalProxy->SetType(purpleIProxyInfo::useEnvVar);
+    else
+      mGlobalProxy->SetType(purpleIProxyInfo::noProxy);
+  }
+
+  /* Give the information to libpurple */
+  PurpleProxyInfo *info;
+  rv = mGlobalProxy->GetPurpleProxy(&info);
+  NS_ENSURE_SUCCESS(rv, rv);
+  purple_global_proxy_set_info(info);
+
+  return NS_OK;
+}
+
+/* purpleIProxy createProxy (in short aType, in AUTF8String aHost,
+                             in unsigned long aPort, in AUTF8String aUsername,
+                             in AUTF8String aPassword); */
+NS_IMETHODIMP purpleCoreService::CreateProxy(PRInt16 aType, const nsACString & aHost,
+                                             PRUint32 aPort, const nsACString & aUsername,
+                                             const nsACString & aPassword,
+                                             purpleIProxy **aResult)
+{
+  PURPLE_ENSURE_INIT(mInitialized);
+
+  /* First check that we don't already have an identical proxy */
+  for (PRInt32 j = mProxies.Count() - 1; j >= 0; --j) {
+    if ((mProxies[j]->Equals(aType, aHost, aPort, aUsername, aPassword))) {
+      NS_ADDREF(*aResult = mProxies[j]);
+      return NS_OK;
+    }
+  }
+
+  /* Get the list of proxies */
+  nsCString proxyList;
+  nsresult rv = mPrefService->GetCharPref(PREF_MESSENGER_PROXIES,
+					  getter_Copies(proxyList));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  /* Get a new unique proxy key */
+  nsCString key;
+  PRInt32 i = 1;
+  PRBool found = PR_FALSE;
+  do {
+    key = PROXY_KEY;
+    key.AppendInt(i);
+    for (PRInt32 j = mProxies.Count() - 1; j >= 0; --j) {
+      if ((found = mProxies[j]->GetKey().Equals(key))) {
+	break;
+      }
+    }
+    ++i;
+  } while (found);
+
+  /* Actually create the new proxy */
+  nsCOMPtr<purpleProxy> proxy = do_CreateInstance(PURPLE_PROXY_CONTRACTID);
+  rv = proxy->Init(key, aType, aHost, aPort, aUsername, aPassword);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  /* Save the proxy list pref */
+  if (proxyList.IsEmpty())
+    proxyList = key;
+  else {
+    proxyList.Append(',');
+    proxyList.Append(key);
+  }
+  mPrefService->SetCharPref(PREF_MESSENGER_PROXIES, proxyList.get());
+
+  /* Keep it in the local proxy list */
+  mProxies.AppendObject(proxy);
+
+  /* And return the new proxy as result */
+  NS_ADDREF(*aResult = proxy);
+  return NS_OK;
+}
+
+/* nsISimpleEnumerator getProxies (); */
+NS_IMETHODIMP purpleCoreService::GetProxies(nsISimpleEnumerator **aResult)
+{
+  PURPLE_ENSURE_INIT(mInitialized);
+
+  return NS_NewArrayEnumerator(aResult, mProxies);
+}
+
+/* attribute purpleIProxyInfo globalProxy; */
+NS_IMETHODIMP purpleCoreService::GetGlobalProxy(purpleIProxyInfo * *aGlobalProxy)
+{
+  PURPLE_ENSURE_INIT(mInitialized);
+
+  NS_ADDREF(*aGlobalProxy = mGlobalProxy);
+  return NS_OK;
+}
+NS_IMETHODIMP purpleCoreService::SetGlobalProxy(purpleIProxyInfo * aGlobalProxy)
+{
+  PURPLE_ENSURE_INIT(mInitialized);
+  NS_ENSURE_ARG_POINTER(aGlobalProxy);
+
+  mGlobalProxy = aGlobalProxy;
+
+  // Save the pref
+  nsCString key;
+  nsresult rv = mGlobalProxy->GetKey(key);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mPrefService->SetCharPref(PREF_MESSENGER_GLOBAL_PROXY, key.get());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Give it to libpurple;
+  PurpleProxyInfo *info;
+  rv = mGlobalProxy->GetPurpleProxy(&info);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  purple_global_proxy_set_info(info);
+
+  return NS_OK;
 }
 
 
