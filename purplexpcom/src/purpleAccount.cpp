@@ -495,6 +495,13 @@ NS_IMETHODIMP purpleAccount::Disconnect()
   purple_account_set_remember_password(mAccount, TRUE);
 
   purple_account_set_enabled(mAccount, UI_ID, FALSE);
+
+  /* Remove the current connection state message so that the UI
+     doesn't interpret it as an error / the cause of the disconnection
+     We used to get a bogus error message when the user disconnected
+     manually an account while it was connecting (see bug 88) */
+  SetConnectionStateMsg(EmptyCString());
+
   return NS_OK;
 }
 
