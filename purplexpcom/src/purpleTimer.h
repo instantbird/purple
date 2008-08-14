@@ -40,8 +40,20 @@
 #include <glib.h>
 #include <nsITimer.h>
 
+#ifdef XP_WIN
+#include <nsIRunnable.h>
+class purpleTimeout: public nsIRunnable
+{
+ public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIRUNNABLE
+
+  purpleTimeout() {}
+  ~purpleTimeout() {}
+#else
 struct purpleTimeout
 {
+#endif
   PRUint32 mId;
   nsCOMPtr<nsITimer> mTimer;
   GSourceFunc mFunction;

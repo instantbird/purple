@@ -38,6 +38,14 @@
 #include "purpleTimer.h"
 #include<nsComponentManagerUtils.h>
 
+#ifdef XP_WIN
+#include<nsServiceManagerUtils.h>
+#include<nsIThreadManager.h>
+#include<nsIEventTarget.h>
+#include<nsThreadUtils.h>
+#include<nsXPCOMCIDInternal.h>
+#endif
+
 //#define DEBUG_PURPLE_TIMER
 
 #ifdef DEBUG_PURPLE_TIMER
@@ -58,9 +66,21 @@ void purpleTimer::unInit()
   delete sTimeouts;
 }
 
+#ifdef XP_WIN
+NS_IMPL_ISUPPORTS1(purpleTimeout, nsIRunnable)
+
+NS_IMETHODIMP purpleTimeout::Run()
+{
+  NS_ASSERTION(!NS_IsMainThread(), "wrong thread");
+
+  mFunction(mData);
+  return NS_OK;
+}
+#endif
+
 PRUint32 purpleTimer::AddTimeout(PRUint32 aInterval,
-				   GSourceFunc aFunction,
-				   gpointer aData)
+                                 GSourceFunc aFunction,
+                                 gpointer aData)
 {
   /* FIXME This is an horrible hack to prevent libpurple from writting
      prefs.xml, blist.xml, status.xml and pounces.xml
@@ -80,10 +100,32 @@ PRUint32 purpleTimer::AddTimeout(PRUint32 aInterval,
   }
 
   purpleTimeout *timer = new purpleTimeout();
-  timer->mId = ++sLastTimer;
-  timer->mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
   timer->mFunction = aFunction;
   timer->mData = aData;
+
+#ifdef XP_WIN
+  nsresult rv;
+  nsCOMPtr<nsIThreadManager> mgr = do_GetService(NS_THREADMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, 0);
+
+  PRBool isMainThread;
+  mgr->GetIsMainThread(&isMainThread);
+  if (!isMainThread) {
+    NS_ASSERTION(!aInterval, "attempting thread synchronisation with a non null timeout");
+
+    nsCOMPtr<nsIThread> mainThread;
+    rv = mgr->GetMainThread(getter_AddRefs(mainThread));
+    NS_ENSURE_SUCCESS(rv, 0);
+
+    mainThread->Dispatch(timer, NS_DISPATCH_NORMAL);
+    // By the way, libpurple doesn't even seem to use the return value
+    // when the timer is used for thread synchronisation
+    return 0;
+  }
+#endif
+
+  timer->mId = ++sLastTimer;
+  timer->mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
   timer->mTimer->InitWithFuncCallback(ExecTimer, timer,
 				      aInterval, nsITimer::TYPE_REPEATING_SLACK);
   sTimeouts->AppendElement(timer);
