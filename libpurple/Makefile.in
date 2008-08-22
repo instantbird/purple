@@ -125,6 +125,7 @@ EXPORTS		= \
 		signals.h \
 		dnsquery.h \
 		dnssrv.h \
+		smiley.h \
 		status.h \
 		stringref.h \
 		stun.h \
@@ -184,7 +185,8 @@ CSRCS		= \
 		server.c \
 		signals.c \
 		dnsquery.c \
-		dnssrv.c\
+		dnssrv.c \
+		smiley.c \
 		status.c \
 		stringref.c \
 		stun.c \

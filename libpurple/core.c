@@ -25,6 +25,7 @@
  */
 #include "internal.h"
 #include "cipher.h"
+#include "cmds.h"
 #include "connection.h"
 #include "conversation.h"
 #include "core.h"
@@ -42,6 +43,7 @@
 #include "proxy.h"
 #include "savedstatuses.h"
 #include "signals.h"
+#include "smiley.h"
 #include "sound.h"
 #include "sslconn.h"
 #include "status.h"
@@ -131,16 +133,18 @@ purple_core_init(const char *ui)
 #endif
 
 	purple_ciphers_init();
-
-#ifdef STATIC_PROTO_INIT
-	/* Initialize all static protocols. */
-	static_proto_init();
-#endif
+	purple_cmds_init();
 
 	/* Since plugins get probed so early we should probably initialize their
 	 * subsystem right away too.
 	 */
 	purple_plugins_init();
+	
+#ifdef STATIC_PROTO_INIT
+	/* Initialize all static protocols. */
+	static_proto_init();
+#endif
+
 	purple_plugins_probe(G_MODULE_SUFFIX);
 
 	/* The buddy icon code uses the imgstore, so init it early. */
@@ -169,6 +173,7 @@ purple_core_init(const char *ui)
 	purple_stun_init();
 	purple_xfers_init();
 	purple_idle_init();
+	purple_smileys_init();
 
 	/*
 	 * Call this early on to try to auto-detect our IP address and
@@ -197,6 +202,7 @@ purple_core_quit(void)
 	purple_connections_disconnect_all();
 
 	/* Save .xml files, remove signals, etc. */
+	purple_smileys_uninit();
 	purple_idle_uninit();
 	purple_ssl_uninit();
 	purple_pounces_uninit();
@@ -210,6 +216,7 @@ purple_core_quit(void)
 	purple_savedstatuses_uninit();
 	purple_status_uninit();
 	purple_prefs_uninit();
+	purple_sound_uninit();
 	purple_xfers_uninit();
 	purple_proxy_uninit();
 	purple_dnsquery_uninit();
@@ -222,24 +229,12 @@ purple_core_quit(void)
 	if (ops != NULL && ops->quit != NULL)
 		ops->quit();
 
-	/*
-	 * purple_sound_uninit() should be called as close to
-	 * shutdown as possible.  This is because the call
-	 * to ao_shutdown() can sometimes leave our
-	 * environment variables in an unusable state, which
-	 * can cause a crash when getenv is called (by gettext
-	 * for example).  See the complete bug report at
-	 * http://trac.xiph.org/cgi-bin/trac.cgi/ticket/701
-	 *
-	 * TODO: Eventually move this call higher up with the others.
-	 */
-	purple_sound_uninit();
-
 	purple_plugins_uninit();
 #ifdef HAVE_DBUS
 	purple_dbus_uninit();
 #endif
 
+	purple_cmds_uninit();
 	purple_util_uninit();
 
 	purple_signals_uninit();

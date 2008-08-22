@@ -48,7 +48,7 @@ purple/libpurple/protocols/irc/Makefile
 purple/libpurple/protocols/Makefile
 purple/libpurple/protocols/simple/Makefile
 purple/libpurple/protocols/qq/Makefile
-purple/libpurple/protocols/msnp9/Makefile
+purple/libpurple/protocols/msn/Makefile
 purple/libpurple/protocols/gg/Makefile
 purple/libpurple/protocols/gg/lib/Makefile
 purple/libpurple/protocols/novell/Makefile

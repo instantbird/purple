@@ -1,5 +1,5 @@
 /**
- * @file crypt.h
+ * @file error.h Error functions
  *
  * purple
  *
@@ -21,27 +21,27 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
  */
+#ifndef _MSN_ERROR_H_
+#define _MSN_ERROR_H_
 
-#ifndef _QQ_CRYPT_H_
-#define _QQ_CRYPT_H_
+#include "session.h"
 
-#include <glib.h>
+/**
+ * Returns the string representation of an error type.
+ *
+ * @param type The error type.
+ * @param debug Whether this should be treated as a debug log message or a user-visible error
+ *
+ * @return The string representation of the error type.
+ */
+const char *msn_error_get_text(unsigned int type, gboolean *debug);
 
-void qq_encrypt(const guint8 *const instr, gint instrlen, 
-		const guint8 *const key, 
-		guint8 *outstr, gint *outstrlen_ptr);
-		
-gint qq_decrypt(const guint8 *const instr, gint instrlen, 
-		const guint8 *const key,
-		guint8 *outstr, gint *outstrlen_ptr);
-		
-/*
-#define DECRYPT 0x00
-#define ENCRYPT 0x01
+/**
+ * Handles an error.
+ *
+ * @param session The current session.
+ * @param type    The error type.
+ */
+void msn_error_handle(MsnSession *session, unsigned int type);
 
-gint qq_crypt(gint flag,
-	     const guint8 *const instr, gint instrlen, 
-	     const guint8 *const key, 
-	     guint8 *outstr, gint *outstrlen_ptr);
-*/
-#endif
+#endif /* _MSN_ERROR_H_ */

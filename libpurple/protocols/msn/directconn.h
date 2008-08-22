@@ -1,5 +1,5 @@
 /**
- * file login_logout.h
+ * @file directconn.h MSN direct connection functions
  *
  * purple
  *
@@ -21,20 +21,41 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
  */
+#ifndef _MSN_DIRECTCONN_H_
+#define _MSN_DIRECTCONN_H_
 
-#ifndef _QQ_LOGIN_LOGOUT_H_
-#define _QQ_LOGIN_LOGOUT_H_
+typedef struct _MsnDirectConn MsnDirectConn;
 
-#include <glib.h>
-#include "connection.h"
+#include "slplink.h"
+#include "slp.h"
+#include "msg.h"
 
-#define QQ_LOGIN_MODE_NORMAL        0x0a
-#define QQ_LOGIN_MODE_AWAY	    0x1e
-#define QQ_LOGIN_MODE_HIDDEN        0x28
+struct _MsnDirectConn
+{
+	MsnSlpLink *slplink;
+	MsnSlpCall *initial_call;
 
-void qq_send_packet_request_login_token(PurpleConnection *gc);
-void qq_process_request_login_token_reply(guint8 *buf, gint buf_len, PurpleConnection *gc);
-void qq_process_login_reply(guint8 *buf, gint buf_len, PurpleConnection *gc);
-void qq_send_packet_logout(PurpleConnection *gc);
+	PurpleProxyConnectData *connect_data;
 
-#endif
+	gboolean acked;
+
+	char *nonce;
+
+	int fd;
+
+	int port;
+	int inpa;
+
+	int c;
+};
+
+MsnDirectConn *msn_directconn_new(MsnSlpLink *slplink);
+gboolean msn_directconn_connect(MsnDirectConn *directconn,
+								const char *host, int port);
+void msn_directconn_listen(MsnDirectConn *directconn);
+void msn_directconn_send_msg(MsnDirectConn *directconn, MsnMessage *msg);
+void msn_directconn_parse_nonce(MsnDirectConn *directconn, const char *nonce);
+void msn_directconn_destroy(MsnDirectConn *directconn);
+void msn_directconn_send_handshake(MsnDirectConn *directconn);
+
+#endif /* _MSN_DIRECTCONN_H_ */

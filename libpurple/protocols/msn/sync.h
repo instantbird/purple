@@ -1,5 +1,5 @@
 /**
- * @file keep_alive.h
+ * @file sync.h MSN list synchronization functions
  *
  * purple
  *
@@ -20,21 +20,33 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
- *
  */
+#ifndef _MSN_SYNC_H_
+#define _MSN_SYNC_H_
 
-#ifndef _QQ_KEEP_ALIVE_H_
-#define _QQ_KEEP_ALIVE_H_
+typedef struct _MsnSync MsnSync;
 
-#include <glib.h>
-#include "connection.h"
-#include "qq.h"
+#include "session.h"
+#include "table.h"
+#include "user.h"
 
-void qq_send_packet_keep_alive(PurpleConnection *gc);
+struct _MsnSync
+{
+	MsnSession *session;
+	MsnTable *cbs_table;
+	MsnTable *old_cbs_table;
 
-void qq_process_keep_alive_reply(guint8 *buf, gint buf_len, PurpleConnection *gc);
-void qq_refresh_all_buddy_status(PurpleConnection *gc);
+	int num_users;
+	int total_users;
+	int num_groups;
+	int total_groups;
+	MsnUser *last_user;
+};
 
-void qq_update_buddy_contact(PurpleConnection *gc, qq_buddy *q_bud);
+void msn_sync_init(void);
+void msn_sync_end(void);
 
-#endif
+MsnSync * msn_sync_new(MsnSession *session);
+void msn_sync_destroy(MsnSync *sync);
+
+#endif /* _MSN_SYNC_H_ */

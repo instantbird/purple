@@ -1151,7 +1151,7 @@ s5_canread_again(gpointer data, gint source, PurpleInputCondition cond)
 	int len;
 
 	if (connect_data->read_buffer == NULL) {
-		connect_data->read_buf_len = 4;
+		connect_data->read_buf_len = 5;
 		connect_data->read_buffer = g_malloc(connect_data->read_buf_len);
 		connect_data->read_len = 0;
 	}
@@ -1220,6 +1220,11 @@ s5_canread_again(gpointer data, gint source, PurpleInputCondition cond)
 				return;
 			buf += 4 + 16;
 			break;
+		default:
+			purple_debug_error("socks5 proxy", "Invalid ATYP received (0x%X)\n", buf[3]);
+			purple_proxy_connect_data_disconnect(connect_data,
+					_("Received invalid data on connection with server."));
+			return;
 	}
 
 	/* Skip past BND.PORT */
@@ -1736,6 +1741,10 @@ proxy_connect_socks5(PurpleProxyConnectData *connect_data, struct sockaddr *addr
  * resolved, and each time a connection attempt fails (assuming there
  * is another IP address to try).
  */
+#ifndef INET6_ADDRSTRLEN
+#define INET6_ADDRSTRLEN 46
+#endif
+
 static void try_connect(PurpleProxyConnectData *connect_data)
 {
 	size_t addrlen;
@@ -1746,9 +1755,13 @@ static void try_connect(PurpleProxyConnectData *connect_data)
 	connect_data->hosts = g_slist_remove(connect_data->hosts, connect_data->hosts->data);
 	addr = connect_data->hosts->data;
 	connect_data->hosts = g_slist_remove(connect_data->hosts, connect_data->hosts->data);
-
+#ifdef HAVE_INET_NTOP
 	inet_ntop(addr->sa_family, &((struct sockaddr_in *)addr)->sin_addr,
 			ipaddr, sizeof(ipaddr));
+#else
+	memcpy(ipaddr,inet_ntoa(((struct sockaddr_in *)addr)->sin_addr),
+			sizeof(ipaddr));
+#endif
 	purple_debug_info("proxy", "Attempting connection to %s\n", ipaddr);
 
 	switch (purple_proxy_info_get_type(connect_data->gpi)) {

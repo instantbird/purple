@@ -58,8 +58,9 @@ typedef struct
 
 #define PURPLE_SSL_NSS_DATA(gsc) ((PurpleSslNssData *)gsc->private_data)
 
-//static const PRIOMethods *_nss_methods = NULL;
-//static PRDescIdentity _identity;
+/* static const PRIOMethods *_nss_methods = NULL; */
+/* static PRDescIdentity _identity; */
+/* static PurpleCertificateScheme x509_nss; */
 
 /* Thank you, Evolution */
 static void
@@ -174,6 +175,7 @@ ssl_auth_cert(void *arg, PRFileDesc *socket, PRBool checksig,
 #endif
 }
 
+#if 0
 static SECStatus
 ssl_bad_cert(void *arg, PRFileDesc *socket)
 {
@@ -213,6 +215,7 @@ ssl_bad_cert(void *arg, PRFileDesc *socket)
 
 	return status;
 }
+#endif
 
 static gboolean
 ssl_nss_init(void)
@@ -227,6 +230,84 @@ ssl_nss_uninit(void)
 
 //	_nss_methods = NULL;
 }
+
+#if 0
+static void
+ssl_nss_verified_cb(PurpleCertificateVerificationStatus st,
+		       gpointer userdata)
+{
+	PurpleSslConnection *gsc = (PurpleSslConnection *) userdata;
+
+	if (st == PURPLE_CERTIFICATE_VALID) {
+		/* Certificate valid? Good! Do the connection! */
+		gsc->connect_cb(gsc->connect_cb_data, gsc, PURPLE_INPUT_READ);
+	} else {
+		/* Otherwise, signal an error */
+		if(gsc->error_cb != NULL)
+			gsc->error_cb(gsc, PURPLE_SSL_CERTIFICATE_INVALID,
+				      gsc->connect_cb_data);
+		purple_ssl_close(gsc);
+	}
+}
+
+/** Transforms an NSS containing an X.509 certificate into a Certificate instance
+ *
+ * @param cert   Certificate to transform
+ * @return A newly allocated Certificate
+ */
+static PurpleCertificate *
+x509_import_from_nss(CERTCertificate* cert)
+{
+	/* New certificate to return */
+	PurpleCertificate * crt;
+
+	/* Allocate the certificate and load it with data */
+	crt = g_new0(PurpleCertificate, 1);
+	crt->scheme = &x509_nss;
+	crt->data = CERT_DupCertificate(cert);
+
+	return crt;
+}
+
+static GList *
+ssl_nss_get_peer_certificates(PRFileDesc *socket, PurpleSslConnection * gsc)
+{
+	CERTCertificate *curcert;
+	CERTCertificate *issuerCert;
+	PurpleCertificate * newcrt;
+
+	/* List of Certificate instances to return */
+	GList * peer_certs = NULL;
+	int count;
+	int64 now = PR_Now();
+	
+	curcert = SSL_PeerCertificate(socket);
+	if (curcert == NULL) {
+		purple_debug_error("nss", "could not DupCertificate\n");
+		return NULL;
+	}
+	
+	for (count = 0 ; count < CERT_MAX_CERT_CHAIN ; count++) {
+		purple_debug_info("nss", "subject=%s issuer=%s\n", curcert->subjectName, curcert->issuerName);
+		newcrt = x509_import_from_nss(curcert);
+		peer_certs = g_list_append(peer_certs, newcrt);
+
+		if (curcert->isRoot) {
+			break;
+		}
+		issuerCert = CERT_FindCertIssuer(curcert, now, certUsageSSLServer);
+		if (!issuerCert) {
+			purple_debug_error("nss", "partial certificate chain\n");
+			break;
+		}
+		CERT_DestroyCertificate(curcert);
+		curcert = issuerCert;
+	}
+	CERT_DestroyCertificate(curcert);
+
+	return peer_certs;
+}
+#endif
 
 static void
 ssl_nss_handshake_cb(gpointer data, int fd, PurpleInputCondition cond)
@@ -259,6 +340,28 @@ ssl_nss_handshake_cb(gpointer data, int fd, PurpleInputCondition cond)
 	nss_data->handshake_handler = 0;
 
 	gsc->connect_cb(gsc->connect_cb_data, gsc, cond);
+
+#if 0
+	/* If a Verifier was given, hand control over to it */
+	if (gsc->verifier) {
+		GList *peers;
+		/* First, get the peer cert chain */
+		peers = ssl_nss_get_peer_certificates(nss_data->in, gsc);
+
+		/* Now kick off the verification process */
+		purple_certificate_verify(gsc->verifier,
+				gsc->host,
+				peers,
+				ssl_nss_verified_cb,
+				gsc);
+
+		purple_certificate_destroy_list(peers);
+	} else {
+		/* Otherwise, just call the "connection complete"
+		   callback */
+		gsc->connect_cb(gsc->connect_cb_data, gsc, cond);
+	}
+#endif
 }
 
 static void
@@ -310,21 +413,16 @@ ssl_nss_connect(PurpleSslConnection *gsc)
 	SSL_OptionSet(nss_data->in, SSL_HANDSHAKE_AS_CLIENT, PR_TRUE);
 	SSL_OptionSet(nss_data->in, SSL_ENABLE_SESSION_TICKETS, PR_FALSE);
 
-#if 0
 	SSL_AuthCertificateHook(nss_data->in,
 							(SSLAuthCertificate)ssl_auth_cert,
 							(void *)CERT_GetDefaultCertDB());
-#endif
+#if 0
+	/* No point in hooking BadCert, since ssl_auth_cert always succeeds */
 	SSL_BadCertHook(nss_data->in, (SSLBadCertHandler)ssl_bad_cert, NULL);
+#endif
 
 	if(gsc->host)
-	{
-		/* Hack for gtalk connect server */
-		if (!strcmp(gsc->host, "talk.google.com"))
-			SSL_SetURL(nss_data->in, "gmail.com");
-		else
-			SSL_SetURL(nss_data->in, gsc->host);
-	}
+		SSL_SetURL(nss_data->in, gsc->host);
 
 #if 0
 	/* This seems like it'd the be the correct way to implement the
@@ -580,7 +678,20 @@ static gboolean
 x509_signed_by(PurpleCertificate * crt,
 	       PurpleCertificate * issuer)
 {
-	return TRUE;
+	CERTCertificate *subjectCert;
+	CERTCertificate *issuerCert;
+	SECStatus st;
+	
+	issuerCert = X509_NSS_DATA(issuer);
+	g_return_val_if_fail(issuerCert, FALSE);
+
+	subjectCert = X509_NSS_DATA(crt);
+	g_return_val_if_fail(subjectCert, FALSE);
+
+	if ( PORT_Strcmp(subjectCert->issuerName, issuerCert->subjectName) != 0 )
+		return FALSE;
+	st = CERT_VerifySignedData(&subjectCert->signatureWrap, issuerCert, PR_Now(), NULL);
+	return st == SECSuccess;
 }
 
 static GByteArray *

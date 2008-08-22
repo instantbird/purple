@@ -46,7 +46,7 @@ DIRS		= \
 		jabber \
 		gg \
 		oscar \
-		msnp9 \
+		msn \
 		myspace \
 		novell \
 		qq \
