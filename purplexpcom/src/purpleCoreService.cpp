@@ -677,6 +677,11 @@ NS_IMETHODIMP purpleCoreService::GetProtoById(const nsACString& aProtocolId, pur
     }
   }
 
+#ifdef DEBUG
+  nsCString warning("Failed to get protocol ");
+  warning.Append(aProtocolId);
+  NS_WARNING(warning.get());
+#endif
   return NS_ERROR_FAILURE;
 }
 

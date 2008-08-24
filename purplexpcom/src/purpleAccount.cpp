@@ -181,11 +181,6 @@ nsresult purpleAccount::load(const nsCString& aKey)
   /* Init the mProtocol member */
   nsCOMPtr<purpleICoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
   rv = pcs->GetProtoById(prpl, getter_AddRefs(mProtocol));
-#ifdef DEBUG_PURPLE_ACCOUNT
-  if (NS_FAILED(rv)) {
-    printf("GetProtoById failed!\n");
-  }
-#endif
   NS_ENSURE_SUCCESS(rv, rv);
 
   mAccount = purple_account_new(name.get(), prpl.get());
