@@ -42,13 +42,15 @@
 #include<nsIProxyObjectManager.h>
 #include<nsIEventTarget.h>
 #include<nsThreadUtils.h>
+#include "prlog.h"
 
-//#define DEBUG_PURPLE_SOCKET <-- Should be defined in purpleSockets.h
-//because there are additionnal fields when it's defined
-
-#ifdef DEBUG_PURPLE_SOCKET
-# include<stdio.h>
+#if defined(PR_LOGGING)
+//
+// NSPR_LOG_MODULES=purpleSockets:5
+//
+static PRLogModuleInfo *gPurpleSocketsLog = nsnull;
 #endif
+#define LOG(args) PR_LOG(gPurpleSocketsLog, PR_LOG_DEBUG, args)
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(purpleSocket, purpleISocket)
 
@@ -56,25 +58,20 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(purpleSocket, purpleISocket)
 
 PRUint32 purpleSocket::sLastSocket = 0;
 
-#ifdef DEBUG_PURPLE_SOCKET
-PRUint32 purpleSocket::sInstances = 0;
-#endif
-
 purpleSocket::purpleSocket()
   : mFunction(NULL),
     mInternal(nsnull)    
 {
-#ifdef DEBUG_PURPLE_SOCKET
-  printf("constructing new purpleSocket\n");
-  ++sInstances;
+#if defined(PR_LOGGING)
+  if (!gPurpleSocketsLog)
+    gPurpleSocketsLog = PR_NewLogModule("purpleSockets");
 #endif
+  LOG(("Creating purpleSocket @%x\n", this));
 }
 
 purpleSocket::~purpleSocket()
 {
-#ifdef DEBUG_PURPLE_SOCKET
-  printf("[%i] destructing purpleSocket [remains: %u]\n", mId, --sInstances);
-#endif
+  LOG(("[%i] destructing purpleSocket @%x\n", mId, this));
   mFunction = NULL; // if we don't do this, C++ tries to delete the function
 }
 
@@ -107,7 +104,7 @@ NS_IMETHODIMP purpleSocket::Init(PurpleInputFunction aFunction,
                                        getter_AddRefs(proxy));
   NS_ENSURE_SUCCESS(rv, rv);
 
-#ifdef DEBUG_PURPLE_SOCKET
+#ifdef DEBUG
   mInternal = new purpleSocketInternal(mId);
 #else
   mInternal = new purpleSocketInternal();
@@ -128,19 +125,14 @@ NS_IMETHODIMP purpleSocket::Cancel()
 
 nsresult purpleSocket::NotifyLibPurple(PRInt16 aPollFlags, PRInt16 aOutFlags)
 {
-#ifdef DEBUG_PURPLE_SOCKET
-  printf("[%i] NotifyLibPurple\n", mId);
-#endif
-
+  LOG(("[%i] NotifyLibPurple\n", mId));
   NS_ASSERTION(NS_IsMainThread(), "wrong thread");
 
   if (mInternal->GetCanceled()) {
     // XXXFLo Need to make sure there can't be a race condition. Can
     // the watch be canceled between our call to GetCanceled and when
     // we return from mFunction?
-#ifdef DEBUG_PURPLE_SOCKET
-    printf("[%i] --> Canceling, leaving!\n", mId);
-#endif
+    LOG(("[%i] --> Canceling, leaving!\n", mId));
     return NS_OK;
   }
   mFunction(mData, mFd, mCondition);
@@ -150,7 +142,7 @@ nsresult purpleSocket::NotifyLibPurple(PRInt16 aPollFlags, PRInt16 aOutFlags)
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(purpleSocketInternal, nsASocketHandler, nsIRunnable)
 
-#ifdef DEBUG_PURPLE_SOCKET
+#ifdef DEBUG
 purpleSocketInternal::purpleSocketInternal(PRUint32 aId)
   : mId(aId),
 #else
@@ -162,17 +154,13 @@ purpleSocketInternal::purpleSocketInternal()
   mCanceled(PR_FALSE)
 {
   MOZ_COUNT_CTOR(purpleSocketInternal);
-#ifdef DEBUG_PURPLE_SOCKET
-  printf("[%i]  constructing new purpleSocketInternal\n", mId);
-#endif
+  LOG(("[%i]  constructing new purpleSocketInternal @%x\n", mId, this));
 }
 
 purpleSocketInternal::~purpleSocketInternal()
 {
   MOZ_COUNT_DTOR(purpleSocketInternal);
-#ifdef DEBUG_PURPLE_SOCKET
-  printf("[%i]  destructing purpleSocketInternal\n", mId);
-#endif
+  LOG(("[%i]  destructing purpleSocketInternal @%x\n", mId, this));
 }
 
 nsresult purpleSocketInternal::Init(PRFileDesc *aFd, purpleISocket *aProxy,
@@ -197,25 +185,16 @@ nsresult purpleSocketInternal::PostEvent()
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = eventTarget->Dispatch(this, NS_DISPATCH_NORMAL);
-#ifdef DEBUG_PURPLE_SOCKET
-  if (NS_FAILED(rv))
-    printf("[%i]  Dispatch Failed!!!\n", mId);
-  else
-    printf("[%i]  Dispatch OK\n", mId);
-#endif
+  LOG(("[%i]  Dispatch %s\n", mId, NS_FAILED(rv) ? "Failed!!!" : "OK"));
   return rv;
 }
 
 void purpleSocketInternal::OnSocketReady(PRFileDesc* fd, PRInt16 outFlags)
 {
-#ifdef DEBUG_PURPLE_SOCKET
-  printf("[%i]  OnSocketReady\n", mId);
-#endif
+  LOG(("[%i]  OnSocketReady\n", mId));
 
   if (mDetached || mCanceled) {
-#ifdef DEBUG_PURPLE_SOCKET
-    printf("[%i]   --> detach in progress, leaving\n", mId);
-#endif
+    LOG(("[%i]   --> detach in progress, leaving\n", mId));
     return;
   }
 
@@ -231,9 +210,7 @@ void purpleSocketInternal::OnSocketReady(PRFileDesc* fd, PRInt16 outFlags)
   NS_ASSERTION(!NS_IsMainThread(), "wrong thread");
 
   if (!mProxy) {
-#ifdef DEBUG_PURPLE_SOCKET
-    printf("[%i]   mProxy is NULL\n", mId);
-#endif
+    LOG(("[%i]   mProxy is NULL\n", mId));
     return;
   }
   mProxy->NotifyLibPurple(pollFlags, outFlags);
@@ -241,45 +218,33 @@ void purpleSocketInternal::OnSocketReady(PRFileDesc* fd, PRInt16 outFlags)
 
 void purpleSocketInternal::OnSocketDetached(PRFileDesc*)
 {
-#ifdef DEBUG_PURPLE_SOCKET
-  printf("[%i]  OnSocketDetached\n", mId);
-#endif
+  LOG(("[%i]  OnSocketDetached\n", mId));
   mProxy = nsnull;
 }
 
 nsresult purpleSocketInternal::Run()
 {
-#ifdef DEBUG_PURPLE_SOCKET
-  printf("[%i]  Run called: ", mId);
-#endif
+  LOG(("[%i]  Run called: ", mId));
 
   if (mDetached) {
-#ifdef DEBUG_PURPLE_SOCKET
-    printf("already detached, leaving!\n");
-#endif
+    LOG(("already detached, leaving!\n"));
     return NS_OK;
   }
 
   if (mPollFlagsInternal) {
     if (mCanceled) {
-#ifdef DEBUG_PURPLE_SOCKET
-      printf("already canceling, leaving!\n");
-#endif
+      LOG(("already canceling, leaving!\n"));
       mPollFlagsInternal = 0;
       return NS_OK;
     }
     mPollFlags = mPollFlagsInternal;
     mPollFlagsInternal = 0;
-#ifdef DEBUG_PURPLE_SOCKET
-    printf("pollFlags set\n");
-#endif
+    LOG(("pollFlags set\n"));
   }
   else if (mAttached) {
     mCondition = NS_ERROR_UNEXPECTED;
     mDetached = PR_TRUE;
-#ifdef DEBUG_PURPLE_SOCKET
-    printf("detach requested\n");
-#endif
+    LOG(("detach requested\n"));
     return NS_OK;
   }
 
@@ -290,15 +255,11 @@ nsresult purpleSocketInternal::Run()
       // called because the socket hasn't been attached. We should
       // release the proxy to ensure this object can be deleted.
       mProxy = nsnull;
-#ifdef DEBUG_PURPLE_SOCKET
-      printf("removed useless proxy\n");
-#endif
+      LOG(("removed useless proxy\n"));
       return NS_OK;
     }
     mAttached = PR_TRUE;
-#ifdef DEBUG_PURPLE_SOCKET
-    printf("attach requested\n");
-#endif
+    LOG(("attach requested\n"));
     return OnAttach();
   }
 
@@ -311,27 +272,19 @@ nsresult purpleSocketInternal::OnAttach()
 
   nsresult rv = sts->AttachSocket(mFd, this);
   if (NS_FAILED(rv)) {
-#ifdef DEBUG_PURPLE_SOCKET
-    printf("cannot attach purpleSocket\n");
-#endif
+    NS_WARNING("cannot attach purpleSocket\n");
   }
   else {
-#ifdef DEBUG_PURPLE_SOCKET
-  printf("socket attached\n");
-#endif
-}
+    LOG(("socket attached\n"));
+  }
   return rv;
 }
 
 nsresult purpleSocketInternal::SetPollFlags(PRInt16 aPollFlags)
 {
-#ifdef DEBUG_PURPLE_SOCKET
-  printf("[%i]  trying to set pollflags to %i\n", mId, aPollFlags);
-#endif
+  LOG(("[%i]  trying to set pollflags to %i\n", mId, aPollFlags));
   if (mCanceled) {
-#ifdef DEBUG_PURPLE_SOCKET
-    printf("[%i]  --> canceling, leaving!\n", mId);
-#endif
+    LOG(("[%i]  --> canceling, leaving!\n", mId));
     return NS_OK;
   }
   mPollFlagsInternal = aPollFlags;
@@ -358,12 +311,7 @@ nsISocketTransportService *purpleSocketWatcher::getSts()
   if (!sSts) {
     nsresult rv;
     sSts = do_GetService("@mozilla.org/network/socket-transport-service;1", &rv);
-#ifdef DEBUG_PURPLE_SOCKET
-    if (NS_FAILED(rv))
-      printf("cannot get nsSocketTransportService\n");
-    else
-      printf("got service nsSocketTransportService\n");
-#endif
+    NS_ASSERTION(NS_SUCCEEDED(rv), "could not get nsSocketTransportService\n");
   }
 
   return sSts;
@@ -386,18 +334,14 @@ PRUint32 purpleSocketWatcher::AddWatch(gint aFd, PurpleInputCondition aCondition
     return 0;
 
   sSockets->AppendElement(socket);
-#ifdef DEBUG_PURPLE_SOCKET
-  printf("[%i]SOCKETADD fd = %i\n", id, aFd);
-#endif
+  LOG(("[%i]SOCKETADD fd = %i\n", id, aFd));
 
   return id;
 }
 
 PRBool purpleSocketWatcher::CancelWatch(PRUint32 aId)
 {
-#ifdef DEBUG_PURPLE_SOCKET
-  printf("[%u]SOCKETCANCEL\n", aId);
-#endif
+  LOG(("[%u]SOCKETCANCEL\n", aId));
 
   for (PRUint32 i = 0; i < sSockets->Length(); ++i) {
     PRUint32 id;
@@ -405,15 +349,11 @@ PRBool purpleSocketWatcher::CancelWatch(PRUint32 aId)
     if (id == aId) {
       (*sSockets)[i]->Cancel();
       sSockets->RemoveElementAt(i);
-#ifdef DEBUG_PURPLE_SOCKET
-      printf("[%u]Socket elt found at index %i; canceled and removed\n", aId, i);
-#endif
+      LOG(("[%u]Socket elt found at index %i; canceled and removed\n", aId, i));
       return PR_TRUE;
     }
   }
 
-#ifdef DEBUG_PURPLE_SOCKET
-  printf("[%i]Not found.\n", aId);
-#endif
+  NS_WARNING("Failed to cancelWatch: socket not found");
   return PR_FALSE;
 }

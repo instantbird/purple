@@ -50,8 +50,6 @@
 #include<necko/nsASocketHandler.h>
 #include<necko/nsISocketTransportService.h>
 
-//#define DEBUG_PURPLE_SOCKET
-
 // 2e8f828f-2b2f-4a82-9efe-3cf8d983fbbf
 #define PURPLE_SOCKET_CID \
 { 0x2e8f828f, 0x2b2f, 0x4a82, \
@@ -74,14 +72,14 @@ class purpleSocketInternal : public nsASocketHandler,
   nsresult PostEvent();
   nsresult Cancel();
   PRBool GetCanceled() { return mCanceled; }
-#ifdef DEBUG_PURPLE_SOCKET
+#ifdef DEBUG
   purpleSocketInternal(PRUint32 aId);
 #else
   purpleSocketInternal();
 #endif
   ~purpleSocketInternal();
   nsresult SetPollFlags(PRInt16 aPollFlags);
-#ifdef DEBUG_PURPLE_SOCKET
+#ifdef DEBUG
   PRUint32 mId;
 #endif
 
@@ -111,9 +109,6 @@ class purpleSocket : public purpleISocket
   gpointer mData;
   PurpleInputCondition mCondition;
   nsRefPtr<purpleSocketInternal> mInternal;
-#ifdef DEBUG_PURPLE_SOCKET
-  static PRUint32 sInstances;
-#endif
 };
 
 typedef void (purpleSocket:: *purpleSocketFunc)(void);
