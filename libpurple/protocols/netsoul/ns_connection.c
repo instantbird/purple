@@ -131,7 +131,7 @@ static void netsoul_login_connect (gpointer data, gint source, const gchar *erro
   purple_debug_info("netsoul", "netsoul_login_connect starts %u\n", source);
 
   if (!g_list_find(purple_connections_get_all(), gc)) {
-    // the account was disconnected while we were connecting
+    /* the account was disconnected while we were connecting */
     purple_debug_info("netsoul",
                       "netsoul_login_connect: the account was disconnected while we were connecting\n");
     closesocket(source);

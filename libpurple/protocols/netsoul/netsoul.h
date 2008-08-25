@@ -85,10 +85,10 @@ typedef enum {
   NS_STATE_IDLE,
   NS_STATE_SERVER,
   NS_STATE_LOCK,
-  NS_STATE_ACTIF_MORE,	// logged several times, but only one active
-  NS_STATE_SEVERAL_ACTIF,	// active at several locations
-  NS_STATE_SEVERAL_INACTIF,	// logged several times, none active
-  NS_STATE_OTHER		// undefined state !?!
+  NS_STATE_ACTIF_MORE,	/* logged several times, but only one active */
+  NS_STATE_SEVERAL_ACTIF,	/* active at several locations */
+  NS_STATE_SEVERAL_INACTIF,	/* logged several times, none active */
+  NS_STATE_OTHER		/* undefined state !?! */
 } NetsoulState;
 
 typedef struct		_NetsoulData {
@@ -97,34 +97,34 @@ typedef struct		_NetsoulData {
    */
   NetsoulState		state;
   PurpleAccount		*account;
-  int			id;		// Netsoul ID
-  char			*challenge;	// Challenge for auth
-  char			*host;		// hostname seen by server
-  int			port;		// local port used for connection
+  int			id;		/* Netsoul ID */
+  char			*challenge;	/* Challenge for auth */
+  char			*host;		/* hostname seen by server */
+  int			port;		/* local port used for connection */
   int			fd;
   PurpleConvChat		conv;
   GList			*watchlist;
 }			NetsoulData;
 
 typedef struct  _NetsoulBuddy {
-  char		*login;		// login
-  char		*group;		// group
-  int		state;		// Buddy global state
-  time_t	signon;		// global signon time
-  time_t	laststate;	// global last state time
-  int		defaultid;	// default communication id
-  int		nblocations;	// number of locations
-  GList		*locationlist;	// List of NetsoulConn
+  char		*login;		/* login */
+  char		*group;		/* group */
+  int		state;		/* Buddy global state */
+  time_t	signon;		/* global signon time */
+  time_t	laststate;	/* global last state time */
+  int		defaultid;	/* default communication id */
+  int		nblocations;	/* number of locations */
+  GList		*locationlist;	/* List of NetsoulConn */
 }		NetsoulBuddy;
 
 typedef struct	_NetsoulConn {
-  int		id;		// Connection ID
-  time_t	logintime;	// connection login time
-  time_t	statetime;	// connection last state time
-  char		*ip;		// connection ip
-  char		*location;	// connection location
-  char		*comment;	// connection comment
-  int		state;		// connection netsoul state
+  int		id;		/* Connection ID */
+  time_t	logintime;	/* connection login time */
+  time_t	statetime;	/* connection last state time */
+  char		*ip;		/* connection ip */
+  char		*location;	/* connection location */
+  char		*comment;	/* connection comment */
+  int		state;		/* connection netsoul state */
 }		NetsoulConn;
 
 /*

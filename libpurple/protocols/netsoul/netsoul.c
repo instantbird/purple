@@ -139,7 +139,7 @@ static void netsoul_tooltip_text(PurpleBuddy *gb, PurpleNotifyUserInfo *user_inf
     gb->proto_data = nb;
     nb->login = g_strdup(gb->name);
     ns_watch_buddy(gc, gb);
-    // watch_log_user
+    /* watch_log_user */
     ns_watch_log_user(gc);
     ns_list_users(gc, ns->watchlist);
   }
@@ -239,7 +239,7 @@ static void netsoul_close (PurpleConnection *gc)
   purple_debug_info("netsoul", "netsoul_close\n");
 
 #if 0
-  // seems useless and produce valgrind errors
+  /* seems useless and produce valgrind errors */
   for(gnode = purple_get_blist()->root; gnode; gnode = gnode->next) {
     if(!PURPLE_BLIST_NODE_IS_GROUP(gnode)) continue;
     for(cnode = gnode->child; cnode; cnode = cnode->next) {
@@ -274,7 +274,7 @@ static void netsoul_got_photo (PurpleUtilFetchUrlData *url, void *user_data,
   PurpleBuddy *gb = (PurpleBuddy *)user_data;
   PurpleAccount *account = purple_buddy_get_account (gb);
 
-  // Check if connection is still existing
+  /* Check if connection is still existing */
   PurpleConnection *gc = purple_account_get_connection (account);
   if (gc == NULL)
     return;
@@ -318,14 +318,14 @@ static void netsoul_add_buddy (PurpleConnection *gc, PurpleBuddy *buddy, PurpleG
   nb = g_new0(NetsoulBuddy, 1);
   buddy->proto_data = nb;
   nb->login = g_strdup(buddy->name);
-  // Get photo
+  /* Get photo */
   photo = g_strdup_printf("%s%s", NETSOUL_PHOTO_URL, buddy->name);
 
   purple_util_fetch_url(photo, TRUE, NULL, FALSE, netsoul_got_photo, buddy);
 
-  // if contact is not already is watch list, add it
+  /* if contact is not already is watch list, add it */
   ns_watch_buddy(gc, buddy);
-  // watch_log_user
+  /* watch_log_user */
   ns_watch_log_user(gc);
   ns_list_users(gc, ns->watchlist);
 }
@@ -343,16 +343,16 @@ static void netsoul_add_buddies(PurpleConnection *gc, GList *buddies, GList *gro
   PurpleBuddy	*gb;
 
   purple_debug_info("netsoul", "netsoul_add_buddies\n");
-  // for each contact
+  /* for each contact */
   for (tmp = buddies; tmp; tmp = tmp->next) {
-  //   if contact is not already in watch list add it
+  /*   if contact is not already in watch list add it */
     gb = (PurpleBuddy *) tmp->data;
     nb = g_new0(NetsoulBuddy, 1);
     nb->login = g_strdup(gb->name);
     gb->proto_data = nb;
     ns_watch_buddy(gc, gb);
   }
-  // watch_log_user
+  /* watch_log_user */
   ns_watch_log_user(gc);
   ns_list_users(gc, ns->watchlist);
 }
@@ -384,18 +384,18 @@ void netsoul_get_buddies (PurpleConnection* gc)
 	  nb = g_new0(NetsoulBuddy, 1);
 	  buddy->proto_data = nb;
 	  nb->login = g_strdup(buddy->name);
-	  // Get photo
+	  /* Get photo */
 	  photo = g_strdup_printf("%s%s", NETSOUL_PHOTO_URL, buddy->name);
 
 	  purple_util_fetch_url(photo, TRUE, NULL, FALSE, netsoul_got_photo, buddy);
 
-	  // if contact is not already is watch list, add it
+	  /* if contact is not already is watch list, add it */
 	  ns_watch_buddy(gc, buddy);
 	}
       }
     }
   }
-  // watch_log_user
+  /* watch_log_user */
   ns = (NetsoulData *)gc->proto_data;
   ns_watch_log_user(gc);
   ns_list_users(gc, ns->watchlist);
@@ -416,7 +416,7 @@ static void netsoul_remove_buddy (PurpleConnection *gc, PurpleBuddy *buddy, Purp
 
   purple_debug_info("netsoul", "netsoul_remove_buddy\n");
   nb = (NetsoulBuddy *)buddy->proto_data;
-  // remove buddy from watchlist
+  /* remove buddy from watchlist */
   if ((tmp = g_list_find_custom(ns->watchlist, nb->login, (GCompareFunc) g_ascii_strcasecmp)))
     ns->watchlist = g_list_delete_link(ns->watchlist, tmp);
   g_free(nb->login);
@@ -644,7 +644,9 @@ static PurplePluginProtocolInfo prpl_info =
     NULL,		       	    /* unregister_user     */
     NULL,			    /* send_attention      */
     NULL,			    /* get_attention_types */
-    NULL			    /* purple_reserved     */
+
+    sizeof(PurplePluginProtocolInfo),
+    NULL			    /* get_account_text_table */
 };
 
 #define NETSOUL_VERSION "0.42"
