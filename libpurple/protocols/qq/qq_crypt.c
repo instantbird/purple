@@ -82,7 +82,7 @@ void show_binary(char *psztitle, const guint8 *const buffer, gint bytes)
 }
 #else
 
-#define show_binary(args... )		/* nothing */
+#define show_binary(arg1, arg2, arg3)		/* nothing */
 
 #endif
 
