@@ -80,7 +80,7 @@ static char const *const kDependentLibraries[] =
 // component.dll on windows, libcomponent.dll on linux
 static char kRealComponent[] = DLL_PREFIX "purplexpcom" DLL_SUFFIX;
 
-nsresult
+extern "C" NS_EXPORT nsresult PR_CALLBACK 
 NSGetModule(nsIComponentManager* aCompMgr,
             nsIFile* aLocation,
             nsIModule* *aResult)

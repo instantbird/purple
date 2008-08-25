@@ -49,8 +49,10 @@ interface purpleIAccountBuddy;
  */
 
 %{C++
+#pragma GCC visibility push(default)
   struct _PurpleBuddy;
   typedef _PurpleBuddy PurpleBuddy;
+#pragma GCC visibility pop
 %}
 
 [ptr] native PurpleNativeBuddy(PurpleBuddy);
