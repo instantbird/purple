@@ -22,7 +22,7 @@
 #define __GLIB_GOBJECT_H_INSIDE__
 
 #include        <gobject/gclosure.h>
-#if 0 /* Seems unused */
+
 /* topmost include file for GObject header files */
 #include	<gobject/gboxed.h>
 #include	<gobject/genums.h>
@@ -37,7 +37,6 @@
 #include	<gobject/gvalue.h>
 #include	<gobject/gvaluearray.h>
 #include	<gobject/gvaluetypes.h>
-#endif
 
 #undef __GLIB_GOBJECT_H_INSIDE__
 

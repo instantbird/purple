@@ -44,8 +44,24 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= glib/gobject
 
 EXPORTS		= \
-		gclosure.h \
-		gtype.h \
+		gboxed.h		\
+		gclosure.h		\
+		genums.h		\
+		gobject.h		\
+		gobjectalias.h		\
+		gparam.h		\
+		gparamspecs.h		\
+		gsignal.h		\
+		gsourceclosure.h	\
+		gtype.h			\
+		gtypemodule.h		\
+		gtypeplugin.h		\
+		gvalue.h		\
+		gvaluearray.h		\
+		gvaluecollector.h	\
+		gvaluetypes.h		\
+		gobjectnotifyqueue.c	\
+		gmarshal.h		\
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

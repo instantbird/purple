@@ -54,6 +54,8 @@ DEFINES		+= -DDISABLE_VISIBILITY -DGLIB_COMPILATION
 DSO_LDOPTS	+= -DEF:glib.def
 endif
 
+DEFINES		+= -DGOBJECT_COMPILATION
+
 DIRS		= \
 		libcharset \
 		gobject \
@@ -180,9 +182,28 @@ CSRCS		= \
 		gprintf.c \
 		grand.c \
 		libcharset/localcharset.c \
+		gobject/gboxed.c		\
+		gobject/gclosure.c		\
+		gobject/genums.c		\
+		gobject/gobject.c		\
+		gobject/gparam.c		\
+		gobject/gparamspecs.c		\
+		gobject/gsignal.c		\
+		gobject/gtype.c			\
+		gobject/gtypemodule.c		\
+		gobject/gtypeplugin.c		\
+		gobject/gvalue.c		\
+		gobject/gvaluearray.c		\
+		gobject/gvaluetransform.c	\
+		gobject/gvaluetypes.c		\
+		gobject/gobjectaliasdef.c	\
+		gdate.c				\
+		ghook.c				\
 		gmodule.c \
 		gscanner.c \
 		$(NULL)
+#		gobject/gmarshal.c		\
+#		gobject/gsourceclosure.c	\
 
 ifneq ($(OS_ARCH),WINNT)
 CSRCS		+= gspawn.c
@@ -224,4 +245,8 @@ export:: $(EXPORTS) $(PUBLIC)
 glib.dll: glib.def
 
 glib.def: $(srcdir)/glib.symbols
-	(echo -e EXPORTS; $(CPP) -DINCLUDE_VARIABLES -DINCLUDE_INTERNAL_SYMBOLS -DG_OS_WIN32 -DALL_FILES $(srcdir)/glib.symbols | sed -e '/#/d' -e '/^$$/d' -e 's/^/	/' -e 's/G_GNUC_[^ ]*//g') > glib.def
+	echo -e EXPORTS > glib.def
+	$(CPP) -DINCLUDE_VARIABLES -DINCLUDE_INTERNAL_SYMBOLS -DG_OS_WIN32 -DALL_FILES $(srcdir)/glib.symbols | \
+            sed -e '/#/d' -e '/^$$/d' -e 's/^/	/' -e 's/G_GNUC_[^ ]*//g' >> glib.def
+	$(CPP) -DINCLUDE_VARIABLES -DG_OS_WIN32 -DALL_FILES $(srcdir)/gobject.symbols | \
+            sed -e '/#/d' -e '/^$$/d' -e 's/^/	/' -e 's/G_GNUC_[^ ]*//g' >> glib.def
