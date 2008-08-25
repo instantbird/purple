@@ -39,7 +39,9 @@
 #include<nsAutoPtr.h>
 #include <nsTArray.h>
 #include <glib.h>
+#pragma GCC visibility push(default)
 #include <libpurple/eventloop.h>
+#pragma GCC visibility pop
 #include<nsStringAPI.h>
 #include"purpleISocket.h"
 

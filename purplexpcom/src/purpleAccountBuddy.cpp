@@ -43,7 +43,9 @@
 #include "purpleTooltipInfo.h"
 #include <nsServiceManagerUtils.h>
 #include <prprf.h>
+#pragma GCC visibility push(default)
 #include <libpurple/status.h>
+#pragma GCC visibility pop
 
 NS_IMPL_ISUPPORTS1(purpleAccountBuddy, purpleIAccountBuddy)
 

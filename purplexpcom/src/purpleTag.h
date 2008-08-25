@@ -39,7 +39,10 @@
 # define PURPLE_TAG_H_
 
 #include "purpleITag.h"
+
+#pragma GCC visibility push(default)
 #include <libpurple/account.h>
+#pragma GCC visibility pop
 
 // 0012b173-0404-46e7-bd54-e04e22e3dd69
 #define PURPLE_TAG_CID                                          \

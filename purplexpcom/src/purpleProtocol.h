@@ -40,7 +40,9 @@
 
 #include "purpleIProtocol.h"
 #include "purpleIPref.h"
+#pragma GCC visibility push(default)
 #include <libpurple/account.h>
+#pragma GCC visibility pop
 #include<nsCOMArray.h>
 
 // 63ee9306-8615-4896-9f1f-6e6fafe17d1e

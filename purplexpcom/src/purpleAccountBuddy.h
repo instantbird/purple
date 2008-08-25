@@ -41,7 +41,6 @@
 #include "purpleIAccountBuddy.h"
 #include "purpleTag.h"
 #include <nsCOMPtr.h>
-#include <libpurple/account.h>
 
 // af152d5b-fa54-45d4-b6a7-5b4cabef9b7c
 #define PURPLE_ACCOUNTBUDDY_CID                                 \

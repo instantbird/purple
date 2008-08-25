@@ -41,7 +41,10 @@
 #include "purpleITooltipInfo.h"
 #include <nsCOMPtr.h>
 #include <nsStringAPI.h>
+
+#pragma GCC visibility push(default)
 #include <libpurple/notify.h>
+#pragma GCC visibility pop
 
 // dd535741-4b04-49ca-8df6-08f8577fe52b
 #define PURPLE_TOOLTIPINFO_CID					\

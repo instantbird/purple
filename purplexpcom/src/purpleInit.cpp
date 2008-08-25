@@ -42,6 +42,7 @@
 # define _USE_32BIT_TIME_T
 #endif
 
+#pragma GCC visibility push(default)
 #include <libpurple/account.h>
 #include <libpurple/accountopt.h>
 #include <libpurple/conversation.h>
@@ -60,6 +61,7 @@
 #include <libpurple/util.h>
 #include <libpurple/whiteboard.h>
 #include <libpurple/dnsquery.h>
+#pragma GCC visibility pop
 
 #include <glib.h>
 

@@ -38,7 +38,11 @@
 #include <nsCOMPtr.h>
 #include <nsCOMArray.h>
 #include <glib.h>
+
+#pragma GCC visibility push(default)
 #include <libpurple/dnsquery.h>
+#pragma GCC visibility pop
+
 #include <necko/nsIDNSService.h>
 #include <necko/nsIDNSRecord.h>
 #include <necko/nsIDNSListener.h>

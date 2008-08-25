@@ -41,7 +41,6 @@
 #include "purpleIAccount.h"
 #include "purpleProtocol.h"
 #include "nsCOMPtr.h"
-#include <libpurple/account.h>
 #include<pref/nsIPrefBranch.h>
 #include<nsStringAPI.h>
 

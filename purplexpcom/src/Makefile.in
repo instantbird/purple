@@ -47,7 +47,6 @@ LIBRARY_NAME	= purplexpcom
 IS_COMPONENT	= 1
 MODULE_NAME	= purplexpcom
 NO_DIST_INSTALL	= 1
-VISIBILITY_FLAGS=
 
 REQUIRES	= \
 		xpcom \

@@ -39,7 +39,10 @@
 #define PURPLE_CONVERSATION_H_
 
 #include "purpleIConversation.h"
+
+#pragma GCC visibility push(default)
 #include <libpurple/conversation.h>
+#pragma GCC visibility pop
 
 // 10f8465f-b9d5-41b1-a7a9-247a576f4492
 #define PURPLE_CONVERSATION_CID \

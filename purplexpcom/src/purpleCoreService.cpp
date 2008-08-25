@@ -44,9 +44,11 @@
 #include "purpleTimer.h"
 #include "nsXPCOM.h"
 #include <glib.h>
+
+#pragma GCC visibility push(default)
 #include <libpurple/core.h>
-#include <libpurple/account.h>
 #include <libpurple/savedstatuses.h>
+#pragma GCC visibility pop
 
 #include<nsServiceManagerUtils.h>
 #include<nsComponentManagerUtils.h>

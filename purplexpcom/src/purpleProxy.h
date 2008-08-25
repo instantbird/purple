@@ -38,7 +38,10 @@
 #ifndef PURPLE_PROXY_H_
 # define PURPLE_PROXY_H_
 
+#pragma GCC visibility push(default)
 #include <libpurple/proxy.h>
+#pragma GCC visibility pop
+
 #include "purpleIProxy.h"
 #include <pref/nsIPrefBranch.h>
 #include <nsStringAPI.h>

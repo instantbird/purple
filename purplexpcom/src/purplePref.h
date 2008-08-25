@@ -36,7 +36,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "purpleIPref.h"
+
+#pragma GCC visibility push(default)
 #include <libpurple/accountopt.h>
+#pragma GCC visibility pop
 
 // fe21354d-2932-4a12-8d5b-15ac975d97e6
 #define PURPLE_PREF_CID						\

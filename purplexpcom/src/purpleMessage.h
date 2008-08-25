@@ -43,7 +43,9 @@
 #endif
 
 #include "purpleIMessage.h"
+#pragma GCC visibility push(default)
 #include <libpurple/conversation.h>
+#pragma GCC visibility pop
 #include "nsStringAPI.h"
 
 // 0ca0b0a3-ab52-434a-9176-a7d7daa74bad
