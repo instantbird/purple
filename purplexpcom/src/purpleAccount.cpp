@@ -82,6 +82,7 @@ void purpleAccount::UnInit()
     printf("uninitializing purpleAccount %s (%s)\n",
 	   purple_account_get_username(mAccount), mProtocol->GetId());
 #endif
+    mAccount->ui_data = NULL;
     purple_accounts_delete(mAccount);
     mAccount = NULL;
   }
@@ -116,13 +117,13 @@ nsresult purpleAccount::create(const nsACString& aName, purpleProtocol *aPrpl,
   if (purple_accounts_find(flatName.get(), aPrpl->GetId())) {
     // adding a duplicate account would confuse libpurple
     // XXX: Should this test be included inside purple_account_new?
+    NS_WARNING("Attempted to create a duplicate account!");
     return NS_ERROR_ALREADY_INITIALIZED;
   }
 
   mAccount = purple_account_new(flatName.get(), aPrpl->GetId());
-  if (!mAccount) {
-    return NS_ERROR_FAILURE;
-  }
+  NS_ENSURE_TRUE(mAccount, NS_ERROR_FAILURE);
+  mAccount->ui_data = this;
   purple_accounts_add(mAccount);
 
   nsresult rv = SetId(aKey);
@@ -184,9 +185,8 @@ nsresult purpleAccount::load(const nsCString& aKey)
   NS_ENSURE_SUCCESS(rv, rv);
 
   mAccount = purple_account_new(name.get(), prpl.get());
-  if (!mAccount) {
-    return NS_ERROR_FAILURE;
-  }
+  NS_ENSURE_TRUE(mAccount, NS_ERROR_FAILURE);
+  mAccount->ui_data = this;
   purple_accounts_add(mAccount);
 
   /* Load the alias if any */
