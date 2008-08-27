@@ -38,14 +38,13 @@
 #include "purpleAccount.h"
 #include "purpleCoreService.h"
 #include "purpleStorage.h"
+#include "prlog.h"
 #include <pref/nsIPrefService.h>
 #include <nsServiceManagerUtils.h>
 #include <nsComponentManagerUtils.h>
 #include <prprf.h>
 
 NS_IMPL_ISUPPORTS1(purpleAccount, purpleIAccount)
-
-//#define DEBUG_PURPLE_ACCOUNT
 
 #define PREF_PREFIX		"messenger.account."
 #define PREF_OPTIONS		"options."
@@ -57,38 +56,47 @@ NS_IMPL_ISUPPORTS1(purpleAccount, purpleIAccount)
 #define PREF_PASSWORD		"password"
 #define PREF_REMEMBER_PASSWORD	"rememberPassword"
 
+#ifdef PR_LOGGING
+//
+// NSPR_LOG_MODULES=purpleAccount:5
+//
+static PRLogModuleInfo *gPurpleAccountLog = nsnull;
+#endif
+#define LOG(args) PR_LOG(gPurpleAccountLog, PR_LOG_DEBUG, args)
+
 purpleAccount::purpleAccount()
+  : mAccount(NULL)
 {
   /* member initializers and constructor code */
-  mAccount = NULL;
-#ifdef DEBUG_PURPLE_ACCOUNT
-  printf("Creating purpleAccount\n");
+#ifdef PR_LOGGING
+  if (!gPurpleAccountLog)
+    gPurpleAccountLog = PR_NewLogModule("purpleAccount");
 #endif
+  LOG(("Creating purpleAccount @%x\n", this));
+
 }
 
 purpleAccount::~purpleAccount()
 {
   /* destructor code */
-  UnInit();
-#ifdef DEBUG_PURPLE_ACCOUNT
-  printf("destructing purpleAccount\n");
-#endif
+  LOG(("Destructing purpleAccount @%x\n", this));
+  if (mAccount)
+    UnInit();
 }
 
 void purpleAccount::UnInit()
 {
+  NS_PRECONDITION(mAccount, "Uninitializing uninitialized purpleAccount\n");
+  NS_ENSURE_TRUE(mAccount,);
+
   if (mAccount) {
-#ifdef DEBUG_PURPLE_ACCOUNT
-    printf("uninitializing purpleAccount %s (%s)\n",
-	   purple_account_get_username(mAccount), mProtocol->GetId());
-#endif
+    LOG(("uninitializing purpleAccount %s (%s)\n",
+         purple_account_get_username(mAccount), mProtocol->GetId()));
+
     mAccount->ui_data = NULL;
     purple_accounts_delete(mAccount);
     mAccount = NULL;
   }
-#ifdef DEBUG_PURPLE_ACCOUNT
-  else printf("uninitializing uninitialized purpleAccount\n");
-#endif
 }
 
 #define PURPLE_IMPL_GETPREF(prettyType, purpleType, PRType)             \
@@ -110,8 +118,7 @@ nsresult purpleAccount::create(const nsACString& aName, purpleProtocol *aPrpl,
                                const nsCString& aKey)
 {
   NS_ENSURE_ARG_POINTER(aPrpl);
-  if (aName.IsEmpty())
-    return NS_ERROR_UNEXPECTED;
+  NS_ENSURE_TRUE(!aName.IsEmpty(), NS_ERROR_UNEXPECTED);
 
   PromiseFlatCString flatName(aName);
   if (purple_accounts_find(flatName.get(), aPrpl->GetId())) {
@@ -128,7 +135,7 @@ nsresult purpleAccount::create(const nsACString& aName, purpleProtocol *aPrpl,
 
   nsresult rv = SetId(aKey);
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   mProtocol = aPrpl;
 
   rv = GetPrefBranch();
@@ -147,9 +154,7 @@ nsresult purpleAccount::create(const nsACString& aName, purpleProtocol *aPrpl,
 
 nsresult purpleAccount::load(const nsCString& aKey)
 {
-#ifdef DEBUG_PURPLE_ACCOUNT
-  printf("loading account : %s\n", aKey.get());
-#endif
+  LOG(("loading account : %s\n", aKey.get()));
   nsresult rv = SetId(aKey);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -159,22 +164,14 @@ nsresult purpleAccount::load(const nsCString& aKey)
   /* Get the name */
   nsCString name;
   mPrefBranch->GetCharPref(PREF_NAME, getter_Copies(name));
-  if (name.IsEmpty()) {
-    return NS_ERROR_UNEXPECTED;
-  }
-#ifdef DEBUG_PURPLE_ACCOUNT
-  printf("name = %s\n", name.get());
-#endif
+  NS_ENSURE_TRUE(!name.IsEmpty(), NS_ERROR_UNEXPECTED);
+  LOG(("name = %s\n", name.get()));
 
   /* Get the prpl */
   nsCString prpl;
   mPrefBranch->GetCharPref(PREF_PRPL, getter_Copies(prpl));
-  if (prpl.IsEmpty()) {
-    return NS_ERROR_UNEXPECTED;
-  }
-#ifdef DEBUG_PURPLE_ACCOUNT
-  printf("prpl = %s\n", prpl.get());
-#endif
+  NS_ENSURE_TRUE(!prpl.IsEmpty(), NS_ERROR_UNEXPECTED);
+  LOG(("prpl = %s\n", prpl.get()));
 
   rv = ensureStored(name, prpl);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -194,9 +191,7 @@ nsresult purpleAccount::load(const nsCString& aKey)
   rv = mPrefBranch->GetCharPref(PREF_ALIAS, getter_Copies(alias));
   if (NS_SUCCEEDED(rv) && !alias.IsEmpty()) {
     purple_account_set_alias(mAccount, alias.get());
-#ifdef DEBUG_PURPLE_ACCOUNT
-    printf("alias = %s\n", alias.get());
-#endif
+    LOG(("alias = %s\n", alias.get()));
   }
 
   /* Load proxy settings */
@@ -245,9 +240,7 @@ nsresult purpleAccount::load(const nsCString& aKey)
   rv = mPrefBranch->GetCharPref(PREF_PASSWORD, getter_Copies(pass));
   if (NS_SUCCEEDED(rv)) {
     purple_account_set_password(mAccount, pass.get());
-#ifdef DEBUG_PURPLE_ACCOUNT
-    printf("pass = %s\n", pass.get());
-#endif
+    LOG(("password Set\n"));
   }
 
   /* Load the rememberPassword pref */
@@ -255,9 +248,7 @@ nsresult purpleAccount::load(const nsCString& aKey)
   rv = mPrefBranch->GetBoolPref(PREF_REMEMBER_PASSWORD, &rememberPass);
   if (NS_SUCCEEDED(rv)) {
     purple_account_set_remember_password(mAccount, rememberPass);
-#ifdef DEBUG_PURPLE_ACCOUNT
-    printf("rememberPassword = %s\n", rememberPass ? "true" : "false");
-#endif
+    LOG(("rememberPassword = %s\n", rememberPass ? "true" : "false"));
   }
 
   //get spec options
@@ -265,9 +256,7 @@ nsresult purpleAccount::load(const nsCString& aKey)
   char **prefs;
   rv = mPrefOptBranch->GetChildList("", &count, &prefs);
   NS_ENSURE_SUCCESS(rv, rv);
-#ifdef DEBUG_PURPLE_ACCOUNT
-  printf("number of specific pref: %i\n", count);
-#endif
+  LOG(("Number of specific pref: %i\n", count));
   while (count--) {
     PRInt32 type;
     rv = mPrefOptBranch->GetPrefType(prefs[count], &type);
@@ -298,9 +287,7 @@ nsresult purpleAccount::checkAutoLogin()
   PRBool autoLogin;
   nsresult rv = mPrefBranch->GetBoolPref(PREF_AUTOLOGIN, &autoLogin);
   if (NS_FAILED(rv) || autoLogin) {
-#ifdef DEBUG_PURPLE_ACCOUNT
-    printf("autologin\n");
-#endif
+    LOG(("autologin\n"));
     Connect();
   }
 
@@ -313,6 +300,8 @@ nsresult purpleAccount::ensureStored(const nsCString& aName, const nsCString& aP
   purpleStorage *storageInstance = purpleStorage::GetInstance();
   NS_ENSURE_TRUE(storageInstance, NS_ERROR_OUT_OF_MEMORY);
 
+  LOG(("Checking that the account with the id %u in mozStorage has the name %s and the prpl %s\n",
+       mId, aName.get(), aPrpl.get()));
   mozIStorageStatement *statement = storageInstance->mEnsureAccountStoredStatement;
   mozStorageStatementScoper scoper(statement);
   nsresult rv = statement->BindInt32Parameter(0, mId);
@@ -327,30 +316,23 @@ nsresult purpleAccount::ensureStored(const nsCString& aName, const nsCString& aP
     rv = statement->GetUTF8String(1, prpl);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (!name.Equals(aName) || !prpl.Equals(aPrpl)) {
-#ifdef DEBUG_PURPLE_ACCOUNT
-      printf("checking account %u failed\n", mId);
-      printf(" aName = %s; name = %s\n", aName.get(), name.get());
-      printf(" aPrpl = %s; prpl = %s\n", aPrpl.get(), prpl.get());
-#endif
-      return NS_ERROR_FAILURE;
-    }
+    LOG(("Account at the id %u in mozStorage has the name %s and the prpl %s\n",
+         mId, name.get(), prpl.get()));
+    NS_ENSURE_TRUE(name.Equals(aName) && prpl.Equals(aPrpl), NS_ERROR_FAILURE);
 
-#ifdef DEBUG_PURPLE_ACCOUNT
-    printf("checking account (%u, %s, %s) OK\n", mId, name.get(), prpl.get());
-#endif
+    LOG(("Checking account (%u, %s, %s) OK\n", mId, name.get(), prpl.get()));
     return NS_OK;
   }
 
-#ifdef DEBUG_PURPLE_ACCOUNT
-  printf("account not found in mozStorage\n");
-#endif
+  LOG(("account (%u, %s, %s) not found in mozStorage, attempting to store it\n",
+       mId, aName.get(), aPrpl.get()));
 
   return storeAccount(mId, aName, aPrpl);
 }
 
 nsresult purpleAccount::storeAccount(PRUint32 aKey, const nsCString& aName, const nsCString& aPrpl)
 {
+  LOG(("Adding account %u (%s, %s) in mozStorage\n", aKey, aName.get(), aPrpl.get()));
   purpleStorage *storageInstance = purpleStorage::GetInstance();
   NS_ENSURE_TRUE(storageInstance, NS_ERROR_OUT_OF_MEMORY);
 
@@ -366,19 +348,13 @@ nsresult purpleAccount::storeAccount(PRUint32 aKey, const nsCString& aName, cons
   statement->BindUTF8StringParameter(2, aPrpl);
 
   rv = statement->Execute();
-#ifdef DEBUG_PURPLE_ACCOUNT
-  if (NS_FAILED(rv)) {
-    printf("adding account %u (%s, %s) failed\n", aKey, aName.get(), aPrpl.get());
-  }
-  else {
-    printf("account %u (%s, %s) added\n", aKey, aName.get(), aPrpl.get());
-  }
-#endif
+  NS_ASSERTION(NS_SUCCEEDED(rv), "adding account failed");
   return rv;
 }
 
 nsresult purpleAccount::unstoreAccount()
 {
+  LOG(("Removing account %u from mozStorage\n", mId));
   purpleStorage *storageInstance = purpleStorage::GetInstance();
   NS_ENSURE_TRUE(storageInstance, NS_ERROR_OUT_OF_MEMORY);
 
@@ -393,18 +369,12 @@ nsresult purpleAccount::unstoreAccount()
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = statement->Execute();
-#ifdef DEBUG_PURPLE_ACCOUNT
-  if (NS_FAILED(rv)) {
-    printf("removing account %u from mozStorage failed\n", mId);
-  }
-  else {
-    printf("account %u removed from mozStorage\n", mId);
-  }
-#endif
+  NS_ASSERTION(NS_SUCCEEDED(rv), "removing account failed");
   NS_ENSURE_SUCCESS(rv, rv);
 
   // removing the account from the accounts table is not enought,
   // we need to remove all the associated account_buddy entries too
+  LOG(("Removing account_buddy entries of account %u from mozStorage\n", mId));
   rv = DBConn->CreateStatement(NS_LITERAL_CSTRING(
     "DELETE FROM account_buddy WHERE account_id = ?1"),
     getter_AddRefs(statement));
@@ -414,14 +384,7 @@ nsresult purpleAccount::unstoreAccount()
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = statement->Execute();
-#ifdef DEBUG_PURPLE_ACCOUNT
-  if (NS_FAILED(rv)) {
-    printf("removing account_buddy entries of account %u from mozStorage failed\n", mId);
-  }
-  else {
-    printf("account_buddy entries of account %u removed from mozStorage\n", mId);
-  }
-#endif
+  NS_ASSERTION(NS_SUCCEEDED(rv), "removing account_buddy failed");
 
   return rv;
 }
@@ -431,11 +394,9 @@ nsresult purpleAccount::remove()
   nsresult rv = GetPrefBranch();
   NS_ENSURE_SUCCESS(rv, rv);
 
-#ifdef DEBUG_PURPLE_ACCOUNT
-  printf("deleting purpleAccount %s (%s)\n",
-	 mAccount ? purple_account_get_username(mAccount) : "(mAccount = NULL)",
-	 mProtocol ? mProtocol->GetId() : "(mProtocol = NULL)");
-#endif
+  LOG(("Deleting purpleAccount %s (%s)\n",
+       mAccount ? purple_account_get_username(mAccount) : "(mAccount = NULL)",
+       mProtocol ? mProtocol->GetId() : "(mProtocol = NULL)"));
 
   /* Remove data from the pref branch */
   rv = mPrefBranch->DeleteBranch("");
@@ -454,16 +415,13 @@ NS_IMETHODIMP purpleAccount::Connect()
 {
   PURPLE_ENSURE_INIT(mAccount);
 
-#ifdef DEBUG_PURPLE_ACCOUNT
-  printf("attempting to connect %s\n", mAccount->username);
-#endif
+  LOG(("Attempting to connect %s\n", mAccount->username));
+
   if (purple_account_get_enabled(mAccount, UI_ID)) {
     /* The account is already enabled. This means that we have already
        connected it and we haven't disconnected it. If it isn't
        connected then it's because of a connection failure */
-#ifdef DEBUG_PURPLE_ACCOUNT
-    printf("account already enabled\n");
-#endif
+    LOG(("Account already enabled\n"));
     purple_account_connect(mAccount);
   }
   else {
@@ -555,9 +513,7 @@ NS_IMETHODIMP purpleAccount::GetName(nsACString& aName)
 /* readonly attribute AUTF8String id; */
 NS_IMETHODIMP purpleAccount::GetId(nsACString& aId)
 {
-  if (mKey.IsEmpty()) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
+  NS_ENSURE_TRUE(!mKey.IsEmpty(), NS_ERROR_NOT_INITIALIZED);
 
   aId = mKey;
   return NS_OK;
