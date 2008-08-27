@@ -72,14 +72,14 @@ class purpleSocketInternal : public nsASocketHandler,
   nsresult PostEvent();
   nsresult Cancel();
   PRBool GetCanceled() { return mCanceled; }
-#ifdef DEBUG
+#ifdef PR_LOGGING
   purpleSocketInternal(PRUint32 aId);
 #else
   purpleSocketInternal();
 #endif
   ~purpleSocketInternal();
   nsresult SetPollFlags(PRInt16 aPollFlags);
-#ifdef DEBUG
+#ifdef PR_LOGGING
   PRUint32 mId;
 #endif
 

@@ -44,7 +44,7 @@
 #include<nsThreadUtils.h>
 #include "prlog.h"
 
-#if defined(PR_LOGGING)
+#ifdef PR_LOGGING
 //
 // NSPR_LOG_MODULES=purpleSockets:5
 //
@@ -62,7 +62,7 @@ purpleSocket::purpleSocket()
   : mFunction(NULL),
     mInternal(nsnull)    
 {
-#if defined(PR_LOGGING)
+#ifdef PR_LOGGING
   if (!gPurpleSocketsLog)
     gPurpleSocketsLog = PR_NewLogModule("purpleSockets");
 #endif
@@ -104,7 +104,7 @@ NS_IMETHODIMP purpleSocket::Init(PurpleInputFunction aFunction,
                                        getter_AddRefs(proxy));
   NS_ENSURE_SUCCESS(rv, rv);
 
-#ifdef DEBUG
+#ifdef PR_LOGGING
   mInternal = new purpleSocketInternal(mId);
 #else
   mInternal = new purpleSocketInternal();
@@ -142,7 +142,7 @@ nsresult purpleSocket::NotifyLibPurple(PRInt16 aPollFlags, PRInt16 aOutFlags)
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(purpleSocketInternal, nsASocketHandler, nsIRunnable)
 
-#ifdef DEBUG
+#ifdef PR_LOGGING
 purpleSocketInternal::purpleSocketInternal(PRUint32 aId)
   : mId(aId),
 #else
@@ -199,7 +199,7 @@ void purpleSocketInternal::OnSocketReady(PRFileDesc* fd, PRInt16 outFlags)
   }
 
 //   if (outFlags & (PR_POLL_ERR | PR_POLL_HUP | PR_POLL_NVAL)) {
-//     printf("[%i]   error polling on listening socket\n", mId);
+//     LOG(("[%i]   error polling on listening socket\n", mId));
 //     mCondition = NS_ERROR_UNEXPECTED;
 //     return;
 //   }
