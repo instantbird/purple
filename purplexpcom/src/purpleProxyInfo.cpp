@@ -37,7 +37,7 @@
 
 #include "purpleProxyInfo.h"
 #include <nsServiceManagerUtils.h>
-#include <pref/nsIPrefService.h>
+#include <nsIPrefService.h>
 
 NS_IMPL_ISUPPORTS1(purpleProxyInfo, purpleIProxyInfo)
 

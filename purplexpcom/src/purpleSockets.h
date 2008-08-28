@@ -47,8 +47,8 @@
 
 #include<prio.h>
 #include<nsIRunnable.h>
-#include<necko/nsASocketHandler.h>
-#include<necko/nsISocketTransportService.h>
+#include<nsASocketHandler.h>
+#include<nsISocketTransportService.h>
 
 // 2e8f828f-2b2f-4a82-9efe-3cf8d983fbbf
 #define PURPLE_SOCKET_CID \

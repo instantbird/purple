@@ -40,7 +40,7 @@
 #include <nsServiceManagerUtils.h>
 #include <nsIThread.h>
 #include <nsThreadUtils.h>
-#include <necko/nsICancelable.h>
+#include <nsICancelable.h>
 #include <prio.h>
 
 //#define DEBUG_PURPLE_DNS

@@ -79,8 +79,8 @@
 
 #include<nsStringAPI.h>
 #include<nsEmbedString.h>
-#include<windowwatcher/nsIPromptService.h>
-#include<intl/nsIStringBundle.h>
+#include<nsIPromptService.h>
+#include<nsIStringBundle.h>
 #include"purpleConversation.h"
 #include"purpleCoreService.h"
 #include"purpleBuddy.h"

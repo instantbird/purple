@@ -43,9 +43,9 @@
 #include <libpurple/dnsquery.h>
 #pragma GCC visibility pop
 
-#include <necko/nsIDNSService.h>
-#include <necko/nsIDNSRecord.h>
-#include <necko/nsIDNSListener.h>
+#include <nsIDNSService.h>
+#include <nsIDNSRecord.h>
+#include <nsIDNSListener.h>
 
 struct purpleDNSRequest: nsIDNSListener
 {

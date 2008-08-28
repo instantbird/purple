@@ -43,7 +43,7 @@
 #pragma GCC visibility pop
 
 #include "purpleIProxy.h"
-#include <pref/nsIPrefBranch.h>
+#include <nsIPrefBranch.h>
 #include <nsStringAPI.h>
 #include "nsCOMPtr.h"
 

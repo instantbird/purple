@@ -49,12 +49,14 @@ NO_DIST_INSTALL	= 1
 
 VISIBILITY_FLAGS=
 
+REQUIRES	= nss
+
 ifneq (,$(filter-out WINNT Darwin,$(OS_ARCH)))
 LOCAL_INCLUDES	= $(GLIB_CFLAGS) -I/usr/include/libxml2/ -I/usr/local/include/libxml2/
 EXTRA_LIBS	= $(GLIB_LIBS) -lgmodule-2.0 -lxml2 -lz
 else
 EXTRA_LIBS	= -L$(DIST)/lib -lglib -lxml2 -lz
-REQUIRES	= \
+REQUIRES	+= \
 		glib \
 		libxml2 \
 		$(NULL)

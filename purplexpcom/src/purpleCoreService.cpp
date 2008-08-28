@@ -54,7 +54,7 @@
 #include<nsComponentManagerUtils.h>
 #include<nsIObserverService.h>
 #include <nsIConsoleService.h>
-#include<pref/nsIPrefService.h>
+#include<nsIPrefService.h>
 #include<nsCOMPtr.h>
 #include<nsCRTGlue.h>
 #include<stdio.h>

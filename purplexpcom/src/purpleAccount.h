@@ -41,7 +41,7 @@
 #include "purpleIAccount.h"
 #include "purpleProtocol.h"
 #include "nsCOMPtr.h"
-#include<pref/nsIPrefBranch.h>
+#include<nsIPrefBranch.h>
 #include<nsStringAPI.h>
 
 #define UI_ID                  "instantbird"

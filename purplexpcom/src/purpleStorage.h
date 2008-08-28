@@ -36,10 +36,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <nsCOMPtr.h>
-#include <storage/mozIStorageService.h>
-#include <storage/mozIStorageConnection.h>
-#include <storage/mozIStorageStatement.h>
-#include <storage/mozStorageHelper.h>
+#include <mozIStorageService.h>
+#include <mozIStorageConnection.h>
+#include <mozIStorageStatement.h>
+#include <mozStorageHelper.h>
 
 class purpleStorage
 {
