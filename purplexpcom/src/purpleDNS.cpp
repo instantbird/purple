@@ -43,17 +43,23 @@
 #include <nsICancelable.h>
 #include <prio.h>
 
-//#define DEBUG_PURPLE_DNS
-
-#ifdef DEBUG_PURPLE_DNS
-# include<stdio.h>
+#ifdef PR_LOGGING
+//
+// NSPR_LOG_MODULES=purpleDNS:5
+//
+static PRLogModuleInfo *gPurpleDNSLog = nsnull;
 #endif
+#define LOG(args) PR_LOG(gPurpleDNSLog, PR_LOG_DEBUG, args)
 
 /* Init static members */
 nsCOMArray<purpleDNSRequest> *purpleDNS::sRequests = nsnull;
 
 void purpleDNS::init()
 {
+#ifdef PR_LOGGING
+  if (!gPurpleDNSLog)
+    gPurpleDNSLog = PR_NewLogModule("purpleDNS");
+#endif
   sRequests = new nsCOMArray<purpleDNSRequest>();
 }
 
@@ -67,9 +73,7 @@ gboolean purpleDNS::Resolve(PurpleDnsQueryData *query_data,
                             PurpleDnsQueryFailedCallback failed_cb)
 {
   nsCString host(purple_dnsquery_get_host(query_data));
-#ifdef DEBUG_PURPLE_DNS
-  printf("resolving with moz: %s\n", host.get());
-#endif
+  LOG(("Resolving with moz: %s", host.get()));
   nsCOMPtr<nsIDNSService> dns = do_GetService("@mozilla.org/network/dns-service;1");
   nsCOMPtr<nsIDNSRecord> record;
   nsCOMPtr<nsICancelable> cancelable;
@@ -82,8 +86,7 @@ gboolean purpleDNS::Resolve(PurpleDnsQueryData *query_data,
 
   nsresult rv = dns->AsyncResolve(host, 0, listener, thread,
                                   getter_AddRefs(listener->asyncResolv));
-  if (NS_FAILED(rv))
-    return false; // The request wasn't handled.
+  NS_ENSURE_SUCCESS(rv, false);// The request wasn't handled.
 
   sRequests->AppendObject(listener);
   return true; // We handle the request, libpurple shouldn't try to do it.
@@ -91,43 +94,31 @@ gboolean purpleDNS::Resolve(PurpleDnsQueryData *query_data,
 
 nsresult purpleDNS::Remove(PurpleDnsQueryData *query_data)
 {
-#ifdef DEBUG_PURPLE_DNS
-  printf("Remove by query_data... ");
-#endif
+  LOG(("purpleDNS::Remove query_data=@%x", query_data));
   for (PRInt32 i = sRequests->Count() - 1; i >= 0; --i) {
     if ((*sRequests)[i]->query_data == query_data) {
       sRequests->RemoveObjectAt(i);
-#ifdef DEBUG_PURPLE_DNS
-      printf("found at %i\n", i);
-#endif
+      LOG(("Remove by query_data: found at %i", i));
       return NS_OK;
     }
   }
-#ifdef DEBUG_PURPLE_DNS
-  printf("not found\n");
-#endif
+  LOG(("Remove by query_data: not found"));
   return NS_ERROR_FAILURE;
 }
 
 void purpleDNS::Cancel(PurpleDnsQueryData *query_data)
 {
-#ifdef DEBUG_PURPLE_DNS
-  printf("Canceling by query_data... ");
-#endif
+  LOG(("purpleDNS::Cancel query_data=@%x", query_data));
 
   for (PRInt32 i = sRequests->Count() - 1; i >= 0; --i) {
     if ((*sRequests)[i]->query_data == query_data) {
       (*sRequests)[i]->asyncResolv->Cancel(NS_ERROR_FAILURE);
       sRequests->RemoveObjectAt(i);
-#ifdef DEBUG_PURPLE_DNS
-      printf("found at %i\n", i);
-#endif
+      LOG(("Canceling by query_data: found at %i", i));
       return;
     }
   }
-#ifdef DEBUG_PURPLE_DNS
-  printf("not found\n");
-#endif
+  LOG(("Canceling by query_data: not found"));
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(purpleDNSRequest, nsIDNSListener)
@@ -146,14 +137,10 @@ void purpleDNSRequest::Failed(const char *aMsg)
 {
   NS_ASSERTION(NS_IsMainThread(), "wrong thread");
 
-#ifdef DEBUG_PURPLE_DNS
-  printf("purpleDNSRequest::Failed with msg: %s\n", aMsg);
-#endif
+  LOG(("purpleDNSRequest::Failed with msg: %s", aMsg));
 
   if (NS_FAILED(purpleDNS::Remove(query_data))) {
-#ifdef DEBUG_PURPLE_DNS
-    printf("purpleDNSRequest::Failed, not calling callback because already cancelled\n");
-#endif
+    LOG(("purpleDNSRequest::Failed, not calling callback because already cancelled"));
     return;
   }
 
@@ -181,9 +168,7 @@ nsresult purpleDNSRequest::OnLookupComplete(nsICancelable *request,
   }
 
   if (NS_FAILED(purpleDNS::Remove(query_data))) {
-#ifdef DEBUG_PURPLE_DNS
-  printf("dns resolution completed but result discarded because it was cancelled\n");
-#endif
+    LOG(("DNS resolution completed but result discarded because it was cancelled"));
     return NS_OK;
   }
 
@@ -201,18 +186,16 @@ nsresult purpleDNSRequest::OnLookupComplete(nsICancelable *request,
     hosts = g_slist_append(hosts, g_memdup(&addr.inet, sizeof(addr.inet)));
 #endif
 
-#ifdef DEBUG_PURPLE_DNS
+#ifdef PR_LOGGING
     char ipaddr[INET6_ADDRSTRLEN];
     inet_ntop(addr2->sa_family, &((struct sockaddr_in *)addr2)->sin_addr,
               ipaddr, sizeof(ipaddr));
-    printf("found ip: %s\n", ipaddr);
+    LOG(("Found ip: %s", ipaddr));
 #endif
 
     record->HasMore(&more);
   }
-#ifdef DEBUG_PURPLE_DNS
-  printf("dns resolution done\n");
-#endif
+  LOG(("DNS resolution done"));
   resolved_cb(query_data, hosts);
   return NS_OK;
 }
