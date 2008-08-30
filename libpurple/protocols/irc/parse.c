@@ -541,6 +541,7 @@ char *irc_parse_ctcp(struct irc_conn *irc, const char *from, const char *to, con
 		buf = irc_format(irc, "vt:", "NOTICE", from, "\001VERSION Purple IRC\001");
 		irc_send(irc, buf);
 		g_free(buf);
+		return NULL;
 	} else if (!strncmp(cur, "DCC SEND ", 9)) {
 		irc_dccsend_recv(irc, from, msg + 10);
 		return NULL;
