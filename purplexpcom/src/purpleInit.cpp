@@ -63,42 +63,43 @@
 #include <libpurple/dnsquery.h>
 #pragma GCC visibility pop
 
-#include <glib.h>
-
 #include <string.h>
 
 #ifndef _WIN32
 #include <unistd.h>
 #endif
 
+#include "purpleConversation.h"
+#include "purpleCoreService.h"
+#include "purpleMessage.h"
+#include "purpleTimer.h"
+#include "purpleSockets.h"
+#include "purpleDNS.h"
 #include <xpcom-config.h>
+#include <nsServiceManagerUtils.h>
+#include <nsIObserverService.h>
+#include <nsCOMPtr.h>
+#include <nsStringAPI.h>
+#include <nsEmbedString.h>
+#include <nsIPromptService.h>
+#include <nsIStringBundle.h>
+#include <nsComponentManagerUtils.h>
+#include <nsDirectoryServiceUtils.h>
+#include <nsAppDirectoryServiceDefs.h>
+#include <nsDirectoryServiceDefs.h>
 
-#include<nsServiceManagerUtils.h>
-#include<nsIObserverService.h>
-#include<nsCOMPtr.h>
-
-#include<nsStringAPI.h>
-#include<nsEmbedString.h>
-#include<nsIPromptService.h>
-#include<nsIStringBundle.h>
-#include"purpleConversation.h"
-#include"purpleCoreService.h"
-#include"purpleBuddy.h"
-#include"purpleMessage.h"
-#include"purpleTimer.h"
-#include"purpleSockets.h"
-#include"purpleDNS.h"
-#include "nsComponentManagerUtils.h"
-#include "nsDirectoryServiceUtils.h"
-#include "nsAppDirectoryServiceDefs.h"
-#include "nsDirectoryServiceDefs.h"
-
-//#define DEBUG_PURPLE_INIT
-//#define DEBUG_PURPLE_STDOUT
 #define DEBUG_PURPLE_CONSOLE
 #ifdef DEBUG_PURPLE_CONSOLE
 # include <nsIConsoleService.h>
 #endif
+
+#ifdef PR_LOGGING
+//
+// NSPR_LOG_MODULES=purpleInit:5
+//
+static PRLogModuleInfo *gPurpleInitLog = nsnull;
+#endif
+#define LOG(args) PR_LOG(gPurpleInitLog, PR_LOG_DEBUG, args)
 
 static PurpleEventLoopUiOps eventloops =
 {
@@ -121,9 +122,8 @@ static void setAccountConnectionStateMsg(PurpleConnection *gc, const char *text,
   nsCOMPtr<purpleIAccount> account;
   nsresult rv = pcs->GetAccountByPurpleAccount(purple_connection_get_account(gc),
                                                getter_AddRefs(account));
-  if (NS_FAILED(rv)) {
-    return;
-  }
+  NS_ENSURE_SUCCESS(rv,);
+
   nsCString msg(text);
   account->SetConnectionStateMsg(msg);
   pcs->NotifyObservers(account, aEvent);
@@ -235,9 +235,7 @@ PurpleAccountUiOps account_uiops = {
 /*** Conversation uiops ***/
 static void create_conv(PurpleConversation *aConv)
 {
-#ifdef DEBUG_PURPLE_INIT
-  printf("create conversation with name: %s\n", purple_conversation_get_name(aConv));
-#endif
+  LOG(("Create conversation with name: %s", purple_conversation_get_name(aConv)));
 
   nsCOMPtr<purpleConversation> conv;
   conv = do_CreateInstance("@instantbird.org/purple/conversation;1");
@@ -250,9 +248,7 @@ static void create_conv(PurpleConversation *aConv)
 
 static void destroy_conv(PurpleConversation *aConv)
 {
-#ifdef DEBUG_PURPLE_INIT
-  printf("destroy_conv uiop called\n");
-#endif
+  LOG(("destroy_conv uiop called"));
 
   nsCOMPtr<purpleCoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
   pcs->RemoveConversation(aConv);
@@ -264,9 +260,7 @@ static void write_conv(PurpleConversation *conv, const char *who,
 {
   nsresult rv;
   nsCOMPtr<purpleMessage> msg = do_CreateInstance(PURPLE_MESSAGE_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) {
-    return;
-  }
+  NS_ENSURE_SUCCESS(rv,);
 
   msg->Init(conv, who, alias, message, flags, mtime);
 
@@ -297,10 +291,9 @@ static PurpleConversationUiOps conversation_uiops =
 
 static void account_signals(PurpleAccount *account, const char *signal)
 {
-#ifdef DEBUG_PURPLE_INIT
-  printf("%s: %s (%s)\n", signal,
-	 account->username, account->protocol_id);
-#endif
+  LOG(("%s: %s (%s)\n", signal,
+       account->username, account->protocol_id));
+
   nsCOMPtr<purpleCoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
   pcs->FireAccountEvent(account, signal);
 }
@@ -310,10 +303,10 @@ static void connection_signals(PurpleConnection *gc, const char *signal)
   account_signals(purple_connection_get_account(gc), signal);
 }
 
-#define PURPLE_CONNECT_CONNECTION_SIGNAL(aSignal, aName)	\
-  purple_signal_connect(instance, aSignal, &handle,		\
-			PURPLE_CALLBACK(connection_signals),	\
-			(void *)aName)
+#define PURPLE_CONNECT_CONNECTION_SIGNAL(aSignal, aName)        \
+  purple_signal_connect(instance, aSignal, &handle,             \
+                        PURPLE_CALLBACK(connection_signals),    \
+                        (void *)aName)
 
 static void
 connect_to_connections_signals()
@@ -324,9 +317,7 @@ connect_to_connections_signals()
   PURPLE_CONNECT_CONNECTION_SIGNAL("signing-on", "account-signing-on");
   PURPLE_CONNECT_CONNECTION_SIGNAL("signed-off", "account-disconnected");
   PURPLE_CONNECT_CONNECTION_SIGNAL("signing-off", "account-disconnecting");
-#ifdef DEBUG_PURPLE_INIT
-  printf("connecting to connections signals\n");
-#endif
+  LOG(("Connecting to connections signals"));
 }
 
 static void
@@ -335,11 +326,10 @@ connect_to_accounts_signals()
   int handle;
   void *instance = purple_accounts_get_handle();
   purple_signal_connect(instance, "account-connecting", &handle,
-			PURPLE_CALLBACK(account_signals),
-			(void *)"account-connecting");
-#ifdef DEBUG_PURPLE_INIT
-  printf("connecting to accounts signals\n");
-#endif
+                        PURPLE_CALLBACK(account_signals),
+                        (void *)"account-connecting");
+
+  LOG(("Connecting to accounts signals"));
 }
 
 static void buddy_signals(PurpleBuddy *aBuddy, const char *aSignal)
@@ -349,11 +339,11 @@ static void buddy_signals(PurpleBuddy *aBuddy, const char *aSignal)
 }
 
 #define PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER(aSignal, aHandler)  \
-  purple_signal_connect(instance, aSignal, &handle,		\
-			PURPLE_CALLBACK(aHandler),		\
-			(void *)aSignal)
+  purple_signal_connect(instance, aSignal, &handle,             \
+                        PURPLE_CALLBACK(aHandler),              \
+                        (void *)aSignal)
 
-#define PURPLE_CONNECT_BUDDY_SIGNAL(aSignal)			\
+#define PURPLE_CONNECT_BUDDY_SIGNAL(aSignal)                    \
   PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER(aSignal, buddy_signals)
 
 static void buddy_removed(PurpleBuddy *buddy, void *null)
@@ -391,9 +381,7 @@ connect_to_blist_signals()
   PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER("buddy-status-changed", buddy_away);
   PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER("buddy-idle-changed", buddy_idle);
 
-#ifdef DEBUG_PURPLE_INIT
-  printf("connecting to blist signals\n");
-#endif
+  LOG(("Connecting to blist signals"));
 }
 
 static void remove_blist_node(PurpleBuddyList *aList, PurpleBlistNode *aNode)
@@ -407,9 +395,7 @@ static void remove_blist_node(PurpleBuddyList *aList, PurpleBlistNode *aNode)
     return;
 
   PurpleBuddy *buddy = (PurpleBuddy *) aNode;
-#ifdef DEBUG_PURPLE_INIT
-  printf("purple uiop : remove_blist_node, name = %s\n", buddy->name);
-#endif
+  LOG(("purple uiop : remove_blist_node, name = %s", buddy->name));
   buddy_signals(buddy, "buddy-removed");
 }
 
@@ -431,11 +417,9 @@ static PurpleBlistUiOps blist_uiops = {
 
 static void
 received_im_msg(PurpleAccount *account, char *sender, char *message,
-		PurpleConversation *conv, PurpleMessageFlags flags)
+                PurpleConversation *conv, PurpleMessageFlags flags)
 {
-#ifdef DEBUG_PURPLE_INIT
-  printf("received_im_msg\n");
-#endif
+  LOG(("Received_im_msg"));
 
   nsCOMPtr<nsIObserverService> os = do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
   NS_ASSERTION(os, "nsCOMPtr<nsIObserverService> == null");
@@ -462,19 +446,16 @@ static void connect_to_conversations_signals()
 {
   static int handle;
   purple_signal_connect(purple_conversations_get_handle(), "received-im-msg", &handle,
-			PURPLE_CALLBACK(received_im_msg), NULL);
-#ifdef DEBUG_PURPLE_INIT
-  printf("connecting to signals\n");
-#endif
+                        PURPLE_CALLBACK(received_im_msg), NULL);
+
+  LOG(("Connecting to signals"));
 }
 
 #ifdef DEBUG_PURPLE_CONSOLE
 static void debug_print(PurpleDebugLevel level, const char *category,
-			const char *arg)
+                        const char *arg)
 {
-# ifdef DEBUG_PURPLE_STDOUT
-  printf("pp-%s: %s", category, arg);
-# endif
+  LOG(("pp-%s: %s", category, arg));
   nsCOMPtr<nsIConsoleService> consoleService = 
     do_GetService( "@mozilla.org/consoleservice;1" );
 
@@ -489,7 +470,7 @@ static void debug_print(PurpleDebugLevel level, const char *category,
 }
 
 static gboolean debug_enabled(PurpleDebugLevel level,
-			      const char *category)
+                              const char *category)
 {
   return true;
 }
@@ -516,17 +497,20 @@ init_libpurple()
 
   nsCOMPtr<nsIFile> folder;
   nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-				       getter_AddRefs(folder));
+                                       getter_AddRefs(folder));
   NS_ENSURE_SUCCESS(rv, rv);
   nsString path;
   rv = folder->GetPath(path);
   NS_ENSURE_SUCCESS(rv, rv);
 
+#ifdef PR_LOGGING
+  if (!gPurpleInitLog)
+    gPurpleInitLog = PR_NewLogModule("purpleInit");
+#endif
+
   nsCString cPath;
   CopyUTF16toUTF8(path, cPath);
-#ifdef DEBUG_PURPLE_INIT
-  printf("setting custom user directory to:  %s\n", cPath.get());
-#endif
+  LOG(("Setting custom user directory to:  %s", cPath.get()));
   purple_util_set_user_dir(cPath.get());
 
   purple_debug_set_enabled(FALSE);
@@ -562,20 +546,15 @@ init_libpurple()
   CopyUTF16toUTF8(path, cPath);
   cPath.Append("/" CUSTOM_PLUGIN_PATH);
   purple_plugins_add_search_path(cPath.get());
-#ifdef DEBUG_PURPLE_INIT
-  printf("setting custom plugin path to:  %s\n", cPath.get());
-#endif
+  LOG(("Setting custom plugin path to:  %s", cPath.get()));
 
   /* Here "instantbird" stands for the UI_ID. libpurple
    * sometimes need this id (for example for some plugins and
    * some preferences)
    */
-  if (!purple_core_init("instantbird")) {
-#ifdef DEBUG_PURPLE_INIT
-    printf("purple_core_init failed!!!\n");
-#endif
-    return NS_ERROR_FAILURE;
-  }
+  gboolean purpleCoreInit = purple_core_init("instantbird");
+  NS_ASSERTION(purpleCoreInit, "purple_core_init failed!!!");
+  NS_ENSURE_TRUE(purpleCoreInit, NS_ERROR_FAILURE);
 
   /* Enable all logs by default. */
   purple_prefs_set_bool("/purple/logging/log_ims", TRUE);
