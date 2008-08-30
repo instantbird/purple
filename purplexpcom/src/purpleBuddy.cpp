@@ -37,30 +37,35 @@
 
 #include "purpleBuddy.h"
 #include "purpleCoreService.h"
+#include "purpleStorage.h"
 #include <nsServiceManagerUtils.h>
 #include <nsComponentManagerUtils.h>
-#include "purpleStorage.h"
-#include <prprf.h>
 
 NS_IMPL_ISUPPORTS1(purpleBuddy, purpleIBuddy)
 
-//#define DEBUG_PURPLE_BUDDY
+#ifdef PR_LOGGING
+//
+// NSPR_LOG_MODULES=purpleBuddy:5
+//
+static PRLogModuleInfo *gPurpleBuddyLog = nsnull;
+#endif
+#define LOG(args) PR_LOG(gPurpleBuddyLog, PR_LOG_DEBUG, args)
 
 purpleBuddy::purpleBuddy()
 {
   /* member initializers and constructor code */
   mId = 0;
-#ifdef DEBUG_PURPLE_BUDDY
-  printf("constructing purpleBuddy\n");
+#ifdef PR_LOGGING
+  if (!gPurpleBuddyLog)
+    gPurpleBuddyLog = PR_NewLogModule("purpleBuddy");
 #endif
+  LOG(("Creating purpleBuddy @%x", this));
 }
 
 purpleBuddy::~purpleBuddy()
 {
   /* destructor code */
-#ifdef DEBUG_PURPLE_BUDDY
-  printf("destructing purpleBuddy\n");
-#endif
+  LOG(("Destructing purpleBuddy @%x", this));
 }
 
 nsresult purpleBuddy::load(PurpleBuddy *aBuddy, purpleIAccount *aAccount,
@@ -73,11 +78,12 @@ nsresult purpleBuddy::load(PurpleBuddy *aBuddy, purpleIAccount *aAccount,
 
 nsresult purpleBuddy::Init(PurpleBuddy *aBuddy)
 {
-#ifdef DEBUG_PURPLE_BUDDY
+#ifdef PR_LOGGING
   PurpleBlistNode *node = aBuddy->node.parent;
   PurpleGroup *group = (PurpleGroup *) node->parent;
-  printf("purpleBuddy::Init Trying to add %s in group: %s for account %s (%s)\n",
-	 purple_normalize(aBuddy->account, aBuddy->name), group->name, aBuddy->account->username, aBuddy->account->protocol_id);
+  LOG(("purpleBuddy::Init Trying to add %s in group: %s for account %s (%s)",
+       purple_normalize(aBuddy->account, aBuddy->name), group->name,
+       aBuddy->account->username, aBuddy->account->protocol_id));
 #endif
 
   purpleStorage *storageInstance = purpleStorage::GetInstance();
@@ -106,16 +112,11 @@ nsresult purpleBuddy::Init(PurpleBuddy *aBuddy)
   PRBool ok;
   nsresult rv = statement->ExecuteStep(&ok);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (!ok) {
-#ifdef DEBUG_PURPLE_BUDDY
-    printf("purpleBuddy::Init: couldn't get the id of the stored buddy\n");
-#endif
-    return NS_ERROR_FAILURE;
-  }
+  NS_ASSERTION(ok, "purpleBuddy::Init: couldn't get the id of the stored buddy");
+  NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
+
   mId = statement->AsInt32(0);
-#ifdef DEBUG_PURPLE_BUDDY
-  printf("purpleBuddy::Init: stored buddy with id %i\n", mId);
-#endif
+  LOG(("purpleBuddy::Init: stored buddy with id %i", mId));
 
   return AddAccount(aBuddy);
 }
@@ -148,10 +149,8 @@ nsresult purpleBuddy::AddAccount(PurpleBuddy *aBuddy)
 
 nsresult purpleBuddy::RemoveAccount(PurpleBuddy *aBuddy)
 {
-#ifdef DEBUG_PURPLE_BUDDY
-  printf("purpleBuddy::RemoveAccount buddy = %s, account = %s\n",
-	 aBuddy->name, purple_account_get_username(aBuddy->account));
-#endif
+  LOG(("purpleBuddy::RemoveAccount buddy = %s, account = %s",
+       aBuddy->name, purple_account_get_username(aBuddy->account)));
 
   for (PRInt32 i = 0; i < mBuddies.Count(); ++i) {
     if (mBuddies[i]->GetBuddy() == aBuddy) {
@@ -239,7 +238,7 @@ NS_IMETHODIMP purpleBuddy::GetAccountCount(PRInt16 *aAccountCount)
 
 /* purpleIAccount getAccount (in short aAccountIndex); */
 NS_IMETHODIMP purpleBuddy::GetAccount(PRUint16 aAccountIndex,
-				      purpleIAccount **aResult)
+                                      purpleIAccount **aResult)
 {
   PURPLE_ENSURE_INIT(mId);
   NS_ENSURE_TRUE(aAccountIndex < mBuddies.Count(), NS_ERROR_FAILURE);
@@ -261,7 +260,7 @@ NS_IMETHODIMP purpleBuddy::GetAccounts(nsISimpleEnumerator **_retval)
 
 /* purpleIConversation createConversation (in unsigned short aAccountIndex); */
 NS_IMETHODIMP purpleBuddy::CreateConversation(PRUint16 aAccountIndex,
-					      purpleIConversation **aResult)
+                                              purpleIConversation **aResult)
 {
   PURPLE_ENSURE_INIT(mId);
   NS_ENSURE_TRUE(aAccountIndex < mBuddies.Count(), NS_ERROR_FAILURE);

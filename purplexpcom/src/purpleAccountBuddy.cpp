@@ -37,21 +37,34 @@
 
 #include "purpleAccountBuddy.h"
 #include "purpleCoreService.h"
-#include "purpleAccount.h"
 #include "purpleStorage.h"
 #include "purpleGListEnumerator.h"
 #include "purpleTooltipInfo.h"
+
 #include <nsServiceManagerUtils.h>
 #include <prprf.h>
+
 #pragma GCC visibility push(default)
 #include <libpurple/status.h>
 #pragma GCC visibility pop
 
 NS_IMPL_ISUPPORTS1(purpleAccountBuddy, purpleIAccountBuddy)
 
+#ifdef PR_LOGGING
+//
+// NSPR_LOG_MODULES=purpleAccountBuddy:5
+//
+static PRLogModuleInfo *gPurpleAccountBuddyLog = nsnull;
+#endif
+#define LOG(args) PR_LOG(gPurpleAccountBuddyLog, PR_LOG_DEBUG, args)
+
 purpleAccountBuddy::purpleAccountBuddy()
 {
   /* member initializers and constructor code */
+#ifdef PR_LOGGING
+  if (!gPurpleAccountBuddyLog)
+    gPurpleAccountBuddyLog = PR_NewLogModule("purpleAccountBuddy");
+#endif
 }
 
 purpleAccountBuddy::~purpleAccountBuddy()
@@ -98,10 +111,9 @@ nsresult purpleAccountBuddy::Store(PRInt32 aBuddyId)
   rv = statement->BindInt32Parameter(2, groupId);
   NS_ENSURE_SUCCESS(rv, rv);
 
-#ifdef DEBUG_PURPLE_BUDDY
-  printf("purpleAccountBuddy::Store(buddyId = %i, groupId = %i)\n",
-         aBuddyId, groupId);
-#endif
+  LOG(("purpleAccountBuddy::Store(buddyId = %i, groupId = %i)",
+       aBuddyId, groupId));
+
   return statement->Execute();
 }
 
@@ -203,11 +215,11 @@ NS_IMETHODIMP purpleAccountBuddy::GetTooltipInfo(nsISimpleEnumerator** aTooltipI
   NS_ENSURE_TRUE(mBuddy, NS_ERROR_NOT_INITIALIZED);
   NS_ENSURE_TRUE(mAccount, NS_ERROR_NOT_INITIALIZED);
 
-#ifdef DEBUG_PURPLE_BUDDY
+#ifdef PR_LOGGING
   nsCString name;
   mAccount->GetName(name);
-  printf("purpleAccountBuddy::GetTooltipInfo buddy = %s, account = %s\n",
-	 mBuddy->name, name.get());
+  LOG(("purpleAccountBuddy::GetTooltipInfo buddy = %s, account = %s",
+       mBuddy->name, name.get()));
 #endif
 
   nsCOMPtr<purpleIProtocol> proto;
@@ -224,8 +236,8 @@ NS_IMETHODIMP purpleAccountBuddy::GetTooltipInfo(nsISimpleEnumerator** aTooltipI
     purpleGListEnumerator *enumerator = new purpleGListEnumerator();
     enumerator->Init(purple_notify_user_info_get_entries(user_info),
                      purpleTypeToInterface<purpleTooltipInfo,
-		                           PurpleNotifyUserInfoEntry>,
-		     CleanUserInfo, user_info);
+                                           PurpleNotifyUserInfoEntry>,
+                     CleanUserInfo, user_info);
     NS_ADDREF(*aTooltipInfo = enumerator);
     return NS_OK;
   }
