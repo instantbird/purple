@@ -38,7 +38,6 @@
 #include "purpleAccount.h"
 #include "purpleCoreService.h"
 #include "purpleStorage.h"
-#include "prlog.h"
 #include <nsIPrefService.h>
 #include <nsServiceManagerUtils.h>
 #include <nsComponentManagerUtils.h>
@@ -46,15 +45,15 @@
 
 NS_IMPL_ISUPPORTS1(purpleAccount, purpleIAccount)
 
-#define PREF_PREFIX		"messenger.account."
-#define PREF_OPTIONS		"options."
-#define PREF_PRPL		"prpl"
-#define PREF_NAME		"name"
-#define PREF_ALIAS		"alias"
+#define PREF_PREFIX             "messenger.account."
+#define PREF_OPTIONS            "options."
+#define PREF_PRPL               "prpl"
+#define PREF_NAME               "name"
+#define PREF_ALIAS              "alias"
 #define PREF_PROXY              "proxy"
 #define PREF_AUTOLOGIN          "autoLogin"
-#define PREF_PASSWORD		"password"
-#define PREF_REMEMBER_PASSWORD	"rememberPassword"
+#define PREF_PASSWORD           "password"
+#define PREF_REMEMBER_PASSWORD  "rememberPassword"
 
 #ifdef PR_LOGGING
 //
@@ -73,7 +72,6 @@ purpleAccount::purpleAccount()
     gPurpleAccountLog = PR_NewLogModule("purpleAccount");
 #endif
   LOG(("Creating purpleAccount @%x\n", this));
-
 }
 
 purpleAccount::~purpleAccount()

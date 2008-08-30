@@ -37,12 +37,11 @@
 
 #include "purpleSockets.h"
 #include <private/pprio.h>
-#include<nsComponentManagerUtils.h>
-#include<nsServiceManagerUtils.h>
-#include<nsIProxyObjectManager.h>
-#include<nsIEventTarget.h>
-#include<nsThreadUtils.h>
-#include "prlog.h"
+#include <nsComponentManagerUtils.h>
+#include <nsServiceManagerUtils.h>
+#include <nsIProxyObjectManager.h>
+#include <nsIEventTarget.h>
+#include <nsThreadUtils.h>
 
 #ifdef PR_LOGGING
 //
@@ -60,7 +59,7 @@ PRUint32 purpleSocket::sLastSocket = 0;
 
 purpleSocket::purpleSocket()
   : mFunction(NULL),
-    mInternal(nsnull)    
+    mInternal(nsnull)
 {
 #ifdef PR_LOGGING
   if (!gPurpleSocketsLog)
