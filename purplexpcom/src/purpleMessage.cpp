@@ -36,36 +36,40 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "purpleMessage.h"
-#include "nsCOMPtr.h"
 #include "purpleCoreService.h"
-#include<nsServiceManagerUtils.h>
+#include <nsCOMPtr.h>
+#include <nsServiceManagerUtils.h>
 
-//#define DEBUG_PURPLE_MESSAGE
+#ifdef PR_LOGGING
+//
+// NSPR_LOG_MODULES=purpleMessage:5
+//
+static PRLogModuleInfo *gPurpleMessageLog = nsnull;
+#endif
+#define LOG(args) PR_LOG(gPurpleMessageLog, PR_LOG_DEBUG, args)
 
 NS_IMPL_ISUPPORTS1(purpleMessage, purpleIMessage)
 
 purpleMessage::purpleMessage()
 {
   /* member initializers and constructor code */
-#ifdef DEBUG_PURPLE_MESSAGE
-  printf("Constructing purpleMessage\n");
+#ifdef PR_LOGGING
+  if (!gPurpleMessageLog)
+    gPurpleMessageLog = PR_NewLogModule("purpleMessage");
 #endif
+  LOG(("Constructing purpleMessage @%x", this));
 }
 
 purpleMessage::~purpleMessage()
 {
   /* destructor code */
-#ifdef DEBUG_PURPLE_MESSAGE
-  printf("Destructing purpleMessage\n");
-#endif
+  LOG(("Destructing purpleMessage @%x", this));
 }
 
 nsresult purpleMessage::Init(PurpleConversation *conv, const char *who, const char *alias,
-			     const char *message, PurpleMessageFlags flags, time_t mtime)
+                             const char *message, PurpleMessageFlags flags, time_t mtime)
 {
-#ifdef DEBUG_PURPLE_MESSAGE
-  printf("Initializing purpleMessage\n");
-#endif
+  LOG(("Initializing purpleMessage"));
 
   mConv = conv;
   mWho = who;
@@ -76,9 +80,9 @@ nsresult purpleMessage::Init(PurpleConversation *conv, const char *who, const ch
   return NS_OK;
 }
 
-#define PURPLE_IMPL_GETSTRING(aName, aString)			\
-  NS_IMETHODIMP purpleMessage::Get##aName(nsACString& a##aName)	\
-  {								\
+#define PURPLE_IMPL_GETSTRING(aName, aString)                   \
+  NS_IMETHODIMP purpleMessage::Get##aName(nsACString& a##aName) \
+  {                                                             \
     a##aName = aString;                                         \
     return NS_OK;                                               \
   }
@@ -104,11 +108,11 @@ NS_IMETHODIMP purpleMessage::GetConversation(purpleIConversation * *aConversatio
   return NS_OK;
 }
 
-#define PURPLE_IMPL_GETBOOL(aName, aFlag)				\
-  NS_IMETHODIMP purpleMessage::Get##aName(PRBool *a##aName)		\
-  {									\
-    *a##aName = (mFlags & PURPLE_MESSAGE_##aFlag) ? PR_TRUE : PR_FALSE;	\
-    return NS_OK;							\
+#define PURPLE_IMPL_GETBOOL(aName, aFlag)                               \
+  NS_IMETHODIMP purpleMessage::Get##aName(PRBool *a##aName)             \
+  {                                                                     \
+    *a##aName = (mFlags & PURPLE_MESSAGE_##aFlag) ? PR_TRUE : PR_FALSE; \
+    return NS_OK;                                                       \
   }
 
 /* readonly attribute boolean outgoing; */

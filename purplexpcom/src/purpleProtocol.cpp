@@ -37,40 +37,50 @@
 
 #include "purpleProtocol.h"
 #include "purplePref.h"
-#include "nsCOMPtr.h"
-#include<nsComponentManagerUtils.h>
-#include<nsArrayEnumerator.h>
+#include <nsCOMPtr.h>
+#include <nsComponentManagerUtils.h>
+#include <nsArrayEnumerator.h>
 
-//#define DEBUG_PURPLE_PROTOCOL
-//#define DEBUG_DUMP_PREF_TEXT
+//#define CREATE_PRPL_PROPERTIES
+#ifdef CREATE_PRPL_PROPERTIES
+# include <stdio.h>
+#endif
+
+#ifdef PR_LOGGING
+//
+// NSPR_LOG_MODULES=purpleProtocol:5
+//
+static PRLogModuleInfo *gPurpleProtocolLog = nsnull;
+#endif
+#define LOG(args) PR_LOG(gPurpleProtocolLog, PR_LOG_DEBUG, args)
 
 /* Implementation file */
 NS_IMPL_ISUPPORTS1(purpleProtocol, purpleIProtocol)
 
 purpleProtocol::purpleProtocol()
+  :mInfo(nsnull)
 {
-  mInfo = nsnull;
-#ifdef DEBUG_PURPLE_PROTOCOL
-  printf("creating protocol\n");
-#endif
   /* member initializers and constructor code */
+#ifdef PR_LOGGING
+  if (!gPurpleProtocolLog)
+    gPurpleProtocolLog = PR_NewLogModule("purpleProtocol");
+#endif
+  LOG(("Creating protocol @%x", this));
 }
 
 void purpleProtocol::Init(PurplePluginInfo *aInfo)
 {
   mInfo = aInfo;
-#ifdef DEBUG_PURPLE_PROTOCOL
-  printf("setting mInfo to %i (%s, %s)\n",
-	 (PRUint32) mInfo, mInfo->name, mInfo->id);
+  LOG(("Setting mInfo to @%x (%s, %s)",
+       mInfo, mInfo->name, mInfo->id));
 
-  printf("start init protocol options\n");
-#endif
+  LOG(("Start init protocol options"));
   PurplePluginProtocolInfo *prpl_info = (PurplePluginProtocolInfo *) mInfo->extra_info;
   GList *l;
   for (l = prpl_info->protocol_options; l; l = l->next) {
     nsCOMPtr<purplePref> pref = do_CreateInstance(PURPLE_PREF_CONTRACTID);
 
-#ifdef DEBUG_DUMP_PREF_TEXT   
+#ifdef CREATE_PRPL_PROPERTIES
     PurpleAccountOption *pao = (PurpleAccountOption *) l->data;
     printf("%s.%s=%s\n", mInfo->id, pao->pref_name, pao->text);
 #endif
@@ -84,21 +94,17 @@ void purpleProtocol::Init(PurplePluginInfo *aInfo)
   for (l = prpl_info->user_splits; l; l = l->next) {
     PurpleAccountUserSplit *us = (PurpleAccountUserSplit *) l->data;
     printf(" %s (= %s), separator = '%c'\n",
-	   us->text, us->default_value, us->field_sep);
+           us->text, us->default_value, us->field_sep);
   }
 #endif
 
-#ifdef DEBUG_PURPLE_PROTOCOL
-  printf("end init protocol options\n");
-#endif
+  LOG(("End init protocol options"));
 }
 
 purpleProtocol::~purpleProtocol()
 {
-#ifdef DEBUG_PURPLE_PROTOCOL
-  printf("destructing protocol : %s\n", mInfo ? mInfo->name : "not initialized");
-#endif
   /* destructor code */
+  LOG(("Destructing protocol : %s (@%x)", mInfo ? mInfo->name : "not initialized", this));
 }
 
 /* readonly attribute AUTF8String name; */
@@ -121,12 +127,12 @@ NS_IMETHODIMP purpleProtocol::GetId(nsACString& aId)
 
 /* boolean accountExists (in AUTF8String aName); */
 NS_IMETHODIMP purpleProtocol::AccountExists(const nsACString& aName,
-					    PRBool *aExists)
+                                            PRBool *aExists)
 {
   NS_ENSURE_TRUE(mInfo, NS_ERROR_NOT_INITIALIZED);
 
   *aExists = !!purple_accounts_find(PromiseFlatCString(aName).get(),
-				    mInfo->id);
+                                    mInfo->id);
   return NS_OK;
 }
 
@@ -139,13 +145,13 @@ NS_IMETHODIMP purpleProtocol::GetOptions(nsISimpleEnumerator **aResult)
 }
 
 inline nsresult purpleProtocol::GetBoolOpt(PRBool *aRes,
-					   PurpleProtocolOptions aOpt)
+                                           PurpleProtocolOptions aOpt)
 {
   NS_ENSURE_TRUE(mInfo, NS_ERROR_NOT_INITIALIZED);
 
   PurplePluginProtocolInfo *prpl_info =
     (PurplePluginProtocolInfo *) mInfo->extra_info;
-  
+
   *aRes = prpl_info->options & aOpt ? PR_TRUE : PR_FALSE;
 
   return NS_OK;

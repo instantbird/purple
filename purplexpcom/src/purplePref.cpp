@@ -38,35 +38,37 @@
 #include "purplePref.h"
 #include <nsStringAPI.h>
 
-#ifdef DEBUG_PURPLE_PREF
-# include <stdio.h>
+#ifdef PR_LOGGING
+//
+// NSPR_LOG_MODULES=purplePref:5
+//
+static PRLogModuleInfo *gPurplePrefLog = nsnull;
 #endif
+#define LOG(args) PR_LOG(gPurplePrefLog, PR_LOG_DEBUG, args)
 
 NS_IMPL_ISUPPORTS1(purplePref, purpleIPref)
 
 purplePref::purplePref()
 {
-#ifdef DEBUG_PURPLE_PREF
-  printf("  creating purplePref\n");
-#endif
   /* member initializers and constructor code */
+#ifdef PR_LOGGING
+  if (!gPurplePrefLog)
+    gPurplePrefLog = PR_NewLogModule("purplePref");
+#endif
+  LOG(("Constructing purplePref @%x", this));
 }
 
 void purplePref::Init(PurpleAccountOption *aOpt)
 {
   mOpt = aOpt;
-#ifdef DEBUG_PURPLE_PREF
-  printf("   purplePref (type %i) %s initialized\n",
-         mOpt->type, mOpt->pref_name);
-#endif
+  LOG(("\tpurplePref (type %i) %s initialized",
+       mOpt->type, mOpt->pref_name));
 }
 
 purplePref::~purplePref()
 {
-#ifdef DEBUG_PURPLE_PREF
-  printf("  destructing purplePref\n");
-#endif
   /* destructor code */
+  LOG(("Destructing purplePref @%x", this));
 }
 
 #define PURPLE_IMPL_PREF_GETTER(code)                   \

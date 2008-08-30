@@ -36,21 +36,24 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "purpleTimer.h"
-#include<nsComponentManagerUtils.h>
+#include <prlog.h>
+#include <nsComponentManagerUtils.h>
 
 #ifdef XP_WIN
-#include<nsServiceManagerUtils.h>
-#include<nsIThreadManager.h>
-#include<nsIEventTarget.h>
-#include<nsThreadUtils.h>
-#include<nsXPCOMCIDInternal.h>
+#include <nsServiceManagerUtils.h>
+#include <nsIThreadManager.h>
+#include <nsIEventTarget.h>
+#include <nsThreadUtils.h>
+#include <nsXPCOMCIDInternal.h>
 #endif
 
-//#define DEBUG_PURPLE_TIMER
-
-#ifdef DEBUG_PURPLE_TIMER
-# include<stdio.h>
+#ifdef PR_LOGGING
+//
+// NSPR_LOG_MODULES=purpleTimer:5
+//
+static PRLogModuleInfo *gPurpleTimerLog = nsnull;
 #endif
+#define LOG(args) PR_LOG(gPurpleTimerLog, PR_LOG_DEBUG, args)
 
 /* Init static members */
 PRUint32 purpleTimer::sLastTimer = 0;
@@ -58,6 +61,10 @@ nsTArray<purpleTimeout *> *purpleTimer::sTimeouts = nsnull;
 
 void purpleTimer::init()
 {
+#ifdef PR_LOGGING
+  if (!gPurpleTimerLog)
+    gPurpleTimerLog = PR_NewLogModule("purpleTimer");
+#endif
   sTimeouts = new nsTArray<purpleTimeout *>();
 }
 
@@ -93,9 +100,7 @@ PRUint32 purpleTimer::AddTimeout(PRUint32 aInterval,
   */
   if (aInterval == 5000 && aData == NULL) {
     /* assume this is a buddy list, accounts or prefs saving */
-#ifdef DEBUG_PURPLE_TIMER
-    printf("TIMEOUT REFUSED\n");
-#endif
+    LOG(("purpleTimer::AddTimeout : TIMEOUT REFUSED"));
     return 0;
   }
 
@@ -127,11 +132,9 @@ PRUint32 purpleTimer::AddTimeout(PRUint32 aInterval,
   timer->mId = ++sLastTimer;
   timer->mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
   timer->mTimer->InitWithFuncCallback(ExecTimer, timer,
-				      aInterval, nsITimer::TYPE_REPEATING_SLACK);
+                                      aInterval, nsITimer::TYPE_REPEATING_SLACK);
   sTimeouts->AppendElement(timer);
-#ifdef DEBUG_PURPLE_TIMER
-  printf("TIMEOUTADD id = %i; interval = %ims\n", timer->mId, aInterval);
-#endif
+  LOG(("TIMEOUTADD id = %i; interval = %ims\n", timer->mId, aInterval));
 
   return timer->mId;
 }
@@ -144,9 +147,7 @@ void purpleTimer::ExecTimer(nsITimer *aTimer, void *aTimerClosure)
      mFunction calls purple_timeout_remove, timeout will already be
      freed when we will try to call CancelTimer */
   PRUint32 id = timeout->mId;
-#ifdef DEBUG_PURPLE_TIMER
-  printf("TIMEOUT EXEC id = %i\n", id);
-#endif
+  LOG(("TIMEOUT EXEC id = %i", id));
   PRBool shouldContinue = timeout->mFunction(timeout->mData);
   if (!shouldContinue) {
     CancelTimer(id);
@@ -155,24 +156,18 @@ void purpleTimer::ExecTimer(nsITimer *aTimer, void *aTimerClosure)
 
 PRBool purpleTimer::CancelTimer(PRUint32 aId)
 {
-#ifdef DEBUG_PURPLE_TIMER
-  printf("Trying to cancel timeout with id %i\n", aId);
-#endif
+  LOG(("Trying to cancel timeout with id %i", aId));
   for (PRUint32 i = 0; i < sTimeouts->Length(); ++i) {
     if ((*sTimeouts)[i]->mId == aId) {
       purpleTimeout *timeout = (*sTimeouts)[i];
       timeout->mTimer->Cancel();
       delete timeout;
       sTimeouts->RemoveElementAt(i);
-#ifdef DEBUG_PURPLE_TIMER
-      printf("Timeout elt found at index %i; canceled and removed\n", i);
-#endif
+      LOG(("Timeout elt found at index %i; canceled and removed", i));
       return PR_TRUE;
     }
   }
 
-#ifdef DEBUG_PURPLE_TIMER
-  printf("Timeout with id %i not found.\n", aId);
-#endif
+  LOG(("purpleTimer::CancelTimer : Timeout with id %i not found.", aId));
   return PR_FALSE;
 }
