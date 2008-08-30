@@ -36,32 +36,35 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "purpleCoreService.h"
-#include "purpleProtocol.h"
-#include "purpleBuddy.h"
 #include "purpleStorage.h"
 #include "purpleSockets.h"
 #include "purpleDNS.h"
 #include "purpleTimer.h"
-#include "nsXPCOM.h"
-#include <glib.h>
 
 #pragma GCC visibility push(default)
 #include <libpurple/core.h>
 #include <libpurple/savedstatuses.h>
 #pragma GCC visibility pop
 
-#include<nsServiceManagerUtils.h>
-#include<nsComponentManagerUtils.h>
-#include<nsIObserverService.h>
+#include <nsServiceManagerUtils.h>
+#include <nsComponentManagerUtils.h>
+#include <nsIObserverService.h>
 #include <nsIConsoleService.h>
-#include<nsIPrefService.h>
-#include<nsCOMPtr.h>
-#include<nsCRTGlue.h>
-#include<stdio.h>
+#include <nsIPrefService.h>
+#include <nsCOMPtr.h>
+#include <nsCRTGlue.h>
+#include <nsXPCOM.h>
+#include <nsArrayEnumerator.h>
 
-#include<nsArrayEnumerator.h>
+#ifdef PR_LOGGING
+#include <prprf.h>
+//
+// NSPR_LOG_MODULES=purpleCoreService:5
+//
+static PRLogModuleInfo *gPurpleCoreServiceLog = nsnull;
+#endif
+#define LOG(args) PR_LOG(gPurpleCoreServiceLog, PR_LOG_DEBUG, args)
 
-//#define DEBUG_PURPLE_CORE_SERVICE
 
 #define PREF_MESSENGER_ACCOUNTS "messenger.accounts"
 
@@ -78,6 +81,10 @@ purpleCoreService::purpleCoreService()
    mAccounts(nsnull),
    mConversations(nsnull)
 {
+#ifdef PR_LOGGING
+  if (!gPurpleCoreServiceLog)
+    gPurpleCoreServiceLog = PR_NewLogModule("purpleCoreService");
+#endif
   mPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
   mBuddiesById.Init();
   mTagById.Init();
@@ -94,9 +101,7 @@ NS_IMETHODIMP purpleCoreService::Init()
 {
   /* We shouldn't init the core twice. If the core service is already
      initialized, return with an error */
-  if (mInitialized) {
-    return NS_ERROR_ALREADY_INITIALIZED;
-  }
+  NS_ENSURE_TRUE(!mInitialized, NS_ERROR_ALREADY_INITIALIZED);
 
   purpleSocketWatcher::init();
   purpleDNS::init();
@@ -123,9 +128,7 @@ NS_IMETHODIMP purpleCoreService::Init()
   /* Load the buddy list from mozStorage */
   InitBuddyList();
 
-#ifdef DEBUG_PURPLE_CORE_SERVICE
-  printf("libpurple initialized\n");
-#endif
+  LOG(("Libpurple initialized"));
 
   return NS_OK;
 }
@@ -155,10 +158,9 @@ nsresult purpleCoreService::InitBuddyList()
     nsCString name;
     rv = statement->GetUTF8String(1, name);
     NS_ENSURE_SUCCESS(rv, rv);
-#ifdef DEBUG_PURPLE_CORE_SERVICE 
-    printf("pcs::InitBuddyList: reading group %s (id %i)\n",
-           name.get(), id);
-#endif
+
+    LOG(("pcs::InitBuddyList: reading group %s (id %i)",
+         name.get(), id));
     PurpleGroup *group = purple_group_new(name.get());
     nsCOMPtr<purpleTag> tag = do_CreateInstance(PURPLE_TAG_CONTRACTID);
     tag->Init(id, group);
@@ -181,26 +183,29 @@ nsresult purpleCoreService::InitBuddyList()
     NS_ENSURE_SUCCESS(rv, rv);
     PRInt32 tagId = statement->AsInt32(3);
     PRInt32 accountId = statement->AsInt32(4);
-#ifdef DEBUG_PURPLE_CORE_SERVICE 
-    printf("pcs::InitBuddyList: reading buddy %s of account %i, group %i\n",
-           name.get(), accountId, tagId);
-#endif
+    LOG(("pcs::InitBuddyList: reading buddy %s of account %i, group %i",
+         name.get(), accountId, tagId));
+
     nsCOMPtr<purpleTag> tag;
     if (!mTagById.Get(tagId, getter_AddRefs(tag))) {
       // Should never happen. Corrupted blist.sqlite ?
-#ifdef DEBUG_PURPLE_CORE_SERVICE 
-      printf("pcs::InitBuddyList: Cannot get group with id %i\n", tagId);
+#ifdef PR_LOGGING
+      char errorMsg[60];
+      if (PR_snprintf(errorMsg, 60, "pcs::InitBuddyList: Cannot get group with id %i", tagId) > 0)
+        NS_WARNING(errorMsg);
 #endif
-      continue; 
+      continue;
     }
     nsCOMPtr<purpleAccount> account;
     rv = GetAccountById(accountId, getter_AddRefs(account));
     if (NS_FAILED(rv)) {
       // Should never happen. Corrupted blist.sqlite ?
-#ifdef DEBUG_PURPLE_CORE_SERVICE 
-      printf("pcs::InitBuddyList: Cannot get account with id %i\n", accountId);
+#ifdef PR_LOGGING
+      char errorMsg[60];
+      if (PR_snprintf(errorMsg, 60, "pcs::InitBuddyList: Cannot get account with id %i", accountId) > 0)
+        NS_WARNING(errorMsg);
 #endif
-      continue; 
+      continue;
     }
 
     // When alias == name, don't set the alias so that when calling
@@ -213,9 +218,7 @@ nsresult purpleCoreService::InitBuddyList()
                        alias.Equals(name) ? NULL : alias.get());
     tag->addBuddy(buddy);
 
-#ifdef DEBUG_PURPLE_CORE_SERVICE 
-    printf("Looking for purpleBuddy with id %i in HashTable\n", id);
-#endif
+    LOG(("Looking for purpleBuddy with id %i in HashTable", id));
     nsCOMPtr<purpleBuddy> purpleBuddy;
     if (!mBuddiesById.Get(id, getter_AddRefs(purpleBuddy))) {
       purpleBuddy = do_CreateInstance(PURPLE_BUDDY_CONTRACTID, &rv);
@@ -223,14 +226,10 @@ nsresult purpleCoreService::InitBuddyList()
         continue;
       purpleBuddy->load(buddy, account, id, tag);
       mBuddiesById.Put(id, purpleBuddy);
-#ifdef DEBUG_PURPLE_CORE_SERVICE
-      printf("purpleBuddy added in HashTable with Id %i\n", id);
-#endif
+      LOG(("purpleBuddy added in HashTable with Id %i", id));
     }
     else {
-#ifdef DEBUG_PURPLE_CORE_SERVICE 
-      printf("found purpleBuddy with id %i in HashTable, adding account\n", id);
-#endif
+      LOG(("Found purpleBuddy with id %i in HashTable, adding account", id));
       purpleBuddy->AddAccount(account, buddy, tag);
     }
     buddy->node.ui_data = purpleBuddy;
@@ -242,38 +241,32 @@ nsresult purpleCoreService::InitBuddyList()
 
 void purpleCoreService::InitProtocols()
 {
-#ifdef DEBUG_PURPLE_CORE_SERVICE
-  printf("start init protocols\n");
+  LOG(("Start init protocols"));
 
-#if 1
-  //this code demonstrate how to enumerate protocols from libpurple
+#ifdef PR_LOGGING
+  // this code demonstrate how to enumerate protocols from libpurple
   GList *iter = purple_plugins_get_protocols();
   for (int i = 0; iter; iter = iter->next) {
     PurplePlugin *plugin = (PurplePlugin *) iter->data;
     PurplePluginInfo *info = plugin->info;
     if (info && info->name) {
-      printf("\t%d: %s (%s)\n", i++, info->name, info->id);
+      LOG(("\t%d: %s (%s)", i++, info->name, info->id));
     }
   }
 #endif
 
-#endif
   for (GList *iter = purple_plugins_get_protocols();
        iter; iter = iter->next) {
     PurplePlugin *plugin = (PurplePlugin *) iter->data;
     PurplePluginInfo *info = plugin->info;
     if (info && info->name) {
-#ifdef DEBUG_PURPLE_CORE_SERVICE
-      printf("trying to create %s :\t (%s)\n", info->name, info->id);
-#endif
+      LOG(("Trying to create %s :\t (%s)", info->name, info->id));
       nsCOMPtr<purpleProtocol> proto = do_CreateInstance(PURPLE_PROTOCOL_CONTRACTID);
       proto->Init(info);
       mProtocols.AppendObject(proto);
     }
   }
-#ifdef DEBUG_PURPLE_CORE_SERVICE
-  printf("end init protocols\n");
-#endif
+  LOG(("End init protocols"));
 }
 
 /* void Quit (); */
@@ -297,9 +290,7 @@ NS_IMETHODIMP purpleCoreService::Quit()
   mProxies.Clear();
   mInitialized = PR_FALSE;
   purple_core_quit();
-#ifdef DEBUG_PURPLE_CORE_SERVICE
-  printf("purple_core_quit\n");
-#endif
+  LOG(("purple_core_quit"));
   mBuddiesById.Clear(); // FIXME: this can and should be done before
                         // purple_core_quit() once the blist signal
                         // handlers are removed properly
@@ -321,18 +312,14 @@ NS_IMETHODIMP purpleCoreService::GetVersion(nsACString& aVersion)
 
 /* purpleIBuddy getBuddyById (in long aId); */
 NS_IMETHODIMP purpleCoreService::GetBuddyById(PRInt32 aId,
-					      purpleIBuddy **aResult)
+                                              purpleIBuddy **aResult)
 {
-#ifdef DEBUG_PURPLE_CORE_SERVICE
-  printf("pcs->GetBuddyById(%i)\n", aId);
-#endif
+  LOG(("pcs->GetBuddyById(%i)", aId));
 
   purpleBuddy *buddyPtr = NULL;
   if (mBuddiesById.Get(aId, &buddyPtr)) {
     *aResult = buddyPtr;
-#ifdef DEBUG_PURPLE_CORE_SERVICE
-    printf("purpleBuddy found in HashTable (by Id)\n");
-#endif
+    LOG(("purpleBuddy found in HashTable (by Id)"));
     return NS_OK;
   }
 
@@ -341,12 +328,10 @@ NS_IMETHODIMP purpleCoreService::GetBuddyById(PRInt32 aId,
 
 /* [noscript] purpleIBuddy getBuddyByPurpleBuddy (in PurpleNativeBuddy aBuddy); */
 NS_IMETHODIMP purpleCoreService::GetBuddyByPurpleBuddy(PurpleBuddy * aBuddy,
-						       purpleIBuddy **aResult)
+                                                       purpleIBuddy **aResult)
 {
-#ifdef DEBUG_PURPLE_CORE_SERVICE 
-  printf("pcs::GetBuddyByPurpleBuddy(buddy = %s, group = %s)\n", aBuddy->name,
-         purple_group_get_name(purple_buddy_get_group(aBuddy)));
-#endif
+  LOG(("pcs::GetBuddyByPurpleBuddy(buddy = %s, group = %s)", aBuddy->name,
+       purple_group_get_name(purple_buddy_get_group(aBuddy))));
 
   /* First, check the ui_data pointer, if it is not NULL then just
    * return the associated purpleBuddy.
@@ -355,9 +340,7 @@ NS_IMETHODIMP purpleCoreService::GetBuddyByPurpleBuddy(PurpleBuddy * aBuddy,
   if (buddyPtr) {
     *aResult = buddyPtr;
     NS_ADDREF(*aResult);
-#ifdef DEBUG_PURPLE_CORE_SERVICE
-    printf("purpleBuddy found in ui_data\n");
-#endif
+    LOG(("purpleBuddy found in ui_data"));
     return NS_OK;
   }
 
@@ -375,10 +358,8 @@ NS_IMETHODIMP purpleCoreService::GetBuddyByPurpleBuddy(PurpleBuddy * aBuddy,
   rv = statement->BindUTF8StringParameter(1, prpl);
   NS_ENSURE_SUCCESS(rv, rv);
 
-#ifdef DEBUG_PURPLE_CORE_SERVICE 
-  printf("pcs->GetBuddyByPurpleBuddy(buddy = %s (%s)) Searching in mozStorage\n",
-         name.get(), prpl.get());
-#endif
+  LOG(("pcs->GetBuddyByPurpleBuddy(buddy = %s (%s)) Searching in mozStorage",
+       name.get(), prpl.get()));
 
   PRBool found;
   rv = statement->ExecuteStep(&found);
@@ -395,7 +376,7 @@ NS_IMETHODIMP purpleCoreService::GetBuddyByPurpleBuddy(PurpleBuddy * aBuddy,
       aBuddy->node.ui_data = buddy;
       return buddy->AddAccount(aBuddy);
     }
-    NS_WARNING("Let's ignore the dummy mozStorage entry we found!\n");
+    NS_WARNING("Let's ignore the dummy mozStorage entry we found!");
   }
 
   /* At this point, if we still haven't found it, this is a NEW
@@ -406,9 +387,7 @@ NS_IMETHODIMP purpleCoreService::GetBuddyByPurpleBuddy(PurpleBuddy * aBuddy,
   NS_ENSURE_SUCCESS(rv, rv);
   buddy->Init(aBuddy);
   aBuddy->node.ui_data = buddy;
-#ifdef DEBUG_PURPLE_CORE_SERVICE
-  printf("purpleBuddy added in HashTable with Id %i\n", buddy->getId());
-#endif
+  LOG(("purpleBuddy added in HashTable with Id %i", buddy->getId()));
   mBuddiesById.Put(buddy->getId(), buddy);
 
   *aResult = buddy;
@@ -422,9 +401,7 @@ NS_IMETHODIMP purpleCoreService::AddBuddy(purpleIAccount *aAccount,
 {
   NS_ENSURE_ARG_POINTER(aAccount);
   NS_ENSURE_ARG_POINTER(aTag);
-  if (aName.IsEmpty()) {
-    return NS_ERROR_INVALID_ARG;
-  }
+  NS_ENSURE_ARG(!aName.IsEmpty());
 
   purpleTag *tag = static_cast<purpleTag *>(aTag);
   PurpleAccount *account = static_cast<purpleAccount *>(aAccount)->GetPurpleAccount();
@@ -448,9 +425,7 @@ NS_IMETHODIMP purpleCoreService::PurpleBuddyRemoved(PurpleBuddy *aBuddy)
 NS_IMETHODIMP purpleCoreService::CreateTag(const nsACString& aName,
                                            purpleITag **aResult)
 {
-  if (aName.IsEmpty()) {
-    return NS_ERROR_INVALID_ARG;
-  }
+  NS_ENSURE_ARG(!aName.IsEmpty());
 
   //FIXME unacceptable code duplication from GetTagFromPurpleBuddy
 
@@ -471,9 +446,7 @@ NS_IMETHODIMP purpleCoreService::CreateTag(const nsACString& aName,
 
     rv = statement->Execute();
     NS_ENSURE_SUCCESS(rv, rv);
-#ifdef DEBUG_PURPLE_CORE_SERVICE 
-    printf("pcs::CreateTag: stored group %s\n", groupName.get());
-#endif
+    LOG(("pcs::CreateTag: stored group %s", groupName.get()));
     PRInt32 id;
     rv = GetTagIdFromName(groupName, &id);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -517,9 +490,7 @@ nsresult purpleCoreService::GetTagIdFromName(const nsCString& aName,
   PRBool hasMoreData;
   if (NS_SUCCEEDED(statement->ExecuteStep(&hasMoreData)) && hasMoreData) {
     *aResult = statement->AsInt32(0);
-#ifdef DEBUG_PURPLE_CORE_SERVICE 
-    printf("pcs::GetTagIdFromName(name = %s), found at id %i\n", aName.get(), *aResult);
-#endif
+    LOG(("pcs::GetTagIdFromName(name = %s), found at id %i", aName.get(), *aResult));
     return NS_OK;
   }
 
@@ -566,9 +537,7 @@ nsresult purpleCoreService::GetTagFromPurpleBuddy(PurpleBuddy *aBuddy,
 
     rv = statement->Execute();
     NS_ENSURE_SUCCESS(rv, rv);
-#ifdef DEBUG_PURPLE_CORE_SERVICE 
-    printf("pcs::GetTagFromPurpleBuddy: stored group %s\n", groupName.get());
-#endif
+    LOG(("pcs::GetTagFromPurpleBuddy: stored group %s", groupName.get()));
     PRInt32 id;
     rv = GetTagIdFromName(groupName, &id);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -593,13 +562,11 @@ NS_IMETHODIMP purpleCoreService::GetConversations(nsISimpleEnumerator **aResult)
 
 /* purpleIProtocol getConversationById (in string aConversationId); */
 NS_IMETHODIMP purpleCoreService::GetConversationById(PRUint32 aId,
-						     purpleIConversation **aResult)
+                                                     purpleIConversation **aResult)
 {
   PURPLE_ENSURE_INIT(mInitialized);
 
-#ifdef DEBUG_PURPLE_CORE_SERVICE
-  printf("GetConversationById(%i)\n", aId);
-#endif
+  LOG(("GetConversationById(%i)", aId));
 
   for (PRInt32 i = mConversations.Count() - 1; i >= 0; --i) {
     if (mConversations[i]->GetId() == aId) {
@@ -621,24 +588,18 @@ void purpleCoreService::AddConversation(purpleConversation* aConv)
 
 void purpleCoreService::RemoveConversation(PurpleConversation *aConv)
 {
-#ifdef DEBUG_PURPLE_CORE_SERVICE
-  printf("purpleCoreService::RemoveConversation aConv = %i\n", (size_t) aConv);
-#endif
+  LOG(("purpleCoreService::RemoveConversation aConv = %i", (size_t) aConv));
 
   purpleConversation *conv = (purpleConversation *)aConv->ui_data;
   for (PRInt32 i = mConversations.Count() - 1; i >= 0; --i) {
     if (mConversations[i] == conv) {
-#ifdef DEBUG_PURPLE_CORE_SERVICE
-      printf("purpleCoreSevice::RemoveConversation: Found\n");
-#endif
+      LOG(("purpleCoreSevice::RemoveConversation: Found"));
       mConversations[i]->UnInit();
       mConversations.RemoveObjectAt(i);
       return;
     }
   }
-#ifdef DEBUG_PURPLE_CORE_SERVICE
-  printf("purpleCoreSevice::RemoveConversation: Not Found\n");
-#endif
+  NS_WARNING("purpleCoreSevice::RemoveConversation: Not Found");
 }
 
 /* nsISimpleEnumerator getProtocols (); */
@@ -693,11 +654,9 @@ nsresult purpleCoreService::InitProxies()
   /* Get the list of proxies */
   nsCString proxyList;
   nsresult rv = mPrefService->GetCharPref(PREF_MESSENGER_PROXIES,
-					  getter_Copies(proxyList));
+                                          getter_Copies(proxyList));
 
-#ifdef DEBUG_PURPLE_CORE_SERVICE
-  printf("InitProxies list = %s\n", proxyList.get());
-#endif
+  LOG(("InitProxies list = %s", proxyList.get()));
 
   nsCOMPtr<purpleProxy> proxy;
   char *newStr = proxyList.BeginWriting();
@@ -707,35 +666,28 @@ nsresult purpleCoreService::InitProxies()
        token = NS_strtok(",", &newStr)) {
     key = token;
     key.StripWhitespace();
-    
+
     if (key.IsEmpty()) {
       continue;
     }
 
-#ifdef DEBUG_PURPLE_CORE_SERVICE
-    printf("creating proxy %s \n", key.get());
-#endif
+    LOG(("Creating proxy %s", key.get()));
 
     /* create the purpleProxy object */
     proxy = do_CreateInstance(PURPLE_PROXY_CONTRACTID);
-    if (!proxy)
-      return NS_ERROR_OUT_OF_MEMORY;
+    NS_ENSURE_TRUE(proxy, NS_ERROR_OUT_OF_MEMORY);
 
-#ifdef DEBUG_PURPLE_CORE_SERVICE
-    printf("creating proxy %s \n", key.get());
-#endif
+    LOG(("Creating proxy %s", key.get()));
 
     rv = proxy->Init(key);
     if (NS_FAILED(rv)) {
-      NS_WARNING("failed to init proxy!\n");
+      NS_WARNING("Failed to init proxy!");
       continue;
     }
 
     /* Keep it in the local proxy list */
     mProxies.AppendObject(proxy);
-#ifdef DEBUG_PURPLE_CORE_SERVICE
-    printf("adding proxy %s in the list \n", key.get());
-#endif
+    LOG(("Adding proxy %s in the list", key.get()));
   }
 
   /* Read the pref indicating the global proxy settings */
@@ -793,7 +745,7 @@ NS_IMETHODIMP purpleCoreService::CreateProxy(PRInt16 aType, const nsACString & a
   /* Get the list of proxies */
   nsCString proxyList;
   nsresult rv = mPrefService->GetCharPref(PREF_MESSENGER_PROXIES,
-					  getter_Copies(proxyList));
+                                          getter_Copies(proxyList));
   NS_ENSURE_SUCCESS(rv, rv);
 
   /* Get a new unique proxy key */
@@ -805,7 +757,7 @@ NS_IMETHODIMP purpleCoreService::CreateProxy(PRInt16 aType, const nsACString & a
     key.AppendInt(i);
     for (PRInt32 j = mProxies.Count() - 1; j >= 0; --j) {
       if ((found = mProxies[j]->GetKey().Equals(key))) {
-	break;
+        break;
       }
     }
     ++i;
@@ -919,11 +871,9 @@ nsresult purpleCoreService::InitAccounts()
   /* Get the list of accounts */
   nsCString accountList;
   nsresult rv = mPrefService->GetCharPref(PREF_MESSENGER_ACCOUNTS,
-					  getter_Copies(accountList));
+                                          getter_Copies(accountList));
 
-#ifdef DEBUG_PURPLE_CORE_SERVICE
-  printf("InitAccounts list = %s\n", accountList.get());
-#endif
+  LOG(("InitAccounts list = %s", accountList.get()));
 
   nsCOMPtr<purpleAccount> account;
   char *newStr = accountList.BeginWriting();
@@ -933,7 +883,7 @@ nsresult purpleCoreService::InitAccounts()
        token = NS_strtok(",", &newStr)) {
     key = token;
     key.StripWhitespace();
-    
+
     if (key.IsEmpty()) {
       continue;
     }
@@ -957,13 +907,13 @@ nsresult purpleCoreService::InitAccounts()
 
 /* purpleIAccount createAccount(in AUTF8String aName, in AUTF8String aPrpl); */
 NS_IMETHODIMP purpleCoreService::CreateAccount(const nsACString &aName,
-					       const nsACString &aPrpl,
-					       purpleIAccount **aResult)
+                                               const nsACString &aPrpl,
+                                               purpleIAccount **aResult)
 {
   /* Get the list of accounts */
   nsCString accountList;
   nsresult rv = mPrefService->GetCharPref(PREF_MESSENGER_ACCOUNTS,
-					  getter_Copies(accountList));
+                                          getter_Copies(accountList));
   NS_ENSURE_SUCCESS(rv, rv);
 
   /* Prepare the statement that will be used to check that the key
@@ -987,7 +937,7 @@ NS_IMETHODIMP purpleCoreService::CreateAccount(const nsACString &aName,
     key.AppendInt(i);
     for (PRInt32 j = mAccounts.Count() - 1; j >= 0; --j) {
       if ((found = mAccounts[j]->GetKey().Equals(key))) {
-	break;
+        break;
       }
     }
     if (!found) {
@@ -1045,9 +995,8 @@ NS_IMETHODIMP purpleCoreService::CreateAccount(const nsACString &aName,
 /* void deleteAccount (in AUTF8String accountId); */
 NS_IMETHODIMP purpleCoreService::DeleteAccount(const nsACString& aAccountId)
 {
-#ifdef DEBUG_PURPLE_CORE_SERVICE
-  printf("attempting to delete %s\n", PromiseFlatCString(aAccountId).get());
-#endif
+  LOG(("Attempting to delete %s", PromiseFlatCString(aAccountId).get()));
+
   /* delete the account */
   PRInt32 i;
   for (i = mAccounts.Count() - 1; i >= 0; --i) {
@@ -1061,23 +1010,22 @@ NS_IMETHODIMP purpleCoreService::DeleteAccount(const nsACString& aAccountId)
       break;
     }
   }
-  if (i < 0) {
-    return NS_ERROR_FAILURE;
-  }
+
+  NS_ENSURE_TRUE(i >= 0, NS_ERROR_FAILURE);
 
   /*Update the list of accounts in the prefs */
 
   /* Get the list of accounts */
   nsCString accountList;
   nsresult rv = mPrefService->GetCharPref(PREF_MESSENGER_ACCOUNTS,
-					  getter_Copies(accountList));
+                                          getter_Copies(accountList));
   NS_ENSURE_SUCCESS(rv, rv);
- 
+
   // reconstruct the new account list, re-adding all accounts except
   // the one with 'key'
   nsCString newAccountList;
   char *newStr = accountList.BeginWriting();
-  
+
   for (char *token = NS_strtok(",", &newStr);
        token;
        token = NS_strtok(",", &newStr)) {
@@ -1087,14 +1035,14 @@ NS_IMETHODIMP purpleCoreService::DeleteAccount(const nsACString& aAccountId)
     // re-add the candidate key only if it's not the key we're looking for
     if (!testKey.IsEmpty() && !testKey.Equals(aAccountId)) {
       if (!newAccountList.IsEmpty())
-	newAccountList.Append(',');
+        newAccountList.Append(',');
       newAccountList += testKey;
     }
   }
 
   // now write the new account list back to the prefs
   rv = mPrefService->SetCharPref(PREF_MESSENGER_ACCOUNTS,
-				newAccountList.get());
+                                 newAccountList.get());
   NS_ENSURE_SUCCESS(rv, rv);
 
   // ensure the change is written to the disk now
@@ -1104,22 +1052,20 @@ NS_IMETHODIMP purpleCoreService::DeleteAccount(const nsACString& aAccountId)
 
 /* void notifyObservers (in nsISupports aObj, in string aEvent); */
 NS_IMETHODIMP purpleCoreService::NotifyObservers(nsISupports *aObj,
-						 const char *aEvent)
+                                                 const char *aEvent)
 {
   nsresult rv;
   nsCOMPtr<nsIObserverService> os =
     do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-#ifdef DEBUG_PURPLE_CORE_SERVICE
-  printf("notifying observers of %s\n", aEvent);
-#endif
+  LOG(("Notifying observers of %s", aEvent));
   return os->NotifyObservers(aObj, aEvent, nsnull);
 }
 
 /* [noscript] purpleIAccount getAccountByPurpleAccount (in PurpleNativeAccount aAccount); */
 NS_IMETHODIMP purpleCoreService::GetAccountByPurpleAccount(PurpleAccount * aAccount,
-							   purpleIAccount **aResult)
+                                                           purpleIAccount **aResult)
 {
   PURPLE_ENSURE_INIT(mInitialized);
 
@@ -1129,9 +1075,7 @@ NS_IMETHODIMP purpleCoreService::GetAccountByPurpleAccount(PurpleAccount * aAcco
       NS_ADDREF(*aResult);
       return NS_OK;
     }
-#ifdef DEBUG_PURPLE_CORE_SERVICE
-    printf("mAccounts[%i]: %s\n", i, mAccounts[i]->IsPurpleAccount(NULL) ? "NULL" : "not null");
-#endif
+    LOG(("mAccounts[%i]: %s", i, mAccounts[i]->IsPurpleAccount(NULL) ? "NULL" : "not null"));
   }
 
   return NS_ERROR_FAILURE;
@@ -1139,27 +1083,23 @@ NS_IMETHODIMP purpleCoreService::GetAccountByPurpleAccount(PurpleAccount * aAcco
 
 /* [noscript] void fireAccountEvent (in purpleNativeAccount aAccount, in string event); */
 NS_IMETHODIMP purpleCoreService::FireAccountEvent(PurpleAccount * aAccount,
-						  const char *aEvent)
+                                                  const char *aEvent)
 {
-#ifdef DEBUG_PURPLE_CORE_SERVICE
-  printf("FireAccountEvent: event: %s, account name: %s\n", aEvent, aAccount->username);
-#endif
+  LOG(("FireAccountEvent: event: %s, account name: %s", aEvent, aAccount->username));
 
   nsCOMPtr<purpleIAccount> account;
   nsresult rv = this->GetAccountByPurpleAccount(aAccount,
-						getter_AddRefs(account));
+                                                getter_AddRefs(account));
   NS_ENSURE_SUCCESS(rv, rv);
   return NotifyObservers(account, aEvent);
 }
 
 /* [noscript] void fireBuddyEvent (in purpleNativeBuddy aBuddy, in string event); */
 NS_IMETHODIMP purpleCoreService::FireBuddyEvent(PurpleBuddy * aBuddy,
-						  const char *aEvent)
+                                                const char *aEvent)
 {
-#ifdef DEBUG_PURPLE_CORE_SERVICE 
-  printf("attempting to send %s signal, group = %s, buddy = %s\n", aEvent,
-         purple_group_get_name(purple_buddy_get_group(aBuddy)), aBuddy->name);
-#endif
+  LOG(("Attempting to send %s signal, group = %s, buddy = %s", aEvent,
+       purple_group_get_name(purple_buddy_get_group(aBuddy)), aBuddy->name));
   nsCOMPtr<purpleIBuddy> buddy;
   nsresult rv = this->GetBuddyByPurpleBuddy(aBuddy, getter_AddRefs(buddy));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1167,7 +1107,7 @@ NS_IMETHODIMP purpleCoreService::FireBuddyEvent(PurpleBuddy * aBuddy,
   nsCOMPtr<purpleIAccountBuddy> pab;
   rv = buddy->GetAccountBuddyForPurpleBuddy(aBuddy, getter_AddRefs(pab));
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   return NotifyObservers(pab, aEvent);
 }
 
