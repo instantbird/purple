@@ -70,6 +70,7 @@
 #endif
 
 #include "purpleConversation.h"
+#include "purpleConvChatBuddy.h"
 #include "purpleCoreService.h"
 #include "purpleMessage.h"
 #include "purpleTimer.h"
@@ -238,8 +239,21 @@ static void create_conv(PurpleConversation *aConv)
   LOG(("Create conversation with name: %s", purple_conversation_get_name(aConv)));
 
   nsCOMPtr<purpleConversation> conv;
-  conv = do_CreateInstance("@instantbird.org/purple/conversation;1");
-
+  PurpleConversationType type = purple_conversation_get_type(aConv);
+  const char *contractid = nsnull;
+  switch (type) {
+    case PURPLE_CONV_TYPE_IM:
+      contractid = "@instantbird.org/purple/convim;1";
+      break;
+    case PURPLE_CONV_TYPE_CHAT:
+      contractid = "@instantbird.org/purple/convchat;1";
+      break;
+    default:
+      NS_WARNING("purpleInit: create_conv, Unknown conversation type\n");
+      return;
+  }
+  conv = do_CreateInstance(contractid);
+  NS_ENSURE_TRUE(conv, );
   conv->SetConv(aConv);
 
   nsCOMPtr<purpleCoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
@@ -254,6 +268,18 @@ static void destroy_conv(PurpleConversation *aConv)
   pcs->RemoveConversation(aConv);
 }
 
+static void notify_conv(PurpleConversation *aConv, nsISupports *aSubject,
+                        const char *aTopic, const PRUnichar *aData)
+{
+  NS_ENSURE_TRUE(aConv,);
+
+  nsCOMPtr<purpleConversation> conversation =
+    static_cast<purpleConversation *>(aConv->ui_data);
+  NS_ENSURE_TRUE(conversation,);
+
+  conversation->NotifyObservers(aSubject, aTopic, aData);
+}
+
 static void write_conv(PurpleConversation *conv, const char *who,
                        const char *alias, const char *message,
                        PurpleMessageFlags flags, time_t mtime)
@@ -266,6 +292,52 @@ static void write_conv(PurpleConversation *conv, const char *who,
 
   nsCOMPtr<purpleICoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID, &rv);
   pcs->NotifyObservers(msg, "new-text");
+
+  notify_conv(conv, msg, "new-text", nsnull);
+}
+
+static void conv_add_chat_users(PurpleConversation *conv,
+                                GList *cbuddies,
+                                gboolean new_arrivals)
+{
+  while (cbuddies) {
+    nsCOMPtr<purpleConvChatBuddy> buddy = new purpleConvChatBuddy();
+    buddy->Init((PurpleConvChatBuddy *)cbuddies->data);
+    notify_conv(conv, buddy, "chat-buddy-add", nsnull);
+    cbuddies = cbuddies->next;
+  }
+}
+
+static void conv_remove_chat_users(PurpleConversation *conv,
+                                   GList *users)
+{
+  while (users) {
+    notify_conv(conv, nsnull, "chat-buddy-remove",
+                NS_ConvertUTF8toUTF16((const char *)users->data).get());
+    users = users->next;
+  }
+}
+
+static void conv_update_chat_usr(PurpleConversation *conv, const char *user,
+                                 const PRUnichar *aData = nsnull)
+{
+  PurpleConvChatBuddy *prplBuddy = purple_conv_chat_cb_find(PURPLE_CONV_CHAT(conv), user);
+  NS_ENSURE_TRUE(prplBuddy,);
+
+  nsCOMPtr<purpleConvChatBuddy> buddy = new purpleConvChatBuddy();
+  buddy->Init(prplBuddy);
+  notify_conv(conv, buddy, "chat-buddy-update", aData);
+}
+
+static void conv_update_chat_user(PurpleConversation *conv, const char *user)
+{
+  conv_update_chat_usr(conv, user, nsnull);
+}
+
+static void conv_rename_chat_user(PurpleConversation *conv, const char *old_name,
+                                  const char *new_name, const char *new_alias)
+{
+  conv_update_chat_usr(conv, new_name, NS_ConvertUTF8toUTF16(old_name).get());
 }
 
 static PurpleConversationUiOps conversation_uiops =
@@ -275,10 +347,10 @@ static PurpleConversationUiOps conversation_uiops =
   NULL,                      /* write_chat           */
   NULL,                      /* write_im             */
   write_conv,                /* write_conv           */
-  NULL,                      /* chat_add_users       */
-  NULL,                      /* chat_rename_user     */
-  NULL,                      /* chat_remove_users    */
-  NULL,                      /* chat_update_user     */
+  conv_add_chat_users,       /* chat_add_users       */
+  conv_rename_chat_user,     /* chat_rename_user     */
+  conv_remove_chat_users,    /* chat_remove_users    */
+  conv_update_chat_user,     /* chat_update_user     */
   NULL,                      /* present              */
   NULL,                      /* has_focus            */
   NULL,                      /* custom_smiley_add    */

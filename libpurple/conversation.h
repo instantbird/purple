@@ -294,8 +294,8 @@ struct _PurpleConvChatBuddy
 	                                  *   its @c name.  (This is currently always @c
 	                                  *   NULL.)
 	                                  */
-	gboolean buddy;                  /**< @a TRUE if this chat participant is on the
-	                                  *   buddy list; @a FALSE otherwise.
+	PurpleBuddy *buddy;              /**< @a non-NULL if this chat participant is on the
+	                                  *   buddy list; @a NULL otherwise.
 	                                  */
 	PurpleConvChatBuddyFlags flags;  /**< A bitwise OR of flags for this participant,
 	                                  *   such as whether they are a channel operator.

@@ -37,7 +37,8 @@
 
 #include "nsIGenericFactory.h"
 #include "purpleCoreService.h"
-#include "purpleConversation.h"
+#include "purpleConvIM.h"
+#include "purpleConvChat.h"
 #include "purpleProtocol.h"
 #include "purplePref.h"
 #include "purpleAccount.h"
@@ -50,7 +51,8 @@
 #include "purpleProxyInfo.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleCoreService)
-NS_GENERIC_FACTORY_CONSTRUCTOR(purpleConversation)
+NS_GENERIC_FACTORY_CONSTRUCTOR(purpleConvIM)
+NS_GENERIC_FACTORY_CONSTRUCTOR(purpleConvChat)
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleProtocol)
 NS_GENERIC_FACTORY_CONSTRUCTOR(purplePref)
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleAccount)
@@ -71,10 +73,16 @@ static nsModuleComponentInfo components[] =
     purpleCoreServiceConstructor
   },
   {
-    "PURPLE conversation",
-    PURPLE_CONVERSATION_CID,
-    PURPLE_CONVERSATION_CONTRACTID,
-    purpleConversationConstructor
+    "PURPLE IM conversation",
+    PURPLE_CONV_IM_CID,
+    PURPLE_CONV_IM_CONTRACTID,
+    purpleConvIMConstructor
+  },
+  {
+    "PURPLE chat conversation",
+    PURPLE_CONV_CHAT_CID,
+    PURPLE_CONV_CHAT_CONTRACTID,
+    purpleConvChatConstructor
   },
   {
     "PURPLE protocol",

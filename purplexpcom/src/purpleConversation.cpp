@@ -36,53 +36,64 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "purpleConversation.h"
-#include "nsXPCOM.h"
-#include<nsStringAPI.h>
+#include "purpleIAccount.h"
 
-#include<nsCOMPtr.h>
-#include<stdio.h>
+#include <nsXPCOM.h>
+#include <nsStringAPI.h>
+#include <nsCOMPtr.h>
 
-//#define DEBUG_PURPLE_CONVERSATION
-
-NS_IMPL_ISUPPORTS1(purpleConversation, purpleIConversation)
+#ifdef PR_LOGGING
+//
+// NSPR_LOG_MODULES=purpleConversation:5
+//
+PRLogModuleInfo *gPurpleConvLog = nsnull;
+#endif
+#define LOG(args) PR_LOG(gPurpleConvLog, PR_LOG_DEBUG, args)
 
 PRUint32 purpleConversation::sLastId = 0;
 
 purpleConversation::purpleConversation()
 {
   /* member initializers and constructor code */
-
   mId = ++sLastId;
-#ifdef DEBUG_PURPLE_CONVERSATION
-  printf("new purpleConversation with id %i\n", mId);
+#ifdef PR_LOGGING
+  if (!gPurpleConvLog)
+    gPurpleConvLog = PR_NewLogModule("purpleConversation");
 #endif
+  LOG(("new purpleConversation @%x with id %i", this, mId));
 }
 
 purpleConversation::~purpleConversation()
 {
   /* destructor code */
-#ifdef DEBUG_PURPLE_CONVERSATION
-  printf("destructing conversation with id %i\n", mId);
-#endif
+  LOG(("destructing conversation @%x with id %i", this, mId));
 }
 
 void purpleConversation::SetConv(PurpleConversation *aConv)
 {
   mConv = aConv;
-#ifdef DEBUG_PURPLE_CONVERSATION
-  printf("conversion ptr set to : %i\n", (size_t)mConv);
-#endif
+  LOG(("conversion ptr set to: @%x", mConv));
   aConv->ui_data = this;
 }
 
 /* call this only from the destroy_conv uiop or when exiting */
 void purpleConversation::UnInit()
 {
-#ifdef DEBUG_PURPLE_CONVERSATION
-  printf("purpleConversation::unInit (mId == %i)\n", (mId);
-#endif
+  LOG(("purpleConversation::unInit (mId == %i)", mId));
   mConv->ui_data = NULL;
   mConv = NULL;
+}
+
+/* readonly attribute purpleIAccount account; */
+NS_IMETHODIMP purpleConversation::GetAccount(purpleIAccount * *aAccount)
+{
+  NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
+
+  PurpleAccount *account = purple_conversation_get_account(mConv);
+  NS_ENSURE_TRUE(account, NS_ERROR_FAILURE);
+
+  NS_IF_ADDREF(*aAccount = (purpleIAccount *)account->ui_data);
+  return NS_OK;
 }
 
 /* readonly attribute AUTF8String name; */
@@ -112,39 +123,10 @@ NS_IMETHODIMP purpleConversation::GetId(PRUint32 *aId)
   return NS_OK;
 }
 
-/* readonly attribute boolean isChat; */
-NS_IMETHODIMP purpleConversation::GetIsChat(PRBool *aIsChat)
-{
-  NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
-
-  *aIsChat = mConv->type == PURPLE_CONV_TYPE_CHAT;
-  return NS_OK;
-}
-
 /* void sendMsg (in AUTF8String aMsg); */
 NS_IMETHODIMP purpleConversation::SendMsg(const nsACString& aMsg)
 {
-  NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
-
-  PromiseFlatCString flatMsg(aMsg);
-  switch (mConv->type) {
-  case PURPLE_CONV_TYPE_IM:
-    purple_conv_im_send(mConv->u.im, flatMsg.get());
-#ifdef DEBUG_PURPLE_CONVERSATION
-    printf("message sent: %s\n", flatMsg.get());
-#endif
-    return NS_OK;
-
-  case PURPLE_CONV_TYPE_CHAT:
-    purple_conv_chat_send(mConv->u.chat, flatMsg.get());
-#ifdef DEBUG_PURPLE_CONVERSATION
-    printf("chat message sent: %s\n", flatMsg.get());
-#endif
-    return NS_OK;
-
-  default:
-    return NS_ERROR_FAILURE;
-  }
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* void close (); */
@@ -152,11 +134,43 @@ NS_IMETHODIMP purpleConversation::Close()
 {
   NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
 
-#ifdef DEBUG_PURPLE_CONVERSATION
-  printf("purpleConversation::Close\n");
-#endif
+  LOG(("purpleConversation::Close (mId = %i)", mId));
   purple_conversation_destroy(mConv);
   mConv = NULL;
 
   return NS_OK;
+}
+
+/* void addObserver (in nsIObserver aObserver); */
+NS_IMETHODIMP purpleConversation::AddObserver(nsIObserver *aObserver)
+{
+  NS_ENSURE_ARG_POINTER(aObserver);
+  NS_ENSURE_TRUE(mObservers.IndexOfObject(aObserver) == -1,
+                 NS_ERROR_ALREADY_INITIALIZED);
+  LOG(("purpleConversation::AddObserver (mId = %i, observer = @%x)",
+      mId, aObserver));
+
+  mObservers.AppendObject(aObserver);
+  return NS_OK;
+}
+
+/* void removeObserver (in nsIObserver aObserver); */
+NS_IMETHODIMP purpleConversation::RemoveObserver(nsIObserver *aObserver)
+{
+  NS_ENSURE_ARG_POINTER(aObserver);
+
+  LOG(("purpleConversation::RemoveObserver (mId = %i, observer = @%x)",
+       mId, aObserver));
+  NS_ENSURE_TRUE(mObservers.RemoveObject(aObserver), NS_ERROR_FAILURE);
+  return NS_OK;
+}
+
+void purpleConversation::NotifyObservers(nsISupports *aSubject,
+                                         const char *aTopic,
+                                         const PRUnichar *aData)
+{
+  LOG(("purpleConversation::NotifyObservers (mId = %i, topic = %s)",
+       mId, aTopic));
+  for (PRInt32 i = 0; i < mObservers.Count(); ++i)
+    mObservers[i]->Observe(aSubject, aTopic, aData);
 }

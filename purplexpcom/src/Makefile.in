@@ -80,6 +80,9 @@ CPPSRCS		= \
 		purpleAccountBuddy.cpp \
 		purpleBuddy.cpp \
 		purpleConversation.cpp \
+		purpleConvIM.cpp \
+		purpleConvChat.cpp \
+		purpleConvChatBuddy.cpp \
 		purpleCoreService.cpp \
 		purpleDNS.cpp \
 		purpleInit.cpp \
