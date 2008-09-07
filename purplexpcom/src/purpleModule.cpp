@@ -36,7 +36,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIGenericFactory.h"
+#include "nsICategoryManager.h"
+#include "nsServiceManagerUtils.h"
 #include "purpleCoreService.h"
+#include "purpleContentPolicy.h"
 #include "purpleConvIM.h"
 #include "purpleConvChat.h"
 #include "purpleProtocol.h"
@@ -51,6 +54,7 @@
 #include "purpleProxyInfo.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleCoreService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(purpleContentPolicy)
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleConvIM)
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleConvChat)
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleProtocol)
@@ -64,6 +68,39 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(purpleAccountBuddy)
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleProxy)
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleProxyInfo)
 
+static NS_METHOD RegisterPurpleContentPolicy(nsIComponentManager *aCompMgr,
+                                             nsIFile* aPath,
+                                             const char* aRegistryLocation,
+                                             const char* aComponentType,
+                                             const nsModuleComponentInfo* aInfo)
+{
+  nsresult rv;
+  nsCOMPtr<nsICategoryManager> catman =
+    do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCString previous;
+  return catman->AddCategoryEntry(NS_CONTENTPOLICY_CATEGORY,
+                                  PURPLE_CONTENT_POLICY_CONTRACTID,
+                                  PURPLE_CONTENT_POLICY_CONTRACTID,
+                                  PR_TRUE, PR_TRUE, getter_Copies(previous));
+}
+
+static NS_METHOD UnregisterPurpleContentPolicy(nsIComponentManager *aCompMgr,
+                                               nsIFile *aPath,
+                                               const char *registryLocation,
+                                               const nsModuleComponentInfo *info)
+{
+  nsresult rv;
+  nsCOMPtr<nsICategoryManager> catman =
+    do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  return catman->DeleteCategoryEntry(NS_CONTENTPOLICY_CATEGORY,
+                                     PURPLE_CONTENT_POLICY_CONTRACTID,
+                                     PR_TRUE);
+}
+
 static nsModuleComponentInfo components[] =
 {
   {
@@ -71,6 +108,13 @@ static nsModuleComponentInfo components[] =
     PURPLE_CORE_SERVICE_CID,
     PURPLE_CORE_SERVICE_CONTRACTID,
     purpleCoreServiceConstructor
+  },
+  { "PURPLE conversation content policy",
+    PURPLE_CONTENT_POLICY_CID,
+    PURPLE_CONTENT_POLICY_CONTRACTID,
+    purpleContentPolicyConstructor,
+    RegisterPurpleContentPolicy,
+    UnregisterPurpleContentPolicy
   },
   {
     "PURPLE IM conversation",

@@ -50,6 +50,7 @@ NO_DIST_INSTALL	= 1
 
 REQUIRES	= \
 		xpcom \
+		content \
 		necko \
 		intl \
 		storage \
@@ -80,6 +81,7 @@ CPPSRCS		= \
 		purpleAccountBuddy.cpp \
 		purpleBuddy.cpp \
 		purpleConversation.cpp \
+		purpleContentPolicy.cpp \
 		purpleConvIM.cpp \
 		purpleConvChat.cpp \
 		purpleConvChatBuddy.cpp \
