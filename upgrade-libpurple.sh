@@ -77,12 +77,12 @@ diffcurrent() {
   diffstat < $diffname
 }
 
-latest=2.5.0 #`latestversion`
+latest=2.5.1 #`latestversion`
 #diffversions 2.4.0 $latest
 #diffversions 2.2.1 2.4.0
 #diffversions 2.4.0 2.4.2
 
-current=2.4.3
+current=2.5.0
 getversion $latest
 diffcurrent $current
 extract $latest

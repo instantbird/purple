@@ -226,9 +226,11 @@ ssl_nss_init(void)
 static void
 ssl_nss_uninit(void)
 {
-//	PR_Cleanup();
+#if 0
+	PR_Cleanup();
 
-//	_nss_methods = NULL;
+	_nss_methods = NULL;
+#endif
 }
 
 #if 0
