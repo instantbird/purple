@@ -103,6 +103,11 @@ NS_IMETHODIMP purpleCoreService::Init()
      initialized, return with an error */
   NS_ENSURE_TRUE(!mInitialized, NS_ERROR_ALREADY_INITIALIZED);
 
+  /* Ensure that NSS is initialized */
+  nsCOMPtr<nsISupports> nssComponent 
+    = do_GetService("@mozilla.org/psm;1");
+  NS_ASSERTION(nssComponent, "Failed to initialize NSS");
+
   purpleSocketWatcher::init();
   purpleDNS::init();
   purpleTimer::init();
