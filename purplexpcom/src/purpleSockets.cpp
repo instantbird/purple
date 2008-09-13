@@ -61,10 +61,6 @@ purpleSocket::purpleSocket()
   : mFunction(NULL),
     mInternal(nsnull)
 {
-#ifdef PR_LOGGING
-  if (!gPurpleSocketsLog)
-    gPurpleSocketsLog = PR_NewLogModule("purpleSockets");
-#endif
   LOG(("Creating purpleSocket @%x\n", this));
 }
 
@@ -173,6 +169,7 @@ nsresult purpleSocketInternal::Init(PRFileDesc *aFd, purpleISocket *aProxy,
 
 nsresult purpleSocketInternal::Cancel()
 {
+  LOG(("[%i]  Cancel\n", mId));
   mCanceled = PR_TRUE;
   return PostEvent();
 }
@@ -296,13 +293,22 @@ nsCOMPtr<nsISocketTransportService> purpleSocketWatcher::sSts;
 
 void purpleSocketWatcher::init()
 {
+#ifdef PR_LOGGING
+  if (!gPurpleSocketsLog)
+    gPurpleSocketsLog = PR_NewLogModule("purpleSockets");
+#endif
   sSockets = new nsTArray<purpleISocket *>();
 }
 
 void purpleSocketWatcher::unInit()
 {
-  sSts = nsnull;
+  LOG(("purpleSocketWatcher:unInit: Removing %i leftover watchers",
+       sSockets->Length()));
+  for (PRUint32 i = 0; i < sSockets->Length(); ++i)
+    (*sSockets)[i]->Cancel();
   delete sSockets;
+
+  sSts = nsnull;
 }
 
 nsISocketTransportService *purpleSocketWatcher::getSts()
@@ -319,18 +325,16 @@ nsISocketTransportService *purpleSocketWatcher::getSts()
 PRUint32 purpleSocketWatcher::AddWatch(gint aFd, PurpleInputCondition aCondition,
 				       PurpleInputFunction aFunction, gpointer aData)
 {
-  nsresult rv;
-
+  NS_ENSURE_TRUE(sSockets, NS_ERROR_FAILURE);
   NS_ASSERTION(NS_IsMainThread(), "wrong thread");
 
+  nsresult rv;
   nsCOMPtr<purpleISocket> socket = do_CreateInstance(PURPLE_SOCKET_CONTRACTID, &rv);
-  if (NS_FAILED(rv))
-    return 0;
+  NS_ENSURE_SUCCESS(rv, 0);
 
   PRInt32 id;
   rv = socket->Init(aFunction, aData, aFd, aCondition, &id);
-  if (NS_FAILED(rv))
-    return 0;
+  NS_ENSURE_SUCCESS(rv, 0);
 
   sSockets->AppendElement(socket);
   LOG(("[%i]SOCKETADD fd = %i\n", id, aFd));
@@ -341,6 +345,7 @@ PRUint32 purpleSocketWatcher::AddWatch(gint aFd, PurpleInputCondition aCondition
 PRBool purpleSocketWatcher::CancelWatch(PRUint32 aId)
 {
   LOG(("[%u]SOCKETCANCEL\n", aId));
+  NS_ENSURE_TRUE(sSockets, NS_ERROR_FAILURE);
 
   for (PRUint32 i = 0; i < sSockets->Length(); ++i) {
     PRUint32 id;
