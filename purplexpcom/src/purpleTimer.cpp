@@ -70,7 +70,17 @@ void purpleTimer::init()
 
 void purpleTimer::unInit()
 {
+  LOG(("purpleTimer::unInit: removing %s leftover timeouts",
+       sTimeouts->Length()));
+
+  for (PRUint32 i = 0; i < sTimeouts->Length(); ++i) {
+    purpleTimeout *timeout = (*sTimeouts)[i];
+    timeout->mTimer->Cancel();
+    delete timeout;
+  }
+
   delete sTimeouts;
+  sTimeouts = nsnull;
 }
 
 #ifdef XP_WIN
@@ -89,6 +99,8 @@ PRUint32 purpleTimer::AddTimeout(PRUint32 aInterval,
                                  GSourceFunc aFunction,
                                  gpointer aData)
 {
+  NS_ENSURE_TRUE(sTimeouts, 0);
+
   /* FIXME This is an horrible hack to prevent libpurple from writting
      prefs.xml, blist.xml, status.xml and pounces.xml
 
@@ -141,6 +153,10 @@ PRUint32 purpleTimer::AddTimeout(PRUint32 aInterval,
 
 void purpleTimer::ExecTimer(nsITimer *aTimer, void *aTimerClosure)
 {
+  // just make sure we never call a callback of a timer after
+  // libpurple has been uninitialized
+  NS_ENSURE_TRUE(sTimeouts, );
+
   purpleTimeout *timeout = (purpleTimeout *)aTimerClosure;
 
   /* We need to cache the id before calling mFunction, otherwise if
@@ -156,6 +172,8 @@ void purpleTimer::ExecTimer(nsITimer *aTimer, void *aTimerClosure)
 
 PRBool purpleTimer::CancelTimer(PRUint32 aId)
 {
+  NS_ENSURE_TRUE(sTimeouts, PR_FALSE);
+
   LOG(("Trying to cancel timeout with id %i", aId));
   for (PRUint32 i = 0; i < sTimeouts->Length(); ++i) {
     if ((*sTimeouts)[i]->mId == aId) {

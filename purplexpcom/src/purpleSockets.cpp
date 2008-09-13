@@ -307,6 +307,7 @@ void purpleSocketWatcher::unInit()
   for (PRUint32 i = 0; i < sSockets->Length(); ++i)
     (*sSockets)[i]->Cancel();
   delete sSockets;
+  sSockets = nsnull;
 
   sSts = nsnull;
 }

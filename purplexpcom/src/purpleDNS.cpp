@@ -70,6 +70,7 @@ void purpleDNS::unInit()
   for (PRInt32 i = 0; i < sRequests->Count(); ++i)
     (*sRequests)[i]->asyncResolv->Cancel(NS_ERROR_FAILURE);
   delete sRequests;
+  sRequests = nsnull;
 }
 
 gboolean purpleDNS::Resolve(PurpleDnsQueryData *query_data,
