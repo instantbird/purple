@@ -65,6 +65,10 @@ void purpleDNS::init()
 
 void purpleDNS::unInit()
 {
+  LOG(("purpleDNS:unInit: Canceling %i pending DNS requests",
+       sRequests->Count()));
+  for (PRInt32 i = 0; i < sRequests->Count(); ++i)
+    (*sRequests)[i]->asyncResolv->Cancel(NS_ERROR_FAILURE);
   delete sRequests;
 }
 
@@ -74,6 +78,8 @@ gboolean purpleDNS::Resolve(PurpleDnsQueryData *query_data,
 {
   nsCString host(purple_dnsquery_get_host(query_data));
   LOG(("Resolving with moz: %s", host.get()));
+  NS_ENSURE_TRUE(sRequests, false);
+
   nsCOMPtr<nsIDNSService> dns = do_GetService("@mozilla.org/network/dns-service;1");
   nsCOMPtr<nsIDNSRecord> record;
   nsCOMPtr<nsICancelable> cancelable;
@@ -95,6 +101,8 @@ gboolean purpleDNS::Resolve(PurpleDnsQueryData *query_data,
 nsresult purpleDNS::Remove(PurpleDnsQueryData *query_data)
 {
   LOG(("purpleDNS::Remove query_data=@%x", query_data));
+  NS_ENSURE_TRUE(sRequests, NS_ERROR_FAILURE);
+
   for (PRInt32 i = sRequests->Count() - 1; i >= 0; --i) {
     if ((*sRequests)[i]->query_data == query_data) {
       sRequests->RemoveObjectAt(i);
@@ -109,6 +117,7 @@ nsresult purpleDNS::Remove(PurpleDnsQueryData *query_data)
 void purpleDNS::Cancel(PurpleDnsQueryData *query_data)
 {
   LOG(("purpleDNS::Cancel query_data=@%x", query_data));
+  NS_ENSURE_TRUE(sRequests, );
 
   for (PRInt32 i = sRequests->Count() - 1; i >= 0; --i) {
     if ((*sRequests)[i]->query_data == query_data) {
