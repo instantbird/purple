@@ -46,7 +46,7 @@ LIBRARY_NAME	= purplexpcom
 #EXPORT_LIBRARY	= 1
 IS_COMPONENT	= 1
 MODULE_NAME	= purplexpcom
-NO_DIST_INSTALL	= 1
+#NO_DIST_INSTALL	= 1
 
 REQUIRES	= \
 		xpcom \
@@ -110,6 +110,6 @@ ifeq ($(OS_ARCH),WINNT)
 CXXFLAGS	+= -wd4624 -wd4068
 endif
 
-libs:: $(SHARED_LIBRARY)
-	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(FINAL_TARGET)/libraries
+#libs:: $(SHARED_LIBRARY)
+#	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(FINAL_TARGET)/libraries
 

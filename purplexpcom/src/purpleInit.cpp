@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 
-#define CUSTOM_PLUGIN_PATH     "libraries/prpl"
+#define CUSTOM_PLUGIN_PATH     "protocols"
 
 #ifdef XP_WIN
 # define _USE_32BIT_TIME_T

@@ -41,6 +41,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= public loader src
+DIRS		= public src # loader
 
 include $(topsrcdir)/config/rules.mk

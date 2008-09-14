@@ -43,7 +43,7 @@ ifneq (,$(filter OS2 WINNT WINCE,$(OS_ARCH)))
 else
 	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DIST)/lib
 endif
-	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(FINAL_TARGET)/libraries/prpl
+	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(FINAL_TARGET)/protocols
 
 module.rc: module.ver
 
