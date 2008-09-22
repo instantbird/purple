@@ -69,7 +69,6 @@ private:
   ~purpleProtocol();
 
   PurplePluginInfo *mInfo;
-  inline nsresult GetBoolOpt(PRBool *aRes, PurpleProtocolOptions aOpt);
 
 protected:
   nsCOMArray<purpleIPref> mOptions;

@@ -144,66 +144,46 @@ NS_IMETHODIMP purpleProtocol::GetOptions(nsISimpleEnumerator **aResult)
   return NS_NewArrayEnumerator(aResult, mOptions);
 }
 
-inline nsresult purpleProtocol::GetBoolOpt(PRBool *aRes,
-                                           PurpleProtocolOptions aOpt)
-{
-  NS_ENSURE_TRUE(mInfo, NS_ERROR_NOT_INITIALIZED);
-
-  PurplePluginProtocolInfo *prpl_info =
-    (PurplePluginProtocolInfo *) mInfo->extra_info;
-
-  *aRes = prpl_info->options & aOpt ? PR_TRUE : PR_FALSE;
-
-  return NS_OK;
-}
+#define PURPLE_IMPL_GETBOOLOPT(aOpt, aConst)                            \
+  NS_IMETHODIMP purpleProtocol::Get##aOpt(PRBool *a##aOpt)              \
+  {                                                                     \
+    NS_ENSURE_TRUE(mInfo, NS_ERROR_NOT_INITIALIZED);                    \
+                                                                        \
+    PurplePluginProtocolInfo *prpl_info =                               \
+      (PurplePluginProtocolInfo *) mInfo->extra_info;                   \
+                                                                        \
+    *a##aOpt =                                                          \
+      prpl_info->options & OPT_PROTO_##aConst ? PR_TRUE : PR_FALSE;     \
+                                                                        \
+    return NS_OK;                                                       \
+  }
 
 /* readonly attribute boolean uniqueChatName; */
-NS_IMETHODIMP purpleProtocol::GetUniqueChatName(PRBool *aUniqueChatName)
-{
-  return GetBoolOpt(aUniqueChatName, OPT_PROTO_UNIQUE_CHATNAME);
-}
+PURPLE_IMPL_GETBOOLOPT(UniqueChatName, UNIQUE_CHATNAME)
 
 /* readonly attribute boolean chatHasTopic; */
-NS_IMETHODIMP purpleProtocol::GetChatHasTopic(PRBool *aChatHasTopic)
-{
-  return GetBoolOpt(aChatHasTopic, OPT_PROTO_CHAT_TOPIC);
-}
+PURPLE_IMPL_GETBOOLOPT(ChatHasTopic, CHAT_TOPIC)
 
 /* readonly attribute boolean noPassword; */
-NS_IMETHODIMP purpleProtocol::GetNoPassword(PRBool *aNoPassword)
-{
-  return GetBoolOpt(aNoPassword, OPT_PROTO_NO_PASSWORD);
-}
+PURPLE_IMPL_GETBOOLOPT(NoPassword, NO_PASSWORD)
 
 /* readonly attribute boolean newMailNotification; */
-NS_IMETHODIMP purpleProtocol::GetNewMailNotification(PRBool *aNewMailNotification)
-{
-  return GetBoolOpt(aNewMailNotification, OPT_PROTO_MAIL_CHECK);
-}
+PURPLE_IMPL_GETBOOLOPT(NewMailNotification, MAIL_CHECK)
 
 /* readonly attribute boolean imagesInIM; */
-NS_IMETHODIMP purpleProtocol::GetImagesInIM(PRBool *aImagesInIM)
-{
-  return GetBoolOpt(aImagesInIM, OPT_PROTO_IM_IMAGE);
-}
+PURPLE_IMPL_GETBOOLOPT(ImagesInIM, IM_IMAGE)
 
 /* readonly attribute boolean passwordOptional; */
-NS_IMETHODIMP purpleProtocol::GetPasswordOptional(PRBool *aPasswordOptional)
-{
-  return GetBoolOpt(aPasswordOptional, OPT_PROTO_PASSWORD_OPTIONAL);
-}
+PURPLE_IMPL_GETBOOLOPT(PasswordOptional, PASSWORD_OPTIONAL)
 
 /* readonly attribute boolean usePointSize; */
-NS_IMETHODIMP purpleProtocol::GetUsePointSize(PRBool *aUsePointSize)
-{
-  return GetBoolOpt(aUsePointSize, OPT_PROTO_USE_POINTSIZE);
-}
+PURPLE_IMPL_GETBOOLOPT(UsePointSize, USE_POINTSIZE)
 
 /* readonly attribute boolean registerNoScreenName; */
-NS_IMETHODIMP purpleProtocol::GetRegisterNoScreenName(PRBool *aRegisterNoScreenName)
-{
-  return GetBoolOpt(aRegisterNoScreenName, OPT_PROTO_REGISTER_NOSCREENNAME);
-}
+PURPLE_IMPL_GETBOOLOPT(RegisterNoScreenName, REGISTER_NOSCREENNAME)
+
+/* readonly attribute boolean slashCommandsNative; */
+PURPLE_IMPL_GETBOOLOPT(SlashCommandsNative, SLASH_COMMANDS_NATIVE)
 
 /* [noscript] PurpleNativePluginProtocolInfo getInfo (); */
 NS_IMETHODIMP purpleProtocol::GetInfo(PurplePluginProtocolInfo * *aPrplInfo)
