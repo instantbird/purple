@@ -78,8 +78,15 @@ NS_IMETHODIMP purpleConvIM::SendMsg(const nsACString& aMsg)
   NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
 
   PromiseFlatCString flatMsg(aMsg);
-  purple_conv_im_send(mConv->u.im, flatMsg.get());
-  LOG(("IM message sent: %s", flatMsg.get()));
+  PRBool handled;
+  nsresult rv = DoCommand(flatMsg.get(), handled);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!handled) {
+    purple_conv_im_send(mConv->u.im, flatMsg.get());
+    LOG(("IM message sent: %s", flatMsg.get()));
+  }
+
   return NS_OK;
 }
 

@@ -38,7 +38,7 @@ typedef enum _PurpleCmdStatus {
 	PURPLE_CMD_STATUS_NOT_FOUND,
 	PURPLE_CMD_STATUS_WRONG_ARGS,
 	PURPLE_CMD_STATUS_WRONG_PRPL,
-	PURPLE_CMD_STATUS_WRONG_TYPE,
+	PURPLE_CMD_STATUS_WRONG_TYPE
 } PurpleCmdStatus;
 
 /** Commands registered with the core return one of these values when run.
@@ -51,7 +51,7 @@ typedef enum _PurpleCmdStatus {
 typedef enum _PurpleCmdRet {
 	PURPLE_CMD_RET_OK,       /**< Everything's okay; Don't look for another command to call. */
 	PURPLE_CMD_RET_FAILED,   /**< The command failed, but stop looking.*/
-	PURPLE_CMD_RET_CONTINUE, /**< Continue, looking for other commands with the same name to call. */
+	PURPLE_CMD_RET_CONTINUE  /**< Continue, looking for other commands with the same name to call. */
 } PurpleCmdRet;
 
 #define PURPLE_CMD_FUNC(func) ((PurpleCmdFunc)func)

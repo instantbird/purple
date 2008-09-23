@@ -38,6 +38,11 @@
 #include "purpleConversation.h"
 #include "purpleIAccount.h"
 
+#pragma GCC visibility push(default)
+#include <libpurple/cmds.h>
+#include <libpurple/connection.h>
+#pragma GCC visibility pop
+
 #include <nsXPCOM.h>
 #include <nsStringAPI.h>
 #include <nsCOMPtr.h>
@@ -121,6 +126,58 @@ NS_IMETHODIMP purpleConversation::GetId(PRUint32 *aId)
 
   *aId = mId;
   return NS_OK;
+}
+
+nsresult purpleConversation::DoCommand(const char *aMsg,
+                                       PRBool& aHandled)
+{
+  NS_ASSERTION(aMsg && *aMsg, "Looking for commands in a null message?");
+  NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
+
+  if (*aMsg != '/' || *(aMsg + 1) == '/') {
+    aHandled = PR_FALSE;
+    return NS_OK;
+  }
+
+  char *error = NULL;
+  PurpleCmdStatus status = purple_cmd_do_command(mConv, aMsg + 1,
+                                                 aMsg, &error);
+  g_free(error);
+  switch (status) {
+    case PURPLE_CMD_STATUS_OK:
+      LOG(("Command executed in conversation with mId %i", mId));
+      aHandled = PR_TRUE;
+      return NS_OK;
+
+    case PURPLE_CMD_STATUS_NOT_FOUND:
+      {
+        // Check if '/' is native to the protocol. If it is, a
+        // non-existing command is likely an error, don't send the
+        // message
+        PurpleConnection *gc = purple_conversation_get_gc(mConv);
+        NS_ENSURE_TRUE(gc, NS_ERROR_UNEXPECTED);
+        PurplePluginProtocolInfo *prpl_info =
+          PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl);
+        NS_ENSURE_TRUE(prpl_info, NS_ERROR_UNEXPECTED);
+
+        if (prpl_info->options & OPT_PROTO_SLASH_COMMANDS_NATIVE) {
+          LOG(("The '/' is native on this protocol, a non-existing command is an error"));
+          return NS_ERROR_FAILURE;
+        }
+      }
+
+    case PURPLE_CMD_STATUS_WRONG_TYPE:
+    case PURPLE_CMD_STATUS_WRONG_PRPL:
+      aHandled = PR_FALSE;
+      return NS_OK;
+
+    case PURPLE_CMD_STATUS_WRONG_ARGS:
+    case PURPLE_CMD_STATUS_FAILED:
+    default: // only to work around the warning
+             // 'control reaches end of non-void function'
+      LOG(("Error while attempting to execute the command"));
+      return NS_ERROR_FAILURE;
+  }
 }
 
 /* void sendMsg (in AUTF8String aMsg); */

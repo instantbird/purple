@@ -66,6 +66,7 @@ protected:
   ~purpleConversation();
   PurpleConversation *mConv;
   PRUint32 mId;
+  nsresult DoCommand(const char *aMsg, PRBool& aHandled);
 };
 
 #endif /* !PURPLE_CONVERSATION_H_ */

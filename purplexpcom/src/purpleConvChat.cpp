@@ -81,8 +81,15 @@ NS_IMETHODIMP purpleConvChat::SendMsg(const nsACString& aMsg)
   NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
 
   PromiseFlatCString flatMsg(aMsg);
-  purple_conv_chat_send(mConv->u.chat, flatMsg.get());
-  LOG(("chat message sent: %s", flatMsg.get()));
+  PRBool handled;
+  nsresult rv = DoCommand(flatMsg.get(), handled);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!handled) {
+    purple_conv_chat_send(mConv->u.chat, flatMsg.get());
+    LOG(("chat message sent: %s", flatMsg.get()));
+  }
+
   return NS_OK;
 }
 

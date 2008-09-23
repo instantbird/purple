@@ -45,6 +45,7 @@
 #pragma GCC visibility push(default)
 #include <libpurple/account.h>
 #include <libpurple/accountopt.h>
+#include <libpurple/cmds.h>
 #include <libpurple/conversation.h>
 #include <libpurple/core.h>
 #include <libpurple/debug.h>
@@ -561,6 +562,19 @@ static PurpleDnsQueryUiOps dnsUiOps = {
   NULL,NULL,NULL,NULL
 };
 
+// Taken from pidgin/gtkconv.c (GPL, ...)
+static PurpleCmdRet say_command_cb(PurpleConversation *conv,
+                                   const char *cmd, char **args,
+                                   char **error, void *data)
+{
+  if (purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_IM)
+    purple_conv_im_send(PURPLE_CONV_IM(conv), args[0]);
+  else if (purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_CHAT)
+    purple_conv_chat_send(PURPLE_CONV_CHAT(conv), args[0]);
+
+  return PURPLE_CMD_RET_OK;
+}
+
 nsresult
 init_libpurple()
 {
@@ -648,6 +662,12 @@ init_libpurple()
   connect_to_accounts_signals();
   //  connect_to_blist_signals();
   connect_to_conversations_signals();
+
+  purple_cmd_register("say", "S", PURPLE_CMD_P_DEFAULT,
+                      (PurpleCmdFlag) (PURPLE_CMD_FLAG_CHAT | PURPLE_CMD_FLAG_IM),
+                      NULL, say_command_cb,
+                      "say &lt;message&gt;:  Send a message normally as if you weren't using a command.",
+                      NULL);
 
   return NS_OK;
 }
