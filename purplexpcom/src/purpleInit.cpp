@@ -515,13 +515,23 @@ received_im_msg(PurpleAccount *account, char *sender, char *message,
 #endif
 }
 
+static void update_chat_topic(PurpleConversation *aConv,
+                              const char *aWho,
+       	                      const char *aNew)
+{
+  notify_conv(aConv, nsnull, "chat-update-topic", nsnull);
+}
+
 static void connect_to_conversations_signals()
 {
   static int handle;
   purple_signal_connect(purple_conversations_get_handle(), "received-im-msg", &handle,
                         PURPLE_CALLBACK(received_im_msg), NULL);
 
-  LOG(("Connecting to signals"));
+  purple_signal_connect(purple_conversations_get_handle(), "chat-topic-changed", &handle,
+                        PURPLE_CALLBACK(update_chat_topic), NULL);
+
+  LOG(("Connecting to conversation signals"));
 }
 
 #ifdef DEBUG_PURPLE_CONSOLE
