@@ -85,6 +85,7 @@
 #include <nsEmbedString.h>
 #include <nsIPromptService.h>
 #include <nsIStringBundle.h>
+#include <nsIXULAppInfo.h>
 #include <nsComponentManagerUtils.h>
 #include <nsDirectoryServiceUtils.h>
 #include <nsAppDirectoryServiceDefs.h>
@@ -585,6 +586,58 @@ static PurpleCmdRet say_command_cb(PurpleConversation *conv,
   return PURPLE_CMD_RET_OK;
 }
 
+// Core ui ops (ui info)
+static GHashTable *ui_info = NULL;
+
+static void ui_quit()
+{
+  if (ui_info)
+    g_hash_table_destroy(ui_info);
+}
+
+static GHashTable *ui_get_info(void)
+{
+  if (!ui_info) {
+    ui_info = g_hash_table_new(g_str_hash, g_str_equal);
+
+    nsCOMPtr<nsIXULAppInfo> xai =
+      do_GetService("@mozilla.org/xre/app-info;1");
+    nsCString string;
+
+    // Ugly, ugly, ugly...
+    if (xai && NS_SUCCEEDED(xai->GetName(string)))
+      g_hash_table_insert(ui_info, const_cast<char *>("name"),
+                          const_cast<char *>(string.get()));
+    else
+      g_hash_table_insert(ui_info, const_cast<char *>("name"),
+                          const_cast<char *>("Instantbird"));
+
+    if (xai && NS_SUCCEEDED(xai->GetVersion(string)))
+      g_hash_table_insert(ui_info, const_cast<char *>("version"),
+                          const_cast<char *>(string.get()));
+    else
+      g_hash_table_insert(ui_info, const_cast<char *>("version"),
+                          const_cast<char *>("Unknown"));
+
+    g_hash_table_insert(ui_info, const_cast<char *>("website"),
+                        const_cast<char *>("http://www.instantbird.com"));
+    g_hash_table_insert(ui_info, const_cast<char *>("dev_website"),
+                        const_cast<char *>("http://www.instantbird.org"));
+  }
+
+  return ui_info;
+}
+
+static PurpleCoreUiOps core_uiops =
+{
+  NULL, NULL, NULL,
+  ui_quit,
+  ui_get_info,
+ 
+  /* padding */
+  NULL, NULL, NULL
+};
+
 nsresult
 init_libpurple()
 {
@@ -611,6 +664,7 @@ init_libpurple()
 
   purple_debug_set_enabled(FALSE);
 
+  purple_core_set_ui_ops(&core_uiops);
   purple_conversations_set_ui_ops(&conversation_uiops);
   purple_connections_set_ui_ops(&connection_uiops);
   purple_accounts_set_ui_ops(&account_uiops);
