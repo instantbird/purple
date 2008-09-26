@@ -17,7 +17,7 @@ getfilename() {
   echo -n pidgin-$1.tar.bz2
 }
 getversion() {
-  if [ $1 == "latest" ]; then
+  if [ $1 = "latest" ]; then
     latest=`latestversion`
     filename=`getfilename $latest`
   else
@@ -36,6 +36,7 @@ pruneunused() {
   rm -rf $1/{ChangeLog*,config*,compile,AUTHORS,COPYRIGHT,NEWS,aclocal.m4,depcomp,install-sh,intltool*,missing,pidgin.*,ltmain.sh}
   find . -name 'Makefile.*' -exec rm -r {} \;
   mv $1/libpurple/plugins/ssl/ssl-nss.c $1/libpurple
+  mv $1/libpurple/plugins/statenotify.c $1/libpurple
   rm -rf $1/libpurple/{plugins,gconf,example,tests}
   rm -rf $1/libpurple/protocols/{bonjour,msn,null,sametime,silc,silc10,toc,zephyr}
   rm -f $1/libpurple/purple-*

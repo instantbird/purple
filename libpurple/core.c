@@ -174,6 +174,7 @@ purple_core_init(const char *ui)
 	purple_xfers_init();
 	purple_idle_init();
 	purple_smileys_init();
+	purple_statenotify_init();
 
 	/*
 	 * Call this early on to try to auto-detect our IP address and
