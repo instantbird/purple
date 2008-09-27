@@ -61,6 +61,8 @@
 #  include "dbus-bindings.h"
 #endif
 
+extern void purple_statenotify_init(void);
+
 struct PurpleCore
 {
 	char *ui;
