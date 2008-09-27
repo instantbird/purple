@@ -54,6 +54,7 @@ REQUIRES	= \
 		necko \
 		intl \
 		storage \
+		widget \
 		libpurple \
 		purplexpcom \
 		$(NULL)

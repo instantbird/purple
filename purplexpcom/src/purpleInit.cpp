@@ -51,6 +51,7 @@
 #include <libpurple/debug.h>
 #include <libpurple/eventloop.h>
 #include <libpurple/ft.h>
+#include <libpurple/idle.h>
 #include <libpurple/log.h>
 #include <libpurple/notify.h>
 #include <libpurple/prefs.h>
@@ -83,6 +84,7 @@
 #include <nsCOMPtr.h>
 #include <nsStringAPI.h>
 #include <nsEmbedString.h>
+#include <nsIIdleService.h>
 #include <nsIPromptService.h>
 #include <nsIStringBundle.h>
 #include <nsIXULAppInfo.h>
@@ -586,6 +588,29 @@ static PurpleCmdRet say_command_cb(PurpleConversation *conv,
   return PURPLE_CMD_RET_OK;
 }
 
+// Idle ui ops
+static time_t idle_time()
+{
+  nsCOMPtr<nsIIdleService> idleService =
+    do_GetService("@mozilla.org/widget/idleservice;1");
+  NS_ENSURE_TRUE(idleService, 0);
+
+  PRUint32 idleTime;
+  nsresult rv = idleService->GetIdleTime(&idleTime);
+  NS_ENSURE_SUCCESS(rv, 0);
+
+  LOG(("IdleTime is %u seconds\n", idleTime / 1000));
+  return idleTime / 1000;
+}
+
+static PurpleIdleUiOps idle_uiops =
+{
+  idle_time,
+ 
+  /* padding */
+  NULL, NULL, NULL, NULL
+};
+
 // Core ui ops (ui info)
 static GHashTable *ui_info = NULL;
 
@@ -669,6 +694,7 @@ init_libpurple()
   purple_connections_set_ui_ops(&connection_uiops);
   purple_accounts_set_ui_ops(&account_uiops);
   purple_blist_set_ui_ops(&blist_uiops);
+  purple_idle_set_ui_ops(&idle_uiops);
 
 #ifdef DEBUG_PURPLE_CONSOLE
   purple_debug_set_ui_ops(&debugconsoleuiops);
@@ -710,10 +736,6 @@ init_libpurple()
   purple_prefs_set_bool("/purple/logging/log_ims", TRUE);
   purple_prefs_set_bool("/purple/logging/log_chats", TRUE);
   purple_prefs_set_bool("/purple/logging/log_system", TRUE);
-
-  /* Disable auto away/idle, it's buddy */
-  purple_prefs_set_string("/purple/away/idle_reporting", "none");
-  purple_prefs_set_bool("/purple/away/away_when_idle", FALSE);
 
   /* Load the pounces. */
   purple_pounces_load();
