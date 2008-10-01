@@ -27,6 +27,11 @@ write_status(PurpleBuddy *buddy, const char *message)
 		return;
 	g_return_if_fail(conv->type == PURPLE_CONV_TYPE_IM);
 
+	/* Prevent duplicate notifications for buddies which are multiple times
+	   in the buddy list */
+	if (buddy != purple_find_buddy(buddy->account, buddy->name))
+		return;
+
 	who = purple_buddy_get_alias(buddy);
 	escaped = g_markup_escape_text(who, -1);
 
