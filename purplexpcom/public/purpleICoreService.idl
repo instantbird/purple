@@ -101,6 +101,19 @@ interface purpleICoreService: nsISupports {
   /* will fire the event account-removed */
   void deleteAccount(in AUTF8String aAccountId);
 
+  /* This attribute is true by default. It can be set to false before
+     the initialization of this service to prevent accounts with
+     autoLogin enabled from being connected when libpurple is
+     initialized. */
+  attribute boolean autoLoginEnabled;
+
+  /* The method should be used to connect all accounts with autoLogin enabled.
+     Some use cases:
+       - if the attribute autoLoginEnabled was set to false at startup,
+       - after a loss of internet connectivity that disconnected all accounts.
+  */
+  void processAutoLogin();
+
   void notifyObservers(in nsISupports aObj, in string aEvent);
 
   [noscript] void fireAccountEvent(in PurpleNativeAccount aAccount,

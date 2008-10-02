@@ -76,6 +76,7 @@ extern void connect_to_blist_signals();
 purpleCoreService::purpleCoreService()
   :mInitialized(PR_FALSE),
    mQuitting(PR_FALSE),
+   mAutoLoginEnabled(PR_TRUE),
    mProtocols(nsnull),
    mProxies(nsnull),
    mAccounts(nsnull),
@@ -133,8 +134,11 @@ NS_IMETHODIMP purpleCoreService::Init()
   /* Load the buddy list from mozStorage */
   InitBuddyList();
 
-  LOG(("Libpurple initialized"));
+  /* Connect accounts that should be connected at startup */
+  if (mAutoLoginEnabled)
+    ProcessAutoLogin();
 
+  LOG(("Libpurple initialized"));
   return NS_OK;
 }
 
@@ -901,10 +905,30 @@ nsresult purpleCoreService::InitAccounts()
 
     /* Keep it the local account list */
     mAccounts.AppendObject(account);
-
-    /* Attempt to connect the account if autoLogin is set */
-    account->checkAutoLogin();
   }
+
+  return NS_OK;
+}
+
+/* attribute boolean autoLoginEnabled; */
+NS_IMETHODIMP purpleCoreService::GetAutoLoginEnabled(PRBool *aAutoLoginEnabled)
+{
+  *aAutoLoginEnabled = mAutoLoginEnabled;
+  return NS_OK;
+}
+NS_IMETHODIMP purpleCoreService::SetAutoLoginEnabled(PRBool aAutoLoginEnabled)
+{
+  NS_ENSURE_TRUE(!mInitialized, NS_ERROR_ALREADY_INITIALIZED);
+
+  mAutoLoginEnabled = aAutoLoginEnabled;
+  return NS_OK;
+}
+
+/* void processAutoLogin (); */
+NS_IMETHODIMP purpleCoreService::ProcessAutoLogin()
+{
+  for (PRInt32 i = 0; i < mAccounts.Count(); ++i)
+    mAccounts[i]->checkAutoLogin();
 
   return NS_OK;
 }
