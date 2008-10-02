@@ -28,6 +28,7 @@
 #include "accountopt.h"
 #include "blist.h"
 #include "conversation.h"
+#include "core.h"
 #include "debug.h"
 #include "notify.h"
 #include "prpl.h"
@@ -480,8 +481,21 @@ static void irc_close(PurpleConnection *gc)
 	if (irc == NULL)
 		return;
 
-	if (irc->gsc || (irc->fd >= 0))
-		irc_cmd_quit(irc, "quit", NULL, NULL);
+	if (irc->gsc || (irc->fd >= 0)) {
+		const char *version_complete = NULL;
+		GHashTable *ui_info = purple_core_get_ui_info();
+
+		if (ui_info) {
+			const char *ui_name = g_hash_table_lookup(ui_info, "name");
+			const char *ui_version = g_hash_table_lookup(ui_info, "version");
+
+			if (ui_name && ui_version)
+				version_complete = g_strdup_printf("%s %s", ui_name, ui_version);
+		}
+
+		irc_cmd_quit(irc, "quit", NULL, version_complete ? &version_complete : NULL);
+		g_free((void *)version_complete);
+        }
 
 	if (gc->inpa)
 		purple_input_remove(gc->inpa);
