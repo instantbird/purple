@@ -613,11 +613,16 @@ static PurpleIdleUiOps idle_uiops =
 
 // Core ui ops (ui info)
 static GHashTable *ui_info = NULL;
+static nsCString *ui_name = NULL;
+static nsCString *ui_version = NULL;
 
 static void ui_quit()
 {
-  if (ui_info)
+  if (ui_info) {
     g_hash_table_destroy(ui_info);
+    delete ui_name;
+    delete ui_version;
+  }
 }
 
 static GHashTable *ui_get_info(void)
@@ -627,19 +632,20 @@ static GHashTable *ui_get_info(void)
 
     nsCOMPtr<nsIXULAppInfo> xai =
       do_GetService("@mozilla.org/xre/app-info;1");
-    nsCString string;
 
     // Ugly, ugly, ugly...
-    if (xai && NS_SUCCEEDED(xai->GetName(string)))
+    ui_name = new nsCString();
+    if (xai && NS_SUCCEEDED(xai->GetName(*ui_name)))
       g_hash_table_insert(ui_info, const_cast<char *>("name"),
-                          const_cast<char *>(string.get()));
+                          const_cast<char *>(ui_name->get()));
     else
       g_hash_table_insert(ui_info, const_cast<char *>("name"),
                           const_cast<char *>("Instantbird"));
 
-    if (xai && NS_SUCCEEDED(xai->GetVersion(string)))
+    ui_version = new nsCString();
+    if (xai && NS_SUCCEEDED(xai->GetVersion(*ui_version)))
       g_hash_table_insert(ui_info, const_cast<char *>("version"),
-                          const_cast<char *>(string.get()));
+                          const_cast<char *>(ui_version->get()));
     else
       g_hash_table_insert(ui_info, const_cast<char *>("version"),
                           const_cast<char *>("Unknown"));
