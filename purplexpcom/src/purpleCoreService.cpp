@@ -593,18 +593,17 @@ void purpleCoreService::AddConversation(purpleConversation* aConv)
 
 void purpleCoreService::RemoveConversation(PurpleConversation *aConv)
 {
-  LOG(("purpleCoreService::RemoveConversation aConv = %i", (size_t) aConv));
+  LOG(("purpleCoreService::RemoveConversation aConv = @%x",  aConv));
 
   purpleConversation *conv = (purpleConversation *)aConv->ui_data;
-  for (PRInt32 i = mConversations.Count() - 1; i >= 0; --i) {
-    if (mConversations[i] == conv) {
-      LOG(("purpleCoreSevice::RemoveConversation: Found"));
-      mConversations[i]->UnInit();
-      mConversations.RemoveObjectAt(i);
-      return;
-    }
+  if (!conv) {
+    LOG(("purpleConversation::RemoveConversation already uninitialized"));
+    return;
   }
-  NS_WARNING("purpleCoreSevice::RemoveConversation: Not Found");
+
+  conv->UnInit();
+  mConversations.RemoveObject(conv);
+  LOG(("purpleCoreSevice::RemoveConversation: Done"));
 }
 
 /* nsISimpleEnumerator getProtocols (); */
