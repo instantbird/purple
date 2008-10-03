@@ -156,6 +156,7 @@ purpleSocketInternal::~purpleSocketInternal()
 {
   MOZ_COUNT_DTOR(purpleSocketInternal);
   LOG(("[%i]  destructing purpleSocketInternal @%x\n", mId, this));
+  PR_DestroySocketPollFd(mFd);
 }
 
 nsresult purpleSocketInternal::Init(PRFileDesc *aFd, purpleISocket *aProxy,

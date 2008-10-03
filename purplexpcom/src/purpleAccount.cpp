@@ -41,6 +41,7 @@
 #include <nsIPrefService.h>
 #include <nsServiceManagerUtils.h>
 #include <nsComponentManagerUtils.h>
+#include <nsMemory.h>
 #include <prprf.h>
 
 NS_IMPL_ISUPPORTS1(purpleAccount, purpleIAccount)
@@ -87,14 +88,14 @@ void purpleAccount::UnInit()
   NS_PRECONDITION(mAccount, "Uninitializing uninitialized purpleAccount\n");
   NS_ENSURE_TRUE(mAccount,);
 
-  if (mAccount) {
-    LOG(("uninitializing purpleAccount %s (%s)\n",
-         purple_account_get_username(mAccount), mProtocol->GetId()));
+  LOG(("uninitializing purpleAccount %s (%s)\n",
+       purple_account_get_username(mAccount), mProtocol->GetId()));
 
-    mAccount->ui_data = NULL;
-    purple_accounts_delete(mAccount);
-    mAccount = NULL;
-  }
+  mAccount->ui_data = NULL;
+  // This will call purple_proxy_info_destroy if there was a proxy
+  purple_account_set_proxy_info(mAccount, NULL);
+  purple_accounts_delete(mAccount);
+  mAccount = NULL;
 }
 
 #define PURPLE_IMPL_GETPREF(prettyType, purpleType, PRType)             \
@@ -107,9 +108,16 @@ void purpleAccount::UnInit()
     }                                                                   \
   }
 
+inline void purpleAccount::GetCharPref(const char *aName)
+{
+  nsCString val;
+  nsresult rv = mPrefOptBranch->GetCharPref(aName, getter_Copies(val));
+  if (NS_SUCCEEDED(rv)) {
+    purple_account_set_string(mAccount, aName, val.get());
+  }
+}
 
 PURPLE_IMPL_GETPREF(Bool, bool, PRBool)
-PURPLE_IMPL_GETPREF(Char, string, char *)
 PURPLE_IMPL_GETPREF(Int, int, PRInt32)
 
 nsresult purpleAccount::create(const nsACString& aName, purpleProtocol *aPrpl,
@@ -275,6 +283,7 @@ nsresult purpleAccount::load(const nsCString& aKey)
       continue;
     }
   }
+  NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, prefs);
 
   return NS_OK;
 }
@@ -482,7 +491,8 @@ NS_IMETHODIMP purpleAccount::JoinChat(const nsACString& aName,
 
   PromiseFlatCString flatName(aName);
   GHashTable *components = g_hash_table_new(g_str_hash, g_str_equal);
-  g_hash_table_insert(components, (void *)"channel", g_strdup(flatName.get())); // this cast sucks
+  g_hash_table_insert(components, const_cast<char *>("channel"),
+                      const_cast<char *>(flatName.get()));
   serv_join_chat(gc, components);
   g_hash_table_destroy(components);
 

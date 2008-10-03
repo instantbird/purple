@@ -61,6 +61,8 @@
 #  include "dbus-bindings.h"
 #endif
 
+#include <libxml/parser.h>
+
 extern void purple_statenotify_init(void);
 
 struct PurpleCore
@@ -248,6 +250,8 @@ purple_core_quit(void)
 #ifdef _WIN32
 	wpurple_cleanup();
 #endif
+
+        xmlCleanupParser();
 
 	_core = NULL;
 }
