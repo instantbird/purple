@@ -275,8 +275,7 @@ NS_IMETHODIMP purpleBuddy::GetAccountBuddyForPurpleBuddy(PurpleBuddy * aBuddy,
 {
   for (PRInt32 i = 0; i < mBuddies.Count(); ++i) {
     if (mBuddies[i]->GetBuddy() == aBuddy) {
-      *aResult = mBuddies[i];
-      NS_ADDREF(*aResult);
+      NS_ADDREF(*aResult = mBuddies[i]);
       return NS_OK;
     }
   }

@@ -356,8 +356,7 @@ NS_IMETHODIMP purpleCoreService::GetBuddyByPurpleBuddy(PurpleBuddy * aBuddy,
    */
   purpleBuddy *buddyPtr = (purpleBuddy *)aBuddy->node.ui_data;
   if (buddyPtr) {
-    *aResult = buddyPtr;
-    NS_ADDREF(*aResult);
+    NS_ADDREF(*aResult = buddyPtr);
     LOG(("purpleBuddy found in ui_data"));
     return NS_OK;
   }
@@ -408,8 +407,7 @@ NS_IMETHODIMP purpleCoreService::GetBuddyByPurpleBuddy(PurpleBuddy * aBuddy,
   LOG(("purpleBuddy added in HashTable with Id %i", buddy->getId()));
   mBuddiesById.Put(buddy->getId(), buddy);
 
-  *aResult = buddy;
-  NS_ADDREF(*aResult);
+  NS_ADDREF(*aResult = buddy);
   return NS_OK;
 }
 
@@ -474,8 +472,7 @@ NS_IMETHODIMP purpleCoreService::CreateTag(const nsACString& aName,
     mTagById.Put(id, tag);
     purple_blist_add_group(group, NULL);
   }
-  *aResult = tag;
-  NS_ADDREF(*aResult);
+  NS_ADDREF(*aResult = tag);
 
   return NS_OK;
 }
@@ -560,8 +557,7 @@ nsresult purpleCoreService::GetTagFromPurpleBuddy(PurpleBuddy *aBuddy,
     nsCOMPtr<purpleTag> tag = do_CreateInstance(PURPLE_TAG_CONTRACTID);
     tag->Init(id, group);
     mTagById.Put(id, tag);
-    *aResult = tag;
-    NS_ADDREF(*aResult);
+    NS_ADDREF(*aResult = tag);
   }
 
   return rv;
@@ -586,8 +582,7 @@ NS_IMETHODIMP purpleCoreService::GetConversationById(PRUint32 aId,
 
   for (PRInt32 i = mConversations.Count() - 1; i >= 0; --i) {
     if (mConversations[i]->GetId() == aId) {
-      *aResult = mConversations[i];
-      NS_ADDREF(*aResult);
+      NS_ADDREF(*aResult = mConversations[i]);
       return NS_OK;
     }
   }
@@ -632,8 +627,7 @@ NS_IMETHODIMP purpleCoreService::GetProtocolById(const nsACString& aProtocolId, 
 
   for (PRInt32 i = mProtocols.Count() - 1; i >= 0; --i) {
     if (aProtocolId.Equals(mProtocols[i]->GetId())) {
-      *aResult = mProtocols[i];
-      NS_ADDREF(*aResult);
+      NS_ADDREF(*aResult = mProtocols[i]);
       return NS_OK;
     }
   }
@@ -649,8 +643,7 @@ NS_IMETHODIMP purpleCoreService::GetProtoById(const nsACString& aProtocolId, pur
 
   for (PRInt32 i = mProtocols.Count() - 1; i >= 0; --i) {
     if (aProtocolId.Equals(mProtocols[i]->GetId())) {
-      *aResult = mProtocols[i];
-      NS_ADDREF(*aResult);
+      NS_ADDREF(*aResult = mProtocols[i]);
       return NS_OK;
     }
   }
@@ -848,8 +841,7 @@ NS_IMETHODIMP purpleCoreService::GetAccountById(const nsACString& aAccountId, pu
 
   for (PRInt32 i = mAccounts.Count() - 1; i >= 0; --i) {
     if (mAccounts[i]->GetKey().Equals(aAccountId)) {
-      *aResult = mAccounts[i];
-      NS_ADDREF(*aResult);
+      NS_ADDREF(*aResult = mAccounts[i]);
       return NS_OK;
     }
   }
@@ -864,8 +856,7 @@ nsresult purpleCoreService::GetAccountById(PRUint32 aAccountId, purpleAccount **
 
   for (PRInt32 i = mAccounts.Count() - 1; i >= 0; --i) {
     if (mAccounts[i]->GetId() == aAccountId) {
-      *aResult = mAccounts[i];
-      NS_ADDREF(*aResult);
+      NS_ADDREF(*aResult = mAccounts[i]);
       return NS_OK;
     }
   }
@@ -1022,8 +1013,7 @@ NS_IMETHODIMP purpleCoreService::CreateAccount(const nsACString &aName,
   NotifyObservers(account, "account-added");
 
   /* And return the new account as result */
-  *aResult = account;
-  NS_ADDREF(*aResult);
+  NS_ADDREF(*aResult = account);
   return NS_OK;
 }
 
@@ -1106,8 +1096,7 @@ NS_IMETHODIMP purpleCoreService::GetAccountByPurpleAccount(PurpleAccount * aAcco
 
   for (PRInt32 i = mAccounts.Count() - 1; i >= 0; --i) {
     if (mAccounts[i]->IsPurpleAccount(aAccount)) {
-      *aResult = mAccounts[i];
-      NS_ADDREF(*aResult);
+      NS_ADDREF(*aResult = mAccounts[i]);
       return NS_OK;
     }
     LOG(("mAccounts[%i]: %s", i, mAccounts[i]->IsPurpleAccount(NULL) ? "NULL" : "not null"));
@@ -1152,8 +1141,7 @@ NS_IMETHODIMP purpleCoreService::GetStorageConnection(mozIStorageConnection * *a
   purpleStorage *storageInstance = purpleStorage::GetInstance();
   NS_ENSURE_TRUE(storageInstance, NS_ERROR_OUT_OF_MEMORY);
 
-  *aStorageConnection = storageInstance->GetConnection();
-  NS_ADDREF(*aStorageConnection);
+  NS_ADDREF(*aStorageConnection = storageInstance->GetConnection());
   return NS_OK;
 }
 

@@ -474,9 +474,9 @@ NS_IMETHODIMP purpleAccount::CreateConversation(const nsACString& aName,
                                  PromiseFlatCString(aName).get());
   NS_ENSURE_TRUE(conv, NS_ERROR_FAILURE);
 
-  *aResult = (purpleIConversation *)conv->ui_data;
-  NS_ENSURE_TRUE(*aResult, NS_ERROR_NOT_INITIALIZED);
-  NS_ADDREF(*aResult);
+  purpleIConversation *result = (purpleIConversation *)conv->ui_data;
+  NS_ENSURE_TRUE(result, NS_ERROR_NOT_INITIALIZED);
+  NS_ADDREF(*aResult = result);
 
   return NS_OK;
 }
@@ -499,9 +499,9 @@ NS_IMETHODIMP purpleAccount::JoinChat(const nsACString& aName,
   PurpleConversation *conv =
     purple_find_conversation_with_account(PURPLE_CONV_TYPE_CHAT, flatName.get(), mAccount);
   if (conv) {
-    *aResult = (purpleIConversation *)conv->ui_data;
-    NS_ENSURE_TRUE(*aResult, NS_ERROR_NOT_INITIALIZED);
-    NS_ADDREF(*aResult);
+    purpleIConversation *result = (purpleIConversation *)conv->ui_data;
+    NS_ENSURE_TRUE(result, NS_ERROR_NOT_INITIALIZED);
+    NS_ADDREF(*aResult = result);
     return NS_OK;
   }
 
@@ -573,8 +573,7 @@ NS_IMETHODIMP purpleAccount::GetProtocol(purpleIProtocol * *aProtocol)
 {
   PURPLE_ENSURE_INIT(mProtocol);
 
-  *aProtocol = mProtocol;
-  NS_ADDREF(*aProtocol);
+  NS_ADDREF(*aProtocol = mProtocol);
   return NS_OK;
 }
 

@@ -103,8 +103,7 @@ PURPLE_IMPL_GETSTRING(Time, purple_utf8_strftime("(%H:%M:%S)",
 /* readonly attribute purpleIConversation conversation; */
 NS_IMETHODIMP purpleMessage::GetConversation(purpleIConversation * *aConversation)
 {
-  *aConversation = (purpleIConversation *)mConv->ui_data;
-  NS_IF_ADDREF(*aConversation);
+  NS_IF_ADDREF(*aConversation = (purpleIConversation *)mConv->ui_data);
   return NS_OK;
 }
 

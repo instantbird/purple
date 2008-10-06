@@ -130,8 +130,7 @@ NS_IMETHODIMP purpleAccountBuddy::GetAccount(purpleIAccount * *aAccount)
 {
   NS_ENSURE_TRUE(mAccount, NS_ERROR_NOT_INITIALIZED);
 
-  *aAccount = mAccount;
-  NS_ADDREF(*aAccount);
+  NS_ADDREF(*aAccount = mAccount);
   return NS_OK;
 }
 
@@ -140,8 +139,7 @@ NS_IMETHODIMP purpleAccountBuddy::GetTag(purpleITag * *aTag)
 {
   NS_ENSURE_TRUE(mTag, NS_ERROR_NOT_INITIALIZED);
 
-  *aTag = mTag;
-  NS_ADDREF(*aTag);
+  NS_ADDREF(*aTag = mTag);
   return NS_OK;
 }
 
