@@ -51,6 +51,7 @@
 #include <nsIObserverService.h>
 #include <nsIConsoleService.h>
 #include <nsIPrefService.h>
+#include <nsIXULRuntime.h>
 #include <nsCOMPtr.h>
 #include <nsCRTGlue.h>
 #include <nsXPCOM.h>
@@ -133,6 +134,15 @@ NS_IMETHODIMP purpleCoreService::Init()
 
   /* Load the buddy list from mozStorage */
   InitBuddyList();
+
+  /* Disable auto-login if we are running in safe mode */
+  if (mAutoLoginEnabled) {
+    nsCOMPtr<nsIXULRuntime> xai =
+      do_GetService("@mozilla.org/xre/app-info;1");
+    PRBool inSafeMode;
+    if (xai && NS_SUCCEEDED(xai->GetInSafeMode(&inSafeMode)) && inSafeMode)
+      mAutoLoginEnabled = PR_FALSE;
+  }
 
   /* Connect accounts that should be connected at startup */
   if (mAutoLoginEnabled)

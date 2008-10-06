@@ -55,6 +55,7 @@ REQUIRES	= \
 		intl \
 		storage \
 		widget \
+		xulapp \
 		libpurple \
 		purplexpcom \
 		$(NULL)
