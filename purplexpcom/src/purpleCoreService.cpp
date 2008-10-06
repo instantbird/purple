@@ -336,13 +336,12 @@ NS_IMETHODIMP purpleCoreService::GetBuddyById(PRInt32 aId,
   LOG(("pcs->GetBuddyById(%i)", aId));
 
   purpleBuddy *buddyPtr = NULL;
-  if (mBuddiesById.Get(aId, &buddyPtr)) {
-    *aResult = buddyPtr;
-    LOG(("purpleBuddy found in HashTable (by Id)"));
-    return NS_OK;
-  }
+  PRBool found = mBuddiesById.Get(aId, &buddyPtr);
+  NS_ENSURE_TRUE(found, NS_ERROR_FAILURE);
 
-  return NS_ERROR_FAILURE;
+  *aResult = buddyPtr;
+  LOG(("purpleBuddy found in HashTable (by Id)"));
+  return NS_OK;
 }
 
 /* [noscript] purpleIBuddy getBuddyByPurpleBuddy (in PurpleNativeBuddy aBuddy); */
@@ -434,10 +433,9 @@ NS_IMETHODIMP purpleCoreService::AddBuddy(purpleIAccount *aAccount,
 NS_IMETHODIMP purpleCoreService::PurpleBuddyRemoved(PurpleBuddy *aBuddy)
 {
   purpleBuddy *buddy = (purpleBuddy *)aBuddy->node.ui_data;
-  if (buddy)
-    return buddy->RemoveAccount(aBuddy);
+  NS_ENSURE_TRUE(buddy, NS_ERROR_FAILURE);
 
-  return NS_ERROR_FAILURE;
+  return buddy->RemoveAccount(aBuddy);
 }
 
 /* purpleITag createTag (in AUTF8String aName); */
@@ -486,12 +484,11 @@ NS_IMETHODIMP purpleCoreService::CreateTag(const nsACString& aName,
 NS_IMETHODIMP purpleCoreService::GetTagById(PRInt32 aId, purpleITag **aResult)
 {
   purpleTag *tag;
-  if (mTagById.Get(aId, &tag)) {
-    *aResult = tag;
-    return NS_OK;
-  }
+  PRBool found = mTagById.Get(aId, &tag);
+  NS_ENSURE_TRUE(found, NS_ERROR_FAILURE);
 
-  return NS_ERROR_FAILURE;
+  *aResult = tag;
+  return NS_OK;
 }
 
 nsresult purpleCoreService::GetTagIdFromName(const nsCString& aName,
@@ -507,13 +504,13 @@ nsresult purpleCoreService::GetTagIdFromName(const nsCString& aName,
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool hasMoreData;
-  if (NS_SUCCEEDED(statement->ExecuteStep(&hasMoreData)) && hasMoreData) {
-    *aResult = statement->AsInt32(0);
-    LOG(("pcs::GetTagIdFromName(name = %s), found at id %i", aName.get(), *aResult));
-    return NS_OK;
-  }
+  rv = statement->ExecuteStep(&hasMoreData);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(hasMoreData, NS_ERROR_FAILURE);
 
-  return NS_ERROR_FAILURE;
+  *aResult = statement->AsInt32(0);
+  LOG(("pcs::GetTagIdFromName(name = %s), found at id %i", aName.get(), *aResult));
+  return NS_OK;
 }
 
 nsresult purpleCoreService::GetTagFromName(const nsCString& aName,
@@ -725,8 +722,8 @@ nsresult purpleCoreService::InitProxies()
 
   if (!mGlobalProxy) {
     mGlobalProxy = do_CreateInstance(PURPLE_PROXY_INFO_CONTRACTID);
-    if (!mGlobalProxy)
-      return NS_ERROR_OUT_OF_MEMORY;
+    NS_ENSURE_TRUE(mGlobalProxy, NS_ERROR_OUT_OF_MEMORY);
+
     if (key.Equals(PROXY_KEY_ENVVAR))
       mGlobalProxy->SetType(purpleIProxyInfo::useEnvVar);
     else

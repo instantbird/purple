@@ -83,6 +83,7 @@ NS_IMETHODIMP purpleProxyInfo::GetKey(nsACString & aKey)
   } else if (mType == purpleIProxyInfo::useEnvVar) {
     aKey = PROXY_KEY_ENVVAR;
   } else {
+    NS_NOTREACHED("unknown proxy type...");
     return NS_ERROR_FAILURE;
   }
   

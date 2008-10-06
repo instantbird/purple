@@ -93,9 +93,8 @@ nsresult purpleAccountBuddy::Store(PRInt32 aBuddyId)
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRInt32 accountId;
-  if (PR_sscanf(key.get(), ACCOUNT_KEY "%u", &accountId) != 1) {
-    return NS_ERROR_UNEXPECTED;
-  }
+  PRInt32 count = PR_sscanf(key.get(), ACCOUNT_KEY "%u", &accountId);
+  NS_ENSURE_TRUE(count == 1, NS_ERROR_UNEXPECTED);
 
   PRInt32 groupId;
   rv = mTag->GetId(&groupId);

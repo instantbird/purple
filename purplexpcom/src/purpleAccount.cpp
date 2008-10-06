@@ -224,8 +224,8 @@ nsresult purpleAccount::load(const nsCString& aKey)
   }
   if (!mProxy) {
     mProxy = do_CreateInstance(PURPLE_PROXY_INFO_CONTRACTID);
-    if (!mProxy)
-      return NS_ERROR_OUT_OF_MEMORY;
+    NS_ENSURE_TRUE(mProxy, NS_ERROR_OUT_OF_MEMORY);
+
     if (proxyKey.Equals(PROXY_KEY_ENVVAR))
       mProxy->SetType(purpleIProxyInfo::useEnvVar);
     else if (proxyKey.Equals(PROXY_KEY_NONE))
@@ -533,8 +533,8 @@ inline nsresult purpleAccount::SetId(const nsCString& aId)
   /* Save the id of the account */
   mKey.Assign(aId);
 
-  if (PR_sscanf(aId.get(), ACCOUNT_KEY "%u", &mId) != 1)
-    return NS_ERROR_FAILURE;
+  PRInt32 count = PR_sscanf(aId.get(), ACCOUNT_KEY "%u", &mId);
+  NS_ENSURE_TRUE(count == 1, NS_ERROR_FAILURE);
 
   return NS_OK;
 }
