@@ -84,7 +84,7 @@ private:
 protected:
   PRBool mInitialized;
   PRBool mQuitting;
-  PRBool mAutoLoginEnabled;
+  PRInt16 mAutoLoginStatus;
   nsCOMArray<purpleProtocol> mProtocols;
   nsCOMArray<purpleProxy> mProxies;
   nsCOMArray<purpleAccount> mAccounts;

@@ -77,7 +77,7 @@ extern void connect_to_blist_signals();
 purpleCoreService::purpleCoreService()
   :mInitialized(PR_FALSE),
    mQuitting(PR_FALSE),
-   mAutoLoginEnabled(PR_TRUE),
+   mAutoLoginStatus(AUTOLOGIN_ENABLED),
    mProtocols(nsnull),
    mProxies(nsnull),
    mAccounts(nsnull),
@@ -136,16 +136,16 @@ NS_IMETHODIMP purpleCoreService::Init()
   InitBuddyList();
 
   /* Disable auto-login if we are running in safe mode */
-  if (mAutoLoginEnabled) {
+  if (mAutoLoginStatus == AUTOLOGIN_ENABLED) {
     nsCOMPtr<nsIXULRuntime> xai =
       do_GetService("@mozilla.org/xre/app-info;1");
     PRBool inSafeMode;
     if (xai && NS_SUCCEEDED(xai->GetInSafeMode(&inSafeMode)) && inSafeMode)
-      mAutoLoginEnabled = PR_FALSE;
+      mAutoLoginStatus = AUTOLOGIN_SAFE_MODE;
   }
 
   /* Connect accounts that should be connected at startup */
-  if (mAutoLoginEnabled)
+  if (mAutoLoginStatus == AUTOLOGIN_ENABLED)
     ProcessAutoLogin();
 
   LOG(("Libpurple initialized"));
@@ -908,17 +908,17 @@ nsresult purpleCoreService::InitAccounts()
   return NS_OK;
 }
 
-/* attribute boolean autoLoginEnabled; */
-NS_IMETHODIMP purpleCoreService::GetAutoLoginEnabled(PRBool *aAutoLoginEnabled)
+/* attribute short autoLoginStatus; */
+NS_IMETHODIMP purpleCoreService::GetAutoLoginStatus(PRInt16 *aAutoLoginStatus)
 {
-  *aAutoLoginEnabled = mAutoLoginEnabled;
+  *aAutoLoginStatus = mAutoLoginStatus;
   return NS_OK;
 }
-NS_IMETHODIMP purpleCoreService::SetAutoLoginEnabled(PRBool aAutoLoginEnabled)
+NS_IMETHODIMP purpleCoreService::SetAutoLoginStatus(PRInt16 aAutoLoginStatus)
 {
   NS_ENSURE_TRUE(!mInitialized, NS_ERROR_ALREADY_INITIALIZED);
 
-  mAutoLoginEnabled = aAutoLoginEnabled;
+  mAutoLoginStatus = aAutoLoginStatus;
   return NS_OK;
 }
 
