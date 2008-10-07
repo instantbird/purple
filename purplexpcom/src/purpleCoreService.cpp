@@ -928,6 +928,11 @@ NS_IMETHODIMP purpleCoreService::ProcessAutoLogin()
   for (PRInt32 i = 0; i < mAccounts.Count(); ++i)
     mAccounts[i]->checkAutoLogin();
 
+  // Make sure autologin is now enabled, so that we don't display a
+  // message stating that it is disabled and asking the user if it
+  // should be processed now.
+  mAutoLoginStatus = AUTOLOGIN_ENABLED;
+
   return NS_OK;
 }
 
