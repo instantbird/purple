@@ -38,7 +38,7 @@ write_status(PurpleBuddy *buddy, const char *message)
 	g_snprintf(buf, sizeof(buf), message, escaped);
 	g_free(escaped);
 
-	purple_conv_im_write(conv->u.im, NULL, buf, PURPLE_MESSAGE_SYSTEM | PURPLE_MESSAGE_ACTIVE_ONLY, time(NULL));
+	purple_conv_im_write(conv->u.im, NULL, buf, PURPLE_MESSAGE_SYSTEM | PURPLE_MESSAGE_ACTIVE_ONLY | PURPLE_MESSAGE_NO_LINKIFY, time(NULL));
 }
 
 static void
