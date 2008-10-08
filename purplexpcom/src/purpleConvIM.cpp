@@ -61,6 +61,7 @@ NS_IMPL_ADDREF(purpleConvIM)
 NS_IMPL_RELEASE(purpleConvIM)
 
 purpleConvIM::purpleConvIM()
+  : mSentTyping(PR_FALSE)
 {
   /* member initializers and constructor code */
   LOG(("new purpleConvIM with id %i", mId));
@@ -85,6 +86,7 @@ NS_IMETHODIMP purpleConvIM::SendMsg(const nsACString& aMsg)
   if (!handled) {
     purple_conv_im_send(mConv->u.im, flatMsg.get());
     LOG(("IM message sent: %s", flatMsg.get()));
+    mSentTyping = PR_FALSE;
   }
 
   return NS_OK;
@@ -101,6 +103,52 @@ NS_IMETHODIMP purpleConvIM::GetBuddy(purpleIAccountBuddy * *aBuddy)
     NS_IF_ADDREF(*aBuddy = (purpleIAccountBuddy *)buddy->node.ui_data);
   else
     *aBuddy = nsnull;
+
+  return NS_OK;
+}
+
+/* void sendTyping (in unsigned long aLength); */
+NS_IMETHODIMP purpleConvIM::SendTyping(PRUint32 aLength)
+{
+  NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
+
+  PurpleConvIm *im = PURPLE_CONV_IM(mConv);
+  NS_ENSURE_TRUE(im, NS_ERROR_UNEXPECTED);
+
+  LOG(("purpleConvIM::SendTyping Length = %u", aLength));
+
+  // First, stop the typed timeout
+  purple_conv_im_stop_send_typed_timeout(im);
+
+  if (!aLength) {
+    if (!mSentTyping)
+      return NS_OK;
+
+    // All the content was removed, send a NOT_TYPING message
+    serv_send_typing(purple_conversation_get_gc(mConv),
+                     purple_conversation_get_name(mConv),
+                     PURPLE_NOT_TYPING);
+    LOG(("purpleConvIM::SendTyping Send PURPLE_NOT_TYPING"));
+    mSentTyping = PR_FALSE;
+    return NS_OK;
+  }
+
+  // At this point, we are actually typing, so reset the typed timeout
+  purple_conv_im_start_send_typed_timeout(im);
+
+  // Check if we need to send a TYPING message to the server.
+  // We need to send a message if we just typed the first character
+  // or if the type_again value is not null and is less than the
+  // current timestamp 
+  if (!mSentTyping || (purple_conv_im_get_type_again(im) != 0 &&
+                       time(NULL) > purple_conv_im_get_type_again(im))) {
+    unsigned int timeout = serv_send_typing(purple_conversation_get_gc(mConv),
+                                            purple_conversation_get_name(mConv),
+                                            PURPLE_TYPING);
+    LOG(("purpleConvIM::SendTyping sent PURPLE_TYPING"));
+    purple_conv_im_set_type_again(im, timeout);
+    mSentTyping = PR_TRUE;
+  }
 
   return NS_OK;
 }

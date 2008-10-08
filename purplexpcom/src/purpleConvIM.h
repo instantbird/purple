@@ -86,6 +86,7 @@ private:
   ~purpleConvIM();
 
 protected:
+  PRBool mSentTyping;
 };
 
 #endif /* !PURPLE_CONV_IM_H_ */
