@@ -933,6 +933,10 @@ NS_IMETHODIMP purpleCoreService::ProcessAutoLogin()
   // should be processed now.
   mAutoLoginStatus = AUTOLOGIN_ENABLED;
 
+  // Notify observers so that any message stating that autologin is
+  // disabled can be removed
+  NotifyObservers(nsnull, "autologin-processed");
+
   return NS_OK;
 }
 
