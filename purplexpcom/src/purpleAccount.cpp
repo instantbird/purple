@@ -469,6 +469,8 @@ NS_IMETHODIMP purpleAccount::Disconnect()
 NS_IMETHODIMP purpleAccount::CreateConversation(const nsACString& aName,
                                                 purpleIConversation **aResult)
 {
+  NS_ENSURE_TRUE(!aName.IsEmpty(), NS_ERROR_INVALID_ARG);
+
   PurpleConversation *conv;
   conv = purple_conversation_new(PURPLE_CONV_TYPE_IM, this->mAccount,
                                  PromiseFlatCString(aName).get());
