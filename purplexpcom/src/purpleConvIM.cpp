@@ -107,6 +107,18 @@ NS_IMETHODIMP purpleConvIM::GetBuddy(purpleIAccountBuddy * *aBuddy)
   return NS_OK;
 }
 
+/* readonly attribute short typingState; */
+NS_IMETHODIMP purpleConvIM::GetTypingState(PRInt16 *aTypingState)
+{
+  NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
+
+  PurpleConvIm *im = PURPLE_CONV_IM(mConv);
+  NS_ENSURE_TRUE(im, NS_ERROR_UNEXPECTED);
+
+  *aTypingState = purple_conv_im_get_typing_state(im);
+  return NS_OK;
+}
+
 /* void sendTyping (in unsigned long aLength); */
 NS_IMETHODIMP purpleConvIM::SendTyping(PRUint32 aLength)
 {

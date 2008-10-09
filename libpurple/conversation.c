@@ -944,7 +944,10 @@ purple_conversation_write(PurpleConversation *conv, const char *who,
 
 	if (purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_IM) {
 		if ((flags & PURPLE_MESSAGE_RECV) == PURPLE_MESSAGE_RECV) {
-			purple_conv_im_set_typing_state(PURPLE_CONV_IM(conv), PURPLE_NOT_TYPING);
+			PurpleConvIm *im = PURPLE_CONV_IM(conv);
+			purple_conv_im_set_typing_state(im, PURPLE_NOT_TYPING);
+			purple_conv_im_update_typing(im);
+
 		}
 	}
 

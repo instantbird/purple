@@ -525,6 +525,12 @@ static void update_chat_topic(PurpleConversation *aConv,
   notify_conv(aConv, nsnull, "chat-update-topic", nsnull);
 }
 
+static void conversation_updated(PurpleConversation *aConv, PurpleConvUpdateType aType)
+{
+  if (aType == PURPLE_CONV_UPDATE_TYPING)
+    notify_conv(aConv, nsnull, "update-typing", nsnull);
+}
+
 static void connect_to_conversations_signals()
 {
   static int handle;
@@ -533,6 +539,9 @@ static void connect_to_conversations_signals()
 
   purple_signal_connect(purple_conversations_get_handle(), "chat-topic-changed", &handle,
                         PURPLE_CALLBACK(update_chat_topic), NULL);
+
+  purple_signal_connect(purple_conversations_get_handle(), "conversation-updated", &handle,
+                        PURPLE_CALLBACK(conversation_updated), NULL);
 
   LOG(("Connecting to conversation signals"));
 }
