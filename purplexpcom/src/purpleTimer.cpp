@@ -84,7 +84,7 @@ void purpleTimer::unInit()
 }
 
 #ifdef XP_WIN
-NS_IMPL_ISUPPORTS1(purpleTimeout, nsIRunnable)
+NS_IMPL_THREADSAFE_ISUPPORTS1(purpleTimeout, nsIRunnable)
 
 NS_IMETHODIMP purpleTimeout::Run()
 {
