@@ -38,10 +38,6 @@
 #ifndef PURPLE_MESSAGE_H_
 #define PURPLE_MESSAGE_H_
 
-#ifdef XP_WIN
-# define _USE_32BIT_TIME_T
-#endif
-
 #include "purpleIMessage.h"
 #pragma GCC visibility push(default)
 #include <libpurple/conversation.h>

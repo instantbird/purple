@@ -38,10 +38,6 @@
 
 #define CUSTOM_PLUGIN_PATH     "protocols"
 
-#ifdef XP_WIN
-# define _USE_32BIT_TIME_T
-#endif
-
 #pragma GCC visibility push(default)
 #include <libpurple/account.h>
 #include <libpurple/accountopt.h>
