@@ -104,7 +104,9 @@ interface purpleICoreService: nsISupports {
   /* This attribute is set to AUTOLOGIN_ENABLED by default. It can be set to
      any other value before the initialization of this service to prevent
      accounts with autoLogin enabled from being connected when libpurple is
-     initialized. */
+     initialized.
+     Any value other than the ones listed below will disable autoLogin and
+     display a generic message in the Account Manager. */
   attribute short autoLoginStatus;
 
   const short AUTOLOGIN_ENABLED = 0;
