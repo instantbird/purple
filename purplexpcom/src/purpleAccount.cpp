@@ -42,6 +42,7 @@
 #include <nsServiceManagerUtils.h>
 #include <nsComponentManagerUtils.h>
 #include <nsMemory.h>
+#include <nsNetUtil.h>
 #include <prprf.h>
 
 NS_IMPL_ISUPPORTS1(purpleAccount, purpleIAccount)
@@ -421,8 +422,8 @@ nsresult purpleAccount::remove()
 NS_IMETHODIMP purpleAccount::Connect()
 {
   PURPLE_ENSURE_INIT(mAccount);
-
   LOG(("Attempting to connect %s\n", mAccount->username));
+  NS_ENSURE_TRUE(!NS_IsOffline(), NS_ERROR_FAILURE);
 
   if (purple_account_get_enabled(mAccount, UI_ID)) {
     /* The account is already enabled. This means that we have already

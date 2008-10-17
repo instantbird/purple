@@ -42,6 +42,7 @@
 #include <nsIProxyObjectManager.h>
 #include <nsIEventTarget.h>
 #include <nsThreadUtils.h>
+#include <nsNetUtil.h>
 
 #ifdef PR_LOGGING
 //
@@ -329,6 +330,7 @@ PRUint32 purpleSocketWatcher::AddWatch(gint aFd, PurpleInputCondition aCondition
 {
   NS_ENSURE_TRUE(sSockets, NS_ERROR_FAILURE);
   NS_ASSERTION(NS_IsMainThread(), "wrong thread");
+  NS_ENSURE_TRUE(!NS_IsOffline(), 0);
 
   nsresult rv;
   nsCOMPtr<purpleISocket> socket = do_CreateInstance(PURPLE_SOCKET_CONTRACTID, &rv);

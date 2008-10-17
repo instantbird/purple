@@ -38,6 +38,7 @@
 #include "purpleDNS.h"
 #include <nsComponentManagerUtils.h>
 #include <nsServiceManagerUtils.h>
+#include <nsNetUtil.h>
 #include <nsIThread.h>
 #include <nsThreadUtils.h>
 #include <nsICancelable.h>
@@ -77,6 +78,7 @@ gboolean purpleDNS::Resolve(PurpleDnsQueryData *query_data,
                             PurpleDnsQueryResolvedCallback resolved_cb,
                             PurpleDnsQueryFailedCallback failed_cb)
 {
+  NS_ENSURE_TRUE(!NS_IsOffline(), false);
   nsCString host(purple_dnsquery_get_host(query_data));
   LOG(("Resolving with moz: %s", host.get()));
   NS_ENSURE_TRUE(sRequests, false);

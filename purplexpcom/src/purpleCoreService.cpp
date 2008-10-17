@@ -48,6 +48,7 @@
 
 #include <nsServiceManagerUtils.h>
 #include <nsComponentManagerUtils.h>
+#include <nsIIOService2.h>
 #include <nsIObserverService.h>
 #include <nsIConsoleService.h>
 #include <nsIPrefService.h>
@@ -56,6 +57,7 @@
 #include <nsCRTGlue.h>
 #include <nsXPCOM.h>
 #include <nsArrayEnumerator.h>
+#include <nsNetUtil.h>
 
 #ifdef PR_LOGGING
 #include <prprf.h>
@@ -135,14 +137,8 @@ NS_IMETHODIMP purpleCoreService::Init()
   /* Load the buddy list from mozStorage */
   InitBuddyList();
 
-  /* Disable auto-login if we are running in safe mode */
-  if (mAutoLoginStatus == AUTOLOGIN_ENABLED) {
-    nsCOMPtr<nsIXULRuntime> xai =
-      do_GetService("@mozilla.org/xre/app-info;1");
-    PRBool inSafeMode;
-    if (xai && NS_SUCCEEDED(xai->GetInSafeMode(&inSafeMode)) && inSafeMode)
-      mAutoLoginStatus = AUTOLOGIN_SAFE_MODE;
-  }
+  /* Check if we should disable auto-login */
+  InitAutoLoginStatus();
 
   /* Connect accounts that should be connected at startup */
   if (mAutoLoginStatus == AUTOLOGIN_ENABLED)
@@ -150,6 +146,35 @@ NS_IMETHODIMP purpleCoreService::Init()
 
   LOG(("Libpurple initialized"));
   return NS_OK;
+}
+
+void purpleCoreService::InitAutoLoginStatus()
+{
+  /* If auto-login is already disabled, do nothing */
+  if (mAutoLoginStatus != AUTOLOGIN_ENABLED)
+    return;
+
+  /* Disable auto-login if we are running in safe mode */
+  nsCOMPtr<nsIXULRuntime> xai =
+    do_GetService("@mozilla.org/xre/app-info;1");
+  PRBool inSafeMode;
+  if (xai && NS_SUCCEEDED(xai->GetInSafeMode(&inSafeMode)) && inSafeMode) {
+    mAutoLoginStatus = AUTOLOGIN_SAFE_MODE;
+    return;
+  }
+
+  /* If the application was started offline, disable auto-login */
+  nsCOMPtr<nsIIOService2> io =
+    do_GetService("@mozilla.org/network/io-service;1");
+  NS_ENSURE_TRUE(io, );
+  PRBool offlineStatusManaged = PR_TRUE;
+  io->GetManageOfflineStatus(&offlineStatusManaged);
+  if (!offlineStatusManaged) {
+    PRBool offlineState = PR_FALSE;
+    io->GetOffline(&offlineState);
+    if (offlineState)
+      mAutoLoginStatus = AUTOLOGIN_START_OFFLINE;
+  }
 }
 
 nsresult purpleCoreService::InitBuddyList()
@@ -925,6 +950,8 @@ NS_IMETHODIMP purpleCoreService::SetAutoLoginStatus(PRInt16 aAutoLoginStatus)
 /* void processAutoLogin (); */
 NS_IMETHODIMP purpleCoreService::ProcessAutoLogin()
 {
+  NS_ENSURE_TRUE(!NS_IsOffline(), NS_ERROR_FAILURE);
+
   for (PRInt32 i = 0; i < mAccounts.Count(); ++i)
     mAccounts[i]->checkAutoLogin();
 

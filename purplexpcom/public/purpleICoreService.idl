@@ -113,6 +113,7 @@ interface purpleICoreService: nsISupports {
   const short AUTOLOGIN_USER_DISABLED = 1;
   const short AUTOLOGIN_SAFE_MODE = 2;
   const short AUTOLOGIN_CRASH = 3;
+  const short AUTOLOGIN_START_OFFLINE = 4;
 
   /* The method should be used to connect all accounts with autoLogin enabled.
      Some use cases:

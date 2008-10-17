@@ -75,6 +75,7 @@ private:
   nsresult InitProxies();
   nsresult InitAccounts();
   nsresult InitBuddyList();
+  void InitAutoLoginStatus();
   nsCOMPtr<nsIPrefBranch> mPrefService;
   inline void UnInitAccounts();
   inline void UnInitProtocols();
