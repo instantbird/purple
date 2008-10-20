@@ -55,6 +55,7 @@ CSRCS		= \
 		buddy.c \
 		chat.c \
 		disco.c \
+		data.c \
 		google.c \
 		iq.c \
 		jabber.c \
