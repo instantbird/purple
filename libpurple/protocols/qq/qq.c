@@ -55,6 +55,10 @@
 #include "utils.h"
 #include "version.h"
 
+#ifdef _MSC_VER
+#define strcasecmp stricmp
+#endif
+
 #define OPENQ_AUTHOR            "Puzzlebird"
 #define OPENQ_WEBSITE            "http://openq.sourceforge.net"
 
