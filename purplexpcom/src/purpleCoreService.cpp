@@ -1124,33 +1124,16 @@ NS_IMETHODIMP purpleCoreService::NotifyObservers(nsISupports *aObj,
   return os->NotifyObservers(aObj, aEvent, nsnull);
 }
 
-/* [noscript] purpleIAccount getAccountByPurpleAccount (in PurpleNativeAccount aAccount); */
-NS_IMETHODIMP purpleCoreService::GetAccountByPurpleAccount(PurpleAccount * aAccount,
-                                                           purpleIAccount **aResult)
-{
-  PURPLE_ENSURE_INIT(mInitialized);
-
-  for (PRInt32 i = mAccounts.Count() - 1; i >= 0; --i) {
-    if (mAccounts[i]->IsPurpleAccount(aAccount)) {
-      NS_ADDREF(*aResult = mAccounts[i]);
-      return NS_OK;
-    }
-    LOG(("mAccounts[%i]: %s", i, mAccounts[i]->IsPurpleAccount(NULL) ? "NULL" : "not null"));
-  }
-
-  return NS_ERROR_FAILURE;
-}
-
 /* [noscript] void fireAccountEvent (in purpleNativeAccount aAccount, in string event); */
 NS_IMETHODIMP purpleCoreService::FireAccountEvent(PurpleAccount * aAccount,
                                                   const char *aEvent)
 {
+  NS_ENSURE_ARG_POINTER(aAccount);
   LOG(("FireAccountEvent: event: %s, account name: %s", aEvent, aAccount->username));
 
-  nsCOMPtr<purpleIAccount> account;
-  nsresult rv = this->GetAccountByPurpleAccount(aAccount,
-                                                getter_AddRefs(account));
-  NS_ENSURE_SUCCESS(rv, rv);
+  purpleAccount *account = (purpleAccount *)aAccount->ui_data;
+  NS_ENSURE_TRUE(account, NS_ERROR_FAILURE);
+
   return NotifyObservers(account, aEvent);
 }
 

@@ -79,7 +79,6 @@ interface purpleICoreService: nsISupports {
 
   /* accounts */
   purpleIAccount getAccountById(in AUTF8String aAccountId);
-  [noscript] purpleIAccount getAccountByPurpleAccount(in PurpleNativeAccount aAccount);
 
   /* Create a new proxy and store it in the preferences */
   purpleIProxy createProxy(in short aType, in AUTF8String aHost, in unsigned long aPort,

@@ -133,14 +133,12 @@ purpleAccountBuddy *purpleBuddy::AddAccount(purpleIAccount *aAccount,
 
 nsresult purpleBuddy::AddAccount(PurpleBuddy *aBuddy)
 {
-  nsCOMPtr<purpleIAccount> account;
-  nsCOMPtr<purpleCoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-  nsresult rv = pcs->GetAccountByPurpleAccount(aBuddy->account,
-                                               getter_AddRefs(account));
-  NS_ENSURE_SUCCESS(rv, rv);
+  purpleAccount *account = (purpleAccount *)aBuddy->account->ui_data;
+  NS_ENSURE_TRUE(account, NS_ERROR_UNEXPECTED);
 
+  nsCOMPtr<purpleCoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
   nsCOMPtr<purpleTag> tag;
-  rv = pcs->GetTagFromPurpleBuddy(aBuddy, getter_AddRefs(tag));
+  nsresult rv = pcs->GetTagFromPurpleBuddy(aBuddy, getter_AddRefs(tag));
   NS_ENSURE_SUCCESS(rv, rv);
 
   purpleAccountBuddy *pab = AddAccount(account, aBuddy, tag);

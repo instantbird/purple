@@ -119,14 +119,16 @@ static PurpleEventLoopUiOps eventloops =
 static void setAccountConnectionStateMsg(PurpleConnection *gc, const char *text,
                                          const char *aEvent)
 {
-  nsCOMPtr<purpleCoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-  nsCOMPtr<purpleIAccount> account;
-  nsresult rv = pcs->GetAccountByPurpleAccount(purple_connection_get_account(gc),
-                                               getter_AddRefs(account));
-  NS_ENSURE_SUCCESS(rv,);
+  PurpleAccount *pAccount = purple_connection_get_account(gc);
+  NS_ENSURE_TRUE(pAccount,);
+  purpleAccount *account = (purpleAccount *)pAccount->ui_data;
+  NS_ENSURE_TRUE(account,);
 
   nsCString msg(text);
   account->SetConnectionStateMsg(msg);
+
+  nsCOMPtr<purpleCoreService> pcs =
+    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
   pcs->NotifyObservers(account, aEvent);
 }
 
