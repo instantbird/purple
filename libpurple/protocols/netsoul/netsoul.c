@@ -274,7 +274,8 @@ static void netsoul_close (PurpleConnection *gc)
   g_free(ns->host);
   closesocket(ns->fd);
   g_free(ns);
-  purple_input_remove(gc->inpa);
+  if (gc->inpa)
+    purple_input_remove(gc->inpa);
 }
 
 
