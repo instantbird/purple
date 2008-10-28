@@ -685,6 +685,7 @@ NS_IMETHODIMP purpleAccount::GetProxyInfo(purpleIProxyInfo * *aProxyInfo)
 NS_IMETHODIMP purpleAccount::SetProxyInfo(purpleIProxyInfo * aProxyInfo)
 {
   PURPLE_ENSURE_INIT(mAccount);
+  NS_ENSURE_ARG(aProxyInfo);
 
   mProxy = aProxyInfo;
 
