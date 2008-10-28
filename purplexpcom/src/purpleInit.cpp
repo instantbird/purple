@@ -116,31 +116,33 @@ static PurpleEventLoopUiOps eventloops =
 /*** End of the eventloop functions. ***/
 
 /*** Connection uiops ***/
-static void setAccountConnectionStateMsg(PurpleConnection *gc, const char *text,
-                                         const char *aEvent)
+static void connect_progress(PurpleConnection *gc, const char *text,
+                             size_t step, size_t step_count)
 {
   PurpleAccount *pAccount = purple_connection_get_account(gc);
   NS_ENSURE_TRUE(pAccount,);
   purpleAccount *account = (purpleAccount *)pAccount->ui_data;
   NS_ENSURE_TRUE(account,);
-
-  nsCString msg(text);
-  account->SetConnectionStateMsg(msg);
+  account->SetConnectionStateMsg(text);
 
   nsCOMPtr<purpleCoreService> pcs =
     do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-  pcs->NotifyObservers(account, aEvent);
+  pcs->NotifyObservers(account, "account-connect-progress");
 }
 
-static void connect_progress(PurpleConnection *gc, const char *text,
-                             size_t step, size_t step_count)
+static void report_disconnect_reason(PurpleConnection *gc,
+                                     PurpleConnectionError reason,
+                                     const char *text)
 {
-  setAccountConnectionStateMsg(gc, text, "account-connect-progress");
-}
+  PurpleAccount *pAccount = purple_connection_get_account(gc);
+  NS_ENSURE_TRUE(pAccount,);
+  purpleAccount *account = (purpleAccount *)pAccount->ui_data;
+  NS_ENSURE_TRUE(account,);
+  account->SetDisconnectReason(reason, text);
 
-static void report_disconnect(PurpleConnection *gc, const char *text)
-{
-  setAccountConnectionStateMsg(gc, text, "account-connect-error");
+  nsCOMPtr<purpleCoreService> pcs =
+    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
+  pcs->NotifyObservers(account, "account-connect-error");
 }
 
 PurpleConnectionUiOps connection_uiops = {
@@ -148,11 +150,12 @@ PurpleConnectionUiOps connection_uiops = {
   NULL, /* connected */
   NULL, /* disconnected */
   NULL, /* notice = dead code ? */
-  report_disconnect,
+  NULL, /* report_disconnect: deprecated in favour of report_disconnect_reason */
   NULL, /* network_connected */
   NULL, /* network_disconnected */
+  report_disconnect_reason,
 
-  NULL, NULL, NULL, NULL
+  NULL, NULL, NULL
 };
 
 /*** Account uiops ***/

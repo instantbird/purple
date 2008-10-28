@@ -73,9 +73,8 @@ public:
   nsresult checkAutoLogin();
   nsresult remove();
   void UnInit();
-  PRBool IsPurpleAccount(const PurpleAccount *aAccount) {
-    return mAccount == aAccount;
-  }
+  void SetConnectionStateMsg(const char *aConnectionStateMsg);
+  void SetDisconnectReason(PurpleConnectionError reason, const char *text);
 
 private:
   ~purpleAccount();
@@ -103,6 +102,8 @@ private:
 protected:
   /* additional members */
   nsCString mConnectionStateMsg;
+  nsCString mConnectionErrorMessage;
+  PurpleConnectionError mConnectionErrorReason;
 };
 
 #endif /* !PURPLE_ACCOUNT_H_ */

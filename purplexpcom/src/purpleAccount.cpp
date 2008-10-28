@@ -430,6 +430,8 @@ NS_IMETHODIMP purpleAccount::Connect()
        connected it and we haven't disconnected it. If it isn't
        connected then it's because of a connection failure */
     LOG(("Account already enabled\n"));
+    mConnectionErrorReason = (PurpleConnectionError)NO_ERROR;
+    mConnectionErrorMessage.Truncate();
     purple_account_connect(mAccount);
   }
   else {
@@ -461,7 +463,7 @@ NS_IMETHODIMP purpleAccount::Disconnect()
      doesn't interpret it as an error / the cause of the disconnection
      We used to get a bogus error message when the user disconnected
      manually an account while it was connecting (see bug 88) */
-  SetConnectionStateMsg(EmptyCString());
+  SetConnectionStateMsg("");
 
   return NS_OK;
 }
@@ -761,12 +763,36 @@ NS_IMETHODIMP purpleAccount::GetConnectionStateMsg(nsACString &aConnectionStateM
   aConnectionStateMsg = mConnectionStateMsg;
   return NS_OK;
 }
-NS_IMETHODIMP purpleAccount::SetConnectionStateMsg(const nsACString &aConnectionStateMsg)
+
+void purpleAccount::SetConnectionStateMsg(const char *aConnectionStateMsg)
 {
   mConnectionStateMsg = aConnectionStateMsg;
+  mConnectionErrorReason = (PurpleConnectionError) NO_ERROR;
+  mConnectionErrorMessage.Truncate();
+}
+
+void purpleAccount::SetDisconnectReason(PurpleConnectionError reason,
+                                        const char *text)
+
+{
+  mConnectionErrorReason = reason;
+  mConnectionErrorMessage = text;
+  mConnectionStateMsg.Truncate();
+}
+
+/* readonly attribute short connectionErrorReason; */
+NS_IMETHODIMP purpleAccount::GetConnectionErrorReason(PRInt16 *aConnectionErrorReason)
+{
+  *aConnectionErrorReason = mConnectionErrorReason;
   return NS_OK;
 }
 
+/* readonly attribute AUTF8String connectionErrorMessage; */
+NS_IMETHODIMP purpleAccount::GetConnectionErrorMessage(nsACString & aConnectionErrorMessage)
+{
+  aConnectionErrorMessage = mConnectionErrorMessage;
+  return NS_OK;
+}
 
 #define PURPLE_IMPL_GETBOOL(aName, aVal)			\
   NS_IMETHODIMP purpleAccount::Get##aName(PRBool *a##aName)	\

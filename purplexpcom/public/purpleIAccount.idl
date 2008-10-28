@@ -78,10 +78,37 @@ interface purpleIAccount: nsISupports {
   void setString(in string aName, in string aVal);
   void save();
 
-  // FIXME proxy info
+
+  /* While an account is connecting, this attribute contains a message
+     indicating the current step of the connection */
+  readonly attribute AUTF8String connectionStateMsg;
+
+  /* When a connection error occured, this value indicates the type of error */
+  readonly attribute short connectionErrorReason;
+
+  const short NO_ERROR = -1;
+  const short ERROR_NETWORK_ERROR = 0;
+  const short ERROR_INVALID_USERNAME = 1;
+  const short ERROR_AUTHENTICATION_FAILED = 2;
+  const short ERROR_AUTHENTICATION_IMPOSSIBLE = 3;
+  const short ERROR_NO_SSL_SUPPORT = 4;
+  const short ERROR_ENCRYPTION_ERROR = 5;
+  const short ERROR_NAME_IN_USE = 6;
+  const short ERROR_INVALID_SETTINGS = 7;
+  const short ERROR_CERT_NOT_PROVIDED = 8;
+  const short ERROR_CERT_UNTRUSTED = 9;
+  const short ERROR_CERT_EXPIRED = 10;
+  const short ERROR_CERT_NOT_ACTIVATED = 11;
+  const short ERROR_CERT_HOSTNAME_MISMATCH = 12;
+  const short ERROR_CERT_FINGERPRINT_MISMATCH = 13;
+  const short ERROR_CERT_SELF_SIGNED = 14;
+  const short ERROR_CERT_OTHER_ERROR = 15;
+  const short ERROR_OTHER_ERROR = 16;
+
+  /* A message describing the connection error */
+  readonly attribute AUTF8String connectionErrorMessage;
 
   /* Info about the connection state and flags */
-  attribute AUTF8String connectionStateMsg;
 
   /* From PurpleAccount */
   readonly attribute boolean disconnecting;
