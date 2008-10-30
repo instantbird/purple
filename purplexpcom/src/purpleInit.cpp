@@ -116,13 +116,16 @@ static PurpleEventLoopUiOps eventloops =
 /*** End of the eventloop functions. ***/
 
 /*** Connection uiops ***/
+#define IMPL_GET_ACCOUNT                                        \
+  PurpleAccount *pAccount = purple_connection_get_account(gc);  \
+  NS_ENSURE_TRUE(pAccount,);                                    \
+  purpleAccount *account = (purpleAccount *)pAccount->ui_data;  \
+  NS_ENSURE_TRUE(account,)
+
 static void connect_progress(PurpleConnection *gc, const char *text,
                              size_t step, size_t step_count)
 {
-  PurpleAccount *pAccount = purple_connection_get_account(gc);
-  NS_ENSURE_TRUE(pAccount,);
-  purpleAccount *account = (purpleAccount *)pAccount->ui_data;
-  NS_ENSURE_TRUE(account,);
+  IMPL_GET_ACCOUNT;
   account->SetConnectionStateMsg(text);
 
   nsCOMPtr<purpleCoreService> pcs =
@@ -130,14 +133,17 @@ static void connect_progress(PurpleConnection *gc, const char *text,
   pcs->NotifyObservers(account, "account-connect-progress");
 }
 
+static void connected(PurpleConnection *gc)
+{
+  IMPL_GET_ACCOUNT;
+  account->Connected();
+}
+
 static void report_disconnect_reason(PurpleConnection *gc,
                                      PurpleConnectionError reason,
                                      const char *text)
 {
-  PurpleAccount *pAccount = purple_connection_get_account(gc);
-  NS_ENSURE_TRUE(pAccount,);
-  purpleAccount *account = (purpleAccount *)pAccount->ui_data;
-  NS_ENSURE_TRUE(account,);
+  IMPL_GET_ACCOUNT;
   account->SetDisconnectReason(reason, text);
 
   nsCOMPtr<purpleCoreService> pcs =
@@ -147,7 +153,7 @@ static void report_disconnect_reason(PurpleConnection *gc,
 
 PurpleConnectionUiOps connection_uiops = {
   connect_progress,
-  NULL, /* connected */
+  connected,
   NULL, /* disconnected */
   NULL, /* notice = dead code ? */
   NULL, /* report_disconnect: deprecated in favour of report_disconnect_reason */

@@ -42,7 +42,9 @@
 #include "purpleProtocol.h"
 #include "nsCOMPtr.h"
 #include<nsIPrefBranch.h>
+#include<nsITimer.h>
 #include<nsStringAPI.h>
+#include<prtime.h>
 
 #define UI_ID                  "instantbird"
 
@@ -75,6 +77,9 @@ public:
   void UnInit();
   void SetConnectionStateMsg(const char *aConnectionStateMsg);
   void SetDisconnectReason(PurpleConnectionError reason, const char *text);
+  // Called when an account successfully connected, to reset values
+  // related to connection error and auto-reconnect.
+  void Connected();
 
 private:
   ~purpleAccount();
@@ -104,6 +109,10 @@ protected:
   nsCString mConnectionStateMsg;
   nsCString mConnectionErrorMessage;
   PurpleConnectionError mConnectionErrorReason;
+  nsCOMPtr<nsITimer> mTimer;
+  static void reconnectTimerCallback(nsITimer *aTimer, void *aClosure);
+  PRUint16 mReconnectAttempts;
+  PRTime mTimeOfNextReconnect;
 };
 
 #endif /* !PURPLE_ACCOUNT_H_ */

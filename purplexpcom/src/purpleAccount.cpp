@@ -66,7 +66,9 @@ static PRLogModuleInfo *gPurpleAccountLog = nsnull;
 #define LOG(args) PR_LOG(gPurpleAccountLog, PR_LOG_DEBUG, args)
 
 purpleAccount::purpleAccount()
-  : mAccount(NULL)
+  : mAccount(NULL),
+    mReconnectAttempts(0),
+    mTimeOfNextReconnect(0)
 {
   /* member initializers and constructor code */
 #ifdef PR_LOGGING
@@ -91,6 +93,11 @@ void purpleAccount::UnInit()
 
   LOG(("uninitializing purpleAccount %s (%s)\n",
        purple_account_get_username(mAccount), mProtocol->GetId()));
+
+  if (mTimer) {
+    mTimer->Cancel();
+    mTimer = nsnull;
+  }
 
   mAccount->ui_data = NULL;
   // This will call purple_proxy_info_destroy if there was a proxy
@@ -433,6 +440,13 @@ NS_IMETHODIMP purpleAccount::Connect()
     mConnectionErrorReason = (PurpleConnectionError)NO_ERROR;
     mConnectionErrorMessage.Truncate();
     purple_account_connect(mAccount);
+
+    if (mTimeOfNextReconnect - PR_Now() > 1000) {
+      // This is a manual reconnection, reset the auto-reconnect stuff
+      mReconnectAttempts = 0;
+      if (mTimer)
+        mTimer->Cancel();
+    }
   }
   else {
     /* enabling an account in libpurple connects it automatically */
@@ -458,12 +472,6 @@ NS_IMETHODIMP purpleAccount::Disconnect()
   purple_account_set_remember_password(mAccount, TRUE);
 
   purple_account_set_enabled(mAccount, UI_ID, FALSE);
-
-  /* Remove the current connection state message so that the UI
-     doesn't interpret it as an error / the cause of the disconnection
-     We used to get a bogus error message when the user disconnected
-     manually an account while it was connecting (see bug 88) */
-  SetConnectionStateMsg("");
 
   return NS_OK;
 }
@@ -779,6 +787,60 @@ void purpleAccount::SetDisconnectReason(PurpleConnectionError reason,
   mConnectionErrorReason = reason;
   mConnectionErrorMessage = text;
   mConnectionStateMsg.Truncate();
+
+  if (purple_connection_error_is_fatal(reason))
+    return;
+
+  // Start the auto-reconnect process
+  if (!mTimer)
+    mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+
+  nsCString timers;
+  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(prefs, );
+  nsresult rv = prefs->GetCharPref("messenger.accounts.reconnectTimer",
+                                   getter_Copies(timers));
+  NS_ENSURE_SUCCESS(rv, );
+
+  char *newStr = timers.BeginWriting();
+  nsCAutoString time;
+  PRUint32 i = 0;
+  for (char *token = NS_strtok(",", &newStr);
+       i <= mReconnectAttempts && token;
+       ++i, token = NS_strtok(",", &newStr)) {
+    time = token;
+    time.StripWhitespace();
+  }
+
+  LOG(("time: %s, attempt %i", time.get(), mReconnectAttempts + 1));
+  PRInt32 timer = strtol(time.get(), NULL, 10) * 1000;
+  if (timer <= 0) {
+    LOG(("No auto-reconnect"));
+    return;
+  }
+  ++mReconnectAttempts;
+  mTimeOfNextReconnect = PR_Now() + timer * 1000;
+  mTimer->InitWithFuncCallback(reconnectTimerCallback, this,
+                               timer, nsITimer::TYPE_ONE_SHOT);
+  LOG(("timer initialized with %i s", timer / 1000));
+}
+
+void purpleAccount::Connected()
+{
+  mReconnectAttempts = 0;
+
+  // FIXME: this is probably obsolete
+  /* Remove the current connection state message so that the UI
+     doesn't interpret it as an error / the cause of the disconnection
+     We used to get a bogus error message when the user disconnected
+     manually an account while it was connecting (see bug 88) */
+  SetConnectionStateMsg("");
+}
+
+void purpleAccount::reconnectTimerCallback(nsITimer *aTimer, void *aClosure)
+{
+  LOG(("running reconnectTimerCallback"));
+  static_cast<purpleAccount *>(aClosure)->Connect();
 }
 
 /* readonly attribute short connectionErrorReason; */
@@ -792,6 +854,13 @@ NS_IMETHODIMP purpleAccount::GetConnectionErrorReason(PRInt16 *aConnectionErrorR
 NS_IMETHODIMP purpleAccount::GetConnectionErrorMessage(nsACString & aConnectionErrorMessage)
 {
   aConnectionErrorMessage = mConnectionErrorMessage;
+  return NS_OK;
+}
+
+/* readonly attribute long timeUntilReconnect; */
+NS_IMETHODIMP purpleAccount::GetTimeOfNextReconnect(PRInt64 *aTimeOfNextReconnect)
+{
+  *aTimeOfNextReconnect = mTimeOfNextReconnect / 1000;
   return NS_OK;
 }
 
