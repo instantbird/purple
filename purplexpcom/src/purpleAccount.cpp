@@ -67,6 +67,7 @@ static PRLogModuleInfo *gPurpleAccountLog = nsnull;
 
 purpleAccount::purpleAccount()
   : mAccount(NULL),
+    mConnectionErrorReason((PurpleConnectionError)NO_ERROR),
     mReconnectAttempts(0),
     mTimeOfNextReconnect(0)
 {
