@@ -120,6 +120,15 @@ protected:
   static void savePrefsNow(nsITimer *aTimer, void *aClosure);
   void initSavePrefsTimer();
   static nsCOMPtr<nsITimer> sSavePrefsTimer;
+
+  /* Startup crash prevention stuff */
+  void startAutoLogin();
+  void finishedAutoLogin();
+
+  // Is the current account connecting with autologin
+  PRBool mAutoLoginPending;
+  // How many accounts are currently connecting with autologin
+  static PRUint32 sAutoLoginsPending;
 };
 
 #endif /* !PURPLE_ACCOUNT_H_ */

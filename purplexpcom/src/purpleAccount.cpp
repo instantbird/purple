@@ -47,6 +47,8 @@
 
 NS_IMPL_ISUPPORTS1(purpleAccount, purpleIAccount)
 
+#define PREF_AUTOLOGIN_PENDING  "messenger.accounts.autoLoginPending"
+
 #define PREF_PREFIX             "messenger.account."
 #define PREF_OPTIONS            "options."
 #define PREF_PRPL               "prpl"
@@ -68,12 +70,14 @@ static PRLogModuleInfo *gPurpleAccountLog = nsnull;
 #define LOG(args) PR_LOG(gPurpleAccountLog, PR_LOG_DEBUG, args)
 
 nsCOMPtr<nsITimer> purpleAccount::sSavePrefsTimer;
+PRUint32 purpleAccount::sAutoLoginsPending = 0;
 
 purpleAccount::purpleAccount()
   : mAccount(NULL),
     mConnectionErrorReason((PurpleConnectionError)NO_ERROR),
     mReconnectAttempts(0),
-    mTimeOfNextReconnect(0)
+    mTimeOfNextReconnect(0),
+    mAutoLoginPending(PR_FALSE)
 {
   /* member initializers and constructor code */
 #ifdef PR_LOGGING
@@ -301,6 +305,43 @@ nsresult purpleAccount::load(const nsCString& aKey)
   return NS_OK;
 }
 
+void purpleAccount::startAutoLogin()
+{
+  NS_ENSURE_TRUE(!mAutoLoginPending, );
+  LOG(("purpleAccount::startAutoLogin"));
+  mAutoLoginPending = PR_TRUE;
+
+  if (!sAutoLoginsPending++) {
+    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    NS_ENSURE_TRUE(prefs, );
+    nsresult rv = prefs->SetBoolPref(PREF_AUTOLOGIN_PENDING, PR_TRUE);
+    NS_ENSURE_SUCCESS(rv, );
+
+    LOG(("Added autoLoginPending pref"));
+    savePrefsNow(nsnull, nsnull);
+  }
+}
+
+void purpleAccount::finishedAutoLogin()
+{
+  if (!mAutoLoginPending) {
+    LOG(("purpleAccount::finishedAutoLogin mAutoLoginPending wasn't set"));
+    return;
+  }
+
+  LOG(("finishedAutoLogin"));
+  mAutoLoginPending = PR_FALSE;
+
+  if (!--sAutoLoginsPending) {
+    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    NS_ENSURE_TRUE(prefs, );
+    nsresult rv = prefs->DeleteBranch(PREF_AUTOLOGIN_PENDING);
+    NS_ENSURE_SUCCESS(rv, );
+
+    initSavePrefsTimer();
+  }
+}
+
 nsresult purpleAccount::checkAutoLogin()
 {
   /* Check if we should connect the account automatically */
@@ -308,6 +349,7 @@ nsresult purpleAccount::checkAutoLogin()
   nsresult rv = mPrefBranch->GetBoolPref(PREF_AUTOLOGIN, &autoLogin);
   if (NS_FAILED(rv) || autoLogin) {
     LOG(("autologin\n"));
+    startAutoLogin();
     Connect();
   }
 
@@ -824,6 +866,8 @@ void purpleAccount::SetDisconnectReason(PurpleConnectionError reason,
   mConnectionErrorMessage = text;
   mConnectionStateMsg.Truncate();
 
+  finishedAutoLogin();
+
   if (purple_connection_error_is_fatal(reason))
     return;
 
@@ -864,6 +908,8 @@ void purpleAccount::SetDisconnectReason(PurpleConnectionError reason,
 void purpleAccount::Connected()
 {
   mReconnectAttempts = 0;
+
+  finishedAutoLogin();
 
   // FIXME: this is probably obsolete
   /* Remove the current connection state message so that the UI
