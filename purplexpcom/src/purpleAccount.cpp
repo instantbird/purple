@@ -57,6 +57,8 @@ NS_IMPL_ISUPPORTS1(purpleAccount, purpleIAccount)
 #define PREF_PASSWORD           "password"
 #define PREF_REMEMBER_PASSWORD  "rememberPassword"
 
+#define AUTO_SAVE_PREFS_TIMER   5000
+
 #ifdef PR_LOGGING
 //
 // NSPR_LOG_MODULES=purpleAccount:5
@@ -64,6 +66,8 @@ NS_IMPL_ISUPPORTS1(purpleAccount, purpleIAccount)
 static PRLogModuleInfo *gPurpleAccountLog = nsnull;
 #endif
 #define LOG(args) PR_LOG(gPurpleAccountLog, PR_LOG_DEBUG, args)
+
+nsCOMPtr<nsITimer> purpleAccount::sSavePrefsTimer;
 
 purpleAccount::purpleAccount()
   : mAccount(NULL),
@@ -614,6 +618,7 @@ NS_IMETHODIMP purpleAccount::SetAutoLogin(PRBool aAutoLogin)
   nsresult rv = SetBoolPref(PREF_AUTOLOGIN, aAutoLogin);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  initSavePrefsTimer();
   return sendUpdateNotification();
 }
 
@@ -738,15 +743,41 @@ PURPLE_IMPL_SET(Int, int, PRInt32, Int)
 /* void setString (in string aName, in string aVal); */
 PURPLE_IMPL_SET(String, string, const char *, Char)
 
+void purpleAccount::initSavePrefsTimer()
+{
+  if (sSavePrefsTimer) {
+    LOG(("purpleAccount::initSavePrefsTimer already initialized"));
+    return;
+  }
+  sSavePrefsTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+  sSavePrefsTimer->InitWithFuncCallback(savePrefsNow, nsnull,
+                                        AUTO_SAVE_PREFS_TIMER,
+                                        nsITimer::TYPE_ONE_SHOT);
+  LOG(("purpleAccount::initSavePrefsTimer initialized"));
+}
+
+void purpleAccount::savePrefsNow(nsITimer *aTimer, void *aClosure)
+{
+  LOG(("purpleAccount::savePrefsNow()"));
+
+  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (prefs)
+    prefs->SavePrefFile(nsnull);
+
+  if (sSavePrefsTimer) {
+    sSavePrefsTimer->Cancel();
+    sSavePrefsTimer = nsnull;
+  }
+}
+
 /* void savePrefs (); */
 NS_IMETHODIMP purpleAccount::Save()
 {
   NS_ENSURE_TRUE(mPrefBranch, NS_ERROR_UNEXPECTED);
 
-  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  nsresult rv = prefs->SavePrefFile(nsnull);
+  savePrefsNow(nsnull, nsnull);
   mPrefBranch = nsnull;
-  return rv;
+  return NS_OK;
 }
 
 #define PURPLE_IMPL_SETPREF(prettyType, prefType, PRType)		\
@@ -756,7 +787,11 @@ NS_IMETHODIMP purpleAccount::Save()
     nsresult rv = GetPrefBranch();					\
     NS_ENSURE_SUCCESS(rv, rv);						\
 									\
-    return mPrefBranch->Set##prefType##Pref(aName, aValue);		\
+    rv = mPrefBranch->Set##prefType##Pref(aName, aValue);		\
+    NS_ENSURE_SUCCESS(rv, rv);						\
+                                                                        \
+    initSavePrefsTimer();                                               \
+    return NS_OK;                                                       \
   }
 
 // nsresult purpleAccount::SetBoolPref(const char *aName, PRBool aValue)

@@ -109,10 +109,17 @@ protected:
   nsCString mConnectionStateMsg;
   nsCString mConnectionErrorMessage;
   PurpleConnectionError mConnectionErrorReason;
+
+  /* Automatic reconnection stuff */
   nsCOMPtr<nsITimer> mTimer;
   static void reconnectTimerCallback(nsITimer *aTimer, void *aClosure);
   PRUint16 mReconnectAttempts;
   PRTime mTimeOfNextReconnect;
+
+  /* Timer to save preferences */
+  static void savePrefsNow(nsITimer *aTimer, void *aClosure);
+  void initSavePrefsTimer();
+  static nsCOMPtr<nsITimer> sSavePrefsTimer;
 };
 
 #endif /* !PURPLE_ACCOUNT_H_ */
