@@ -172,8 +172,20 @@ void purpleCoreService::InitAutoLoginStatus()
   if (!offlineStatusManaged) {
     PRBool offlineState = PR_FALSE;
     io->GetOffline(&offlineState);
-    if (offlineState)
+    if (offlineState) {
       mAutoLoginStatus = AUTOLOGIN_START_OFFLINE;
+      return;
+    }
+  }
+
+  /* Check if we crashed at the last startup during autologin */
+  PRBool autoLoginPending;
+  nsresult rv = mPrefService->GetBoolPref(PREF_AUTOLOGIN_PENDING,
+                                          &autoLoginPending);
+  if (NS_SUCCEEDED(rv) && autoLoginPending) {
+    /* if the pref wasn't removed, it's because we crashed */
+    mAutoLoginStatus = AUTOLOGIN_CRASH;
+    mPrefService->DeleteBranch(PREF_AUTOLOGIN_PENDING);
   }
 }
 

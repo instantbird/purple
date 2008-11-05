@@ -47,8 +47,6 @@
 
 NS_IMPL_ISUPPORTS1(purpleAccount, purpleIAccount)
 
-#define PREF_AUTOLOGIN_PENDING  "messenger.accounts.autoLoginPending"
-
 #define PREF_PREFIX             "messenger.account."
 #define PREF_OPTIONS            "options."
 #define PREF_PRPL               "prpl"

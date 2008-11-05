@@ -58,6 +58,7 @@
     "@instantbird.org/purple/account;1"
 
 #define ACCOUNT_KEY "account"
+#define PREF_AUTOLOGIN_PENDING  "messenger.accounts.autoLoginPending"
 
 class purpleAccount : public purpleIAccount
 {
