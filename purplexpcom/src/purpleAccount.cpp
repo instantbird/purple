@@ -487,6 +487,8 @@ NS_IMETHODIMP purpleAccount::Connect()
     purple_account_connect(mAccount);
 
     if (mTimeOfNextReconnect - PR_Now() > 1000) {
+      LOG(("mReconnectAttempts := 0 because: mTimeOfNextReconnect - PR_Now() = %i > 1000",
+           mTimeOfNextReconnect - PR_Now()));
       // This is a manual reconnection, reset the auto-reconnect stuff
       mReconnectAttempts = 0;
       if (mTimer)
