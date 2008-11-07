@@ -119,7 +119,7 @@ NS_IMETHODIMP purpleSocket::Cancel()
   return mInternal->Cancel();
 }
 
-nsresult purpleSocket::NotifyLibPurple(PRInt16 aPollFlags, PRInt16 aOutFlags)
+NS_IMETHODIMP purpleSocket::NotifyLibPurple(PRInt16 aPollFlags)
 {
   LOG(("[%i] NotifyLibPurple\n", mId));
   NS_ASSERTION(NS_IsMainThread(), "wrong thread");
@@ -211,7 +211,7 @@ void purpleSocketInternal::OnSocketReady(PRFileDesc* fd, PRInt16 outFlags)
     LOG(("[%i]   mProxy is NULL\n", mId));
     return;
   }
-  mProxy->NotifyLibPurple(pollFlags, outFlags);
+  mProxy->NotifyLibPurple(pollFlags);
 }
 
 void purpleSocketInternal::OnSocketDetached(PRFileDesc*)

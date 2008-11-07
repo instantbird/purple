@@ -48,7 +48,7 @@ native purpleInputCondition(PurpleInputCondition);
 
 [uuid(ebbf2a86-6378-4d4d-8f0a-8f7544a876b2)]
 interface purpleISocket: nsISupports {
-  void notifyLibPurple(in short aPollFlags, in short aOutFlags);
+  void notifyLibPurple(in short aPollFlags);
   long Init(in purpleInputFunction aFunction,
             in gpointer aData,
             in long aFd,
