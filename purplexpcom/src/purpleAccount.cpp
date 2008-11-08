@@ -312,10 +312,12 @@ void purpleAccount::startAutoLogin()
   if (!sAutoLoginsPending++) {
     nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
     NS_ENSURE_TRUE(prefs, );
-    nsresult rv = prefs->SetBoolPref(PREF_AUTOLOGIN_PENDING, PR_TRUE);
+
+    PRTime now = PR_Now() / PR_USEC_PER_SEC;
+    nsresult rv = prefs->SetIntPref(PREF_AUTOLOGIN_PENDING, now);
     NS_ENSURE_SUCCESS(rv, );
 
-    LOG(("Added autoLoginPending pref"));
+    LOG(("Added autoLoginPending pref, with value %i", now));
     savePrefsNow(nsnull, nsnull);
   }
 }

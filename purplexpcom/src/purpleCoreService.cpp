@@ -53,11 +53,14 @@
 #include <nsIConsoleService.h>
 #include <nsIPrefService.h>
 #include <nsIXULRuntime.h>
+#include <nsICrashReporter.h>
 #include <nsCOMPtr.h>
 #include <nsCRTGlue.h>
 #include <nsXPCOM.h>
 #include <nsArrayEnumerator.h>
 #include <nsNetUtil.h>
+#include <nsAppDirectoryServiceDefs.h>
+#include <nsDirectoryServiceUtils.h>
 
 #ifdef PR_LOGGING
 #include <prprf.h>
@@ -179,15 +182,115 @@ void purpleCoreService::InitAutoLoginStatus()
   }
 
   /* Check if we crashed at the last startup during autologin */
-  PRBool autoLoginPending;
-  nsresult rv = mPrefService->GetBoolPref(PREF_AUTOLOGIN_PENDING,
-                                          &autoLoginPending);
-  if (NS_SUCCEEDED(rv) && autoLoginPending) {
-    /* if the pref wasn't removed, it's because we crashed */
-    mAutoLoginStatus = AUTOLOGIN_CRASH;
-    mPrefService->DeleteBranch(PREF_AUTOLOGIN_PENDING);
+  PRInt32 autoLoginPending;
+  nsresult rv = mPrefService->GetIntPref(PREF_AUTOLOGIN_PENDING,
+                                         &autoLoginPending);
+  if (NS_FAILED(rv) || !autoLoginPending) {
+    // if the pref isn't set, then we haven't crashed: keep autologin enabled
+    return;
   }
+
+  // Last autologin hasn't finished properly.
+  // For now, assume it's because of a crash
+  mAutoLoginStatus = AUTOLOGIN_CRASH;
+  mPrefService->DeleteBranch(PREF_AUTOLOGIN_PENDING);
+
+#ifdef MOZ_CRASHREPORTER
+  // Try to get more info with breakpad
+  PRInt32 lastCrashTime;
+  // We don't use NS_ENSURE_SUCCESS here because a 'file not found' error
+  // is totally acceptable if the application never crached before,
+  // so we don't want to produce a warning on stderr for debug builds
+  if (NS_FAILED(GetLastCrashTime(&lastCrashTime))) {
+    // if we failed to get the last crash time, then keep the
+    // AUTOLOGIN_CRASH value in mAutoLoginStatus and return
+    return;
+  }
+
+  LOG(("autoLoginPending = %i, lastCrash = %i, difference = %i\n",
+       autoLoginPending, lastCrashTime, lastCrashTime - autoLoginPending));
+
+  if (lastCrashTime < autoLoginPending) {
+    // the last crash caught by breakpad is older than our last autologin
+    // attempt.
+    // If breakpad is currently enabled, we can be confident that
+    // autologin was interrupted for an exterior reason
+    // (application killed by the user, power outage, ...)
+    nsCOMPtr<nsICrashReporter> cr = do_GetService("@mozilla.org/xre/app-info;1");
+    if (cr) {
+      // This should fail with NS_ERROR_INVALID_ARG if breakpad is enabled,
+      // and NS_ERROR_NOT_INITIALIZED if it is not.
+      rv = cr->AnnotateCrashReport(NS_LITERAL_CSTRING("="), EmptyCString());
+      LOG(("Breadpad is%s enabled", rv == NS_ERROR_NOT_INITIALIZED ? " not" : ""));
+      if (rv != NS_ERROR_NOT_INITIALIZED) {
+        // crash report is enabled, re-activate autologin
+        LOG(("autologin failed from an exterior cause, don't disable it"));
+        mAutoLoginStatus = AUTOLOGIN_ENABLED;
+      }
+    }
+  }
+#endif
 }
+
+#ifdef MOZ_CRASHREPORTER
+nsresult purpleCoreService::GetLastCrashTime(PRInt32 *aLastCrashTime)
+{
+  /* Look for the LastCrash file */
+  nsCOMPtr<nsIFile> lastCrash;
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILES_ROOT_DIR,
+                                       getter_AddRefs(lastCrash));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+#if defined(XP_MACOSX) || defined(XP_OS2) || defined(XP_WIN)
+  rv = lastCrash->SetNativeLeafName(NS_LITERAL_CSTRING("Crash Reports"));
+#else
+  rv = lastCrash->AppendNative(NS_LITERAL_CSTRING("Crash Reports"));
+#endif
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool exists;
+  rv = lastCrash->Exists(&exists);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!exists)
+    return NS_ERROR_FILE_NOT_FOUND;
+
+  rv = lastCrash->AppendNative(NS_LITERAL_CSTRING("LastCrash"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = lastCrash->Exists(&exists);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!exists)
+    return NS_ERROR_FILE_NOT_FOUND;
+
+  /* Ok, the file exists, now let's try to read it */
+  nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(lastCrash);
+  NS_ENSURE_TRUE(localFile, NS_ERROR_FAILURE);
+
+  PRFileDesc* fd;
+  rv = localFile->OpenNSPRFileDesc(PR_RDONLY, 0, &fd);
+  // this would be NS_ERROR_FILE_NOT_FOUND but we already checked before
+  // that the file exists, so at this point an error is unexpected
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_UNEXPECTED);
+
+  PRInt32 filesize = PR_Available(fd);
+  if (filesize <= 0) {
+    PR_Close(fd);
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsCString data;
+  data.SetLength(filesize);
+  if (PR_Read(fd, data.BeginWriting(), filesize) == -1) {
+    PR_Close(fd);
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  LOG(("Last Crash Time found: %s\n", data.get()));
+  PR_Close(fd);
+  *aLastCrashTime = strtol(data.get(), NULL, 10);
+  return NS_OK;
+}
+#endif
 
 nsresult purpleCoreService::InitBuddyList()
 {
