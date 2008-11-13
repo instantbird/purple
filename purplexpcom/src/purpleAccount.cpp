@@ -106,6 +106,9 @@ void purpleAccount::UnInit()
     mTimer = nsnull;
   }
 
+  if (mAutoLoginPending)
+    finishedAutoLogin();
+
   mAccount->ui_data = NULL;
   // This will call purple_proxy_info_destroy if there was a proxy
   purple_account_set_proxy_info(mAccount, NULL);
