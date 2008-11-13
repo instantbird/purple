@@ -187,13 +187,15 @@ nsresult purpleAccount::load(const nsCString& aKey)
 
   /* Get the name */
   nsCString name;
-  mPrefBranch->GetCharPref(PREF_NAME, getter_Copies(name));
+  rv = mPrefBranch->GetCharPref(PREF_NAME, getter_Copies(name));
+  NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(!name.IsEmpty(), NS_ERROR_UNEXPECTED);
   LOG(("name = %s\n", name.get()));
 
   /* Get the prpl */
   nsCString prpl;
-  mPrefBranch->GetCharPref(PREF_PRPL, getter_Copies(prpl));
+  rv = mPrefBranch->GetCharPref(PREF_PRPL, getter_Copies(prpl));
+  NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(!prpl.IsEmpty(), NS_ERROR_UNEXPECTED);
   LOG(("prpl = %s\n", prpl.get()));
 

@@ -1125,8 +1125,11 @@ NS_IMETHODIMP purpleCoreService::CreateAccount(const nsACString &aName,
       /* We have found a key that isn't used in the pref, double check
          it isn't already saved in the sqlite database. This should
          never happen. */
+      LOG(("Checking in mozStorage if account id %i is free", i));
       statement->BindInt32Parameter(0, i);
       rv = statement->ExecuteStep(&found);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = statement->Reset();
       NS_ENSURE_SUCCESS(rv, rv);
       if (found) {
         /* This should never happen so log a string to the error console */
