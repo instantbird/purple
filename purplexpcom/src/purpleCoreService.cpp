@@ -200,11 +200,12 @@ void purpleCoreService::InitAutoLoginStatus()
 
 #ifdef MOZ_CRASHREPORTER
   // Try to get more info with breakpad
-  PRInt32 lastCrashTime;
-  // We don't use NS_ENSURE_SUCCESS here because a 'file not found' error
-  // is totally acceptable if the application never crached before,
-  // so we don't want to produce a warning on stderr for debug builds
-  if (NS_FAILED(GetLastCrashTime(&lastCrashTime))) {
+  PRInt32 lastCrashTime = 0;
+  // NS_ERROR_FILE_NOT_FOUND is totally acceptable, it just means that
+  // either we never crashed or breakpad is not enabled
+  // In this case, lastCrashTime will keep its 0 initialization value
+  rv = GetLastCrashTime(&lastCrashTime);
+  if (NS_FAILED(rv) && rv != NS_ERROR_FILE_NOT_FOUND) {
     // if we failed to get the last crash time, then keep the
     // AUTOLOGIN_CRASH value in mAutoLoginStatus and return
     return;
