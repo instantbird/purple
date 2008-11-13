@@ -52,8 +52,6 @@
 #define PURPLE_ENSURE_INIT(x)                   \
   NS_ENSURE_TRUE(x, NS_ERROR_NOT_INITIALIZED)
 
-#define MOZ_CRASHREPORTER
-
 class purpleCoreService : public purpleICoreService
 {
 public:
