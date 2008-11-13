@@ -53,7 +53,6 @@
 #include <nsIConsoleService.h>
 #include <nsIPrefService.h>
 #include <nsIXULRuntime.h>
-#include <nsICrashReporter.h>
 #include <nsCOMPtr.h>
 #include <nsCRTGlue.h>
 #include <nsXPCOM.h>
@@ -61,6 +60,10 @@
 #include <nsNetUtil.h>
 #include <nsAppDirectoryServiceDefs.h>
 #include <nsDirectoryServiceUtils.h>
+
+#ifdef MOZ_CRASHREPORTER
+#include <nsICrashReporter.h>
+#endif
 
 #ifdef PR_LOGGING
 #include <prprf.h>
