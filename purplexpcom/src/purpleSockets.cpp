@@ -417,7 +417,7 @@ PRBool purpleSocketWatcher::CancelWatch(PRUint32 aId)
   return PR_FALSE;
 }
 
-NS_IMPL_ISUPPORTS1(purpleSocketNetworkStateObserver, nsIObserver);
+NS_IMPL_ISUPPORTS1(purpleSocketNetworkStateObserver, nsIObserver)
 
 NS_IMETHODIMP
 purpleSocketNetworkStateObserver::Observe(nsISupports *aSubject,
