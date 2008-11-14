@@ -41,6 +41,8 @@
 #include <nsServiceManagerUtils.h>
 #include <nsIProxyObjectManager.h>
 #include <nsIEventTarget.h>
+#include <nsIObserver.h>
+#include <nsIObserverService.h>
 #include <nsThreadUtils.h>
 #include <nsNetUtil.h>
 
@@ -57,6 +59,14 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(purpleSocket, purpleISocket)
 //export NSPR_LOG_MODULES="nsSocketTransport:5"
 
 PRUint32 purpleSocket::sLastSocket = 0;
+
+
+class purpleSocketNetworkStateObserver : public nsIObserver
+{
+ public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+};
 
 purpleSocket::purpleSocket()
   : mFunction(NULL),
@@ -119,6 +129,14 @@ NS_IMETHODIMP purpleSocket::Cancel()
   return mInternal->Cancel();
 }
 
+NS_IMETHODIMP purpleSocket::CallLibpurpleCallback()
+{
+  LOG(("[%i] CallLibpurpleCallback\n", mId));
+  mFunction(mData, mFd, mCondition);
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP purpleSocket::NotifyLibPurple(PRInt16 aPollFlags)
 {
   LOG(("[%i] NotifyLibPurple\n", mId));
@@ -131,7 +149,7 @@ NS_IMETHODIMP purpleSocket::NotifyLibPurple(PRInt16 aPollFlags)
     LOG(("[%i] --> Canceling, leaving!\n", mId));
     return NS_OK;
   }
-  mFunction(mData, mFd, mCondition);
+  CallLibpurpleCallback();
   return mInternal->SetPollFlags(aPollFlags);
 }
 
@@ -292,6 +310,7 @@ nsresult purpleSocketInternal::SetPollFlags(PRInt16 aPollFlags)
 /* Init static members */
 nsTArray<purpleISocket *> *purpleSocketWatcher::sSockets = nsnull;
 nsCOMPtr<nsISocketTransportService> purpleSocketWatcher::sSts;
+nsCOMPtr<nsIObserver> purpleSocketWatcher::sObserver;
 
 void purpleSocketWatcher::init()
 {
@@ -300,10 +319,42 @@ void purpleSocketWatcher::init()
     gPurpleSocketsLog = PR_NewLogModule("purpleSockets");
 #endif
   sSockets = new nsTArray<purpleISocket *>();
+  sObserver = new purpleSocketNetworkStateObserver();
+  nsCOMPtr<nsIObserverService> observerService =
+    do_GetService("@mozilla.org/observer-service;1");
+  if (observerService) {
+    observerService->AddObserver(sObserver,
+                                 NS_IOSERVICE_GOING_OFFLINE_TOPIC,
+                                 PR_FALSE);
+  }
+}
+
+void purpleSocketWatcher::goingOffline()
+{
+  LOG(("purpleSocketWatcher:unInit: Removing %i pending watchers",
+       sSockets->Length()));
+  for (PRUint32 i = 0; i < sSockets->Length(); ++i) {
+    (*sSockets)[i]->CallLibpurpleCallback();
+    (*sSockets)[i]->Cancel();
+  }
+  sSockets->Clear();
+
+  sSts = nsnull;
 }
 
 void purpleSocketWatcher::unInit()
 {
+  if (sObserver) {
+    nsCOMPtr<nsIObserverService> observerService =
+      do_GetService("@mozilla.org/observer-service;1");
+    if (observerService) {
+      observerService->RemoveObserver(sObserver,
+                                      NS_IOSERVICE_GOING_OFFLINE_TOPIC);
+    }
+
+    sObserver = nsnull;
+  }
+
   LOG(("purpleSocketWatcher:unInit: Removing %i leftover watchers",
        sSockets->Length()));
   for (PRUint32 i = 0; i < sSockets->Length(); ++i)
@@ -364,4 +415,17 @@ PRBool purpleSocketWatcher::CancelWatch(PRUint32 aId)
 
   NS_WARNING("Failed to cancelWatch: socket not found");
   return PR_FALSE;
+}
+
+NS_IMPL_ISUPPORTS1(purpleSocketNetworkStateObserver, nsIObserver);
+
+NS_IMETHODIMP
+purpleSocketNetworkStateObserver::Observe(nsISupports *aSubject,
+                                          const char *aTopic,
+                                          const PRUnichar *aData)
+{
+  LOG(("Got notified of %s", aTopic));
+  purpleSocketWatcher::goingOffline();
+
+  return NS_OK;
 }

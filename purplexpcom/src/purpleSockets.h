@@ -50,6 +50,8 @@
 #include<nsASocketHandler.h>
 #include<nsISocketTransportService.h>
 
+class nsIObserver;
+
 // 2e8f828f-2b2f-4a82-9efe-3cf8d983fbbf
 #define PURPLE_SOCKET_CID \
 { 0x2e8f828f, 0x2b2f, 0x4a82, \
@@ -101,6 +103,7 @@ class purpleSocket : public purpleISocket
 
   purpleSocket();
   ~purpleSocket();
+
  private:
   static PRUint32 sLastSocket;
   PRUint32 mId;
@@ -122,8 +125,10 @@ class purpleSocketWatcher
   static nsISocketTransportService *getSts();
   static void init();
   static void unInit();
+  static void goingOffline();
 
  private:
   static nsTArray<purpleISocket *> *sSockets;
   static nsCOMPtr<nsISocketTransportService> sSts;
+  static nsCOMPtr<nsIObserver> sObserver;
 };
