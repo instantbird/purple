@@ -484,14 +484,11 @@ NS_IMETHODIMP purpleAccount::Connect()
   LOG(("Attempting to connect %s\n", mAccount->username));
   NS_ENSURE_TRUE(!NS_IsOffline(), NS_ERROR_FAILURE);
 
-  if (purple_account_get_enabled(mAccount, UI_ID)) {
-    /* The account is already enabled. This means that we have already
-       connected it and we haven't disconnected it. If it isn't
-       connected then it's because of a connection failure */
-    LOG(("Account already enabled\n"));
-    mConnectionErrorReason = (PurpleConnectionError)NO_ERROR;
+  if (mConnectionErrorReason != (PurpleConnectionError) NO_ERROR) {
+    /* The account is offline because of an error, clear the error */
+    LOG(("Reconnecting account and clearing the error"));
+    mConnectionErrorReason = (PurpleConnectionError) NO_ERROR;
     mConnectionErrorMessage.Truncate();
-    purple_account_connect(mAccount);
 
     if (mTimeOfNextReconnect - PR_Now() > 1000) {
       LOG(("mReconnectAttempts := 0 because: mTimeOfNextReconnect - PR_Now() = %i > 1000",
@@ -502,10 +499,10 @@ NS_IMETHODIMP purpleAccount::Connect()
         mTimer->Cancel();
     }
   }
-  else {
-    /* enabling an account in libpurple connects it automatically */
-    purple_account_set_enabled(mAccount, UI_ID, TRUE);
-  }
+
+  /* enabling an account in libpurple connects it automatically */
+  purple_account_set_enabled(mAccount, UI_ID, TRUE);
+  // purple_account_connect(mAccount);
 
   return NS_OK;
 }
@@ -874,6 +871,10 @@ void purpleAccount::SetDisconnectReason(PurpleConnectionError reason,
   mConnectionStateMsg.Truncate();
 
   finishedAutoLogin();
+
+  // Disable the account, otherwise libpurple will attempt to reconnect it
+  // when the status changes (including when idleness changes)
+  purple_account_set_enabled(mAccount, UI_ID, FALSE);
 
   if (purple_connection_error_is_fatal(reason))
     return;
