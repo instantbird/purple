@@ -647,7 +647,13 @@ nsresult purpleCoreService::GetTagIdFromName(const nsCString& aName,
   PRBool hasMoreData;
   rv = statement->ExecuteStep(&hasMoreData);
   NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(hasMoreData, NS_ERROR_FAILURE);
+
+  if (!hasMoreData) {
+    /* The query succeeded but there is no data:
+       this means the tag doesn't exist yet in mozStorage,
+       it's not really an error so we don't use NS_ENSURE_TRUE here */
+    return NS_ERROR_FAILURE;
+  }
 
   *aResult = statement->AsInt32(0);
   LOG(("pcs::GetTagIdFromName(name = %s), found at id %i", aName.get(), *aResult));
