@@ -872,9 +872,28 @@ void purpleAccount::SetDisconnectReason(PurpleConnectionError reason,
 
   finishedAutoLogin();
 
-  // Disable the account, otherwise libpurple will attempt to reconnect it
-  // when the status changes (including when idleness changes)
+  /* Disable the account, otherwise libpurple will attempt to reconnect it
+     when the status changes (including when idleness changes)
+
+     Warning: the following is very ugly!
+     
+     When we disable the account, libpurple disconnect it, which destroys
+     the PurpleConnection associated with the account. Then, it crashes in
+     set_current_error because the gc field of the account points to
+     already freed memory.
+
+     To workaround this, we take the current value of gc, then replace
+     it by NULL so that purple_account_set_enabled(false) believes the
+     account is already disconnected and doesn't attempt to do it.
+
+     Finally, we can put the correct value of gc back in place.
+     purple_connection_disconnect_cb, called with a timer by libpurple,
+     will actually call purple_account_disconnect and free the gc later.
+   */
+  PurpleConnection *gc = purple_account_get_connection(mAccount);
+  purple_account_set_connection(mAccount, NULL);
   purple_account_set_enabled(mAccount, UI_ID, FALSE);
+  purple_account_set_connection(mAccount, gc);
 
   if (purple_connection_error_is_fatal(reason))
     return;
