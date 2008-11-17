@@ -68,6 +68,9 @@ public:
                           purpleTag **aResult);
   nsresult GetTagFromPurpleBuddy(PurpleBuddy *aBuddy,
                                  purpleTag **aResult);
+  nsresult NotifyObservers(nsISupports *aObj, const char *aEvent) {
+    return NotifyObservers(aObj, aEvent, nsnull);
+  }
 
 private:
   ~purpleCoreService();

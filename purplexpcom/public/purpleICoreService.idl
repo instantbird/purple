@@ -121,7 +121,8 @@ interface purpleICoreService: nsISupports {
   */
   void processAutoLogin();
 
-  void notifyObservers(in nsISupports aObj, in string aEvent);
+  void notifyObservers(in nsISupports aObj, in string aEvent,
+                       [optional] in wstring aData);
 
   [noscript] void fireAccountEvent(in PurpleNativeAccount aAccount,
 				   in string aEvent);

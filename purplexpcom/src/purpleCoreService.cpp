@@ -1239,9 +1239,10 @@ NS_IMETHODIMP purpleCoreService::DeleteAccount(const nsACString& aAccountId)
   return prefs->SavePrefFile(nsnull);
 }
 
-/* void notifyObservers (in nsISupports aObj, in string aEvent); */
+/* void notifyObservers (in nsISupports aObj, in string aEvent, in wstring aData); */
 NS_IMETHODIMP purpleCoreService::NotifyObservers(nsISupports *aObj,
-                                                 const char *aEvent)
+                                                 const char *aEvent,
+                                                 const PRUnichar *aData)
 {
   nsresult rv;
   nsCOMPtr<nsIObserverService> os =
@@ -1249,7 +1250,7 @@ NS_IMETHODIMP purpleCoreService::NotifyObservers(nsISupports *aObj,
   NS_ENSURE_SUCCESS(rv, rv);
 
   LOG(("Notifying observers of %s", aEvent));
-  return os->NotifyObservers(aObj, aEvent, nsnull);
+  return os->NotifyObservers(aObj, aEvent, aData);
 }
 
 /* [noscript] void fireAccountEvent (in purpleNativeAccount aAccount, in string event); */
@@ -1307,11 +1308,19 @@ nsresult purpleCoreService::SetStatus(PurpleStatusPrimitive aStatus,
 /* void away (in string aMessage); */
 NS_IMETHODIMP purpleCoreService::Away(const nsACString &aMessage)
 {
-  return SetStatus(PURPLE_STATUS_AWAY, aMessage);
+  nsresult rv = SetStatus(PURPLE_STATUS_AWAY, aMessage);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsString message;
+  NS_CStringToUTF16(aMessage, NS_CSTRING_ENCODING_UTF8, message);
+  return NotifyObservers(nsnull, "away", message.get());
 }
 
 /* void back (in string aMessage); */
 NS_IMETHODIMP purpleCoreService::Back(const nsACString &aMessage)
 {
-  return SetStatus(PURPLE_STATUS_AVAILABLE, aMessage);
+  nsresult rv = SetStatus(PURPLE_STATUS_AVAILABLE, aMessage);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NotifyObservers(nsnull, "back");
 }

@@ -130,7 +130,7 @@ static void connect_progress(PurpleConnection *gc, const char *text,
 
   nsCOMPtr<purpleCoreService> pcs =
     do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-  pcs->NotifyObservers(account, "account-connect-progress");
+  pcs->NotifyObservers(account, "account-connect-progress", nsnull);
 }
 
 static void connected(PurpleConnection *gc)
@@ -148,7 +148,7 @@ static void report_disconnect_reason(PurpleConnection *gc,
 
   nsCOMPtr<purpleCoreService> pcs =
     do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-  pcs->NotifyObservers(account, "account-connect-error");
+  pcs->NotifyObservers(account, "account-connect-error", nsnull);
 }
 
 PurpleConnectionUiOps connection_uiops = {
@@ -302,7 +302,7 @@ static void write_conv(PurpleConversation *conv, const char *who,
   msg->Init(conv, who, alias, message, flags, mtime);
 
   nsCOMPtr<purpleICoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID, &rv);
-  pcs->NotifyObservers(msg, "new-text");
+  pcs->NotifyObservers(msg, "new-text", nsnull);
 
   notify_conv(conv, msg, "new-text", nsnull);
 }
@@ -604,6 +604,33 @@ static PurpleCmdRet say_command_cb(PurpleConversation *conv,
   return PURPLE_CMD_RET_OK;
 }
 
+
+static PurpleCmdRet away_command_cb(PurpleConversation *conv,
+                                    const char *cmd, char **args,
+                                    char **error, void *data)
+{
+  nsCString message(args[0]);
+
+  nsCOMPtr<purpleCoreService> pcs =
+    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
+  pcs->Away(message);
+
+  return PURPLE_CMD_RET_OK;
+}
+static PurpleCmdRet back_command_cb(PurpleConversation *conv,
+                                    const char *cmd, char **args,
+                                    char **error, void *data)
+{
+  nsCString message(args[0]);
+
+  nsCOMPtr<purpleCoreService> pcs =
+    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
+  pcs->Back(message);
+
+  return PURPLE_CMD_RET_OK;
+}
+
+
 // Idle ui ops
 static time_t idle_time()
 {
@@ -775,6 +802,16 @@ init_libpurple()
                       (PurpleCmdFlag) (PURPLE_CMD_FLAG_CHAT | PURPLE_CMD_FLAG_IM),
                       NULL, say_command_cb,
                       "say &lt;message&gt;:  Send a message normally as if you weren't using a command.",
+                      NULL);
+  purple_cmd_register("away", "S", PURPLE_CMD_P_DEFAULT,
+                      (PurpleCmdFlag) (PURPLE_CMD_FLAG_CHAT | PURPLE_CMD_FLAG_IM | PURPLE_CMD_FLAG_ALLOW_WRONG_ARGS),
+                      NULL, away_command_cb,
+                      "away &lt;message&gt;:  Get Away and use |message| as status message.",
+                      NULL);
+  purple_cmd_register("back", "S", PURPLE_CMD_P_DEFAULT,
+                      (PurpleCmdFlag) (PURPLE_CMD_FLAG_CHAT | PURPLE_CMD_FLAG_IM | PURPLE_CMD_FLAG_ALLOW_WRONG_ARGS),
+                      NULL, back_command_cb,
+                      "back &lt;message&gt;:  Get Back and use |message| as status message.",
                       NULL);
 
   return NS_OK;
