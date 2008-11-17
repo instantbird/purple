@@ -38,7 +38,7 @@ pruneunused() {
   mv $1/libpurple/plugins/ssl/ssl-nss.c $1/libpurple
   mv $1/libpurple/plugins/statenotify.c $1/libpurple
   rm -rf $1/libpurple/{plugins,gconf,example,tests}
-  rm -rf $1/libpurple/protocols/{bonjour,msn,null,sametime,silc,silc10,toc,zephyr}
+  rm -rf $1/libpurple/protocols/{bonjour,msnp9,null,sametime,silc,silc10,toc,zephyr}
   rm -f $1/libpurple/purple-*
   rm -f $1/libpurple/dbus-{a,b,d,p,s,t,u}*
   rm -f $1/libpurple/purple.pc.in
