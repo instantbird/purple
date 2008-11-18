@@ -319,7 +319,7 @@ void purpleAccount::startAutoLogin()
     NS_ENSURE_TRUE(prefs, );
 
     PRTime now = PR_Now() / PR_USEC_PER_SEC;
-    nsresult rv = prefs->SetIntPref(PREF_AUTOLOGIN_PENDING, now);
+    nsresult rv = prefs->SetIntPref(PREF_AUTOLOGIN_PENDING, (PRInt32)now);
     NS_ENSURE_SUCCESS(rv, );
 
     LOG(("Added autoLoginPending pref, with value %i", now));
@@ -490,8 +490,8 @@ NS_IMETHODIMP purpleAccount::Connect()
     mConnectionErrorReason = (PurpleConnectionError) NO_ERROR;
     mConnectionErrorMessage.Truncate();
 
-    if (mTimeOfNextReconnect - PR_Now() > 1000) {
-      LOG(("mReconnectAttempts := 0 because: mTimeOfNextReconnect - PR_Now() = %i > 1000",
+    if (mTimeOfNextReconnect - PR_Now() > PR_USEC_PER_SEC) {
+      LOG(("mReconnectAttempts := 0 because: mTimeOfNextReconnect - PR_Now() = %li > PR_USEC_PER_SEC",
            mTimeOfNextReconnect - PR_Now()));
       // This is a manual reconnection, reset the auto-reconnect stuff
       mReconnectAttempts = 0;
@@ -920,16 +920,17 @@ void purpleAccount::SetDisconnectReason(PurpleConnectionError reason,
   }
 
   LOG(("time: %s, attempt %i", time.get(), mReconnectAttempts + 1));
-  PRInt32 timer = strtol(time.get(), NULL, 10) * 1000;
+  PRInt32 timer = strtol(time.get(), NULL, 10);
   if (timer <= 0) {
     LOG(("No auto-reconnect"));
     return;
   }
   ++mReconnectAttempts;
-  mTimeOfNextReconnect = PR_Now() + timer * 1000;
+  mTimeOfNextReconnect = PR_Now() + timer * PR_USEC_PER_SEC;
   mTimer->InitWithFuncCallback(reconnectTimerCallback, this,
-                               timer, nsITimer::TYPE_ONE_SHOT);
-  LOG(("timer initialized with %i s", timer / 1000));
+                               timer * PR_MSEC_PER_SEC,
+			       nsITimer::TYPE_ONE_SHOT);
+  LOG(("timer initialized with %i s", timer));
 }
 
 void purpleAccount::Connected()
