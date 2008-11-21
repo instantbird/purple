@@ -1306,6 +1306,7 @@ purple_account_request_authorization(PurpleAccount *account, const char *remote_
 	PurpleAccountUiOps *ui_ops;
 	PurpleAccountRequestInfo *info;
 	int plugin_return;
+	void *handle;
 
 	g_return_val_if_fail(account     != NULL, NULL);
 	g_return_val_if_fail(remote_user != NULL, NULL);
@@ -1332,11 +1333,17 @@ purple_account_request_authorization(PurpleAccount *account, const char *remote_
 		info->deny_cb   = deny_cb;
 		info->userdata  = user_data;
 		info->user      = g_strdup(remote_user);
-		info->ui_handle = ui_ops->request_authorize(account, remote_user, id, alias, message,
-							    on_list, request_auth_cb, request_deny_cb, info);
+		info->ui_handle = NULL;
 
 		handles = g_list_append(handles, info);
-		return info->ui_handle;
+
+		handle = ui_ops->request_authorize(account, remote_user, id, alias, message,
+						   on_list, request_auth_cb, request_deny_cb, info);
+		/* If the handle is NULL, we can assume that one of the callback
+		   was called synchronously and that info has already been freed,
+		   so we don't want to write in it. */
+		if (handle != NULL)
+			return info->ui_handle = handle;
 	}
 
 	return NULL;
