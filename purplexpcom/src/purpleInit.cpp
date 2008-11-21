@@ -80,9 +80,11 @@
 #include <nsCOMPtr.h>
 #include <nsStringAPI.h>
 #include <nsEmbedString.h>
+#include <nsIDOMWindowInternal.h>
 #include <nsIIdleService.h>
 #include <nsIPromptService.h>
 #include <nsIStringBundle.h>
+#include <nsIWindowMediator.h>
 #include <nsIXULAppInfo.h>
 #include <nsComponentManagerUtils.h>
 #include <nsDirectoryServiceUtils.h>
@@ -214,11 +216,17 @@ static void *request_authorize(PurpleAccount *account, const char *remote_user,
   rv = stringBundle->FormatStringFromName(NS_LITERAL_STRING("requestAuthorizeText").get(),
                                           &whoFlat, 1, getter_Copies(msg));
 
+  nsCOMPtr<nsIWindowMediator> wm = do_GetService(NS_WINDOWMEDIATOR_CONTRACTID);
+  NS_ENSURE_TRUE(wm, NULL);
+  nsCOMPtr<nsIDOMWindowInternal> window;
+  wm->GetMostRecentWindow(NS_LITERAL_STRING("Messenger:blist").get(),
+			  getter_AddRefs(window));
+
   PRInt32 result;
   PRUint32 flags = (nsIPromptService::BUTTON_POS_0 +
                     nsIPromptService::BUTTON_POS_1) *
                    nsIPromptService::BUTTON_TITLE_IS_STRING;
-  promptService->ConfirmEx(nsnull, title.get(), msg.get(), flags, allow.get(),
+  promptService->ConfirmEx(window, title.get(), msg.get(), flags, allow.get(),
                            deny.get(), nsnull, nsnull, nsnull, &result);
   NS_ENSURE_SUCCESS(rv, NULL);
 

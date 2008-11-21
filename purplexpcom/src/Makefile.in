@@ -49,8 +49,10 @@ MODULE_NAME	= purplexpcom
 #NO_DIST_INSTALL	= 1
 
 REQUIRES	= \
+		appshell \
 		xpcom \
 		content \
+		dom \
 		necko \
 		intl \
 		storage \
