@@ -83,12 +83,13 @@ NS_IMETHODIMP purpleConvIM::SendMsg(const nsACString& aMsg)
   nsresult rv = DoCommand(flatMsg.get(), handled);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!handled) {
-    purple_conv_im_send(mConv->u.im, flatMsg.get());
-    LOG(("IM message sent: %s", flatMsg.get()));
-    mSentTyping = PR_FALSE;
+  if (handled) {
+    return SendTyping(0);
   }
 
+  purple_conv_im_send(mConv->u.im, flatMsg.get());
+  LOG(("IM message sent: %s", flatMsg.get()));
+  mSentTyping = PR_FALSE;
   return NS_OK;
 }
 
