@@ -1118,10 +1118,11 @@ NS_IMETHODIMP purpleCoreService::CreateAccount(const nsACString &aName,
   /* First get a new unique account key */
   nsCString key;
   PRInt32 i = 1;
-  PRBool found = PR_FALSE;
+  PRBool found;
   do {
     key = ACCOUNT_KEY;
     key.AppendInt(i);
+    found = PR_FALSE;
     for (PRInt32 j = mAccounts.Count() - 1; j >= 0; --j) {
       if ((found = mAccounts[j]->GetKey().Equals(key))) {
         break;
