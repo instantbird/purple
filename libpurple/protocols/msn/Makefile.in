@@ -42,6 +42,8 @@ PROTOCOL	= msn
 
 include $(srcdir)/../prpl.mk
 
+DEFINES		+= -DPACKAGE_NAME=\"purple\"
+
 CSRCS		= \
 		cmdproc.c \
 		command.c \

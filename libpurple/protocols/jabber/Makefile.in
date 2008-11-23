@@ -48,8 +48,6 @@ else
 REQUIRES	+= libxml2
 endif
 
-DEFINES		+= -DPACKAGE=\"purple\"
-
 CSRCS		= \
 		auth.c \
 		buddy.c \

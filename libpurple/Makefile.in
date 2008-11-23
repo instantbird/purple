@@ -105,6 +105,7 @@ EXPORTS		= \
 		eventloop.h \
 		ft.h \
 		gaim-compat.h \
+		gettext.h \
 		idle.h \
 		imgstore.h \
 		log.h \
@@ -166,6 +167,7 @@ CSRCS		= \
 		debug.c \
 		eventloop.c \
 		ft.c \
+		gettext.c \
 		idle.c \
 		imgstore.c \
 		log.c \

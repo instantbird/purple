@@ -45,23 +45,25 @@
  * taken from an email to the texinfo mailing list by Manuel Guerrero.
  * Thank you Manuel, and thank you Alex's good friend Google.
  */
+
+#include <locale.h>
+#include "gettext.h"
+
+#ifndef PACKAGE
+#  define PACKAGE "purple"
+#endif
+
+#define _(String) (purple_get_text(PACKAGE, String))
+#define N_(String) (String)
+#define ngettext(Singular, Plural, Number) dngettext(PACKAGE, Singular, Plural, Number)
+#define dngettext(Domain, Singular, Plural, Number) (purple_get_plural_text(Domain, Singular, Plural, Number))
+
 #ifdef ENABLE_NLS
-#  include <locale.h>
 #  include <libintl.h>
-#  define _(String) ((const char *)dgettext(PACKAGE, String))
 #  ifdef gettext_noop
+#    undef N_
 #    define N_(String) gettext_noop (String)
-#  else
-#    define N_(String) (String)
 #  endif
-#else
-#  include <locale.h>
-#  define N_(String) (String)
-#  ifndef _
-#    define _(String) ((const char *)String)
-#  endif
-#  define ngettext(Singular, Plural, Number) ((Number == 1) ? ((const char *)Singular) : ((const char *)Plural))
-#  define dngettext(Domain, Singular, Plural, Number) ((Number == 1) ? ((const char *)Singular) : ((const char *)Plural))
 #endif
 
 #ifdef HAVE_ENDIAN_H

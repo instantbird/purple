@@ -47,6 +47,7 @@
 #include <libpurple/debug.h>
 #include <libpurple/eventloop.h>
 #include <libpurple/ft.h>
+#include <libpurple/gettext.h>
 #include <libpurple/idle.h>
 #include <libpurple/log.h>
 #include <libpurple/notify.h>
@@ -662,6 +663,33 @@ static PurpleIdleUiOps idle_uiops =
   NULL, NULL, NULL, NULL
 };
 
+// GetText ui ops
+const char *get_text(const char *package,
+		     const char *string)
+{
+  LOG(("purple_get_text(package = %s, %s)", package, string));
+
+  return string;
+}
+
+const char *get_plural_text(const char *package,
+			    const char *singular,
+			    const char *plural,
+			    unsigned long int number)
+{
+  LOG(("purple_get_plural_text(package = %s, %s, %s, %i)",
+       package, singular,plural, number));
+
+  return (const char *)(number == 1 ? singular : plural);
+}
+
+PurpleGetTextUiOps gettext_uiops = {
+  get_text,
+  get_plural_text,
+
+  NULL, NULL, NULL, NULL
+};
+
 // Core ui ops (ui info)
 static GHashTable *ui_info = NULL;
 static nsCString *ui_name = NULL;
@@ -723,6 +751,10 @@ static PurpleCoreUiOps core_uiops =
 nsresult
 init_libpurple()
 {
+  /* First initialize the translation stuff, it can probably be
+     needed early be potential error messages */
+  purple_gettext_set_ui_ops(&gettext_uiops);
+
   /* Set the instantbird profile folder as libpurple custom user
      directory */
 
