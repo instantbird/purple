@@ -130,9 +130,10 @@ purple_prefs_remove(const char *name)
 void
 purple_prefs_trigger_callback(const char *name)
 {
+	GSList *cbs;
+
 	purple_debug_misc("trigger callback %s\n", name);
 
-	GSList *cbs = callbacks;
 	for (cbs = callbacks; cbs; cbs = cbs->next) {
 		const char *cb_name = ((struct pref_cb *)cbs->data)->name;
 		size_t len = strlen(cb_name);
