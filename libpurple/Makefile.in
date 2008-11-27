@@ -88,6 +88,8 @@ endif
 
 DEFINES		+= -DPURPLE_PLUGINS
 
+PREF_JS_EXPORTS = $(srcdir)/purple-prefs.js
+
 EXPORTS		= \
 		account.h \
 		accountopt.h \

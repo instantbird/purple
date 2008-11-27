@@ -84,6 +84,8 @@
 #include <nsIDOMWindowInternal.h>
 #include <nsIIdleService.h>
 #include <nsIPromptService.h>
+#include <nsIPrefBranch2.h>
+#include <nsIPrefService.h>
 #include <nsIStringBundle.h>
 #include <nsIWindowMediator.h>
 #include <nsIXULAppInfo.h>
@@ -664,6 +666,29 @@ static PurpleIdleUiOps idle_uiops =
 };
 
 // GetText ui ops
+class prefsObserver : public nsIObserver
+{
+  public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIOBSERVER
+    prefsObserver(void *aCallback) : callback(aCallback) {}
+
+  private:
+    gpointer callback;
+};
+
+NS_IMPL_ISUPPORTS1(prefsObserver, nsIObserver);
+
+NS_IMETHODIMP prefsObserver::Observe(nsISupports *aSubject,
+				     const char *aTopic,
+				     const PRUnichar *someData)
+{
+  LOG(("prefsObserver::Observe topic = %s\n", aTopic));
+  purple_prefs_observe(callback);
+
+  return NS_OK;
+}
+
 const char *get_text(const char *package,
 		     const char *string)
 {
@@ -686,6 +711,267 @@ const char *get_plural_text(const char *package,
 PurpleGetTextUiOps gettext_uiops = {
   get_text,
   get_plural_text,
+
+  NULL, NULL, NULL, NULL
+};
+
+// Prefs ui ops
+#define DEFINE_mozName_from_name(name)		\
+  NS_ENSURE_TRUE(name && *name == '/',);	\
+						\
+  char *mozName = g_strdup(name + 1);		\
+  for (int i = 0; mozName[i]; ++i)		\
+    if (mozName[i] == '/')			\
+      mozName[i] = '.';
+
+#define DEFINE_mozName_from_name_with_default(name, default)	\
+  NS_ENSURE_TRUE(name && *name == '/', default);		\
+  								\
+  char *mozName = g_strdup(name + 1);				\
+  for (int i = 0; mozName[i]; ++i)				\
+    if (mozName[i] == '/')					\
+      mozName[i] = '.';
+
+void prefs_add_none(const char *name)
+{
+  LOG(("add pref none %s\n", name));
+}
+
+void prefs_add_bool(const char *name, gboolean value)
+{
+  LOG(("add pref bool %s=%i\n", name, value));
+  DEFINE_mozName_from_name(name);
+
+  nsCOMPtr<nsIPrefBranch> prefs =
+    do_GetService(NS_PREFSERVICE_CONTRACTID);
+  PRInt32 type = nsIPrefBranch::PREF_INVALID;
+  prefs->GetPrefType(mozName, &type);
+
+  if (type == nsIPrefBranch::PREF_INVALID) {
+#ifdef DEBUG
+    printf("pref(%s, %s);\n", mozName, value ? "true" : "false");
+#endif
+    prefs->SetBoolPref(mozName, value);
+  }
+}
+
+void prefs_add_int(const char *name, int value)
+{
+  LOG(("add pref int %s=%i\n", name, value));
+  DEFINE_mozName_from_name(name);
+
+  nsCOMPtr<nsIPrefBranch> prefs =
+    do_GetService(NS_PREFSERVICE_CONTRACTID);
+  PRInt32 type = nsIPrefBranch::PREF_INVALID;
+  prefs->GetPrefType(mozName, &type);
+
+  if (type == nsIPrefBranch::PREF_INVALID) {
+#ifdef DEBUG
+    printf("pref(%s, %i);\n", mozName, value);
+#endif
+    prefs->SetIntPref(mozName, value);
+  }
+}
+
+void prefs_add_string(const char *name, const char *value)
+{
+  LOG(("add pref string %s=%s\n", name, value));
+  DEFINE_mozName_from_name(name);
+
+  nsCOMPtr<nsIPrefBranch> prefs =
+    do_GetService(NS_PREFSERVICE_CONTRACTID);
+  PRInt32 type = nsIPrefBranch::PREF_INVALID;
+  prefs->GetPrefType(mozName, &type);
+
+  if (type == nsIPrefBranch::PREF_INVALID) {
+#ifdef DEBUG
+    printf("pref(%s, \"%s\");\n", mozName, value);
+#endif
+    prefs->SetCharPref(mozName, value);
+  }
+}
+
+void prefs_remove(const char *name)
+{
+  LOG(("remove pref %s\n", name));
+  NS_ENSURE_TRUE(name && *name, );
+  DEFINE_mozName_from_name(name);
+  nsCOMPtr<nsIPrefBranch> prefs =
+    do_GetService(NS_PREFSERVICE_CONTRACTID);
+  prefs->DeleteBranch(name);
+}
+
+void prefs_set_bool(const char *name, gboolean value)
+{
+  LOG(("set bool pref %s=%i\n", name, value));
+  DEFINE_mozName_from_name(name);
+
+  nsCOMPtr<nsIPrefBranch> prefs =
+    do_GetService(NS_PREFSERVICE_CONTRACTID);
+  prefs->SetBoolPref(mozName, value);
+}
+
+void prefs_set_int(const char *name, int value)
+{
+  LOG(("set int pref %s=%i\n", name, value));
+  DEFINE_mozName_from_name(name);
+
+  nsCOMPtr<nsIPrefBranch> prefs =
+    do_GetService(NS_PREFSERVICE_CONTRACTID);
+  prefs->SetIntPref(mozName, value);
+}
+
+void prefs_set_string(const char *name, const char *value)
+{
+  LOG(("set string pref %s=%s\n", name, value));
+  DEFINE_mozName_from_name(name);
+
+  nsCOMPtr<nsIPrefBranch> prefs =
+    do_GetService(NS_PREFSERVICE_CONTRACTID);
+  prefs->SetCharPref(mozName, value);
+}
+
+
+gboolean prefs_exists(const char *name)
+{
+  LOG(("pref exists *%s\n", name));
+  DEFINE_mozName_from_name_with_default(name, false);
+
+  nsCOMPtr<nsIPrefBranch> prefs =
+    do_GetService(NS_PREFSERVICE_CONTRACTID);
+  PRInt32 type = nsIPrefBranch::PREF_INVALID;
+  prefs->GetPrefType(mozName, &type);
+
+  return type != nsIPrefBranch::PREF_INVALID;
+}
+
+PurplePrefType prefs_get_type(const char *name)
+{
+  LOG(("pref get type %s\n", name));
+  DEFINE_mozName_from_name_with_default(name, PURPLE_PREF_NONE);
+
+  nsCOMPtr<nsIPrefBranch> prefs =
+    do_GetService(NS_PREFSERVICE_CONTRACTID);
+  PRInt32 type = nsIPrefBranch::PREF_INVALID;
+  prefs->GetPrefType(mozName, &type);
+
+  switch (type) {
+    case nsIPrefBranch::PREF_INT:
+      return PURPLE_PREF_INT;
+    case nsIPrefBranch::PREF_BOOL:
+      return PURPLE_PREF_BOOLEAN;
+    case nsIPrefBranch::PREF_STRING:
+      return PURPLE_PREF_STRING;
+    default:
+      return PURPLE_PREF_NONE;
+  }
+}
+
+
+gboolean prefs_get_bool(const char *name)
+{
+  LOG(("get bool pref %s\n", name));
+  DEFINE_mozName_from_name_with_default(name, PR_FALSE);
+
+  nsCOMPtr<nsIPrefBranch> prefs =
+    do_GetService(NS_PREFSERVICE_CONTRACTID);
+  PRBool result = PR_FALSE;
+  prefs->GetBoolPref(mozName, &result);
+  return result;
+}
+
+int prefs_get_int(const char *name)
+{
+  LOG(("get int pref %s\n", name));
+  DEFINE_mozName_from_name_with_default(name, 0);
+
+  nsCOMPtr<nsIPrefBranch> prefs =
+    do_GetService(NS_PREFSERVICE_CONTRACTID);
+  PRInt32 result = 0;
+  prefs->GetBoolPref(mozName, &result);
+  return result;
+}
+
+const char *prefs_get_string(const char *name)
+{
+  LOG(("get string pref %s\n", name));
+  DEFINE_mozName_from_name_with_default(name, 0);
+
+  nsCOMPtr<nsIPrefBranch> prefs =
+    do_GetService(NS_PREFSERVICE_CONTRACTID);
+  char *result = NULL;
+  prefs->GetCharPref(mozName, &result);
+
+  purple_debug_warning("prefs", "leaking the value of %s\n", name);
+  return result;
+}
+
+GList *prefs_get_children_names(const char *name)
+{
+  LOG(("prefs get children name %s\n", name));
+  purple_debug_error("prefs", "call to get_children_names, not implemented yet\n");
+
+  return NULL;
+}
+
+void *prefs_add_observer(const char *name, gpointer data)
+{
+  LOG(("prefs add observer %s\n", name));
+  DEFINE_mozName_from_name_with_default(name, NULL);
+
+  prefsObserver *observer = new prefsObserver(data);
+  nsCOMPtr<nsIPrefBranch2> prefs =
+    do_GetService(NS_PREFSERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(prefs, NULL);
+  prefs->AddObserver(mozName, observer, false);
+
+  return (void *)observer;
+}
+
+void prefs_remove_observer(const char *name, void *observer)
+{
+  LOG(("remove observer @%x\n", observer));
+  DEFINE_mozName_from_name(name);
+
+  nsCOMPtr<nsIPrefBranch2> prefs =
+    do_GetService(NS_PREFSERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(prefs, );
+  prefs->RemoveObserver(mozName, (nsIObserver *)observer);
+}
+
+void prefs_save()
+{
+  LOG(("prefs save\n"));
+  nsCOMPtr<nsIPrefService> prefs =
+    do_GetService(NS_PREFSERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(prefs, );
+  prefs->SavePrefFile(nsnull);
+}
+
+PurplePrefsUiOps prefs_uiops = {
+  prefs_add_none,
+  prefs_add_bool,
+  prefs_add_int,
+  prefs_add_string,
+
+  prefs_set_bool,
+  prefs_set_int,
+  prefs_set_string,
+
+  prefs_get_bool,
+  prefs_get_int,
+  prefs_get_string,
+
+  prefs_get_type,
+  prefs_get_children_names,
+
+  prefs_exists,
+  prefs_remove,
+
+  prefs_save,
+
+  prefs_add_observer,
+  prefs_remove_observer,
 
   NULL, NULL, NULL, NULL
 };
@@ -754,6 +1040,8 @@ init_libpurple()
   /* First initialize the translation stuff, it can probably be
      needed early be potential error messages */
   purple_gettext_set_ui_ops(&gettext_uiops);
+
+  purple_prefs_set_ui_ops(&prefs_uiops);
 
   /* Set the instantbird profile folder as libpurple custom user
      directory */
