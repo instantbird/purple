@@ -1239,6 +1239,7 @@ purple_plugins_destroy_all(void)
 #endif /* PURPLE_PLUGINS */
 }
 
+#if 0
 void
 purple_plugins_save_loaded(const char *key)
 {
@@ -1320,6 +1321,7 @@ purple_plugins_load_saved(const char *key)
 	g_list_free(files);
 #endif /* PURPLE_PLUGINS */
 }
+#endif
 
 
 void
