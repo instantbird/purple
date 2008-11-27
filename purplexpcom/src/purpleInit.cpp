@@ -677,7 +677,7 @@ class prefsObserver : public nsIObserver
     gpointer callback;
 };
 
-NS_IMPL_ISUPPORTS1(prefsObserver, nsIObserver);
+NS_IMPL_ISUPPORTS1(prefsObserver, nsIObserver)
 
 NS_IMETHODIMP prefsObserver::Observe(nsISupports *aSubject,
 				     const char *aTopic,
