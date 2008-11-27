@@ -275,13 +275,14 @@ purple_prefs_disconnect_by_handle(void *handle)
 
 	cbs = callbacks;
 	while (cbs != NULL) {
+		PurplePrefsUiOps *uiop;
 		struct pref_cb *cb = cbs->data;
 		if (cb->handle != handle) {
 			cbs = cbs->next;
 			continue;
 		}
 
-		PurplePrefsUiOps *uiop = purple_prefs_get_ui_ops();
+		uiop = purple_prefs_get_ui_ops();
 		uiop->remove_observer(cb->name, cb->observer);
 
 		callbacks = g_slist_delete_link(callbacks, cbs);
