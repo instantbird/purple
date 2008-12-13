@@ -888,7 +888,7 @@ int prefs_get_int(const char *name)
   nsCOMPtr<nsIPrefBranch> prefs =
     do_GetService(NS_PREFSERVICE_CONTRACTID);
   PRInt32 result = 0;
-  prefs->GetBoolPref(mozName, &result);
+  prefs->GetIntPref(mozName, &result);
   return result;
 }
 
