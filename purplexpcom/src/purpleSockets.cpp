@@ -190,6 +190,10 @@ nsresult purpleSocketInternal::Init(PRFileDesc *aFd, purpleISocket *aProxy,
 nsresult purpleSocketInternal::Cancel()
 {
   LOG(("[%i]  Cancel\n", mId));
+  if (mCanceled) {
+    LOG(("[%i]  Already Canceled\n", mId));
+    return NS_OK;
+  }
   mCanceled = PR_TRUE;
   return PostEvent();
 }
@@ -333,9 +337,14 @@ void purpleSocketWatcher::goingOffline()
 {
   LOG(("purpleSocketWatcher:unInit: Removing %i pending watchers",
        sSockets->Length()));
-  for (PRUint32 i = 0; i < sSockets->Length(); ++i) {
-    (*sSockets)[i]->CallLibpurpleCallback();
-    (*sSockets)[i]->Cancel();
+
+  // We don't loop from 0 to Length - 1 because the libpurple callback
+  // can cancel some watchers so the length of the array may change
+  // during the loop. See bug 158
+  for (PRInt32 i = sSockets->Length() - 1; i >= 0; i = sSockets->Length() - 1) {
+    nsCOMPtr<purpleISocket> socket = (*sSockets)[i];
+    socket->CallLibpurpleCallback();
+    socket->Cancel();
   }
   sSockets->Clear();
 
