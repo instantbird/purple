@@ -118,12 +118,9 @@ def make_id_from_string(aString):
     str = exp.sub(' ', aString)
     words = filter(no_percent_strings, str.split(" "))
     if words == []:
-        result = ''
+        return ''
     else:
-        result = words[0].lower() + ''.join(map(capitalize_string, words[1:7]))
-    m = hashlib.md5()
-    m.update(aString)
-    return result
+        return words[0].lower() + ''.join(map(capitalize_string, words[1:7]))
 
 
 ## the main program
@@ -153,7 +150,7 @@ for entry in po:
             comment = ''
         else:
             comment = fix_comment(entry.comment)
-        allstrings[entry.msgid] = {'id': id, 'packages': entry.packages, 'comment': comment}
+        allstrings[entry.msgid] = {'id': id, 'packages': entry.packages, 'comment': comment, 'plural': entry.msgid_plural}
         for pack in entry.packages:
             strings[pack].append(entry.msgid)
             if not id in files[pack]:
@@ -178,6 +175,9 @@ for pack in strings:
         comment = allstrings[msg]['comment']
         if comment != '':
             fhandle.write('\n' + comment)
+        plural = allstrings[msg]['plural']
+        if plural != '':
+            msg += ';' + plural
         fhandle.write(id + '=' + fix_multiline_string(msg) + '\n')
     fhandle.close()
 
@@ -186,7 +186,20 @@ for lang in po_files:
     po = polib.pofile('po/' + lang + '.po')
     local_strings = {}
     for entry in po:
-        local_strings[entry.msgid] = entry.msgstr
+        if not entry.translated():
+            continue
+        if entry.msgstr_plural:
+            msgstrs = entry.msgstr_plural
+            keys = msgstrs.keys()
+            keys.sort()
+            msg = ''
+            for index in keys:
+                if msg != '':
+                    msg += ';'
+                msg += msgstrs[index]
+        else:
+            msg = entry.msgstr
+        local_strings[entry.msgid] = msg
     print lang
     for pack in strings:
         fixme = 0
@@ -204,12 +217,16 @@ for lang in po_files:
                 id += m.hexdigest()[0:8]
             comment = allstrings[msg]['comment']
             if comment != '':
-                fhandle.write('\n' + comment)
+                fhandle.write('\n' + comment + '\n')
 
             if msg in local_strings and local_strings[msg] != '':
                 fhandle.write(id + '=' + fix_multiline_string(local_strings[msg]) + '\n')
             else:
-                fhandle.write(id + '=' + fix_multiline_string(msg) + '\n')
+#     When a string is not translated, don't put it in the locale file        
+#                plural = allstrings[msg]['plural']
+#                if plural != '':
+#                    msg += ';' + plural
+#                fhandle.write(id + '=' + fix_multiline_string(msg) + '\n')
                 fixme += 1
             total += 1
         fhandle.close()
