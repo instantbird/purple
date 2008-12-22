@@ -51,26 +51,21 @@ CSRCS		= \
 		char_conv.c \
 		file_trans.c \
 		group.c \
-		group_conv.c \
-		group_find.c \
-		group_free.c \
 		group_internal.c \
 		group_im.c \
 		group_info.c \
 		group_join.c \
 		group_opt.c \
-		group_search.c \
-		header_info.c \
 		im.c \
 		packet_parse.c \
 		qq_base.c \
 		qq.c \
 		qq_crypt.c \
+		qq_define.c \
 		qq_network.c \
 		qq_process.c \
 		qq_trans.c \
 		send_file.c \
-		sys_msg.c \
 		utils.c \
 		$(NULL)
 

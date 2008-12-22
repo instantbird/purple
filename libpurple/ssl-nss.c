@@ -27,9 +27,6 @@
 #include "version.h"
 
 #define SSL_NSS_PLUGIN_ID "ssl-nss"
-#define HAVE_NSS
-
-#ifdef HAVE_NSS
 
 #undef HAVE_LONG_LONG /* Make Mozilla less angry. If angry, Mozilla SMASH! */
 
@@ -773,7 +770,7 @@ x509_issuer_dn (PurpleCertificate *crt)
 	crt_dat = X509_NSS_DATA(crt);
 	g_return_val_if_fail(crt_dat, NULL);
 
-	return g_strdup(crt_dat->subjectName);
+	return g_strdup(crt_dat->issuerName);
 }
 
 static gchar *
@@ -906,19 +903,17 @@ static PurpleSslOps ssl_ops =
 	NULL
 };
 
+
 void purple_nss_init(void)
 {
 	purple_ssl_set_ops(&ssl_ops);
 }
-
-#endif /* HAVE_NSS */
 
 #if 0
 /* Instantbird does not need the plugin stuff for NSS */
 static gboolean
 plugin_load(PurplePlugin *plugin)
 {
-#ifdef HAVE_NSS
 	if (!purple_ssl_get_ops()) {
 		purple_ssl_set_ops(&ssl_ops);
 	}
@@ -930,22 +925,17 @@ plugin_load(PurplePlugin *plugin)
 	purple_certificate_register_scheme(&x509_nss);
 
 	return TRUE;
-#else
-	return FALSE;
-#endif
 }
 
 static gboolean
 plugin_unload(PurplePlugin *plugin)
 {
-#ifdef HAVE_NSS
 	if (purple_ssl_get_ops() == &ssl_ops) {
 		purple_ssl_set_ops(NULL);
 	}
 
 	/* Unregister our X.509 functions */
 	purple_certificate_unregister_scheme(&x509_nss);
-#endif
 
 	return TRUE;
 }

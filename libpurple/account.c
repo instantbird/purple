@@ -75,6 +75,7 @@ typedef struct
 	gpointer userdata;
 	PurpleAccountRequestAuthorizationCb auth_cb;
 	PurpleAccountRequestAuthorizationCb deny_cb;
+	guint ref;
 } PurpleAccountRequestInfo;
 
 static PurpleAccountUiOps *account_ui_ops = NULL;
@@ -1035,7 +1036,7 @@ purple_account_register(PurpleAccount *account)
 	purple_debug_info("account", "Registering account %s\n",
 					purple_account_get_username(account));
 
-	purple_connection_new(account, TRUE, purple_account_get_password(account));
+	_purple_connection_new(account, TRUE, purple_account_get_password(account));
 }
 
 void
@@ -1046,7 +1047,7 @@ purple_account_unregister(PurpleAccount *account, PurpleAccountUnregistrationCb 
 	purple_debug_info("account", "Unregistering account %s\n",
 					  purple_account_get_username(account));
 
-	purple_connection_new_unregister(account, purple_account_get_password(account), cb, user_data);
+	_purple_connection_new_unregister(account, purple_account_get_password(account), cb, user_data);
 }
 
 static void
@@ -1069,7 +1070,7 @@ request_password_ok_cb(PurpleAccount *account, PurpleRequestFields *fields)
 
 	purple_account_set_password(account, entry);
 
-	purple_connection_new(account, FALSE, entry);
+	_purple_connection_new(account, FALSE, entry);
 }
 
 static void
@@ -1155,7 +1156,7 @@ purple_account_connect(PurpleAccount *account)
 		!(prpl_info->options & OPT_PROTO_PASSWORD_OPTIONAL))
 		purple_account_request_password(account, G_CALLBACK(request_password_ok_cb), G_CALLBACK(request_password_cancel_cb), account);
 	else
-		purple_connection_new(account, FALSE, password);
+		_purple_connection_new(account, FALSE, password);
 }
 
 void
@@ -1171,7 +1172,7 @@ purple_account_disconnect(PurpleAccount *account)
 	account->disconnecting = TRUE;
 
 	gc = purple_account_get_connection(account);
-	purple_connection_destroy(gc);
+	_purple_connection_destroy(gc);
 	if (!purple_account_get_remember_password(account))
 		purple_account_set_password(account, NULL);
 	purple_account_set_connection(account, NULL);
@@ -1211,6 +1212,18 @@ purple_account_request_add(PurpleAccount *account, const char *remote_user,
 		ui_ops->request_add(account, remote_user, id, alias, message);
 }
 
+static PurpleAccountRequestInfo *
+purple_account_request_info_unref(PurpleAccountRequestInfo *info)
+{
+	if (--info->ref)
+		return info;
+
+	/* TODO: This will leak info->user_data, but there is no callback to just clean that up */
+	g_free(info->user);
+	g_free(info);
+	return NULL;
+}
+
 static void
 purple_account_request_close_info(PurpleAccountRequestInfo *info)
 {
@@ -1221,11 +1234,7 @@ purple_account_request_close_info(PurpleAccountRequestInfo *info)
 	if (ops != NULL && ops->close_account_request != NULL)
 		ops->close_account_request(info->ui_handle);
 
-	/* TODO: This will leak info->user_data, but there is no callback to just clean that up */
-
-	g_free(info->user);
-	g_free(info);
-
+	purple_account_request_info_unref(info);
 }
 
 void
@@ -1278,8 +1287,7 @@ request_auth_cb(void *data)
 	purple_signal_emit(purple_accounts_get_handle(),
 			"account-authorization-granted", info->account, info->user);
 
-	g_free(info->user);
-	g_free(info);
+	purple_account_request_info_unref(info);
 }
 
 static void
@@ -1294,8 +1302,7 @@ request_deny_cb(void *data)
 	purple_signal_emit(purple_accounts_get_handle(),
 			"account-authorization-denied", info->account, info->user);
 
-	g_free(info->user);
-	g_free(info);
+	purple_account_request_info_unref(info);
 }
 
 void *
@@ -1306,7 +1313,6 @@ purple_account_request_authorization(PurpleAccount *account, const char *remote_
 	PurpleAccountUiOps *ui_ops;
 	PurpleAccountRequestInfo *info;
 	int plugin_return;
-	void *handle;
 
 	g_return_val_if_fail(account     != NULL, NULL);
 	g_return_val_if_fail(remote_user != NULL, NULL);
@@ -1333,17 +1339,18 @@ purple_account_request_authorization(PurpleAccount *account, const char *remote_
 		info->deny_cb   = deny_cb;
 		info->userdata  = user_data;
 		info->user      = g_strdup(remote_user);
-		info->ui_handle = NULL;
+		info->ref       = 2;  /* We hold an extra ref to make sure info remains valid
+		                         if any of the callbacks are called synchronously. We
+		                         unref it after the function call */
 
-		handles = g_list_append(handles, info);
+		info->ui_handle = ui_ops->request_authorize(account, remote_user, id, alias, message,
+							    on_list, request_auth_cb, request_deny_cb, info);
 
-		handle = ui_ops->request_authorize(account, remote_user, id, alias, message,
-						   on_list, request_auth_cb, request_deny_cb, info);
-		/* If the handle is NULL, we can assume that one of the callback
-		   was called synchronously and that info has already been freed,
-		   so we don't want to write in it. */
-		if (handle != NULL)
-			return info->ui_handle = handle;
+		info = purple_account_request_info_unref(info);
+		if (info) {
+			handles = g_list_append(handles, info);
+			return info->ui_handle;
+		}
 	}
 
 	return NULL;

@@ -351,9 +351,9 @@ char* wpurple_strerror(int errornum) {
 int wpurple_read(int fd, void *buf, unsigned int size) {
 	int ret;
 
-	if ( fd < 0 ) {
+	if (fd < 0) {
 		errno = EBADF;
-		return -1;
+		g_return_val_if_reached(-1);
 	}
 
 	if(wpurple_is_socket(fd)) {
@@ -396,9 +396,9 @@ int wpurple_send(int fd, const void *buf, unsigned int size, int flags) {
 
 int wpurple_write(int fd, const void *buf, unsigned int size) {
 
-	if ( fd < 0 ) {
+	if (fd < 0) {
 		errno = EBADF;
-		return -1;
+		g_return_val_if_reached(-1);
 	}
 
 	if(wpurple_is_socket(fd))
@@ -423,9 +423,9 @@ int wpurple_recv(int fd, void *buf, size_t len, int flags) {
 int wpurple_close(int fd) {
 	int ret;
 
-	if ( fd < 0 ) {
+	if (fd < 0) {
 		errno = EBADF;
-		return -1;
+		g_return_val_if_reached(-1);
 	}
 
 	if( wpurple_is_socket(fd) ) {
