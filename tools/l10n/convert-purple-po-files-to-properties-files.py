@@ -164,7 +164,7 @@ for pack in strings:
     if not os.path.exists(dir):
         os.makedirs(dir)
     file = dir + '/' + pack + '.properties'
-    print 'writting ' + file
+    print 'writing ' + file
     fhandle = open(file, 'w')
     for msg in strings[pack]:
         id = allstrings[msg]['id']
@@ -174,7 +174,7 @@ for pack in strings:
             id += m.hexdigest()[0:8]
         comment = allstrings[msg]['comment']
         if comment != '':
-            fhandle.write('\n' + comment)
+            fhandle.write('\n' + comment + '\n')
         plural = allstrings[msg]['plural']
         if plural != '':
             msg += ';' + plural
@@ -227,6 +227,7 @@ for lang in po_files:
 #                if plural != '':
 #                    msg += ';' + plural
 #                fhandle.write(id + '=' + fix_multiline_string(msg) + '\n')
+#                fhandle.write(id + '=' + "FIXME" + '\n')
                 fixme += 1
             total += 1
         fhandle.close()
