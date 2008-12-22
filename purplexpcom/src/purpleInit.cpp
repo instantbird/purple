@@ -749,7 +749,7 @@ void prefs_add_bool(const char *name, gboolean value)
 
   if (type == nsIPrefBranch::PREF_INVALID) {
 #ifdef DEBUG
-    printf("pref(%s, %s);\n", mozName, value ? "true" : "false");
+    printf("pref(\"%s\", %s);\n", mozName, value ? "true" : "false");
 #endif
     prefs->SetBoolPref(mozName, value);
   }
@@ -767,7 +767,7 @@ void prefs_add_int(const char *name, int value)
 
   if (type == nsIPrefBranch::PREF_INVALID) {
 #ifdef DEBUG
-    printf("pref(%s, %i);\n", mozName, value);
+    printf("pref(\"%s\", %i);\n", mozName, value);
 #endif
     prefs->SetIntPref(mozName, value);
   }
@@ -785,7 +785,7 @@ void prefs_add_string(const char *name, const char *value)
 
   if (type == nsIPrefBranch::PREF_INVALID) {
 #ifdef DEBUG
-    printf("pref(%s, \"%s\");\n", mozName, value);
+    printf("pref(\"%s\", \"%s\");\n", mozName, value);
 #endif
     prefs->SetCharPref(mozName, value);
   }
