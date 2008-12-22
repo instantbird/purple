@@ -1,0 +1,25 @@
+#filter substitution
+
+@AB_CD@.jar:
+% locale purple @AB_CD@ %locale/@AB_CD@/purple/
+	locale/@AB_CD@/purple/prpl.properties	(%purple.properties)
+% locale oscar @AB_CD@ %locale/@AB_CD@/oscar/
+	locale/@AB_CD@/oscar/prpl.properties	(%oscar.properties)
+% locale jabber @AB_CD@ %locale/@AB_CD@/jabber/
+	locale/@AB_CD@/jabber/prpl.properties	(%jabber.properties)
+% locale msn @AB_CD@ %locale/@AB_CD@/msn/
+	locale/@AB_CD@/msn/prpl.properties	(%msn.properties)
+% locale yahoo @AB_CD@ %locale/@AB_CD@/yahoo/
+	locale/@AB_CD@/yahoo/prpl.properties	(%yahoo.properties)
+% locale qq @AB_CD@ %locale/@AB_CD@/qq/
+	locale/@AB_CD@/qq/prpl.properties	(%qq.properties)
+% locale myspace @AB_CD@ %locale/@AB_CD@/myspace/
+	locale/@AB_CD@/myspace/prpl.properties	(%myspace.properties)
+% locale gg @AB_CD@ %locale/@AB_CD@/gg/
+	locale/@AB_CD@/gg/prpl.properties	(%gg.properties)
+% locale irc @AB_CD@ %locale/@AB_CD@/irc/
+	locale/@AB_CD@/irc/prpl.properties	(%irc.properties)
+% locale simple @AB_CD@ %locale/@AB_CD@/simple/
+	locale/@AB_CD@/simple/prpl.properties	(%simple.properties)
+% locale novell @AB_CD@ %locale/@AB_CD@/novell/
+	locale/@AB_CD@/novell/prpl.properties	(%novell.properties)
