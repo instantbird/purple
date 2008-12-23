@@ -172,8 +172,14 @@ nsresult purpleAccount::create(const nsACString& aName, purpleProtocol *aPrpl,
   rv = storeAccount(mId, flatName, prpl);
   if (NS_FAILED(rv)) {
     mPrefBranch->DeleteBranch("");
+    return rv;
   }
-  return rv;
+
+  mProxy = do_CreateInstance(PURPLE_PROXY_INFO_CONTRACTID);
+  NS_ENSURE_TRUE(mProxy, NS_ERROR_OUT_OF_MEMORY);
+
+  mProxy->SetType(purpleIProxyInfo::useGlobal);
+  return NS_OK;
 }
 
 nsresult purpleAccount::load(const nsCString& aKey)
@@ -738,6 +744,7 @@ NS_IMETHODIMP purpleAccount::SetAlias(const nsACString& aAlias)
 NS_IMETHODIMP purpleAccount::GetProxyInfo(purpleIProxyInfo * *aProxyInfo)
 {
   PURPLE_ENSURE_INIT(mAccount);
+  PURPLE_ENSURE_INIT(mProxy);
 
   NS_ADDREF(*aProxyInfo = mProxy);
   return NS_OK;
