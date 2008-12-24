@@ -81,31 +81,40 @@ purplePref::~purplePref()
 
 /* readonly attribute AUTF8String name; */
 NS_IMETHODIMP purplePref::GetName(nsACString& aName)
-  PURPLE_IMPL_PREF_GETTER(aName = mOpt->pref_name)
+  PURPLE_IMPL_PREF_GETTER(aName = purple_account_option_get_setting(mOpt))
+
+/* readonly attribute AUTF8String label; */
+NS_IMETHODIMP purplePref::GetLabel(nsACString& aLabel)
+  PURPLE_IMPL_PREF_GETTER(aLabel = purple_account_option_get_text(mOpt))
 
 /* readonly attribute short type; */
 NS_IMETHODIMP purplePref::GetType(PRInt16 *aType)
-  PURPLE_IMPL_PREF_GETTER(*aType = mOpt->type)
+  PURPLE_IMPL_PREF_GETTER(*aType = purple_account_option_get_type(mOpt))
 
 /* readonly attribute boolean masked (); */
 NS_IMETHODIMP purplePref::GetMasked(PRBool *aMasked)
-  PURPLE_IMPL_PREF_GETTER(*aMasked = mOpt->masked)
+  PURPLE_IMPL_PREF_GETTER(*aMasked = purple_account_option_get_masked(mOpt))
 
 #define PURPLE_IMPL_PREF_GET_VALUE(aType, code)                             \
   PURPLE_IMPL_PREF_GETTER(                                                  \
-    NS_ENSURE_TRUE(mOpt->type == (PurplePrefType) aType, NS_ERROR_FAILURE); \
+    NS_ENSURE_TRUE(purple_account_option_get_type(mOpt) ==                  \
+                     (PurplePrefType) aType,                                \
+                   NS_ERROR_FAILURE);                                       \
                                                                             \
     code;                                                                   \
   )
 
 /* boolean getBool (); */
 NS_IMETHODIMP purplePref::GetBool(PRBool *_retval)
-  PURPLE_IMPL_PREF_GET_VALUE(typeBool, *_retval = mOpt->default_value.boolean)
+  PURPLE_IMPL_PREF_GET_VALUE(typeBool,
+    *_retval = purple_account_option_get_default_bool(mOpt))
 
 /* long getInt (); */
 NS_IMETHODIMP purplePref::GetInt(PRInt32 *_retval)
-  PURPLE_IMPL_PREF_GET_VALUE(typeInt, *_retval = mOpt->default_value.integer)
+  PURPLE_IMPL_PREF_GET_VALUE(typeInt,
+    *_retval = purple_account_option_get_default_int(mOpt))
 
 /* AUTF8String getString (); */
 NS_IMETHODIMP purplePref::GetString(nsACString& _retval)
-  PURPLE_IMPL_PREF_GET_VALUE(typeString, _retval = mOpt->default_value.string)
+  PURPLE_IMPL_PREF_GET_VALUE(typeString,
+    _retval = purple_account_option_get_default_string(mOpt))
