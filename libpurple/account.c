@@ -1949,7 +1949,7 @@ purple_account_get_protocol_name(const PurpleAccount *account)
 
 	p = purple_find_prpl(purple_account_get_protocol_id(account));
 
-	return ((p && p->info->name) ? _(p->info->name) : _("Unknown"));
+	return ((p && p->info->name) ? p->info->name : _("Unknown"));
 }
 
 PurpleConnection *
