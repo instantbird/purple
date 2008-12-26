@@ -816,7 +816,7 @@ static const char *get_text_identifier(const char *string)
 
   // Replace non alphanumeric characters by spaces
   // Keep % symbols for now
-  char *buf = str.BeginWriting();
+  char *buf;
   for (buf = str.BeginWriting(); *buf; ++buf) {
     if (IN_RANGE(*buf, 'A', 'Z') ||
 	IN_RANGE(*buf, 'a', 'z') ||
@@ -833,6 +833,8 @@ static const char *get_text_identifier(const char *string)
 	*buf = ' ';
 	++buf;
       } while (*buf && *buf != ' ');
+      if (!*buf)
+        break;
     }
   }
 
