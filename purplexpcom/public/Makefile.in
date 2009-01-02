@@ -51,6 +51,7 @@ XPIDLSRCS	= \
 		purpleIConversation.idl \
 		purpleICoreService.idl \
 		purpleIMessage.idl \
+		purpleIPlugin.idl \
 		purpleIPref.idl \
 		purpleIProtocol.idl \
 		purpleIProxy.idl \

@@ -198,6 +198,7 @@ struct _PurplePluginAction {
 /**
  * Handles the initialization of modules.
  */
+#if 0
 #if !defined(PURPLE_PLUGINS) || defined(PURPLE_STATIC_PRPL)
 # define _FUNC_NAME(x) purple_init_##x##_plugin
 # define PURPLE_INIT_PLUGIN(pluginname, initfunc, plugininfo) \
@@ -218,7 +219,21 @@ struct _PurplePluginAction {
 		return purple_plugin_register(plugin); \
 	}
 #endif
+#endif
 
+#ifdef PURPLE_STATIC_PRPL
+# define _FUNC_NAME(x) purple_init_##x##_plugin
+#else
+# define _FUNC_NAME(x) purple_plugin_register_self
+#endif
+
+#define PURPLE_INIT_PLUGIN(pluginname, initfunc, plugininfo) \
+	gboolean _FUNC_NAME(pluginname)(void) { \
+		PurplePlugin *plugin = purple_plugin_new(TRUE, NULL); \
+		plugin->info = &(plugininfo); \
+		initfunc((plugin)); \
+		return purple_plugin_register(plugin); \
+	}
 
 #ifdef __cplusplus
 extern "C" {

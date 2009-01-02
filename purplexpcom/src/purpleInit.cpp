@@ -75,6 +75,7 @@
 #include "purpleTimer.h"
 #include "purpleSockets.h"
 #include "purpleDNS.h"
+#include <purpleIPlugin.h>
 #include <xpcom-config.h>
 #include <nsServiceManagerUtils.h>
 #include <nsIObserverService.h>
@@ -83,18 +84,22 @@
 #include <nsNetCID.h>
 #include <nsEmbedString.h>
 #include <nsICryptoHash.h>
+#include <nsICategoryManager.h>
 #include <nsIDOMWindowInternal.h>
 #include <nsIIdleService.h>
 #include <nsIPromptService.h>
 #include <nsIPrefBranch2.h>
 #include <nsIPrefService.h>
 #include <nsIStringBundle.h>
+#include <nsISupportsPrimitives.h>
 #include <nsIWindowMediator.h>
 #include <nsIXULAppInfo.h>
 #include <nsComponentManagerUtils.h>
 #include <nsDirectoryServiceUtils.h>
 #include <nsAppDirectoryServiceDefs.h>
 #include <nsDirectoryServiceDefs.h>
+
+#define PURPLE_PROTOCOL_PLUGIN_CATEGORY   "purple-protocol-plugin"
 
 #define DEBUG_PURPLE_CONSOLE
 #ifdef DEBUG_PURPLE_CONSOLE
@@ -1395,12 +1400,52 @@ static GHashTable *ui_get_info(void)
   return ui_info;
 }
 
+static void ui_register_plugins()
+{
+  LOG(("ui_register_plugins"));
+
+  nsCOMPtr<nsICategoryManager> catMgr =
+    do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
+  NS_ENSURE_TRUE(catMgr, );
+
+  // Get contract IDs of all purple protocol plugin registrated as
+  // XPCOM components and register them with libpurple
+  nsCOMPtr<nsISimpleEnumerator> catEntries;
+  nsresult rv = catMgr->EnumerateCategory(PURPLE_PROTOCOL_PLUGIN_CATEGORY,
+					  getter_AddRefs(catEntries));
+  NS_ENSURE_SUCCESS(rv, );
+
+  PRBool hasMore;
+  while (NS_SUCCEEDED(catEntries->HasMoreElements(&hasMore)) && hasMore) {
+    nsCOMPtr<nsISupports> elem;
+    rv = catEntries->GetNext(getter_AddRefs(elem));
+    NS_ENSURE_SUCCESS(rv, );
+
+    nsCOMPtr<nsISupportsCString> entry = do_QueryInterface(elem, &rv);
+    NS_ENSURE_SUCCESS(rv, );
+
+    nsCString contractId;
+    rv = entry->GetData(contractId);
+    NS_ENSURE_SUCCESS(rv, );
+
+    LOG(("Attempting to register %s", contractId.get()));
+    nsCOMPtr<purpleIPlugin> plugin = do_CreateInstance(contractId.get());
+    if (!plugin) {
+      NS_WARNING("Failed attempt to register a protocol plugin");
+      continue;
+    }
+
+    plugin->RegisterSelf();
+  }
+}
+
 static PurpleCoreUiOps core_uiops =
 {
   NULL, NULL, NULL,
   ui_quit,
   ui_get_info,
- 
+  ui_register_plugins,
+
   /* padding */
   NULL, NULL, NULL
 };
@@ -1455,22 +1500,6 @@ init_libpurple()
    * so that we can have the right prototypes for libpurple.
    */
   purple_eventloop_set_ui_ops(&eventloops);
-
-  /* Add CUSTOM_PLUGIN_PATH as search folder. On some plateform (for
-   * example MACOSX), we can't hope that the current working directory
-   * of libpurple will be set to a correct folder, so we need to find
-   * the absolute path ourselves
-   */
-  rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR,
-                              getter_AddRefs(folder));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = folder->GetPath(path);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  CopyUTF16toUTF8(path, cPath);
-  cPath.Append("/" CUSTOM_PLUGIN_PATH);
-  purple_plugins_add_search_path(cPath.get());
-  LOG(("Setting custom plugin path to:  %s", cPath.get()));
 
   /* Here "instantbird" stands for the UI_ID. libpurple
    * sometimes need this id (for example for some plugins and

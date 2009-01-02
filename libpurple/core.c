@@ -149,6 +149,9 @@ purple_core_init(const char *ui)
 	static_proto_init();
 #endif
 
+	if (ops != NULL && ops->register_plugins != NULL)
+		ops->register_plugins();
+
 	purple_plugins_probe(G_MODULE_SUFFIX);
 
 	/* The buddy icon code uses the imgstore, so init it early. */

@@ -39,12 +39,12 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= purple/$(PROTOCOL)
 LIBRARY_NAME	= $(PROTOCOL)
 FORCE_SHARED_LIB= 1
-LIB_IS_C_ONLY	= 1
-NO_DIST_INSTALL	= 1
+IS_COMPONENT	= 1
 
-VISIBILITY_FLAGS=
-
-REQUIRES	= libpurple
+REQUIRES	= \
+		libpurple \
+		purplexpcom \
+		$(NULL)
 
 ifneq (,$(filter-out WINNT Darwin,$(OS_ARCH)))
 LOCAL_INCLUDES	= $(GLIB_CFLAGS)
@@ -64,4 +64,4 @@ EXTRA_LIBS	= \
 		$(NULL)
 endif
 
-DEFINES		+= -DVERSION=\"2.5.3\" -DDISPLAY_VERSION=\"2.5.3\" -DPURPLE_PLUGINS -DPACKAGE=\"$(PROTOCOL)\"
+DEFINES		+= -DVERSION=\"2.5.3\" -DDISPLAY_VERSION=\"2.5.3\" -DPACKAGE=\"$(PROTOCOL)\"

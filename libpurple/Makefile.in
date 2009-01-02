@@ -86,8 +86,6 @@ ifeq ($(OS_ARCH),WINNT)
 DIRS		+= win32
 endif
 
-DEFINES		+= -DPURPLE_PLUGINS
-
 PREF_JS_EXPORTS = $(srcdir)/purple-prefs.js
 
 EXPORTS		= \

@@ -61,6 +61,11 @@ typedef struct
 	 */
 	GHashTable* (*get_ui_info)(void);
 
+	/** Called during the initialization of the core to give the
+	 *  UI a chance to register static plugins.
+	 */
+	void (*register_plugins)(void);
+
 	void (*_purple_reserved1)(void);
 	void (*_purple_reserved2)(void);
 	void (*_purple_reserved3)(void);

@@ -34,19 +34,26 @@
 #
 # ***** END LICENSE BLOCK *****
 
+
+CPPSRCS		= \
+		xpcomModule.cpp \
+		$(NULL)
+
+EXTRA_DSO_LDOPTS += $(XPCOM_GLUE_LDOPTS) $(MOZ_COMPONENT_NSPR_LIBS)
+
 include $(topsrcdir)/config/rules.mk
 _RC_STRING += -SRCDIR .
 
-libs:: $(SHARED_LIBRARY)
-ifneq (,$(filter OS2 WINNT WINCE,$(OS_ARCH)))
-	$(INSTALL) $(IFLAGS2) $(IMPORT_LIBRARY) $(DIST)/lib
-else
-	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DIST)/lib
-endif
-	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(FINAL_TARGET)/protocols
+xpcomModule.cpp: $(srcdir)/../xpcomModule.cpp.in xpcomCid.h
+	sed 's/@PROTOCOL@/$(PROTOCOL)/g' $< > $@
+
+xpcomCid.h:
+	bash $(srcdir)/../create-cid.sh > $@
 
 module.rc: module.ver
 
 module.ver: $(srcdir)/../module.ver.in
-	echo WIN32_MODULE_DESCRIPTION=$(PROTOCOL) PRotocol PLugin > module.ver
-	cat $(srcdir)/../module.ver.in >> module.ver
+	echo WIN32_MODULE_DESCRIPTION=$(PROTOCOL) PRotocol PLugin > $@
+	cat $^ >> $@
+
+GARBAGE += xpcomModule.cpp module.ver xpcomCid.h
