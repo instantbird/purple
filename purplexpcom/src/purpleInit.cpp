@@ -729,7 +729,7 @@ IMPL_PLURAL_RULE(3, n%10==1&&n%100!=11?1:n!=0?2:0)
 // 4: Scottish Gaelic
 IMPL_PLURAL_RULE(4, n==1?0:n==2?1:2)
 // 5: Romanian
-IMPL_PLURAL_RULE(5, n==1?0:n==0||n%100>0&&n%100<20?1:2)
+IMPL_PLURAL_RULE(5, n==1?0:n==0||(n%100>0&&n%100<20)?1:2)
 // 6: Lithuanian
 IMPL_PLURAL_RULE(6, n%10==1&&n%100!=11?0:n%10>=2&&(n%100<10||n%100>=20)?2:1)
 // 7: Russian
@@ -743,9 +743,9 @@ IMPL_PLURAL_RULE(10, n%100==1?0:n%100==2?1:n%100==3||n%100==4?2:3)
 // 11: Irish Gaeilge
 IMPL_PLURAL_RULE(11, n==1?0:n==2?1:n>=3&&n<=6?2:n>=7&&n<=10?3:4)
 // 12: Arabic
-IMPL_PLURAL_RULE(12, n==1?0:n==2?1:n<=10?2:3)
+IMPL_PLURAL_RULE(12, n==0?5:n==1?0:n==2?1:n%100>=3&&n%100<=10?2:n%100>=11&&n%100<=99?3:4)
 // 13: Maltese
-IMPL_PLURAL_RULE(13, n==1?0:n==0||n%100>0&&n%100<=10?1:n%100>10&&n%100<20?2:3)
+IMPL_PLURAL_RULE(13, n==1?0:n==0||(n%100>0&&n%100<=10)?1:n%100>10&&n%100<20?2:3)
 // 14: Macedonian
 IMPL_PLURAL_RULE(14, n%10==1?0:n%10==2?1:2)
 
@@ -775,7 +775,7 @@ static const PluralRule pluralRules[15] = {
   // 11: Irish Gaeilge
   {5, plural_rule_11},
   // 12: Arabic
-  {4, plural_rule_12},
+  {6, plural_rule_12},
   // 13: Maltese
   {4, plural_rule_13},
   // 14: Macedonian
