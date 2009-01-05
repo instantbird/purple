@@ -341,12 +341,12 @@ void purpleSocketWatcher::goingOffline()
   // We don't loop from 0 to Length - 1 because the libpurple callback
   // can cancel some watchers so the length of the array may change
   // during the loop. See bug 158
-  for (PRInt32 i = sSockets->Length() - 1; i >= 0; i = sSockets->Length() - 1) {
-    nsCOMPtr<purpleISocket> socket = (*sSockets)[i];
+  for (PRInt32 i = sSockets->Length(); i; i = sSockets->Length()) {
+    nsCOMPtr<purpleISocket> socket = (*sSockets)[i - 1];
+    sSockets->RemoveElementAt(i - 1);
     socket->CallLibpurpleCallback();
     socket->Cancel();
   }
-  sSockets->Clear();
 
   sSts = nsnull;
 }
