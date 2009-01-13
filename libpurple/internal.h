@@ -49,10 +49,6 @@
 #include <locale.h>
 #include "gettext.h"
 
-#ifndef PACKAGE
-#  define PACKAGE "purple"
-#endif
-
 #define _(String) (purple_get_text(PACKAGE, String))
 #define N_(String) (String)
 #define ngettext(Singular, Plural, Number) dngettext(PACKAGE, Singular, Plural, Number)

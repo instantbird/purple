@@ -52,8 +52,8 @@ xpcomCid.h:
 
 module.rc: module.ver
 
-module.ver: $(srcdir)/../module.ver.in
+module.ver: $(srcdir)/../module.ver.in $(DEPTH)/config/autoconf.mk
 	echo WIN32_MODULE_DESCRIPTION=$(PROTOCOL) PRotocol PLugin > $@
-	cat $^ >> $@
+	sed 's/@PURPLE_MAJOR_VERSION@/$(PURPLE_MAJOR_VERSION)/;s/@PURPLE_MINOR_VERSION@/$(PURPLE_MINOR_VERSION)/;s/@PURPLE_MICRO_VERSION@/$(PURPLE_MICRO_VERSION)/' $< > $@
 
 GARBAGE += xpcomModule.cpp module.ver xpcomCid.h

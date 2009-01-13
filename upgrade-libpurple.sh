@@ -78,12 +78,29 @@ diffcurrent() {
   diffstat < $diffname
 }
 
-latest=2.5.2 #`latestversion`
+if [ -z "$LATEST" ]; then
+  latest=`latestversion`
+  if [ -z "$latest" ]; then
+    echo "Couldn't fetch latest version number."
+    exit 1
+  fi
+else
+  latest=$LATEST
+fi
+
 #diffversions 2.4.0 $latest
 #diffversions 2.2.1 2.4.0
 #diffversions 2.4.0 2.4.2
 
-current=2.5.1
+current=`cat config/version.txt`
+
+if [ "$latest" = "$current" ]; then
+  echo "Already up to date (version $latest)."
+  exit
+fi
+
+echo "Attempting to upgrade from $current to $latest"
+
 getversion $latest
 diffcurrent $current
 extract $latest
@@ -95,3 +112,6 @@ cd -
 echo "run patch -p0 < ../../diff-current-to-$current.patch and merge changes manually in extract/pidgin-$latest"
 echo "then run: diff -ru libpurple extract/pidgin-$latest/libpurple > diff-update-to-$latest.patch "
 echo "and finally: patch -p0 <diff-update-to-$latest.patch"
+
+echo "also run: echo $latest > config/version.txt"
+echo "don't forget to update purple-prefs.js and the translations"
