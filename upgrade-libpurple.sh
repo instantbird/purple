@@ -41,7 +41,9 @@ pruneunused() {
   rm -rf $1/libpurple/protocols/{bonjour,msnp9,null,sametime,silc,silc10,toc,zephyr}
   rm -f $1/libpurple/purple-*
   rm -f $1/libpurple/dbus-{a,b,d,p,s,t,u}*
-  rm -f $1/libpurple/purple.pc.in
+  rm -f $1/libpurple/{purple.pc.in,purple.h,purple.h.in,version.h}
+  rm -f $1/libpurple/certificate.{c,h}
+  rm -f $1/libpurple/protocols/qq/ChangeLog
 }
 
 extract() {
