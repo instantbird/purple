@@ -24,6 +24,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
  */
 
+#ifdef _WIN32
+#undef _WIN32_WINNT
+#define _WIN32_WINNT 0x0501
+#define INCL_WINSOCK_API_TYPEDEFS 1
+#endif
+
 #include "internal.h"
 
 #ifndef _WIN32
@@ -34,12 +40,6 @@
 #include <sys/ioctl.h>
 #else
 #include <nspapi.h>
-#ifndef SIO_NSP_NOTIFY_CHANGE
-#define SIO_NSP_NOTIFY_CHANGE         _WSAIOW(IOC_WS2,25)
-
-typedef FAR* LPWSACOMPLETION;
-
-#endif
 #endif
 
 /* Solaris */
@@ -550,10 +550,7 @@ static gpointer wpurple_network_change_thread(gpointer data)
 	WSAEVENT *nla_event;
 	time_t last_trigger = time(NULL);
 
-	int (WSAAPI *MyWSANSPIoctl) (
-		HANDLE hLookup, DWORD dwControlCode, LPVOID lpvInBuffer,
-		DWORD cbInBuffer, LPVOID lpvOutBuffer, DWORD cbOutBuffer,
-		LPDWORD lpcbBytesReturned, LPWSACOMPLETION lpCompletion) = NULL;
+	LPFN_WSANSPIOCTL MyWSANSPIoctl = NULL;
 
 	if (!(MyWSANSPIoctl = (void*) wpurple_find_and_loadproc("ws2_32.dll", "WSANSPIoctl"))) {
 		g_thread_exit(NULL);
