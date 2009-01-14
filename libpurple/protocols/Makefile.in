@@ -55,4 +55,8 @@ PARALLEL_DIRS	= \
 		netsoul \
 		$(NULL)
 
+ifdef MOZ_DEBUG
+PARALLEL_DIRS += null
+endif
+
 include $(topsrcdir)/config/rules.mk
