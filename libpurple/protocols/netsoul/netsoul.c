@@ -79,9 +79,15 @@ void netsoul_conn_tooltip(NetsoulConn *nc, PurpleNotifyUserInfo *user_info)
   time_t now = time(NULL);
 
   loggedin = purple_str_seconds_to_string(now - nc->logintime);
-  statetime = purple_str_seconds_to_string(now - nc->statetime);
   state = ns_state_to_text(nc->state);
-  state2 = g_strdup_printf("%s (%s)", state, statetime);
+  if (nc->statetime) {
+    statetime = purple_str_seconds_to_string(now - nc->statetime);
+    state2 = g_strdup_printf("%s (%s)", state, statetime);
+    g_free(statetime);
+    g_free(state);
+  }
+  else
+    state2 = state;
 
   purple_notify_user_info_add_pair(user_info, "Location", nc->location);
   purple_notify_user_info_add_pair(user_info, "IP", nc->ip);
@@ -90,8 +96,6 @@ void netsoul_conn_tooltip(NetsoulConn *nc, PurpleNotifyUserInfo *user_info)
   purple_notify_user_info_add_pair(user_info, "State", state2);
 
   g_free(loggedin);
-  g_free(statetime);
-  g_free(state);
   g_free(state2);
 }
 
@@ -100,18 +104,26 @@ char *netsoul_conn_text_html(NetsoulConn *nc)
   char	*loggedin;
   char	*statetime;
   char	*state;
+  char	*state2;
   char	*resp;
 
   time_t now = time(NULL);
 
   loggedin = purple_str_seconds_to_string(now - nc->logintime);
-  statetime = purple_str_seconds_to_string(now - nc->statetime);
   state = ns_state_to_text(nc->state);
-  resp = g_strdup_printf("<b>Location:</b> %s<br><b>IP:</b> %s<br><b>Comment:</b> %s<br><b>Logged in:</b> %s<br><b>State:</b> %s (%s)",
-			 nc->location, nc->ip, nc->comment, loggedin, state, statetime);
+  if (nc->statetime) {
+    statetime = purple_str_seconds_to_string(now - nc->statetime);
+    state2 = g_strdup_printf("%s (%s)", state, statetime);
+    g_free(statetime);
+    g_free(state);
+  }
+  else
+    state2 = state;
+
+  resp = g_strdup_printf("<b>Location:</b> %s<br><b>IP:</b> %s<br><b>Comment:</b> %s<br><b>Logged in:</b> %s<br><b>State:</b> %s",
+			 nc->location, nc->ip, nc->comment, loggedin, state2);
   g_free(loggedin);
-  g_free(statetime);
-  g_free(state);
+  g_free(state2);
   return resp;
 }
 
