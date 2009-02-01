@@ -698,7 +698,7 @@ NS_IMETHODIMP prefsObserver::Observe(nsISupports *aSubject,
 
 struct LangStringCache {
   nsCString lang;
-  nsDataHashtable<nsCStringHashKey, nsCStringArray *> table;
+  nsDataHashtable<nsCStringHashKey, nsTArray<nsCString> *> table;
 };
 
 nsTArray<LangStringCache> *gStringCache;
@@ -708,7 +708,7 @@ static PRInt32 gPluralRule = -1;
 typedef int (*PluralFormIndexCallback) (int n);
 
 struct PluralRule {
-  PRInt32 nbForms;
+  PRUint32 nbForms;
   PluralFormIndexCallback func;
 };
 
@@ -990,13 +990,13 @@ static const char *get_text(const char *package,
   NS_ENSURE_TRUE(packageIndex != -1, string);
 
   // check if we can get it from the hashtable
-  nsCStringArray *array = nsnull;
+  nsTArray<nsCString> *array = nsnull;
   nsDependentCString cString(string);
   if ((*gStringCache)[packageIndex].table.Get(cString, &array)) {
     // Check if we cached that the string is missing
     if (!array)
       return string;
-    return (*array)[0]->get();
+    return (*array)[0].get();
   }
 
   nsCString *result = get_string(package, string);
@@ -1004,7 +1004,7 @@ static const char *get_text(const char *package,
   if (!result) {
     (*gStringCache)[packageIndex].table.Put(cString, nsnull);
     //    printf("caching the missingness of %s:%s\n", package, string);
-#ifdef DEBUG    
+#ifdef DEBUG
     nsCString warning(NS_LITERAL_CSTRING("caching the missingness of "));
     warning.Append(package);
     warning.Append(':');
@@ -1015,18 +1015,18 @@ static const char *get_text(const char *package,
   }
 
   // Keep the localized string in the hashtable
-  array = new nsCStringArray(1);
+  array = new nsTArray<nsCString>(1);
   if (!array) {
-    NS_WARNING("Failed to create nsCStringArray(1)");
+    NS_WARNING("Failed to create nsTArray<nsCString>(1)");
     delete result;
     return string;
   }
 
-  array->InsertCStringAt(*result, 0);
+  array->AppendElement(*result);
   (*gStringCache)[packageIndex].table.Put(cString, array);
   delete result;
 
-  return (*array)[0]->get();
+  return (*array)[0].get();
 }
 
 // Uiop function to replace ngettext
@@ -1042,46 +1042,46 @@ static const char *get_plural_text(const char *package,
   const PluralRule *rule = get_plural_rule();
   NS_ENSURE_TRUE(rule, defaultResult);
 
-  PRInt32 form = rule->func(number);
+  PRUint32 form = rule->func(number);
   NS_ENSURE_TRUE(form >= 0 && form < rule->nbForms, defaultResult);
 
   PRInt32 packageIndex = get_package_index(package);
   NS_ENSURE_TRUE(packageIndex != -1, defaultResult);
 
   // check if we can get it from the hashtable
-  nsCStringArray *array = nsnull;
+  nsTArray<nsCString> *array;
   nsDependentCString cString(singular);
   if ((*gStringCache)[packageIndex].table.Get(cString, &array)) {
     // Check if we cached that the string is missing
     if (!array)
       return defaultResult;
 
-    NS_ENSURE_TRUE(array->Count() == rule->nbForms, defaultResult);
-    return (*array)[form]->get();
+    NS_ENSURE_TRUE(array->Length() == rule->nbForms, defaultResult);
+    return (*array)[form].get();
   }
 
   nsCString *result = get_string(package, singular);
   NS_ENSURE_TRUE(result, defaultResult);
 
   // Keep the localized string in the hashtable
-  array = new nsCStringArray(rule->nbForms);
+  array = new nsTArray<nsCString>(rule->nbForms);
   if (!array) {
-    NS_WARNING("Failed to create nsCStringArray(nbForms)");
+    NS_WARNING("Failed to create nsTArray<nsCString>(nbForms)");
     delete result;
     return defaultResult;
   }
 
-  array->ParseString(result->get(), ";");
+  ParseString(*result, ';', *array);
   delete result;
 
-  if (array->Count() != rule->nbForms) {
+  if (array->Length() != rule->nbForms) {
     NS_WARNING("unexpected number of plural forms in the localized string");
     delete array;
     return defaultResult;
   }
 
   (*gStringCache)[packageIndex].table.Put(cString, array);
-  return (*array)[form]->get();
+  return (*array)[form].get();
 }
 
 PurpleGetTextUiOps gettext_uiops = {
