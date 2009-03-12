@@ -67,6 +67,9 @@
 #include "util.h"
 #include "version.h"
 
+/* Disable gettext for the null-prpl, it will never be translated... */
+#undef _
+#define _(String) (String)
 
 #define NULLPRPL_ID "prpl-null"
 static PurplePlugin *_null_protocol = NULL;
