@@ -38,7 +38,7 @@ pruneunused() {
   mv $1/libpurple/plugins/ssl/ssl-nss.c $1/libpurple
   mv $1/libpurple/plugins/statenotify.c $1/libpurple
   rm -rf $1/libpurple/{plugins,gconf,example,tests}
-  rm -rf $1/libpurple/protocols/{bonjour,msnp9,null,sametime,silc,silc10,toc,zephyr}
+  rm -rf $1/libpurple/protocols/{bonjour,msnp9,sametime,silc,silc10,toc,zephyr}
   rm -f $1/libpurple/purple-*
   rm -f $1/libpurple/dbus-{a,b,d,p,s,t,u}*
   rm -f $1/libpurple/{purple.pc.in,purple.h,purple.h.in,version.h}
@@ -80,6 +80,13 @@ diffcurrent() {
   diffstat < $diffname
 }
 
+current=`cat config/version.txt`
+
+if [ ! -z "$DIFFCURRENTONLY" ]; then
+  diffcurrent $current
+  exit
+fi
+
 if [ -z "$LATEST" ]; then
   latest=`latestversion`
   if [ -z "$latest" ]; then
@@ -93,8 +100,6 @@ fi
 #diffversions 2.4.0 $latest
 #diffversions 2.2.1 2.4.0
 #diffversions 2.4.0 2.4.2
-
-current=`cat config/version.txt`
 
 if [ "$latest" = "$current" ]; then
   echo "Already up to date (version $latest)."
