@@ -38,6 +38,7 @@ typedef enum
 
 #define PURPLE_SSL_DEFAULT_PORT 443
 
+/** @copydoc _PurpleSslConnection */
 typedef struct _PurpleSslConnection PurpleSslConnection;
 typedef struct _PurpleCertificateVerifier PurpleCertificateVerifier;
 

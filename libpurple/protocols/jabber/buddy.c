@@ -1790,7 +1790,7 @@ void jabber_buddy_get_info(PurpleConnection *gc, const char *who)
 	if (!jid)
 		return;
 
-	if (jabber_chat_find(js, jid->node, jid->domain)) {
+	if (jid->node && jabber_chat_find(js, jid->node, jid->domain)) {
 		/* For a conversation, include the resource (indicates the user). */
 		jabber_buddy_get_info_for_jid(js, who);
 	} else {
@@ -2522,7 +2522,7 @@ jabber_buddy_has_capability(const JabberBuddy *jb, const gchar *cap)
 	JabberBuddyResource *jbr = jabber_buddy_find_resource((JabberBuddy*)jb, NULL);
 
 	if (!jbr) {
-		purple_debug_error("jabber",
+		purple_debug_info("jabber",
 			"Unable to find caps: buddy might be offline\n");
 		return FALSE;
 	}
