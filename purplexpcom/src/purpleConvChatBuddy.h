@@ -65,7 +65,7 @@ private:
 protected:
   nsCString mName;
   nsCString mAlias;
-  nsCOMPtr<purpleAccountBuddy> mBuddy;
+  PRBool mBuddy;
   PurpleConvChatBuddyFlags mFlags;
 };
 

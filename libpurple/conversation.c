@@ -1626,7 +1626,7 @@ purple_conv_chat_add_users(PurpleConvChat *chat, GList *users, GList *extra_msgs
 				purple_conv_chat_is_user_ignored(chat, user);
 
 		cbuddy = purple_conv_chat_cb_new(user, alias, flag);
-		cbuddy->buddy = purple_find_buddy(conv->account, user);
+		cbuddy->buddy = purple_find_buddy(conv->account, user) != NULL;
 		/* This seems dumb. Why should we set users thousands of times? */
 		purple_conv_chat_set_users(chat,
 				g_list_prepend(chat->in_room, cbuddy));
@@ -1720,7 +1720,7 @@ purple_conv_chat_rename_user(PurpleConvChat *chat, const char *old_user,
 
 	flags = purple_conv_chat_user_get_flags(chat, old_user);
 	cb = purple_conv_chat_cb_new(new_user, new_alias, flags);
-	cb->buddy = purple_find_buddy(conv->account, new_user);
+	cb->buddy = purple_find_buddy(conv->account, new_user) != NULL;
 	purple_conv_chat_set_users(chat,
 		g_list_prepend(chat->in_room, cb));
 

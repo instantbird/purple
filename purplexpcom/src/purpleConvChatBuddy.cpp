@@ -54,8 +54,7 @@ void purpleConvChatBuddy::Init(PurpleConvChatBuddy *aBuddy)
 {
   mName = aBuddy->name;
   mAlias = aBuddy->alias;
-  if (aBuddy->buddy)
-    mBuddy = (purpleAccountBuddy *)aBuddy->buddy->node.ui_data;
+  mBuddy = aBuddy->buddy;
   mFlags = aBuddy->flags;
 }
 
@@ -73,10 +72,10 @@ NS_IMETHODIMP purpleConvChatBuddy::GetAlias(nsACString & aAlias)
   return NS_OK;
 }
 
-/* readonly attribute purpleIAccountBuddy buddy; */
-NS_IMETHODIMP purpleConvChatBuddy::GetBuddy(purpleIAccountBuddy * *aBuddy)
+/* readonly attribute boolean buddy; */
+NS_IMETHODIMP purpleConvChatBuddy::GetBuddy(PRBool *aBuddy)
 {
-  NS_IF_ADDREF(*aBuddy = mBuddy);
+  *aBuddy = mBuddy;
   return NS_OK;
 }
 
