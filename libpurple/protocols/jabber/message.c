@@ -114,7 +114,8 @@ static void handle_chat(JabberMessage *jm)
 					 * this should be able to be implemented by removing the
 					 * user from the conversation like we do with chats now. */
 					purple_conversation_write(conv, "", buf,
-					                        PURPLE_MESSAGE_SYSTEM, time(NULL));
+					                          PURPLE_MESSAGE_SYSTEM | PURPLE_MESSAGE_NO_LINKIFY,
+					                          time(NULL));
 				}
 			}
 			serv_got_typing_stopped(jm->js->gc, from);
