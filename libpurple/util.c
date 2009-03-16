@@ -32,14 +32,6 @@
 #include "prefs.h"
 #include "util.h"
 
-#ifdef XP_UNIX
-# if defined(XP_MACOSX) || defined(__FreeBSD__)
-#  define HAVE_TM_GMTOFF
-# else
-#  define HAVE_TIMEZONE
-# endif
-#endif
-
 struct _PurpleUtilFetchUrlData
 {
 	PurpleUtilFetchUrlCallback callback;
