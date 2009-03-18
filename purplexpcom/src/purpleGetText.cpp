@@ -36,7 +36,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "purpleGetText.h"
+#include <nsIChromeRegistry.h>
 #include <nsICryptoHash.h>
+#include <nsIObserverService.h>
 #include <nsIStringBundle.h>
 #include <nsServiceManagerUtils.h>
 #include <nsComponentManagerUtils.h>
@@ -51,6 +53,8 @@ static PRLogModuleInfo *gPurpleGetTextLog = nsnull;
 #define LOG(args) PR_LOG(gPurpleGetTextLog, PR_LOG_DEBUG, args)
 
 purpleGetText *purpleGetText::sInstance = nsnull;
+
+NS_IMPL_ISUPPORTS1(purpleGetText, nsIObserver)
 
 #define IMPL_PLURAL_RULE(aNumber, aRule)                        \
   static PRUint32 plural_rule_##aNumber(unsigned long int n)    \
@@ -429,6 +433,16 @@ const char *purpleGetText::GetPluralText(const char *package,
   return (*array)[form].get();
 }
 
+NS_IMETHODIMP
+purpleGetText::Observe(nsISupports *aSubject,
+                       const char *aTopic, 
+                       const PRUnichar *aSomeData)
+{
+  LOG(("purpleGetText::Observer(%s)\n", aTopic));
+  unInit();
+  return NS_OK;
+}
+
 purpleGetText::purpleGetText()
   : mStringCache(10),
     mPluralRule(nsnull)
@@ -446,6 +460,12 @@ nsresult purpleGetText::init()
     LOG(("creating a new instance of purpleGetText\n"));
     sInstance = new purpleGetText();
     NS_ENSURE_TRUE(sInstance, NS_ERROR_OUT_OF_MEMORY);
+    NS_ADDREF(sInstance);
+
+    nsCOMPtr<nsIObserverService> os = 
+      do_GetService("@mozilla.org/observer-service;1");
+    if (os)
+      os->AddObserver(sInstance, NS_CHROME_FLUSH_TOPIC, PR_FALSE);
   }
 
   return NS_OK;
@@ -466,10 +486,15 @@ void purpleGetText::unInit()
   if (!sInstance)
     return;
 
+  nsCOMPtr<nsIObserverService> os = 
+    do_GetService("@mozilla.org/observer-service;1");
+  if (os)
+    os->RemoveObserver(sInstance, NS_CHROME_FLUSH_TOPIC);
+
   LOG(("purpleGetText::unInit\n"));
   for (PRUint32 i = 0; i < sInstance->mStringCache.Length(); ++i)
     sInstance->mStringCache[i].table.Enumerate(deleteEnumerator, nsnull);
-    
-  delete sInstance;
+
+  NS_RELEASE(sInstance);
   sInstance = nsnull;
 }

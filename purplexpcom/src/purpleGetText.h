@@ -37,10 +37,14 @@
 
 #include <nsStringAPI.h>
 #include <nsDataHashtable.h>
+#include <nsIObserver.h>
 
-class purpleGetText
+class purpleGetText : public nsIObserver
 {
  public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
   static const char *GetText(const char *package,
                              const char *string);
   static const char *GetPluralText(const char *package,
