@@ -36,9 +36,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "purpleCoreService.h"
+#include "purpleDNS.h"
+#include "purpleGetText.h"
 #include "purpleStorage.h"
 #include "purpleSockets.h"
-#include "purpleDNS.h"
 #include "purpleTimer.h"
 
 #pragma GCC visibility push(default)
@@ -461,6 +462,7 @@ NS_IMETHODIMP purpleCoreService::Quit()
   purpleSocketWatcher::unInit();
   purpleDNS::unInit();
   purpleTimer::unInit();
+  purpleGetText::unInit();
 
   mInitialized = PR_FALSE;
   return NS_OK;
