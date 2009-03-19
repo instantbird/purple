@@ -1089,7 +1089,7 @@ NS_IMETHODIMP purpleCoreService::ProcessAutoLogin()
 
   // Notify observers so that any message stating that autologin is
   // disabled can be removed
-  NotifyObservers(nsnull, "autologin-processed");
+  NotifyObservers(this, "autologin-processed");
 
   return NS_OK;
 }
@@ -1316,7 +1316,7 @@ NS_IMETHODIMP purpleCoreService::Away(const nsACString &aMessage)
 
   nsString message;
   NS_CStringToUTF16(aMessage, NS_CSTRING_ENCODING_UTF8, message);
-  return NotifyObservers(nsnull, "away", message.get());
+  return NotifyObservers(this, "status-away", message.get());
 }
 
 /* void back (in string aMessage); */
@@ -1325,5 +1325,7 @@ NS_IMETHODIMP purpleCoreService::Back(const nsACString &aMessage)
   nsresult rv = SetStatus(PURPLE_STATUS_AVAILABLE, aMessage);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return NotifyObservers(nsnull, "back");
+  nsString message;
+  NS_CStringToUTF16(aMessage, NS_CSTRING_ENCODING_UTF8, message);
+  return NotifyObservers(this, "status-back", message.get());
 }
