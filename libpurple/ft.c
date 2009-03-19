@@ -176,7 +176,7 @@ purple_xfer_set_status(PurpleXfer *xfer, PurpleXferStatusType status)
 void purple_xfer_conversation_write(PurpleXfer *xfer, char *message, gboolean is_error)
 {
 	PurpleConversation *conv = NULL;
-	PurpleMessageFlags flags = PURPLE_MESSAGE_SYSTEM;
+	PurpleMessageFlags flags = PURPLE_MESSAGE_SYSTEM | PURPLE_MESSAGE_NO_LINKIFY;
 	char *escaped;
 
 	g_return_if_fail(xfer != NULL);
