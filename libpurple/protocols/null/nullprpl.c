@@ -543,8 +543,12 @@ static void nullprpl_get_info(PurpleConnection *gc, const char *username) {
 
 static void nullprpl_set_status(PurpleAccount *acct, PurpleStatus *status) {
   const char *msg = purple_status_get_attr_string(status, "message");
-  purple_debug_info("nullprpl", "setting %s's status to %s: %s\n",
-                    acct->username, purple_status_get_name(status), msg);
+  if (msg)
+    purple_debug_info("nullprpl", "setting %s's status to %s: %s\n",
+		      acct->username, purple_status_get_name(status), msg);
+  else
+    purple_debug_info("nullprpl", "setting %s's status to %s\n",
+		      acct->username, purple_status_get_name(status));
 
   foreach_nullprpl_gc(report_status_change, get_nullprpl_gc(acct->username),
                       NULL);
