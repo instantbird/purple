@@ -741,6 +741,7 @@ void prefs_add_bool(const char *name, gboolean value)
 #endif
     prefs->SetBoolPref(mozName, value);
   }
+  g_free(mozName);
 }
 
 void prefs_add_int(const char *name, int value)
@@ -759,6 +760,7 @@ void prefs_add_int(const char *name, int value)
 #endif
     prefs->SetIntPref(mozName, value);
   }
+  g_free(mozName);
 }
 
 void prefs_add_string(const char *name, const char *value)
@@ -777,6 +779,7 @@ void prefs_add_string(const char *name, const char *value)
 #endif
     prefs->SetCharPref(mozName, value);
   }
+  g_free(mozName);
 }
 
 void prefs_remove(const char *name)
@@ -786,7 +789,8 @@ void prefs_remove(const char *name)
   DEFINE_mozName_from_name(name);
   nsCOMPtr<nsIPrefBranch> prefs =
     do_GetService(NS_PREFSERVICE_CONTRACTID);
-  prefs->DeleteBranch(name);
+  prefs->DeleteBranch(mozName);
+  g_free(mozName);
 }
 
 void prefs_set_bool(const char *name, gboolean value)
@@ -797,6 +801,7 @@ void prefs_set_bool(const char *name, gboolean value)
   nsCOMPtr<nsIPrefBranch> prefs =
     do_GetService(NS_PREFSERVICE_CONTRACTID);
   prefs->SetBoolPref(mozName, value);
+  g_free(mozName);
 }
 
 void prefs_set_int(const char *name, int value)
@@ -807,6 +812,7 @@ void prefs_set_int(const char *name, int value)
   nsCOMPtr<nsIPrefBranch> prefs =
     do_GetService(NS_PREFSERVICE_CONTRACTID);
   prefs->SetIntPref(mozName, value);
+  g_free(mozName);
 }
 
 void prefs_set_string(const char *name, const char *value)
@@ -817,6 +823,7 @@ void prefs_set_string(const char *name, const char *value)
   nsCOMPtr<nsIPrefBranch> prefs =
     do_GetService(NS_PREFSERVICE_CONTRACTID);
   prefs->SetCharPref(mozName, value);
+  g_free(mozName);
 }
 
 
@@ -829,6 +836,7 @@ gboolean prefs_exists(const char *name)
     do_GetService(NS_PREFSERVICE_CONTRACTID);
   PRInt32 type = nsIPrefBranch::PREF_INVALID;
   prefs->GetPrefType(mozName, &type);
+  g_free(mozName);
 
   return type != nsIPrefBranch::PREF_INVALID;
 }
@@ -842,6 +850,7 @@ PurplePrefType prefs_get_type(const char *name)
     do_GetService(NS_PREFSERVICE_CONTRACTID);
   PRInt32 type = nsIPrefBranch::PREF_INVALID;
   prefs->GetPrefType(mozName, &type);
+  g_free(mozName);
 
   switch (type) {
     case nsIPrefBranch::PREF_INT:
@@ -865,6 +874,7 @@ gboolean prefs_get_bool(const char *name)
     do_GetService(NS_PREFSERVICE_CONTRACTID);
   PRBool result = PR_FALSE;
   prefs->GetBoolPref(mozName, &result);
+  g_free(mozName);
   return result;
 }
 
@@ -877,6 +887,7 @@ int prefs_get_int(const char *name)
     do_GetService(NS_PREFSERVICE_CONTRACTID);
   PRInt32 result = 0;
   prefs->GetIntPref(mozName, &result);
+  g_free(mozName);
   return result;
 }
 
@@ -889,6 +900,7 @@ const char *prefs_get_string(const char *name)
     do_GetService(NS_PREFSERVICE_CONTRACTID);
   char *result = NULL;
   prefs->GetCharPref(mozName, &result);
+  g_free(mozName);
 
   purple_debug_warning("prefs", "leaking the value of %s\n", name);
   return result;
@@ -905,13 +917,15 @@ GList *prefs_get_children_names(const char *name)
 void *prefs_add_observer(const char *name, gpointer data)
 {
   LOG(("prefs add observer %s\n", name));
-  DEFINE_mozName_from_name_with_default(name, NULL);
 
   prefsObserver *observer = new prefsObserver(data);
   nsCOMPtr<nsIPrefBranch2> prefs =
     do_GetService(NS_PREFSERVICE_CONTRACTID);
   NS_ENSURE_TRUE(prefs, NULL);
+
+  DEFINE_mozName_from_name_with_default(name, NULL);
   prefs->AddObserver(mozName, observer, false);
+  g_free(mozName);
 
   return (void *)observer;
 }
@@ -919,12 +933,13 @@ void *prefs_add_observer(const char *name, gpointer data)
 void prefs_remove_observer(const char *name, void *observer)
 {
   LOG(("remove observer @%x\n", observer));
-  DEFINE_mozName_from_name(name);
-
   nsCOMPtr<nsIPrefBranch2> prefs =
     do_GetService(NS_PREFSERVICE_CONTRACTID);
   NS_ENSURE_TRUE(prefs, );
+
+  DEFINE_mozName_from_name(name);
   prefs->RemoveObserver(mozName, (nsIObserver *)observer);
+  g_free(mozName);
 }
 
 void prefs_save()
