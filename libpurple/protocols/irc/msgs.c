@@ -65,8 +65,16 @@ static void irc_chat_remove_buddy(PurpleConversation *convo, char *data[2])
 	char *message, *stripped;
 
 	stripped = data[1] ? irc_mirc2txt(data[1]) : NULL;
-	message = g_strdup_printf("quit: %s", stripped);
-	g_free(stripped);
+	if (g_str_has_prefix(stripped, "Quit: ")) {
+		// some IRC servers automatically prefix a "Quit:" string.
+		// there is no point in duplicating it.
+		message = stripped;
+	} else if (stripped) {
+		message = g_strdup_printf(_("quit: %s"), stripped);
+		g_free(stripped);
+	} else {
+		message = g_strdup(_("quit"));
+	}
 
 	if (purple_conv_chat_find_user(PURPLE_CONV_CHAT(convo), data[0]))
 		purple_conv_chat_remove_user(PURPLE_CONV_CHAT(convo), data[0], message);
