@@ -1158,12 +1158,12 @@ init_libpurple()
                       NULL, say_command_cb,
                       "say &lt;message&gt;:  Send a message normally as if you weren't using a command.",
                       NULL);
-  purple_cmd_register("away", "S", PURPLE_CMD_P_DEFAULT,
+  purple_cmd_register("away", "S", PURPLE_CMD_P_HIGH,
                       (PurpleCmdFlag) (PURPLE_CMD_FLAG_CHAT | PURPLE_CMD_FLAG_IM | PURPLE_CMD_FLAG_ALLOW_WRONG_ARGS),
                       NULL, away_command_cb,
                       "away &lt;message&gt;:  Get Away and use |message| as status message.",
                       NULL);
-  purple_cmd_register("back", "S", PURPLE_CMD_P_DEFAULT,
+  purple_cmd_register("back", "S", PURPLE_CMD_P_HIGH,
                       (PurpleCmdFlag) (PURPLE_CMD_FLAG_CHAT | PURPLE_CMD_FLAG_IM | PURPLE_CMD_FLAG_ALLOW_WRONG_ARGS),
                       NULL, back_command_cb,
                       "back &lt;message&gt;:  Get Back and use |message| as status message.",
