@@ -357,7 +357,9 @@ nsresult purpleAccount::checkAutoLogin()
 {
   /* Check if we should connect the account automatically */
   PRBool autoLogin;
-  nsresult rv = mPrefBranch->GetBoolPref(PREF_AUTOLOGIN, &autoLogin);
+  nsresult rv = GetPrefBranch();
+  if (NS_SUCCEEDED(rv))
+    rv = mPrefBranch->GetBoolPref(PREF_AUTOLOGIN, &autoLogin);
   if (NS_FAILED(rv) || autoLogin) {
     LOG(("autologin\n"));
     startAutoLogin();
