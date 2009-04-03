@@ -62,7 +62,7 @@ REQUIRES	= \
 		purplexpcom \
 		$(NULL)
 
-ifneq (,$(filter-out WINNT Darwin,$(OS_ARCH)))
+ifneq (,$(filter-out WINNT WINCE Darwin,$(OS_ARCH)))
 LOCAL_INCLUDES	= $(GLIB_CFLAGS)
 EXTRA_LIBS	= $(GLIB_LIBS) -lgmodule-2.0 -L$(DIST)/lib -lpurple -lz -lxml2
 else
@@ -73,7 +73,7 @@ REQUIRES	+= \
 		$(NULL)
 endif
 
-ifeq ($(OS_ARCH),WINNT)
+ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 EXTRA_LIBS	= \
 		$(DIST)/lib/purple.lib \
 		$(DIST)/lib/glib.lib \
@@ -111,7 +111,7 @@ EXTRA_DSO_LDOPTS += $(XPCOM_GLUE_LDOPTS) $(MOZ_COMPONENT_NSPR_LIBS)
 
 include $(topsrcdir)/config/rules.mk
 
-ifeq ($(OS_ARCH),WINNT)
+ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 CXXFLAGS	+= -wd4624 -wd4068
 endif
 

@@ -47,7 +47,7 @@ REQUIRES	= \
 		purplexpcom \
 		$(NULL)
 
-ifneq (,$(filter-out WINNT Darwin,$(OS_ARCH)))
+ifneq (,$(filter-out WINNT WINCE Darwin,$(OS_ARCH)))
 LOCAL_INCLUDES	= $(GLIB_CFLAGS)
 EXTRA_LIBS	= -L../.. -lpurple $(GLIB_LIBS) -lgmodule-2.0 -lxml2 -lz
 else
@@ -57,7 +57,7 @@ REQUIRES	+= \
 		$(NULL)
 endif
 
-ifeq ($(OS_ARCH),WINNT)
+ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 EXTRA_LIBS	= \
 		../../purple.lib \
 		$(DIST)/lib/glib.lib \

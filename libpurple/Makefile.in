@@ -51,20 +51,19 @@ VISIBILITY_FLAGS=
 
 REQUIRES	= nss
 
-ifneq (,$(filter-out WINNT Darwin,$(OS_ARCH)))
+ifneq (,$(filter-out WINNT WINCE Darwin,$(OS_ARCH)))
 LOCAL_INCLUDES	= $(GLIB_CFLAGS) -I/usr/include/libxml2/ -I/usr/local/include/libxml2/
-EXTRA_LIBS	= $(GLIB_LIBS) -lgmodule-2.0 -lxml2 -lz
 else
-EXTRA_LIBS	= -L$(DIST)/lib -lglib -lxml2 -lz
 REQUIRES	+= \
 		glib \
 		libxml2 \
 		$(NULL)
+ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
+LOCAL_INCLUDES += -I$(srcdir)/win32
+endif
 endif
 
-ifeq ($(OS_ARCH),WINNT)
-LOCAL_INCLUDES += -I$(srcdir)/win32
-
+ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 EXTRA_LIBS	= \
 		ws2_32.lib \
 		$(DIST)/lib/glib.lib \
@@ -75,6 +74,13 @@ EXTRA_LIBS	= \
 		$(NULL)
 DSO_LDOPTS	+= -DEF:purple.def
 else
+ifeq ($(OS_ARCH),Darwin)
+# Mac
+EXTRA_LIBS	= -L$(DIST)/lib -lglib -lxml2 -lz
+else
+# Other Unix
+EXTRA_LIBS	= $(GLIB_LIBS) -lgmodule-2.0 -lxml2 -lz
+endif
 ifneq ($(OS_ARCH),FreeBSD)
 EXTRA_LIBS	+= -lresolv
 endif
@@ -82,7 +88,7 @@ EXTRA_LIBS	+= $(NSS_LIBS) $(NSPR_LIBS)
 endif
 
 DIRS		= protocols
-ifeq ($(OS_ARCH),WINNT)
+ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 DIRS		+= win32
 endif
 
@@ -147,7 +153,7 @@ EXPORTS		= \
 		$(NULL)
 #		certificate.h
 
-ifeq ($(OS_ARCH),WINNT)
+ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 EXPORTS		+= \
 		win32/win32dep.h \
 		win32/wpurpleerror.h \
@@ -211,7 +217,7 @@ CSRCS		= \
 #		desktopitem.c
 #		certificate.c
 
-ifeq ($(OS_ARCH),WINNT)
+ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 CSRCS		+= \
 		win32/libc_interface.c \
 		win32/win32dep.c \

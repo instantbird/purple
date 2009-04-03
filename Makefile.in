@@ -41,7 +41,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifneq (,$(filter WINNT Darwin,$(OS_ARCH)))
+ifneq (,$(filter WINNT WINCE Darwin,$(OS_ARCH)))
 DIRS		= libraries
 endif
 
