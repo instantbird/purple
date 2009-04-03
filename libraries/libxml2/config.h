@@ -98,7 +98,9 @@ static int isnan (double d) {
 #define mkdir(p,m) _mkdir(p)
 #define snprintf _snprintf
 #if _MSC_VER < 1500
+#ifndef _WIN32_WCE
 #define vsnprintf(b,c,f,a) _vsnprintf(b,c,f,a)
+#endif
 #endif
 #elif defined(__MINGW32__)
 #define mkdir(p,m) _mkdir(p)
