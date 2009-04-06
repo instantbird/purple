@@ -1630,11 +1630,6 @@ g_win32_locale_filename_from_utf8
 #endif
 
 #ifndef NO_EXTERNAL
-g_module_close
-g_module_symbol
-g_module_error
-g_module_open_utf8
-g_module_supported
 g_thread_init
 #endif
 

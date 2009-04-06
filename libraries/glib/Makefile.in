@@ -137,8 +137,6 @@ EXPORTS		= \
 		gunidecomp.h \
 		config.h \
 		glibconfig.h \
-		gmodule.h \
-		gmoduleconf.h \
 		glib-object.h \
 		$(NULL)
 
@@ -199,7 +197,6 @@ CSRCS		= \
 		gobject/gobjectaliasdef.c	\
 		gdate.c				\
 		ghook.c				\
-		gmodule.c \
 		gscanner.c \
 		$(NULL)
 #		gobject/gmarshal.c		\

@@ -97,9 +97,10 @@
 #include <langinfo.h>
 #endif
 
-#include <gmodule.h>
+#include <gutils.h>
 
 #ifdef PURPLE_PLUGINS
+# include <gmodule.h>
 # ifdef HAVE_DLFCN_H 
 #  include <dlfcn.h>
 # endif

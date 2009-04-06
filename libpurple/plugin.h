@@ -30,7 +30,9 @@
 #define _PURPLE_PLUGIN_H_
 
 #include <glib/glist.h>
-#include <gmodule.h>
+#ifdef PURPLE_PLUGINS
+# include <gmodule.h>
+#endif
 #include "signals.h"
 #include "value.h"
 
