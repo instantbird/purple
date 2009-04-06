@@ -38,7 +38,7 @@
 #include <netinet/in.h>
 #include <net/if.h>
 #include <sys/ioctl.h>
-#else
+#elif 0
 #include <nspapi.h>
 #endif
 
@@ -75,7 +75,7 @@ static DBusGProxy *dbus_proxy = NULL;
 static NMState nm_state = NM_STATE_UNKNOWN;
 static gboolean have_nm_state = FALSE;
 
-#elif defined _WIN32
+#elif 0
 static int current_network_count;
 
 /* Mutex for the other global vars */
@@ -83,6 +83,8 @@ static GStaticMutex mutex = G_STATIC_MUTEX_INIT;
 static gboolean network_initialized = FALSE;
 static HANDLE network_change_handle = NULL;
 static LPFN_WSANSPIOCTL MyWSANSPIoctl = NULL;
+#else
+static network_available_callback available_callback = NULL;
 #endif
 
 struct _PurpleNetworkListenData {
@@ -463,7 +465,7 @@ purple_network_get_port_from_fd(int fd)
 	return ntohs(addr.sin_port);
 }
 
-#ifdef _WIN32
+#if 0
 #ifndef NS_NLA
 #define NS_NLA 15
 #endif
@@ -687,9 +689,12 @@ purple_network_is_available(void)
 
 	return FALSE;
 
-#elif defined _WIN32
+#elif 0
 	return (current_network_count > 0);
 #else
+	if (available_callback)
+		return (available_callback());
+
 	return TRUE;
 #endif
 }
@@ -786,7 +791,7 @@ purple_network_init(void)
 #ifdef HAVE_NETWORKMANAGER
 	GError *error = NULL;
 #endif
-#ifdef _WIN32
+#if 0
 	GError *err = NULL;
 	gint cnt = wpurple_get_connected_network_count();
 
@@ -860,7 +865,7 @@ purple_network_uninit(void)
 		dbus_g_connection_unref(nm_conn);
 #endif
 
-#ifdef _WIN32
+#if 0
 	g_static_mutex_lock(&mutex);
 	network_initialized = FALSE;
 	if (network_change_handle != NULL) {
@@ -883,4 +888,16 @@ purple_network_uninit(void)
 #endif
 	purple_signal_unregister(purple_network_get_handle(),
 							 "network-configuration-changed");
+}
+
+void
+purple_network_configuration_changed(void)
+{
+	purple_signal_emit(purple_network_get_handle(), "network-configuration-changed", NULL);
+}
+
+void
+purple_network_set_available_callback(network_available_callback cb)
+{
+	available_callback = cb;
 }

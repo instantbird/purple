@@ -96,6 +96,7 @@ CPPSRCS		= \
 		purpleGListEnumerator.cpp \
 		purpleMessage.cpp \
 		purpleModule.cpp \
+		purpleNetwork.cpp \
 		purplePref.cpp \
 		purpleProtocol.cpp \
 		purpleProxy.cpp \

@@ -224,6 +224,24 @@ void purple_network_init(void);
  */
 void purple_network_uninit(void);
 
+/**
+ * Emits the network-configuration-changed signal
+ */
+void
+purple_network_configuration_changed(void);
+
+/**
+ * Function pointer to a function indicating if network is available
+ */
+typedef gboolean (*network_available_callback)(void);
+
+/**
+ * Sets the callback function to be used to query the UI about the
+ * availability of the network.
+ */
+void
+purple_network_set_available_callback(network_available_callback cb);
+
 /*@}*/
 
 #ifdef __cplusplus
