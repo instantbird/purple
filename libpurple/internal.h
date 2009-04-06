@@ -97,7 +97,7 @@
 #include <langinfo.h>
 #endif
 
-#include <gutils.h>
+#include <glib/gutils.h>
 
 #ifdef PURPLE_PLUGINS
 # include <gmodule.h>
