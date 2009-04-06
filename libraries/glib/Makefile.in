@@ -132,7 +132,6 @@ EXPORTS		= \
 		ghook.h \
 		giochannel.h \
 		gtestutils.h \
-		gspawn.h \
 		gslice.h \
 		gunidecomp.h \
 		config.h \
@@ -202,11 +201,8 @@ CSRCS		= \
 #		gobject/gmarshal.c		\
 #		gobject/gsourceclosure.c	\
 
-ifneq ($(OS_ARCH),WINNT)
-CSRCS		+= gspawn.c
-else
+ifeq ($(OS_ARCH),WINNT)
 CSRCS		+= \
-		gspawn-win32.c \
 		giowin32.c \
 		giochannel.c \
 		gwin32.c \

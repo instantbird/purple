@@ -68,7 +68,6 @@
 #include <glib/gsequence.h>
 #include <glib/gshell.h>
 #include <glib/gslist.h>
-#include <glib/gspawn.h>
 #include <glib/gstrfuncs.h>
 #include <glib/gstring.h>
 #include <glib/gtestutils.h>

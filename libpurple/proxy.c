@@ -215,6 +215,7 @@ purple_global_proxy_set_info(PurpleProxyInfo *info)
 	global_proxy_info = info;
 }
 
+#if 0
 static PurpleProxyInfo *
 purple_gnome_proxy_get_info(void)
 {
@@ -363,6 +364,7 @@ purple_gnome_proxy_get_info(void)
 
 	return &info;
 }
+#endif
 
 #ifdef _WIN32
 
