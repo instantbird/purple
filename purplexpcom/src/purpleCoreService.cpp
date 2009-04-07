@@ -38,6 +38,7 @@
 #include "purpleCoreService.h"
 #include "purpleDNS.h"
 #include "purpleGetText.h"
+#include "purpleNetwork.h"
 #include "purpleStorage.h"
 #include "purpleSockets.h"
 #include "purpleTimer.h"
@@ -120,6 +121,7 @@ NS_IMETHODIMP purpleCoreService::Init()
   NS_ASSERTION(nssComponent, "Failed to initialize NSS");
 
   purpleSocketWatcher::init();
+  purpleNetworkObserver::init();
   purpleDNS::init();
   purpleTimer::init();
 
@@ -460,6 +462,7 @@ NS_IMETHODIMP purpleCoreService::Quit()
                         // handlers are removed properly
   purpleStorage::unInit();
   purpleSocketWatcher::unInit();
+  purpleNetworkObserver::unInit();
   purpleDNS::unInit();
   purpleTimer::unInit();
   purpleGetText::unInit();
