@@ -39,7 +39,9 @@ static GSList *loggers = NULL;
 
 static PurpleLogLogger *html_logger;
 static PurpleLogLogger *txt_logger;
+#if 0
 static PurpleLogLogger *old_logger;
+#endif
 
 struct _purple_logsize_user {
 	char *name;
@@ -57,12 +59,14 @@ static GList *html_logger_list_syslog(PurpleAccount *account);
 static char *html_logger_read(PurpleLog *log, PurpleLogReadFlags *flags);
 static int html_logger_total_size(PurpleLogType type, const char *name, PurpleAccount *account);
 
+#if 0
 static GList *old_logger_list(PurpleLogType type, const char *sn, PurpleAccount *account);
 static int old_logger_total_size(PurpleLogType type, const char *name, PurpleAccount *account);
 static char * old_logger_read (PurpleLog *log, PurpleLogReadFlags *flags);
 static int old_logger_size (PurpleLog *log);
 static void old_logger_get_log_sets(PurpleLogSetCallback cb, GHashTable *sets);
 static void old_logger_finalize(PurpleLog *log);
+#endif
 
 static gsize txt_logger_write(PurpleLog *log,
 							 PurpleMessageFlags type,
@@ -622,6 +626,7 @@ void purple_log_init(void)
 									 purple_log_common_is_deletable);
 	purple_log_logger_add(txt_logger);
 
+#if 0
 	old_logger = purple_log_logger_new("old", _("Old flat format"), 9,
 									 NULL,
 									 NULL,
@@ -633,6 +638,7 @@ void purple_log_init(void)
 									 NULL,
 									 old_logger_get_log_sets);
 	purple_log_logger_add(old_logger);
+#endif
 
 	purple_signal_register(handle, "log-timestamp",
 #if SIZEOF_TIME_T == 4
@@ -676,9 +682,11 @@ purple_log_uninit(void)
 	purple_log_logger_free(txt_logger);
 	txt_logger = NULL;
 
+#if 0
 	purple_log_logger_remove(old_logger);
 	purple_log_logger_free(old_logger);
 	old_logger = NULL;
+#endif
 }
 
 /****************************************************************************
@@ -1584,6 +1592,7 @@ static int txt_logger_total_size(PurpleLogType type, const char *name, PurpleAcc
 }
 
 
+#if 0
 /****************
  * OLD LOGGER ***
  ****************/
@@ -1992,3 +2001,4 @@ static void old_logger_finalize(PurpleLog *log)
 	purple_stringref_unref(data->pathref);
 	g_slice_free(struct old_logger_data, data);
 }
+#endif
