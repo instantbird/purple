@@ -2840,6 +2840,7 @@ purple_util_read_xml_from_file(const char *filename, const char *description)
 	return node;
 }
 
+#if 0
 /*
  * Like mkstemp() but returns a file pointer, uses a pre-set template,
  * uses the semantics of tempnam() for the directory to use and allocates
@@ -2888,6 +2889,7 @@ purple_mkstemp(char **fpath, gboolean binary)
 
 	return fp;
 }
+#endif
 
 const char *
 purple_util_get_image_extension(gconstpointer data, size_t len)
