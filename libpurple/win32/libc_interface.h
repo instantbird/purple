@@ -138,7 +138,7 @@ wpurple_gethostname( name, size )
 
 /* sys/time.h */
 #define gettimeofday( timeval, timezone ) \
-wpurple_gettimeofday( timeval, timezone )
+  g_get_current_time( timeval )
 
 /* stdio.h */
 #define snprintf _snprintf
