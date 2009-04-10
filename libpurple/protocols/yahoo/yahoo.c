@@ -51,6 +51,10 @@
 #include "yahoo_picture.h"
 #include "ycht.h"
 
+#ifdef leave
+# undef leave
+#endif
+
 /* #define YAHOO_DEBUG */
 
 /* #define TRY_WEBMESSENGER_LOGIN 0 */
