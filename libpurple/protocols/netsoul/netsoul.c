@@ -306,7 +306,7 @@ static void netsoul_got_photo (PurpleUtilFetchUrlData *url, void *user_data,
   if (gc == NULL)
     return;
 
-  purple_debug_info("netsoul", "netsoul_got_photo (size: %d) for %s\n",
+  purple_debug_info("netsoul", "netsoul_got_photo (size: %" G_GSIZE_FORMAT ") for %s\n",
 		    len,
 		    gb->name);
 
