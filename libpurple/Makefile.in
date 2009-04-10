@@ -110,10 +110,8 @@ EXPORTS		= \
 		core.h \
 		dbus-maybe.h \
 		debug.h \
-		desktopitem.h \
 		eventloop.h \
 		ft.h \
-		gaim-compat.h \
 		gettext.h \
 		idle.h \
 		imgstore.h \
@@ -214,8 +212,6 @@ CSRCS		= \
 		whiteboard.c \
 		ssl-nss.c \
 		$(NULL)
-#		desktopitem.c
-#		certificate.c
 
 ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 CSRCS		+= \
