@@ -27,9 +27,6 @@ typedef struct _NMSSLConn NMSSLConn;
 #include "nmfield.h"
 #include "nmuser.h"
 
-typedef int (*nm_ssl_read_cb) (gpointer ssl_data, void *buff, int len);
-typedef int (*nm_ssl_write_cb) (gpointer ssl_data, const void *buff, int len);
-
 struct _NMConn
 {
 
@@ -58,19 +55,7 @@ struct _NMConn
 	gboolean redirect;
 
 	/* SSL connection  */
-	NMSSLConn *ssl_conn;
-
-};
-
-struct _NMSSLConn
-{
-
-	/*  Data to pass to the callbacks */
-	gpointer data;
-
-	/* Callbacks for reading/writing */
-	nm_ssl_read_cb read;
-	nm_ssl_write_cb write;
+	gpointer ssl_conn;
 
 };
 

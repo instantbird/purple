@@ -1672,7 +1672,7 @@ novell_ssl_connect_error(PurpleSslConnection * gsc,
 
 	gc = data;
 	user = gc->proto_data;
-	user->conn->ssl_conn->data = NULL;
+	user->conn->ssl_conn = NULL;
 
 	purple_connection_ssl_error (gc, error);
 }
@@ -2201,14 +2201,10 @@ novell_login(PurpleAccount * account)
 
 		user->conn->use_ssl = TRUE;
 
-		user->conn->ssl_conn = g_new0(NMSSLConn, 1);
-		user->conn->ssl_conn->read = (nm_ssl_read_cb) purple_ssl_read;
-		user->conn->ssl_conn->write = (nm_ssl_write_cb) purple_ssl_write;
-
-		user->conn->ssl_conn->data = purple_ssl_connect(user->client_data,
-													  user->conn->addr, user->conn->port,
-													  novell_ssl_connected_cb, novell_ssl_connect_error, gc);
-		if (user->conn->ssl_conn->data == NULL) {
+		user->conn->ssl_conn = purple_ssl_connect(user->client_data,
+		                                          user->conn->addr, user->conn->port,
+		                                          novell_ssl_connected_cb, novell_ssl_connect_error, gc);
+		if (user->conn->ssl_conn == NULL) {
 			purple_connection_error_reason (gc,
 				PURPLE_CONNECTION_ERROR_NO_SSL_SUPPORT,
 				_("Error. SSL support is not installed."));
@@ -2229,7 +2225,8 @@ novell_close(PurpleConnection * gc)
 	if (user) {
 		conn = user->conn;
 		if (conn && conn->ssl_conn) {
-			purple_ssl_close(user->conn->ssl_conn->data);
+			purple_ssl_close(user->conn->ssl_conn);
+			user->conn->ssl_conn = NULL;
 		}
 		nm_deinitialize_user(user);
 	}
