@@ -676,7 +676,6 @@ purple_util_write_data_to_file_absolute(const char *filename_full, const char *d
 xmlnode *purple_util_read_xml_from_file(const char *filename,
 									  const char *description);
 
-#if 0
 /**
  * Creates a temporary file and returns a file pointer to it.
  *
@@ -693,8 +692,7 @@ xmlnode *purple_util_read_xml_from_file(const char *filename,
  *
  * @return A file pointer to the temporary file, or @c NULL on failure.
  */
-FILE *purple_mkstemp(char **path, gboolean binary);
-#endif
+/* FILE *purple_mkstemp(char **path, gboolean binary); */
 
 /**
  * Returns an extension corresponding to the image data's file type.

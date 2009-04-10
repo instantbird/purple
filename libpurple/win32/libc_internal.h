@@ -124,7 +124,7 @@ struct timezone {
 	int tz_minuteswest;
 	int tz_dsttime;
 };
-int wpurple_gettimeofday(struct timeval *p, struct timezone *z);
+/* int wpurple_gettimeofday(struct timeval *p, struct timezone *z); */
 
 /* time.h */
 struct tm *wpurple_localtime_r(const time_t *time, struct tm *resultp);
