@@ -34,18 +34,13 @@ extern "C" {
 #endif /* __cplusplus */
 
 #ifdef _MSC_VER
-#ifdef S_IRUSR
 #define S_IRUSR S_IREAD
 #define S_IWUSR S_IWRITE
 #define S_IXUSR S_IEXEC
-#else
-/* these defines are only used for the mode argument of g_mkdir, which is unused in the WIN32 implementation.*/
-#define S_IRUSR 0
-#define S_IWUSR 0
-#define S_IXUSR 0
-#endif
 
+#ifndef S_ISDIR
 #define S_ISDIR(m)	 (((m)&S_IFDIR)==S_IFDIR)
+#endif
 
 #define F_OK 0
 #endif
