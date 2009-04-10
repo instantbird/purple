@@ -46,6 +46,8 @@
 #include <nsXPCOM.h>
 #include <nsStringAPI.h>
 #include <nsCOMPtr.h>
+#include <nsIDocument.h>
+#include <nsIDOMDocument.h>
 
 #ifdef PR_LOGGING
 //
@@ -230,4 +232,16 @@ void purpleConversation::NotifyObservers(nsISupports *aSubject,
        mId, aTopic));
   for (PRInt32 i = 0; i < mObservers.Count(); ++i)
     mObservers[i]->Observe(aSubject, aTopic, aData);
+}
+
+/* void setBaseURI (in nsIDOMDocument aDocument, in nsIURI aURI); */
+NS_IMETHODIMP purpleConversation::SetBaseURI(nsIDOMDocument *aDocument, nsIURI *aURI)
+{
+  NS_ENSURE_ARG_POINTER(aDocument);
+  NS_ENSURE_ARG_POINTER(aURI);
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDocument);
+  nsresult rv = doc->SetBaseURI(aURI);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
 }

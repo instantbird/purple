@@ -75,6 +75,7 @@ nsresult purpleMessage::Init(PurpleConversation *conv, const char *who, const ch
   mWho = who;
   mAlias = alias;
   mMessage = message;
+  mOriginalMessage = mMessage;
   mFlags = flags;
   mTime = mtime;
   return NS_OK;
@@ -93,12 +94,21 @@ PURPLE_IMPL_GETSTRING(Who, mWho)
 /* readonly attribute AUTF8String alias; */
 PURPLE_IMPL_GETSTRING(Alias, mAlias)
 
-/* readonly attribute AUTF8String message; */
+/* readonly attribute AUTF8String time; */
+PURPLE_IMPL_GETSTRING(Time, purple_utf8_strftime("%H:%M:%S",
+                                                 localtime(&mTime)))
+
+/* readonly attribute AUTF8String originalMessage; */
+PURPLE_IMPL_GETSTRING(OriginalMessage, mOriginalMessage)
+
+/*          attribute AUTF8String message; */
 PURPLE_IMPL_GETSTRING(Message, mMessage)
 
-/* readonly attribute AUTF8String time; */
-PURPLE_IMPL_GETSTRING(Time, purple_utf8_strftime("(%H:%M:%S)",
-                                                 localtime(&mTime)))
+NS_IMETHODIMP purpleMessage::SetMessage(nsACString const& aMessage)
+{
+  mMessage = aMessage;
+  return NS_OK;
+}
 
 /* readonly attribute purpleIConversation conversation; */
 NS_IMETHODIMP purpleMessage::GetConversation(purpleIConversation * *aConversation)

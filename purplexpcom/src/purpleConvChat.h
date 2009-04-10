@@ -80,6 +80,10 @@ public:
   // Keep the SendMsg method here
   NS_SCRIPTABLE NS_IMETHOD SendMsg(const nsACString & aMsg);
 
+  NS_SCRIPTABLE NS_IMETHOD SetBaseURI(nsIDOMDocument *aDocument, nsIURI *aURI) {
+    return purpleConversation::SetBaseURI(aDocument, aURI);
+  }
+
   purpleConvChat();
 
 private:

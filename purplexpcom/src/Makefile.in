@@ -55,6 +55,7 @@ REQUIRES	= \
 		dom \
 		necko \
 		intl \
+		layout \
 		storage \
 		widget \
 		xulapp \

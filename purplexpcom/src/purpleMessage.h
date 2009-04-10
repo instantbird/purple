@@ -69,6 +69,7 @@ private:
 protected:
   /* additional members */
   PurpleConversation *mConv;
+  nsCString mOriginalMessage;
   nsCString mMessage;
   nsCString mWho, mAlias;
   PurpleMessageFlags mFlags;
