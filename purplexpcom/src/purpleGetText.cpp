@@ -43,6 +43,7 @@
 #include <nsServiceManagerUtils.h>
 #include <nsComponentManagerUtils.h>
 #include <nsNetCID.h>
+#include <nsNetUtil.h>
 
 #ifdef PR_LOGGING
 //
@@ -308,12 +309,51 @@ PRInt32 purpleGetText::GetPackageIndex(const char *package)
 {
   // Attempt to find the index
   for (PRUint32 i = 0; i < mStringCache.Length(); ++i)
-    if (mStringCache[i].lang.Equals(package))
+    if (mStringCache[i].packageName.Equals(package)) {
+      // If we have an entry but the hashtable isn't initialized,
+      // it means that the translation bundle for this package is
+      // missing. The error value will make the translation code
+      // return early.
+      if (!mStringCache[i].table.IsInitialized())
+        return -1;
       return i;
+    }
 
   // Create the new package
   LangStringCache *pack = mStringCache.AppendElement();
-  pack->lang = package;
+  pack->packageName = package;
+
+  // check if the translation bundle exists.
+  nsCString propFileName("chrome://");
+  propFileName.Append(package);
+  propFileName.Append("/locale/prpl.properties");
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), propFileName);
+  NS_ENSURE_SUCCESS(rv, -1);
+
+  nsCOMPtr<nsIChromeRegistry> chromeRegistry =
+    do_GetService(NS_CHROMEREGISTRY_CONTRACTID);
+  NS_ENSURE_TRUE(chromeRegistry, -1);
+
+  nsCOMPtr<nsIURI> resolvedURI;
+  rv = chromeRegistry->ConvertChromeURL(uri, getter_AddRefs(resolvedURI));
+  if (NS_FAILED(rv)) {
+    // this prpl doesn't provide a translation bundle
+#ifdef DEBUG
+    nsCString warning("Missing translation file: ");
+    warning.Append(propFileName);
+    NS_WARNING(warning.get());
+#endif
+
+    // We don't initialize the hashtable, so that next time we are
+    // called for the same package we can detect it and return early
+
+    // return -1 to indicate a failure.
+    return -1;
+  }
+
+  // The translation file exists, init the hashtable and return the new index
   pack->table.Init();
   return mStringCache.Length() - 1;
 }
@@ -329,7 +369,10 @@ const char *purpleGetText::GetText(const char *package,
 
   LOG(("purple_get_text(package = %s, %s)", package, string));
   PRInt32 packageIndex = sInstance->GetPackageIndex(package);
-  NS_ENSURE_TRUE(packageIndex != -1, string);
+  // We don't use NS_ENSURE_TRUE here so that we don't print a warning
+  // each time a translation from a missing file is requested
+  if (packageIndex == -1)
+    return string;
 
   // check if we can get it from the hashtable
   nsTArray<nsCString> *array = nsnull;
@@ -394,7 +437,10 @@ const char *purpleGetText::GetPluralText(const char *package,
   NS_ENSURE_TRUE(form < sInstance->mPluralRule->nbForms, defaultResult);
 
   PRInt32 packageIndex = sInstance->GetPackageIndex(package);
-  NS_ENSURE_TRUE(packageIndex != -1, defaultResult);
+  // We don't use NS_ENSURE_TRUE here so that we don't print a warning
+  // each time a translation from a missing file is requested
+  if (packageIndex == -1)
+    return defaultResult;
 
   // check if we can get it from the hashtable
   nsTArray<nsCString> *array;
@@ -493,7 +539,8 @@ void purpleGetText::unInit()
 
   LOG(("purpleGetText::unInit\n"));
   for (PRUint32 i = 0; i < sInstance->mStringCache.Length(); ++i)
-    sInstance->mStringCache[i].table.Enumerate(deleteEnumerator, nsnull);
+    if (sInstance->mStringCache[i].table.IsInitialized())
+      sInstance->mStringCache[i].table.Enumerate(deleteEnumerator, nsnull);
 
   NS_RELEASE(sInstance);
   sInstance = nsnull;

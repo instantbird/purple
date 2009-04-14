@@ -69,7 +69,7 @@ class purpleGetText : public nsIObserver
   static purpleGetText *sInstance;
 
   struct LangStringCache {
-    nsCString lang;
+    nsCString packageName;
     nsDataHashtable<nsCStringHashKey, nsTArray<nsCString> *> table;
   };
 
