@@ -40,6 +40,8 @@
 #include <nsCOMPtr.h>
 #include <nsComponentManagerUtils.h>
 #include <nsArrayEnumerator.h>
+#include <nsNetUtil.h>
+#include <nsIChromeRegistry.h>
 
 //#define CREATE_PRPL_PROPERTIES
 #ifdef CREATE_PRPL_PROPERTIES
@@ -117,6 +119,34 @@ NS_IMETHODIMP purpleProtocol::GetId(nsACString& aId)
   NS_ENSURE_TRUE(mInfo, NS_ERROR_NOT_INITIALIZED);
 
   aId = mInfo->id;
+  return NS_OK;
+}
+
+/* readonly attribute AUTF8String iconBaseURI; */
+NS_IMETHODIMP purpleProtocol::GetIconBaseURI(nsACString& aIconBaseURI)
+{
+  NS_ENSURE_TRUE(mInfo, NS_ERROR_NOT_INITIALIZED);
+
+  nsCString spec("chrome://");
+  spec.Append(mInfo->id);
+  spec.Append("/skin/");
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), spec);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIChromeRegistry> chromeRegistry =
+    do_GetService(NS_CHROMEREGISTRY_CONTRACTID);
+  NS_ENSURE_TRUE(chromeRegistry, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIURI> resolvedURI;
+  rv = chromeRegistry->ConvertChromeURL(uri, getter_AddRefs(resolvedURI));
+  if (NS_SUCCEEDED(rv))
+    aIconBaseURI = spec;
+  else {
+    // this prpl doesn't provide icons, use the generic ones
+    aIconBaseURI = "chrome://instantbird/skin/prpl-generic/";
+  }
+
   return NS_OK;
 }
 
