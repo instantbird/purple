@@ -52,6 +52,8 @@ void g_on_error_stack_trace (const gchar *prg_name);
 #  define G_BREAKPOINT()	G_STMT_START{ __asm int 3h }G_STMT_END
 #elif defined (__alpha__) && !defined(__osf__) && defined (__GNUC__) && __GNUC__ >= 2
 #  define G_BREAKPOINT()	G_STMT_START{ __asm__ __volatile__ ("bpt"); }G_STMT_END
+#elif defined (WINCE)
+#  define G_BREAKPOINT()
 #else	/* !__i386__ && !__alpha__ */
 #  define G_BREAKPOINT()	G_STMT_START{ raise (SIGTRAP); }G_STMT_END
 #endif	/* __i386__ */

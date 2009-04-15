@@ -40,6 +40,9 @@
 #define _WIN32_WINDOWS 0x0401 /* to get IsDebuggerPresent */
 #include <windows.h>
 #undef STRICT
+#ifdef WINCE
+# define IsDebuggerPresent() 0
+#endif
 
 #include <process.h>
 #include <stdlib.h>
