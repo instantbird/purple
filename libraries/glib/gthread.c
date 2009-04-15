@@ -599,8 +599,14 @@ gettime (void)
 #ifdef G_OS_WIN32
   guint64 v;
 
+#ifdef WINCE
+  SYSTEMTIME st;
+  GetSystemTime (&st);
+  SystemTimeToFileTime (&st, (FILETIME *)&v);
+#else
   /* Returns 100s of nanoseconds since start of 1601 */
   GetSystemTimeAsFileTime ((FILETIME *)&v);
+#endif
 
   /* Offset to Unix epoch */
   v -= G_GINT64_CONSTANT (116444736000000000);

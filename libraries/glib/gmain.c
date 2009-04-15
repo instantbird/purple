@@ -1652,7 +1652,13 @@ g_get_current_time (GTimeVal *result)
   FILETIME ft;
   guint64 *time64 = (guint64 *) &ft;
 
+#ifdef WINCE
+  SYSTEMTIME st;
+  GetSystemTime (&st);
+  SystemTimeToFileTime (&st, &ft);
+#else
   GetSystemTimeAsFileTime (&ft);
+#endif
 
   /* Convert from 100s of nanoseconds since 1601-01-01
    * to Unix epoch. Yes, this is Y2038 unsafe.
