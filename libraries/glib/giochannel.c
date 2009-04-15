@@ -35,6 +35,9 @@
 
 #include <string.h>
 #include <errno.h>
+#ifndef EILSEQ
+# define EILSEQ 42
+#endif
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>

@@ -61,6 +61,18 @@
 
 #define STATIC_STRLEN(arr) (sizeof(arr) - 1)
 
+#ifdef WINCE
+int*
+static _errno(void)
+{
+    return &errno;
+}
+#endif
+
+#ifndef EILSEQ
+# define EILSEQ 42
+#endif
+
 typedef unsigned char uchar;
 typedef unsigned short ushort;
 typedef unsigned int uint;
