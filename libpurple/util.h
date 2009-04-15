@@ -734,7 +734,7 @@ char *purple_util_get_image_filename(gconstpointer image_data, size_t image_len)
  *
  * @return TRUE if the program is runable.
  */
-gboolean purple_program_is_valid(const char *program);
+/* gboolean purple_program_is_valid(const char *program); */
 
 /**
  * Check if running GNOME.

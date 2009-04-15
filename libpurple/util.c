@@ -2951,6 +2951,7 @@ purple_util_get_image_filename(gconstpointer image_data, size_t image_len)
 	return filename;
 }
 
+#if 0
 gboolean
 purple_program_is_valid(const char *program)
 {
@@ -2982,7 +2983,7 @@ purple_program_is_valid(const char *program)
 
 	return is_valid;
 }
-
+#endif
 
 gboolean
 purple_running_gnome(void)

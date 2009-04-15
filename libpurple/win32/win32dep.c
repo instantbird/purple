@@ -447,6 +447,7 @@ void wpurple_init(void) {
 		WSACleanup();
 	}
 
+#if 0
 	/* Set Environmental Variables */
 	/* Tell perl where to find Purple's perl modules */
 	perlenv = g_getenv("PERL5LIB");
@@ -457,6 +458,7 @@ void wpurple_init(void) {
 	if (!g_setenv("PERL5LIB", newenv, TRUE))
 		purple_debug_warning("wpurple", "putenv failed for PERL5LIB\n");
 	g_free(newenv);
+#endif
 
 	purple_debug_info("wpurple", "wpurple_init end\n");
 }

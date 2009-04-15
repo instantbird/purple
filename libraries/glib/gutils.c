@@ -88,6 +88,7 @@
 #endif /* G_PLATFORM_WIN32 */
 
 #ifdef G_OS_WIN32
+#  include <winsock.h> /* For gethostname */
 #  include <direct.h>
 #  include <shlobj.h>
    /* older SDK (e.g. msvc 5.0) does not have these*/
@@ -337,7 +338,7 @@ my_strchrnul (const gchar *str,
   return p;
 }
 
-#ifdef G_OS_WIN32
+#if 0
 
 static gchar *inner_find_program_in_path (const gchar *program);
 
@@ -386,7 +387,6 @@ g_find_program_in_path (const gchar *program)
     return inner_find_program_in_path (program);
 }
 
-#endif
 
 /**
  * g_find_program_in_path:
@@ -569,6 +569,7 @@ g_find_program_in_path (const gchar *program)
 
   return NULL;
 }
+#endif
 
 static gboolean
 debug_key_matches (const gchar *key,
@@ -942,6 +943,7 @@ g_path_get_dirname (const gchar	   *file_name)
   return base;
 }
 
+#if 0
 /**
  * g_get_current_dir:
  *
@@ -1019,6 +1021,7 @@ g_get_current_dir (void)
   return dir;
 #endif /* !Win32 */
 }
+#endif
 
 /**
  * g_getenv:
@@ -1143,6 +1146,7 @@ _g_getenv_nomalloc (const gchar *variable,
   return NULL;
 }
 
+#if 0
 /**
  * g_setenv:
  * @variable: the environment variable to set, must not contain '='.
@@ -1402,25 +1406,27 @@ g_listenv (void)
   return result;
 #endif
 }
+#endif
 
 G_LOCK_DEFINE_STATIC (g_utils_global);
 
-static	gchar	*g_tmp_dir = NULL;
+/* static	gchar	*g_tmp_dir = NULL; */
 static	gchar	*g_user_name = NULL;
 static	gchar	*g_real_name = NULL;
-static	gchar	*g_home_dir = NULL;
+/* static	gchar	*g_home_dir = NULL; */
 static	gchar	*g_host_name = NULL;
 
 #ifdef G_OS_WIN32
 /* System codepage versions of the above, kept at file level so that they,
  * too, are produced only once.
  */
-static	gchar	*g_tmp_dir_cp = NULL;
+/* static	gchar	*g_tmp_dir_cp = NULL; */
 static	gchar	*g_user_name_cp = NULL;
 static	gchar	*g_real_name_cp = NULL;
-static	gchar	*g_home_dir_cp = NULL;
+/* static	gchar	*g_home_dir_cp = NULL; */
 #endif
 
+#if 0
 static  gchar   *g_user_data_dir = NULL;
 static  gchar  **g_system_data_dirs = NULL;
 static  gchar   *g_user_cache_dir = NULL;
@@ -1481,6 +1487,7 @@ get_windows_directory_root (void)
 }
 
 #endif
+#endif
 
 /* HOLDS: g_utils_global_lock */
 static void
@@ -1488,6 +1495,7 @@ g_get_any_init_do (void)
 {
   gchar hostname[100];
 
+#if 0
   g_tmp_dir = g_strdup (g_getenv ("TMPDIR"));
   if (!g_tmp_dir)
     g_tmp_dir = g_strdup (g_getenv ("TMP"));
@@ -1514,7 +1522,7 @@ g_get_any_init_do (void)
       g_tmp_dir = g_strdup ("/tmp");
     }
 #endif	/* !G_OS_WIN32 */
-  
+
 #ifdef G_OS_WIN32
   /* We check $HOME first for Win32, though it is a last resort for Unix
    * where we prefer the results of getpwuid().
@@ -1555,7 +1563,8 @@ g_get_any_init_do (void)
   if (!g_home_dir)
     g_home_dir = get_windows_directory_root ();
 #endif /* G_OS_WIN32 */
-  
+#endif
+ 
 #ifdef HAVE_PWD_H
   {
     struct passwd *pw = NULL;
@@ -1666,8 +1675,10 @@ g_get_any_init_do (void)
 	    g_strfreev (name_parts);
 	  }
 
+#if 0
 	if (!g_home_dir)
 	  g_home_dir = g_strdup (pw->pw_dir);
+#endif
       }
     g_free (buffer);
   }
@@ -1679,7 +1690,7 @@ g_get_any_init_do (void)
     guint len = UNLEN+1;
     wchar_t buffer[UNLEN+1];
     
-    if (GetUserNameW (buffer, (LPDWORD) &len))
+    if (GetUserNameExW (NameSamCompatible, buffer, (LPDWORD) &len))
       {
 	g_user_name = g_utf16_to_utf8 (buffer, -1, NULL, NULL, NULL);
 	g_real_name = g_strdup (g_user_name);
@@ -1689,7 +1700,7 @@ g_get_any_init_do (void)
 
 #endif /* !HAVE_PWD_H */
 
-#ifndef G_OS_WIN32
+#if 0
   if (!g_home_dir)
     g_home_dir = g_strdup (g_getenv ("HOME"));
 #endif
@@ -1704,7 +1715,7 @@ g_get_any_init_do (void)
     g_real_name = g_strdup ("Unknown");
 
   {
-#ifndef G_OS_WIN32
+#if 1
     gboolean hostname_fail = (gethostname (hostname, sizeof (hostname)) == -1);
 #else
     DWORD size = sizeof (hostname);
@@ -1714,17 +1725,22 @@ g_get_any_init_do (void)
   }
 
 #ifdef G_OS_WIN32
+#if 0
   g_tmp_dir_cp = g_locale_from_utf8 (g_tmp_dir, -1, NULL, NULL, NULL);
+#endif
   g_user_name_cp = g_locale_from_utf8 (g_user_name, -1, NULL, NULL, NULL);
   g_real_name_cp = g_locale_from_utf8 (g_real_name, -1, NULL, NULL, NULL);
 
+#if 0
   if (!g_tmp_dir_cp)
     g_tmp_dir_cp = g_strdup ("\\");
+#endif
   if (!g_user_name_cp)
     g_user_name_cp = g_strdup ("somebody");
   if (!g_real_name_cp)
     g_real_name_cp = g_strdup ("Unknown");
 
+#if 0
   /* home_dir might be NULL, unlike tmp_dir, user_name and
    * real_name.
    */
@@ -1732,13 +1748,14 @@ g_get_any_init_do (void)
     g_home_dir_cp = g_locale_from_utf8 (g_home_dir, -1, NULL, NULL, NULL);
   else
     g_home_dir_cp = NULL;
+#endif
 #endif /* G_OS_WIN32 */
 }
 
 static inline void
 g_get_any_init (void)
 {
-  if (!g_tmp_dir)
+  if (!g_user_name)
     g_get_any_init_do ();
 }
 
@@ -1786,6 +1803,7 @@ g_get_real_name (void)
   return g_real_name;
 }
 
+#if 0
 /**
  * g_get_home_dir:
  *
@@ -1842,6 +1860,7 @@ g_get_tmp_dir (void)
   g_get_any_init_locked ();
   return g_tmp_dir;
 }
+#endif
 
 /**
  * g_get_host_name:
@@ -2004,6 +2023,7 @@ g_set_application_name (const gchar *application_name)
     g_warning ("g_set_application() name called multiple times");
 }
 
+#if 0
 /**
  * g_get_user_data_dir:
  * 
@@ -2710,6 +2730,7 @@ g_get_system_config_dirs (void)
 
   return (G_CONST_RETURN gchar * G_CONST_RETURN *) conf_dir_vector;
 }
+#endif
 
 #ifndef G_OS_WIN32
 
@@ -3244,6 +3265,7 @@ glib_gettext (const gchar *str)
 
 #undef g_find_program_in_path
 
+#if 0
 gchar*
 g_find_program_in_path (const gchar *program)
 {
@@ -3270,6 +3292,7 @@ g_get_current_dir (void)
   g_free (utf8_dir);
   return dir;
 }
+#endif
 
 #undef g_getenv
 
@@ -3293,6 +3316,7 @@ g_getenv (const gchar *variable)
 
 #undef g_setenv
 
+#if 0
 gboolean
 g_setenv (const gchar *variable, 
 	  const gchar *value, 
@@ -3319,6 +3343,7 @@ g_unsetenv (const gchar *variable)
 
   g_free (utf8_variable);
 }
+#endif
 
 #undef g_get_user_name
 
@@ -3338,6 +3363,7 @@ g_get_real_name (void)
   return g_real_name_cp;
 }
 
+#if 0
 #undef g_get_home_dir
 
 G_CONST_RETURN gchar*
@@ -3355,6 +3381,7 @@ g_get_tmp_dir (void)
   g_get_any_init_locked ();
   return g_tmp_dir_cp;
 }
+#endif
 
 #endif
 
