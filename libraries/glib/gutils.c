@@ -1690,7 +1690,11 @@ g_get_any_init_do (void)
     guint len = UNLEN+1;
     wchar_t buffer[UNLEN+1];
     
+#ifndef WINCE
+    if (GetUserNameW (buffer, (LPDWORD) &len))
+#else
     if (GetUserNameExW (NameSamCompatible, buffer, (LPDWORD) &len))
+#endif
       {
 	g_user_name = g_utf16_to_utf8 (buffer, -1, NULL, NULL, NULL);
 	g_real_name = g_strdup (g_user_name);
