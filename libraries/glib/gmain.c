@@ -66,6 +66,9 @@
 #ifdef G_OS_WIN32
 #define STRICT
 #include <windows.h>
+#ifndef MWMO_ALERTABLE
+#define MWMO_ALERTABLE 2
+#endif
 #endif /* G_OS_WIN32 */
 
 #ifdef G_OS_BEOS
@@ -392,13 +395,14 @@ g_poll (GPollFD *fds,
        * -> Use WaitForMultipleObjectsEx
        */
 #ifdef G_MAIN_POLL_DEBUG
-      g_print ("WaitForMultipleObjectsEx(%d, %d)\n", nhandles, timeout);
+      g_print ("MsgWaitForMultipleObjectsEx(%d, %d)\n", nhandles, timeout);
 #endif
-      ready = WaitForMultipleObjectsEx (nhandles, handles, FALSE, timeout, TRUE);
+      ready = MsgWaitForMultipleObjectsEx (nhandles, handles, timeout,
+					   QS_ALLEVENTS, MWMO_ALERTABLE);
       if (ready == WAIT_FAILED)
 	{
 	  gchar *emsg = g_win32_error_message (GetLastError ());
-	  g_warning (G_STRLOC ": WaitForMultipleObjectsEx() failed: %s", emsg);
+	  g_warning (G_STRLOC ": MsgWaitForMultipleObjectsEx() failed: %s", emsg);
 	  g_free (emsg);
 	}
     }
@@ -415,8 +419,12 @@ g_poll (GPollFD *fds,
 
   if (ready == WAIT_FAILED)
     return -1;
+#ifndef WINCE
   else if (ready == WAIT_TIMEOUT ||
 	   ready == WAIT_IO_COMPLETION)
+#else
+  else if (ready == WAIT_TIMEOUT)
+#endif
     return 0;
   else if (poll_msgs && ready == WAIT_OBJECT_0 + nhandles)
     {
