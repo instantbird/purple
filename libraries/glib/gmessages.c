@@ -56,6 +56,7 @@
 #  undef STRICT
 #ifdef WINCE
 # define IsDebuggerPresent() 0
+# define getpid GetCurrentProcessId
 #endif
 #endif
 
