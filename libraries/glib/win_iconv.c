@@ -865,7 +865,7 @@ win_iconv(iconv_t _cd, const char **inbuf, size_t *inbytesleft, char **outbuf, s
 static csconv_t
 make_csconv(const char *_name)
 {
-    CPINFOEX cpinfoex;
+    CPINFO cpinfo;
     csconv_t cv;
     int use_compat = TRUE;
     char name[128];
@@ -920,12 +920,12 @@ make_csconv(const char *_name)
         cv.mblen = eucjp_mblen;
     }
     else if (IsValidCodePage(cv.codepage)
-            && GetCPInfoEx(cv.codepage, 0, &cpinfoex) != 0
-            && (cpinfoex.MaxCharSize == 1 || cpinfoex.MaxCharSize == 2))
+            && GetCPInfo(cv.codepage, &cpinfo) != 0
+            && (cpinfo.MaxCharSize == 1 || cpinfo.MaxCharSize == 2))
     {
         cv.mbtowc = kernel_mbtowc;
         cv.wctomb = kernel_wctomb;
-        if (cpinfoex.MaxCharSize == 1)
+        if (cpinfo.MaxCharSize == 1)
             cv.mblen = sbcs_mblen;
         else
             cv.mblen = dbcs_mblen;
