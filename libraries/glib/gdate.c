@@ -1433,7 +1433,11 @@ win32_strftime_helper (const GDate     *d,
   systemtime.wSecond = tm->tm_sec;
   systemtime.wMilliseconds = 0;
   
+#ifndef WINCE
   lcid = GetThreadLocale ();
+#else
+  lcid = GetUserDefaultLCID ();
+#endif
   result = g_array_sized_new (FALSE, FALSE, sizeof (wchar_t), MAX (128, strlen (format) * 2));
 
   p = format;

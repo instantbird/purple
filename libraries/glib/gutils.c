@@ -3178,7 +3178,7 @@ _g_utils_thread_init (void)
   g_get_language_names ();
 }
 
-#ifdef G_OS_WIN32
+#if 0
 
 /**
  * _glib_get_locale_dir:
@@ -3225,7 +3225,7 @@ _glib_get_locale_dir (void)
 
 #undef GLIB_LOCALE_DIR
 
-#endif /* G_OS_WIN32 */
+#endif
 
 /**
  * glib_gettext:

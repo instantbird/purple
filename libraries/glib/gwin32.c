@@ -58,7 +58,7 @@
 #include <sys/cygwin.h>
 #endif
 
-#ifndef G_WITH_CYGWIN
+#if 0
 
 gint
 g_win32_ftruncate (gint  fd,
@@ -108,7 +108,11 @@ g_win32_getlocale (void)
       || ((ev = getenv ("LANG")) != NULL && ev[0] != '\0'))
     return g_strdup (ev);
 
+#ifndef WINCE
   lcid = GetThreadLocale ();
+#else
+  lcid = GetUserDefaultLCID ();
+#endif
 
   if (!GetLocaleInfo (lcid, LOCALE_SISO639LANGNAME, iso639, sizeof (iso639)) ||
       !GetLocaleInfo (lcid, LOCALE_SISO3166CTRYNAME, iso3166, sizeof (iso3166)))
@@ -532,6 +536,7 @@ g_win32_get_package_installation_subdirectory (const gchar *package,
   return dirname;
 }
 
+#if 0
 static guint windows_version;
 
 static void 
@@ -634,6 +639,7 @@ g_win32_locale_filename_from_utf8 (const gchar *utf8filename)
     }
   return retval;
 }
+#endif
 
 #define __G_WIN32_C__
 #include "galiasdef.c"
