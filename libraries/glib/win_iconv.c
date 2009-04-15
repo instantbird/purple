@@ -62,8 +62,8 @@
 #define STATIC_STRLEN(arr) (sizeof(arr) - 1)
 
 #ifdef WINCE
-int*
-static _errno(void)
+static int*
+_errno(void)
 {
     return &errno;
 }
