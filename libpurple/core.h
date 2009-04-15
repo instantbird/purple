@@ -159,7 +159,7 @@ PurpleCoreUiOps *purple_core_get_ui_ops(void);
  * @return A boolean indicating success or migration failure. On failure,
  *         the application must display an error to the user and then exit.
  */
-gboolean purple_core_migrate(void);
+/* gboolean purple_core_migrate(void); */
 
 /**
  * Ensures that only one instance is running.  If libpurple is built with D-Bus

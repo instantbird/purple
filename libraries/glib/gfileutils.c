@@ -1292,6 +1292,7 @@ g_mkstemp (gchar *tmpl)
 
 #endif
 
+#if 0
 /**
  * g_file_open_tmp:
  * @tmpl: Template for file name, as in g_mkstemp(), basename only,
@@ -1433,6 +1434,7 @@ g_file_open_tmp (const gchar *tmpl,
   return retval;
 }
 
+#endif
 #endif
 
 static gchar *

@@ -413,6 +413,7 @@ move_and_symlink_dir(const char *path, const char *basename, const char *old_bas
 	return TRUE;
 }
 
+#if 0
 gboolean
 purple_core_migrate(void)
 {
@@ -781,6 +782,7 @@ purple_core_migrate(void)
 	g_free(status_file);
 	return TRUE;
 }
+#endif
 
 GHashTable* purple_core_get_ui_info() {
 	PurpleCoreUiOps *ops = purple_core_get_ui_ops();

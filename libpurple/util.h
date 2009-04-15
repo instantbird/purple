@@ -591,7 +591,7 @@ char * purple_markup_get_css_property(const gchar *style, const gchar *opt);
  *
  * @see purple_user_dir()
  */
-const gchar *purple_home_dir(void);
+/* const gchar *purple_home_dir(void); */
 
 /**
  * Returns the purple settings directory in the user's home directory.

@@ -484,6 +484,7 @@ schedule_accounts_save(void)
  * Reading from disk                                                 *
  *********************************************************************/
 
+#if 0
 static void
 parse_settings(xmlnode *node, PurpleAccount *account)
 {
@@ -882,6 +883,7 @@ parse_account(xmlnode *node)
 
 	return ret;
 }
+#endif
 
 static void
 load_accounts(void)
@@ -890,6 +892,7 @@ load_accounts(void)
 
 	accounts_loaded = TRUE;
 
+#if 0
 	node = purple_util_read_xml_from_file("accounts.xml", _("accounts"));
 
 	if (node == NULL)
@@ -906,6 +909,7 @@ load_accounts(void)
 	xmlnode_free(node);
 
 	_purple_buddy_icons_account_loaded_cb();
+#endif
 }
 
 

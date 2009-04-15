@@ -2508,6 +2508,7 @@ purple_markup_get_tag_name(const char *tag)
 /**************************************************************************
  * Path/Filename Functions
  **************************************************************************/
+#if 0
 const char *
 purple_home_dir(void)
 {
@@ -2517,17 +2518,14 @@ purple_home_dir(void)
 	return wpurple_data_dir();
 #endif
 }
+#endif
 
 /* Returns the argument passed to -c IFF it was present, or ~/.purple. */
 const char *
 purple_user_dir(void)
 {
-	if (custom_user_dir != NULL)
-		return custom_user_dir;
-	else if (!user_dir)
-		user_dir = g_build_filename(purple_home_dir(), ".purple", NULL);
-
-	return user_dir;
+	g_return_val_if_fail(custom_user_dir != NULL, NULL);
+	return custom_user_dir;
 }
 
 void purple_util_set_user_dir(const char *dir)
@@ -2988,7 +2986,7 @@ purple_program_is_valid(const char *program)
 gboolean
 purple_running_gnome(void)
 {
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(__APPLE__)
 	gchar *tmp = g_find_program_in_path("gnome-open");
 
 	if (tmp == NULL)
@@ -3006,7 +3004,7 @@ purple_running_gnome(void)
 gboolean
 purple_running_kde(void)
 {
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(__APPLE__)
 	gchar *tmp = g_find_program_in_path("kfmclient");
 	const char *session;
 
