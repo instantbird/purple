@@ -422,8 +422,10 @@ char *wpurple_read_reg_string(HKEY rootkey, const char *subkey, const char *valn
 void wpurple_init(void) {
 	WORD wVersionRequested;
 	WSADATA wsaData;
+#if 0
 	const char *perlenv;
 	char *newenv;
+#endif
 
 	if (!g_thread_supported())
 		g_thread_init(NULL);
