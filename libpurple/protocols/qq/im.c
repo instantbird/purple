@@ -42,6 +42,10 @@
 #include "send_file.h"
 #include "utils.h"
 
+#ifdef WINCE
+# include <search.h>
+#endif
+
 #define QQ_MSG_IM_MAX               700	/* max length of IM */
 
 enum {

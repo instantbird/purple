@@ -25,6 +25,9 @@
 #include <stddef.h>
 #include <string.h>
 #include <locale.h>
+#ifdef WINCE
+# include <search.h>
+#endif
 
 #include "glib.h"
 #include "gunichartables.h"
