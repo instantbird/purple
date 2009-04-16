@@ -177,10 +177,6 @@ PurpleConnectionUiOps connection_uiops = {
 };
 
 /*** Account uiops ***/
-#pragma GCC visibility push(default)
-typedef void (*GCallback) (void);
-#pragma GCC visibility pop
-
 static void *request_authorize(PurpleAccount *account, const char *remote_user,
                                const char *id, const char *alias,
                                const char *message, gboolean on_list, 
