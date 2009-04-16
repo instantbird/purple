@@ -31,6 +31,22 @@
 #include "galias.h"
 
 #ifdef _MSC_VER
+#ifdef WINCE
+/* strcoll and strxfrm are missing on CE.
+ * Replace by strcmp and strncpy for now...
+ * This is likely to break unicode string comparison.
+ */
+#define strcoll strcmp
+static gsize
+wince_strxfrm_wrapper (char       *string1,
+		       const char *string2,
+		       gsize       count)
+{
+  strncpy (string1, string2, count);
+  return strlen (string1);
+}
+#define strxfrm wince_strxfrm_wrapper
+#else
 /* Workaround for bug in MSVCR80.DLL */
 static gsize
 msc_strxfrm_wrapper (char       *string1,
@@ -46,6 +62,7 @@ msc_strxfrm_wrapper (char       *string1,
   return strxfrm (string1, string2, count);
 }
 #define strxfrm msc_strxfrm_wrapper
+#endif
 #endif
 
 /**
