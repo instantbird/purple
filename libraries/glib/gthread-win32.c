@@ -627,7 +627,7 @@ g_thread_impl_init ()
    * sections instead of mutexes. See
    * http://world.std.com/~jmhart/csmutx.htm for some discussion.
    */
-  kernel32 = GetModuleHandle (_T("KERNEL32.DLL"));
+  kernel32 = GetModuleHandleA ("KERNEL32.DLL");
   if (kernel32)
     {
       try_enter_critical_section = (GTryEnterCriticalSectionFunc)
