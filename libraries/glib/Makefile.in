@@ -203,8 +203,6 @@ CSRCS		= \
 
 ifeq ($(OS_ARCH),WINNT)
 CSRCS		+= \
-		giowin32.c \
-		giochannel.c \
 		gwin32.c \
 		wdirent.c \
 		gnulib/asnprintf.c \

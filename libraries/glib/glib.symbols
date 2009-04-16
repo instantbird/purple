@@ -441,6 +441,7 @@ g_hook_unref
 #endif
 #endif
 
+#if 0
 #if IN_HEADER(__G_IOCHANNEL_H__)
 #if IN_FILE(__G_IOCHANNEL_C__)
 g_io_add_watch
@@ -512,7 +513,6 @@ g_io_channel_win32_set_debug
 #endif
 #endif
 
-#if 0
 #if IN_HEADER(__G_KEY_FILE_H__)
 #if IN_FILE(__G_KEY_FILE_C__)
 g_key_file_error_quark
@@ -1591,7 +1591,6 @@ g_ascii_table
 g_utf8_skip
 g_idle_funcs
 g_timeout_funcs
-g_io_watch_funcs
 g_child_watch_funcs
 glib_binary_age
 glib_interface_age
