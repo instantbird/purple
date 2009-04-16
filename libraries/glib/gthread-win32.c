@@ -42,6 +42,9 @@
 #undef STRICT
 #ifdef WINCE
 # define IsDebuggerPresent() 0
+# ifndef TLS_OUT_OF_INDEXES
+#  define TLS_OUT_OF_INDEXES 0xffffffff
+# endif
 #endif
 
 #include <process.h>
@@ -333,7 +336,7 @@ g_private_new_win32_impl (GDestroyNotify destructor)
       sprintf (buf,
 	       "Too many GPrivate allocated. Their number is limited to %d.",
 	       G_PRIVATE_MAX);
-      MessageBox (NULL, buf, NULL, MB_ICONERROR|MB_SETFOREGROUND);
+      MessageBoxA (NULL, buf, NULL, MB_ICONERROR|MB_SETFOREGROUND);
       if (IsDebuggerPresent ())
 	G_BREAKPOINT ();
       abort ();
@@ -468,7 +471,11 @@ g_thread_exit_win32_impl (void)
       win32_check_for_error (TlsSetValue (g_cond_event_tls, NULL));
     }
 
+#ifndef WINCE
   _endthreadex (0);
+#else
+  ExitThread (0);
+#endif
 }
 
 static guint __stdcall
@@ -620,7 +627,7 @@ g_thread_impl_init ()
    * sections instead of mutexes. See
    * http://world.std.com/~jmhart/csmutx.htm for some discussion.
    */
-  kernel32 = GetModuleHandle ("KERNEL32.DLL");
+  kernel32 = GetModuleHandle (_T("KERNEL32.DLL"));
   if (kernel32)
     {
       try_enter_critical_section = (GTryEnterCriticalSectionFunc)
