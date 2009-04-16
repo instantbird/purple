@@ -365,13 +365,11 @@ g_build_pathv G_GNUC_MALLOC
 g_file_error_from_errno
 g_file_error_quark
 g_file_get_contents PRIVATE
-g_file_set_contents
 g_file_test PRIVATE
 g_file_read_link
 #if 0
 g_format_size_for_display
 #endif
-g_mkstemp PRIVATE
 g_mkdir_with_parents
 #ifdef G_OS_WIN32
 g_file_get_contents_utf8

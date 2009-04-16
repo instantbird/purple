@@ -25,6 +25,12 @@
 
 #include <sys/stat.h>
 
+#ifndef O_RDWR
+#define O_RDWR         0x0002  /* open for reading and writing */
+#define O_CREAT        0x0100  /* create and open file */
+#define O_EXCL         0x0400  /* open only if file doesn't already exist */
+#endif
+
 G_BEGIN_DECLS
 
 #if defined(G_OS_UNIX) && !defined(G_STDIO_NO_WRAP_ON_UNIX)
