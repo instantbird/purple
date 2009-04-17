@@ -233,7 +233,7 @@ export:: $(EXPORTS) $(PUBLIC)
 
 glib.dll: glib.def
 
-glib.def: $(srcdir)/glib.symbols
+glib.def: $(srcdir)/glib.symbols $(srcdir)/gobject.symbols
 	echo -e EXPORTS > glib.def
 	$(CPP) -DINCLUDE_VARIABLES -DINCLUDE_INTERNAL_SYMBOLS -DG_OS_WIN32 -DALL_FILES $(srcdir)/glib.symbols | \
             sed -e '/#/d' -e '/^$$/d' -e 's/^/	/' -e 's/G_GNUC_[^ ]*//g' >> glib.def
