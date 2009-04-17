@@ -114,7 +114,6 @@ EXPORTS		= \
 		gfileutils.h \
 		gerror.h \
 		gmappedfile.h \
-		gdate.h \
 		gdataset.h \
 		gconvert.h \
 		gcompletion.h \
@@ -194,7 +193,6 @@ CSRCS		= \
 		gobject/gvaluetransform.c	\
 		gobject/gvaluetypes.c		\
 		gobject/gobjectaliasdef.c	\
-		gdate.c				\
 		ghook.c				\
 		gscanner.c \
 		$(NULL)
