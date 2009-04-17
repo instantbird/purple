@@ -73,7 +73,12 @@
 #define BUF_LEN MSG_LEN
 #define BUF_LONG BUF_LEN * 2
 
+#ifndef WINCE
 #include <sys/stat.h>
+#else
+#include <glib/wince.h>
+#endif
+
 #include <sys/types.h>
 #ifndef _WIN32
 #include <sys/time.h>

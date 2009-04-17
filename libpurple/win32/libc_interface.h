@@ -28,6 +28,9 @@
 #include <errno.h>
 #include "libc_internal.h"
 #include <glib.h>
+#ifdef WINCE
+# include <glib/wince.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -108,9 +111,11 @@ wpurple_strerror( errornum )
 wpurple_strerror( errornum )
 
 /* unistd.h */
+#undef read
 #define read( fd, buf, buflen ) \
 wpurple_read( fd, buf, buflen )
 
+#undef write
 #define write( socket, buf, buflen ) \
 wpurple_write( socket, buf, buflen )
 

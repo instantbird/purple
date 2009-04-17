@@ -13,6 +13,10 @@
 
 #ifndef RC_INVOKED
 
+#ifdef WINCE
+# include "wince.h"
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif

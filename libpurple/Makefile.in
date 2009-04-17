@@ -65,13 +65,20 @@ endif
 
 ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 EXTRA_LIBS	= \
-		ws2_32.lib \
 		$(DIST)/lib/glib.lib \
 		$(DIST)/lib/xml2.lib \
 		$(DIST)/lib/nss3.lib \
 		$(DIST)/lib/nspr4.lib \
 		$(DIST)/lib/ssl3.lib \
 		$(NULL)
+
+ifeq ($(OS_ARCH),WINNT)
+EXTRA_LIBS	+= ws2_32.lib
+endif
+ifeq ($(OS_ARCH),WINCE)
+EXTRA_LIBS	+= ws2.lib
+endif
+
 DSO_LDOPTS	+= -DEF:purple.def
 else
 ifeq ($(OS_ARCH),Darwin)

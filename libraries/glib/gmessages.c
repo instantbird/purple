@@ -54,10 +54,10 @@
 #  define _WIN32_WINDOWS 0x0401 /* to get IsDebuggerPresent */
 #  include <windows.h>
 #  undef STRICT
-#ifdef WINCE
-# define IsDebuggerPresent() 0
-# define getpid GetCurrentProcessId
 #endif
+
+#ifdef WINCE
+# include "wince.h"
 #endif
 
 /* --- structures --- */
@@ -106,6 +106,9 @@ static gchar  fatal_msg_buf[1000] = "Unspecified fatal error encountered, aborti
 static gchar *fatal_msg_ptr = fatal_msg_buf;
 
 #undef write
+#ifdef WINCE
+# define write _write
+#endif
 static inline int
 dowrite (int          fd,
 	 const void  *buf,
@@ -123,6 +126,7 @@ dowrite (int          fd,
 
   return len;
 }
+#undef write
 #define write(fd, buf, len) dowrite(fd, buf, len)
 
 #endif
@@ -483,10 +487,12 @@ g_logv (const gchar   *log_domain,
 	  if (test_level & G_LOG_FLAG_FATAL)
 	    {
 #ifdef G_OS_WIN32
+#ifndef WINCE
 	      gchar *locale_msg = g_locale_from_utf8 (fatal_msg_buf, -1, NULL, NULL, NULL);
 	      
 	      MessageBox (NULL, locale_msg, NULL,
 			  MB_ICONERROR|MB_SETFOREGROUND);
+#endif
 	      if (IsDebuggerPresent () && !(test_level & G_LOG_FLAG_RECURSION))
 		G_BREAKPOINT ();
 	      else

@@ -336,7 +336,9 @@ g_private_new_win32_impl (GDestroyNotify destructor)
       sprintf (buf,
 	       "Too many GPrivate allocated. Their number is limited to %d.",
 	       G_PRIVATE_MAX);
-      MessageBoxA (NULL, buf, NULL, MB_ICONERROR|MB_SETFOREGROUND);
+#ifndef WINCE
+      MessageBox (NULL, buf, NULL, MB_ICONERROR|MB_SETFOREGROUND);
+#endif
       if (IsDebuggerPresent ())
 	G_BREAKPOINT ();
       abort ();
@@ -627,7 +629,7 @@ g_thread_impl_init ()
    * sections instead of mutexes. See
    * http://world.std.com/~jmhart/csmutx.htm for some discussion.
    */
-  kernel32 = GetModuleHandleA ("KERNEL32.DLL");
+  kernel32 = GetModuleHandleW (L"KERNEL32.DLL");
   if (kernel32)
     {
       try_enter_critical_section = (GTryEnterCriticalSectionFunc)

@@ -779,7 +779,7 @@ convert_image_tags(const PurpleLog *log, const char *msg)
 						fclose(image_file);
 
 						/* Attempt to not leave half-written files around. */
-						unlink(path);
+						g_unlink(path);
 					}
 					else
 					{

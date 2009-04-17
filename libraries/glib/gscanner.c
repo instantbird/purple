@@ -61,6 +61,10 @@
 )
 #define	READ_BUFFER_SIZE	(4000)
 
+#ifdef WINCE
+# include "wince.h"
+#endif
+
 
 /* --- typedefs --- */
 typedef	struct	_GScannerKey	GScannerKey;

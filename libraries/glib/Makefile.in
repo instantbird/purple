@@ -53,6 +53,10 @@ ifeq ($(OS_ARCH),WINNT)
 DEFINES		+= -DDISABLE_VISIBILITY -DGLIB_COMPILATION
 DSO_LDOPTS	+= -DEF:glib.def
 endif
+ifeq ($(OS_ARCH),WINCE)
+DEFINES		+= -DDISABLE_VISIBILITY -DGLIB_COMPILATION
+DSO_LDOPTS	+= -DEF:$(srcdir)/glib-wince.def
+endif
 
 DEFINES		+= -DGOBJECT_COMPILATION
 
@@ -61,7 +65,7 @@ DIRS		= \
 		gobject \
 		$(NULL)
 
-ifeq ($(OS_ARCH),WINNT)
+ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
 DIRS		+= gnulib
 endif
 
@@ -138,10 +142,17 @@ EXPORTS		= \
 		glib-object.h \
 		$(NULL)
 
-ifeq ($(OS_ARCH),WINNT)
+ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
 EXPORTS		+= \
 		gwin32.h \
 		dirent-win32.h \
+		$(NULL)
+endif
+
+ifeq ($(OS_ARCH),WINCE)
+EXPORTS		+= \
+		wince.h \
+		wince-stat.h \
 		$(NULL)
 endif
 
@@ -199,7 +210,7 @@ CSRCS		= \
 #		gobject/gmarshal.c		\
 #		gobject/gsourceclosure.c	\
 
-ifeq ($(OS_ARCH),WINNT)
+ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
 CSRCS		+= \
 		gwin32.c \
 		wdirent.c \
@@ -212,13 +223,25 @@ CSRCS		+= \
 		$(NULL)
 endif
 
+ifeq ($(OS_ARCH),WINCE)
+CSRCS		+= \
+		wince.c \
+		$(NULL)
+endif
+
+
 ifeq ($(OS_ARCH),WINNT)
 EXTRA_LIBS	+= shell32.lib ws2_32.lib ole32.lib
 else
+ifeq ($(OS_ARCH),WINCE)
+EXTRA_LIBS	+= ole32.lib ws2.lib
+else
 EXTRA_LIBS	+= -liconv
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk
+
 
 # libs:: $(SHARED_LIBRARY)
 # ifneq (,$(filter OS2 WINNT WINCE,$(OS_ARCH)))
