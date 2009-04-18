@@ -28,9 +28,6 @@
 #include <errno.h>
 #include "libc_internal.h"
 #include <glib.h>
-#ifdef WINCE
-# include <glib/wince.h>
-#endif
 
 #ifdef __cplusplus
 extern "C" {

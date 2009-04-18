@@ -23,7 +23,9 @@
 #ifndef _LIBC_INTERNAL_
 #define _LIBC_INTERNAL_
 #include <glib.h>
-
+#ifdef WINCE
+# include <glib/wince.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {
