@@ -88,6 +88,10 @@ FARPROC wpurple_find_and_loadproc(const char *dllname, const char *procedure) {
 	BOOL did_load = FALSE;
 	FARPROC proc = 0;
 
+#ifdef WINCE
+	return NULL; /* FIXME: ansi/wide mismatch, unlikely to work */
+#endif
+
 	if(!(hmod = GetModuleHandle(dllname))) {
 		purple_debug_warning("wpurple", "%s not already loaded; loading it...\n", dllname);
 		if(!(hmod = LoadLibrary(dllname))) {

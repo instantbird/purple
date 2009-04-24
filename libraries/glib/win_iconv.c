@@ -697,7 +697,7 @@ load_mlang()
     HMODULE h;
     if (ConvertINetString != NULL)
         return TRUE;
-    h = LoadLibrary("mlang.dll");
+    h = LoadLibraryW(L"mlang.dll");
     if (!h)
         return FALSE;
     ConvertINetString = (CONVERTINETSTRING)GetProcAddress(h, "ConvertINetString");

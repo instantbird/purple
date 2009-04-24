@@ -4430,6 +4430,7 @@ purple_gai_strerror(gint errnum)
 	char *msg;
 	int saved_errno = errno;
 
+#ifndef WINCE
 	const char *msg_locale;
 
 	msg_locale = gai_strerror(errnum);
@@ -4442,6 +4443,14 @@ purple_gai_strerror(gint errnum)
 	else
 	{
 		gchar *msg_utf8 = g_locale_to_utf8(msg_locale, -1, NULL, NULL, NULL);
+#else
+	const WCHAR *msg_locale;
+
+	msg_locale = gai_strerror(errnum);
+	if (1)
+	{
+		gchar *msg_utf8 = g_utf16_to_utf8(msg_locale, -1, NULL, NULL, NULL);
+#endif
 		if (msg_utf8)
 		{
 			/* Stick in the quark table so that we can return a static result */

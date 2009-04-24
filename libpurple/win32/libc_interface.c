@@ -964,8 +964,8 @@ wpurple_get_timezone_abbreviation(const struct tm *tm)
 	 * against our table again.
 	 */
 	memset(localtzname, 0, sizeof(localtzname));
-	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-			   "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones",
+	if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+			   L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones",
 					 0,
 					 KEY_READ,
 					 &rootKey) != ERROR_SUCCESS)
@@ -976,7 +976,7 @@ wpurple_get_timezone_abbreviation(const struct tm *tm)
 
 	for (idx = 0;; idx++)
 	{
-		char keyname[256];
+		WCHAR keyname[256];
 		char zonename[256];
 		DWORD namesize;
 		FILETIME lastwrite;
@@ -1000,7 +1000,7 @@ wpurple_get_timezone_abbreviation(const struct tm *tm)
 			break;
 		}
 
-		if ((r = RegOpenKeyEx(rootKey, keyname, 0, KEY_READ, &key)) != ERROR_SUCCESS)
+		if ((r = RegOpenKeyExW(rootKey, keyname, 0, KEY_READ, &key)) != ERROR_SUCCESS)
 		{
 			purple_debug_warning("wpurple", "could not open registry subkey to identify Windows timezone: %i\n", (int) r);
 			break;
@@ -1008,7 +1008,7 @@ wpurple_get_timezone_abbreviation(const struct tm *tm)
 
 		memset(zonename, 0, sizeof(zonename));
 		namesize = sizeof(zonename);
-		if ((r = RegQueryValueEx(key, "Std", NULL, NULL, zonename, &namesize)) != ERROR_SUCCESS)
+		if ((r = RegQueryValueExW(key, L"Std", NULL, NULL, zonename, &namesize)) != ERROR_SUCCESS)
 		{
 			purple_debug_warning("wpurple", "could not query value for 'std' to identify Windows timezone: %i\n", (int) r);
 			RegCloseKey(key);
@@ -1017,13 +1017,15 @@ wpurple_get_timezone_abbreviation(const struct tm *tm)
 		if (strcmp(tzname, zonename) == 0)
 		{
 			/* Matched zone */
-			strcpy(localtzname, keyname);
+			char *tmp = g_utf16_to_utf8(keyname, -1, NULL, NULL, NULL); 
+			strcpy(localtzname, tmp);
+			g_free(tmp);
 			RegCloseKey(key);
 			break;
 		}
 		memset(zonename, 0, sizeof(zonename));
 		namesize = sizeof(zonename);
-		if ((r = RegQueryValueEx(key, "Dlt", NULL, NULL, zonename, &namesize)) != ERROR_SUCCESS)
+		if ((r = RegQueryValueExW(key, L"Dlt", NULL, NULL, zonename, &namesize)) != ERROR_SUCCESS)
 		{
 			purple_debug_warning("wpurple", "could not query value for 'dlt' to identify Windows timezone: %i\n", (int) r);
 			RegCloseKey(key);
@@ -1032,7 +1034,9 @@ wpurple_get_timezone_abbreviation(const struct tm *tm)
 		if (strcmp(tzname, zonename) == 0)
 		{
 			/* Matched DST zone */
-			strcpy(localtzname, keyname);
+			char *tmp = g_utf16_to_utf8(keyname, -1, NULL, NULL, NULL); 
+			strcpy(localtzname, tmp);
+			g_free(tmp);
 			RegCloseKey(key);
 			break;
 		}
