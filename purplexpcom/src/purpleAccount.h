@@ -97,16 +97,17 @@ private:
   inline void GetIntPref(const char *aName);
   inline void GetCharPref(const char *aName);
 
+protected:
+  /* additional members */
   PurpleAccount *mAccount;
   nsCString mKey;
   PRUint32 mId;
+  PRBool mHasValidProtocol;
   nsCOMPtr<purpleProtocol> mProtocol;
   nsCOMPtr<purpleIProxyInfo> mProxy;
   nsCOMPtr<nsIPrefBranch> mPrefBranch;
   nsCOMPtr<nsIPrefBranch> mPrefOptBranch;
 
-protected:
-  /* additional members */
   nsCString mConnectionStateMsg;
   nsCString mConnectionErrorMessage;
   PurpleConnectionError mConnectionErrorReason;

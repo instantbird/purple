@@ -107,6 +107,7 @@ CPPSRCS		= \
 		purpleTag.cpp \
 		purpleTimer.cpp \
 		purpleTooltipInfo.cpp \
+		purpleUnknownProtocol.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS += $(XPCOM_GLUE_LDOPTS) $(MOZ_COMPONENT_NSPR_LIBS)

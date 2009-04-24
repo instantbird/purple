@@ -108,6 +108,10 @@ interface purpleIAccount: nsISupports {
   const short ERROR_CERT_OTHER_ERROR = 15;
   const short ERROR_OTHER_ERROR = 16;
 
+  // use a big enough number so that it doesn't conflict with error
+  // codes added in libpurple later
+  const short ERROR_UNKNOWN_PRPL = 42;
+
   /* A message describing the connection error */
   readonly attribute AUTF8String connectionErrorMessage;
 

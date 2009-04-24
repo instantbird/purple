@@ -37,6 +37,7 @@
 
 #include "purpleAccount.h"
 #include "purpleCoreService.h"
+#include "purpleUnknownProtocol.h"
 #include "purpleStorage.h"
 #include <nsIPrefService.h>
 #include <nsServiceManagerUtils.h>
@@ -59,6 +60,8 @@ NS_IMPL_ISUPPORTS1(purpleAccount, purpleIAccount)
 
 #define AUTO_SAVE_PREFS_TIMER   5000
 
+#define INIT_CONDITION          (mProtocol && (!mHasValidProtocol || mAccount))
+
 #ifdef PR_LOGGING
 //
 // NSPR_LOG_MODULES=purpleAccount:5
@@ -72,6 +75,7 @@ PRUint32 purpleAccount::sAutoLoginsPending = 0;
 
 purpleAccount::purpleAccount()
   : mAccount(NULL),
+    mHasValidProtocol(PR_FALSE),
     mConnectionErrorReason((PurpleConnectionError)NO_ERROR),
     mReconnectAttempts(0),
     mTimeOfNextReconnect(0),
@@ -95,25 +99,34 @@ purpleAccount::~purpleAccount()
 
 void purpleAccount::UnInit()
 {
-  NS_PRECONDITION(mAccount, "Uninitializing uninitialized purpleAccount\n");
-  NS_ENSURE_TRUE(mAccount,);
+  NS_PRECONDITION(INIT_CONDITION,
+                  "Uninitializing uninitialized purpleAccount\n");
+  NS_ENSURE_TRUE(INIT_CONDITION,);
 
   LOG(("uninitializing purpleAccount %s (%s)\n",
-       purple_account_get_username(mAccount), mProtocol->GetId()));
+       mAccount ? purple_account_get_username(mAccount) : "(mAccount = NULL)",
+       (mProtocol && mHasValidProtocol) ? mProtocol->GetId() : "(mProtocol = NULL)"));
 
   if (mTimer) {
     mTimer->Cancel();
     mTimer = nsnull;
   }
 
+  // remove any pending autologin preference used for crash detection
   if (mAutoLoginPending)
     finishedAutoLogin();
 
-  mAccount->ui_data = NULL;
-  // This will call purple_proxy_info_destroy if there was a proxy
-  purple_account_set_proxy_info(mAccount, NULL);
-  purple_accounts_delete(mAccount);
-  mAccount = NULL;
+  // and make sure we cleanup the save pref timer
+  if (sSavePrefsTimer)
+    savePrefsNow(nsnull, nsnull);
+
+  if (mAccount) {
+    mAccount->ui_data = NULL;
+    // This will call purple_proxy_info_destroy if there was a proxy
+    purple_account_set_proxy_info(mAccount, NULL);
+    purple_accounts_delete(mAccount);
+    mAccount = NULL;
+  }
 }
 
 #define PURPLE_IMPL_GETPREF(prettyType, purpleType, PRType)             \
@@ -211,17 +224,27 @@ nsresult purpleAccount::load(const nsCString& aKey)
   /* Init the mProtocol member */
   nsCOMPtr<purpleICoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
   rv = pcs->GetProtoById(prpl, getter_AddRefs(mProtocol));
-  NS_ENSURE_SUCCESS(rv, rv);
 
-  mAccount = purple_account_new(name.get(), prpl.get());
-  NS_ENSURE_TRUE(mAccount, NS_ERROR_FAILURE);
-  mAccount->ui_data = this;
-  purple_accounts_add(mAccount);
+  if (NS_SUCCEEDED(rv)) {
+    mHasValidProtocol = PR_TRUE;
+    mAccount = purple_account_new(name.get(), prpl.get());
+    NS_ENSURE_TRUE(mAccount, NS_ERROR_FAILURE);
+    mAccount->ui_data = this;
+    purple_accounts_add(mAccount);
+  }
+  else {
+    mConnectionErrorReason = (PurpleConnectionError) ERROR_UNKNOWN_PRPL;
+    nsCOMPtr<purpleUnknownProtocol> unknown =
+      do_CreateInstance(PURPLE_UNKNOWN_PROTOCOL_CONTRACTID);
+    NS_ENSURE_TRUE(unknown, NS_ERROR_OUT_OF_MEMORY);
+    unknown->Init(prpl);
+    mProtocol = (purpleProtocol *)unknown.get(); // Ugly...
+  }
 
   /* Load the alias if any */
   nsCString alias;
   rv = mPrefBranch->GetCharPref(PREF_ALIAS, getter_Copies(alias));
-  if (NS_SUCCEEDED(rv) && !alias.IsEmpty()) {
+  if (NS_SUCCEEDED(rv) && !alias.IsEmpty() && mAccount) {
     purple_account_set_alias(mAccount, alias.get());
     LOG(("alias = %s\n", alias.get()));
   }
@@ -259,6 +282,9 @@ nsresult purpleAccount::load(const nsCString& aKey)
     else
       mProxy->SetType(purpleIProxyInfo::useGlobal);
   }
+
+  if (!mHasValidProtocol)
+    return NS_OK;
 
   /* Give the information to libpurple */
   PurpleProxyInfo *info;
@@ -471,7 +497,7 @@ nsresult purpleAccount::remove()
 
   LOG(("Deleting purpleAccount %s (%s)\n",
        mAccount ? purple_account_get_username(mAccount) : "(mAccount = NULL)",
-       mProtocol ? mProtocol->GetId() : "(mProtocol = NULL)"));
+       (mProtocol && mHasValidProtocol) ? mProtocol->GetId() : "(mProtocol = NULL)"));
 
   /* Remove data from the pref branch */
   rv = mPrefBranch->DeleteBranch("");
@@ -584,7 +610,21 @@ NS_IMETHODIMP purpleAccount::JoinChat(const nsACString& aName,
 /* readonly attribute AUTF8String name; */
 NS_IMETHODIMP purpleAccount::GetName(nsACString& aName)
 {
-  PURPLE_ENSURE_INIT(mProtocol);
+  PURPLE_ENSURE_INIT(INIT_CONDITION);
+
+  if (NS_UNLIKELY(!mAccount)) {
+    // Get the account name from the preferences
+    nsresult rv = GetPrefBranch();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCString name;
+    rv = mPrefBranch->GetCharPref(PREF_NAME, getter_Copies(name));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    NS_ENSURE_TRUE(!name.IsEmpty(), NS_ERROR_UNEXPECTED);
+    aName = name;
+    return NS_OK;
+  }
 
   aName = purple_account_get_username(mAccount);
   return NS_OK;
@@ -652,7 +692,7 @@ NS_IMETHODIMP purpleAccount::GetProtocol(purpleIProtocol * *aProtocol)
 /* attribute boolean autoLogin; */
 NS_IMETHODIMP purpleAccount::GetAutoLogin(PRBool *aAutoLogin)
 {
-  PURPLE_ENSURE_INIT(mAccount);
+  PURPLE_ENSURE_INIT(!mKey.IsEmpty());
 
   nsresult rv = GetPrefBranch();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -667,7 +707,7 @@ NS_IMETHODIMP purpleAccount::GetAutoLogin(PRBool *aAutoLogin)
 }
 NS_IMETHODIMP purpleAccount::SetAutoLogin(PRBool aAutoLogin)
 {
-  PURPLE_ENSURE_INIT(mAccount);
+  PURPLE_ENSURE_INIT(mProtocol);
 
   nsresult rv = SetBoolPref(PREF_AUTOLOGIN, aAutoLogin);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -679,18 +719,32 @@ NS_IMETHODIMP purpleAccount::SetAutoLogin(PRBool aAutoLogin)
 /* attribute AUTF8String password; */
 NS_IMETHODIMP purpleAccount::GetPassword(nsACString& aPassword)
 {
-  PURPLE_ENSURE_INIT(mAccount);
+  PURPLE_ENSURE_INIT(INIT_CONDITION);
+
+  if (NS_UNLIKELY(!mAccount)) {
+    // Get the password from the preferences
+    nsresult rv = GetPrefBranch();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCString password;
+    rv = mPrefBranch->GetCharPref(PREF_PASSWORD, getter_Copies(password));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    aPassword = password;
+    return NS_OK;
+  }
 
   aPassword = purple_account_get_password(mAccount);
   return NS_OK;
 }
 NS_IMETHODIMP purpleAccount::SetPassword(const nsACString& aPassword)
 {
-  PURPLE_ENSURE_INIT(mAccount);
+  PURPLE_ENSURE_INIT(INIT_CONDITION);
 
   PromiseFlatCString flatPassword(aPassword);
   const char *pass = flatPassword.get();
-  purple_account_set_password(mAccount, pass);
+  if (mAccount)
+    purple_account_set_password(mAccount, pass);
   SetStringPref(PREF_PASSWORD, pass);
 
   return NS_OK;
@@ -717,22 +771,35 @@ NS_IMETHODIMP purpleAccount::SetRememberPassword(PRBool aRememberPassword)
 /* attribute string alias; */
 NS_IMETHODIMP purpleAccount::GetAlias(nsACString& aAlias)
 {
-  PURPLE_ENSURE_INIT(mAccount);
+  PURPLE_ENSURE_INIT(INIT_CONDITION);
 
+  if (NS_UNLIKELY(!mAccount)) {
+    // Get the alias from the preferences
+    nsresult rv = GetPrefBranch();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCString alias;
+    rv = mPrefBranch->GetCharPref(PREF_ALIAS, getter_Copies(alias));
+    aAlias = NS_SUCCEEDED(rv) ? alias : EmptyCString();
+    return NS_OK;
+  }
+  
   aAlias = purple_account_get_alias(mAccount);
   return NS_OK;
 }
 NS_IMETHODIMP purpleAccount::SetAlias(const nsACString& aAlias)
 {
-  PURPLE_ENSURE_INIT(mAccount);
+  PURPLE_ENSURE_INIT(INIT_CONDITION);
 
   if (!aAlias.IsEmpty()) {
     PromiseFlatCString flatCString(aAlias);
-    purple_account_set_alias(mAccount, flatCString.get());
+    if (mAccount)
+      purple_account_set_alias(mAccount, flatCString.get());
     SetStringPref(PREF_ALIAS, flatCString.get());
   }
   else {
-    purple_account_set_alias(mAccount, NULL);
+    if (mAccount)
+      purple_account_set_alias(mAccount, NULL);
     nsresult rv = GetPrefBranch();
     if(NS_SUCCEEDED(rv)) {
       mPrefBranch->DeleteBranch(PREF_ALIAS);
@@ -745,7 +812,6 @@ NS_IMETHODIMP purpleAccount::SetAlias(const nsACString& aAlias)
 /* attribute purpleIProxyInfo proxyInfo; */
 NS_IMETHODIMP purpleAccount::GetProxyInfo(purpleIProxyInfo * *aProxyInfo)
 {
-  PURPLE_ENSURE_INIT(mAccount);
   PURPLE_ENSURE_INIT(mProxy);
 
   NS_ADDREF(*aProxyInfo = mProxy);
@@ -753,8 +819,8 @@ NS_IMETHODIMP purpleAccount::GetProxyInfo(purpleIProxyInfo * *aProxyInfo)
 }
 NS_IMETHODIMP purpleAccount::SetProxyInfo(purpleIProxyInfo * aProxyInfo)
 {
-  PURPLE_ENSURE_INIT(mAccount);
   NS_ENSURE_ARG(aProxyInfo);
+  PURPLE_ENSURE_INIT(INIT_CONDITION);
 
   mProxy = aProxyInfo;
 
@@ -770,7 +836,8 @@ NS_IMETHODIMP purpleAccount::SetProxyInfo(purpleIProxyInfo * aProxyInfo)
   rv = mProxy->GetPurpleProxy(&info);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  purple_account_set_proxy_info(mAccount, info);
+  if (mAccount)
+    purple_account_set_proxy_info(mAccount, info);
 
   return NS_OK;
 }
@@ -983,9 +1050,16 @@ NS_IMETHODIMP purpleAccount::GetTimeOfNextReconnect(PRInt64 *aTimeOfNextReconnec
   return NS_OK;
 }
 
-#define PURPLE_IMPL_GETBOOL(aName, aVal)			\
+#define PURPLE_IMPL_GETBOOL(aName, aDefault, aVal)              \
   NS_IMETHODIMP purpleAccount::Get##aName(PRBool *a##aName)	\
   {								\
+    PURPLE_ENSURE_INIT(mProtocol);				\
+                                                                \
+    if (!mHasValidProtocol) {                                   \
+      *a##aName = aDefault;                                     \
+      return NS_OK;                                             \
+    }                                                           \
+                                                                \
     PURPLE_ENSURE_INIT(mAccount);				\
     								\
     *a##aName = aVal;						\
@@ -994,18 +1068,18 @@ NS_IMETHODIMP purpleAccount::GetTimeOfNextReconnect(PRInt64 *aTimeOfNextReconnec
 
 
 /* readonly attribute boolean disconnecting; */
-PURPLE_IMPL_GETBOOL(Disconnecting, mAccount->disconnecting)
+PURPLE_IMPL_GETBOOL(Disconnecting, PR_FALSE, mAccount->disconnecting)
 
 /* readonly attribute boolean disconnected; */
-PURPLE_IMPL_GETBOOL(Disconnected,
+PURPLE_IMPL_GETBOOL(Disconnected, PR_TRUE,
 		    !mAccount->gc || mAccount->gc->state == PURPLE_DISCONNECTED)
 
 /* readonly attribute boolean connected; */
-PURPLE_IMPL_GETBOOL(Connected,
+PURPLE_IMPL_GETBOOL(Connected, PR_FALSE,
 		    mAccount->gc && mAccount->gc->state == PURPLE_CONNECTED)
 
 /* readonly attribute boolean connecting; */
-PURPLE_IMPL_GETBOOL(Connecting,
+PURPLE_IMPL_GETBOOL(Connecting, PR_FALSE,
 		    mAccount->gc && mAccount->gc->state == PURPLE_CONNECTING)
 
 /* Get flag from PurpleConnection->flags */

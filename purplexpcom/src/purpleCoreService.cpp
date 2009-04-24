@@ -379,8 +379,13 @@ nsresult purpleCoreService::InitBuddyList()
     // server-side alias (needed for MSN that won't send server-side
     // aliases when syncing the buddy list and will wait until the
     // buddies are online to send it)
+    PurpleAccount *pAccount = account->GetPurpleAccount();
+    if (!pAccount) {
+      // This can happen if the prpl related to this account is missing
+      continue;
+    }
     PurpleBuddy *buddy =
-      purple_buddy_new(account->GetPurpleAccount(), name.get(),
+      purple_buddy_new(pAccount, name.get(),
                        alias.Equals(name) ? NULL : alias.get());
     tag->addBuddy(buddy);
 
@@ -408,18 +413,6 @@ nsresult purpleCoreService::InitBuddyList()
 void purpleCoreService::InitProtocols()
 {
   LOG(("Start init protocols"));
-
-#ifdef PR_LOGGING
-  // this code demonstrate how to enumerate protocols from libpurple
-  GList *iter = purple_plugins_get_protocols();
-  for (int i = 0; iter; iter = iter->next) {
-    PurplePlugin *plugin = (PurplePlugin *) iter->data;
-    PurplePluginInfo *info = plugin->info;
-    if (info && info->name) {
-      LOG(("\t%d: %s (%s)", i++, info->name, info->id));
-    }
-  }
-#endif
 
   for (GList *iter = purple_plugins_get_protocols();
        iter; iter = iter->next) {
