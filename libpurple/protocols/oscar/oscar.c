@@ -486,11 +486,18 @@ purple_plugin_oscar_convert_to_best_encoding(PurpleConnection *gc,
 
 	/* Attempt to send as ASCII */
 	if (oscar_charset_check(from) == AIM_CHARSET_ASCII) {
-		*msg = g_convert(from, -1, "ASCII", "UTF-8", NULL, &msglen, NULL);
-		*charset = AIM_CHARSET_ASCII;
-		*charsubset = 0x0000;
-		*msglen_int = msglen;
-		return;
+		*msg = g_convert(from, -1, "ASCII", "UTF-8", NULL, &msglen, &err);
+		if (*msg != NULL) {
+			*charset = AIM_CHARSET_ASCII;
+			*charsubset = 0x0000;
+			*msglen_int = msglen;
+			return;
+		}
+		purple_debug_error("oscar", "Conversion from UTF-8 to ASCII failed: %s.\n",
+		                   err->message);
+		g_error_free(err);
+		err = NULL;
+		*msg = g_strdup(from);
 	}
 
 	/*
