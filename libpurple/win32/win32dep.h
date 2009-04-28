@@ -54,17 +54,17 @@ typedef struct {
  **/
 /* Windows helper functions */
 FARPROC wpurple_find_and_loadproc(const char *dllname, const char *procedure);
-gboolean wpurple_read_reg_dword(HKEY rootkey, const char *subkey, const char *valname, LPDWORD result);
-char *wpurple_read_reg_string(HKEY rootkey, const char *subkey, const char *valname); /* needs to be g_free'd */
-gboolean wpurple_write_reg_string(HKEY rootkey, const char *subkey, const char *valname, const char *value);
+/* gboolean wpurple_read_reg_dword(HKEY rootkey, const char *subkey, const char *valname, LPDWORD result); */
+/* char *wpurple_read_reg_string(HKEY rootkey, const char *subkey, const char *valname); / * needs to be g_free'd */
+/* gboolean wpurple_write_reg_string(HKEY rootkey, const char *subkey, const char *valname, const char *value); */
 char *wpurple_escape_dirsep(const char *filename); /* needs to be g_free'd */
 
 /* Determine Purple paths */
 gchar *wpurple_get_special_folder(int folder_type); /* needs to be g_free'd */
-const char *wpurple_install_dir(void);
-const char *wpurple_lib_dir(void);
-const char *wpurple_locale_dir(void);
-const char *wpurple_data_dir(void);
+/* const char *wpurple_install_dir(void); */
+/* const char *wpurple_lib_dir(void); */
+/* const char *wpurple_locale_dir(void); */
+/* const char *wpurple_data_dir(void); */
 
 /* init / cleanup */
 void wpurple_init(void);
@@ -79,9 +79,9 @@ long wpurple_get_tz_offset(void);
 /*
  *  Purple specific
  */
-#define DATADIR wpurple_install_dir()
-#define LIBDIR wpurple_lib_dir()
-#define LOCALEDIR wpurple_locale_dir()
+/* #define DATADIR wpurple_install_dir() */
+/* #define LIBDIR wpurple_lib_dir() */
+/* #define LOCALEDIR wpurple_locale_dir() */
 
 #ifdef __cplusplus
 }

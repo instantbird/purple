@@ -3507,7 +3507,7 @@ xmlParserGetDirectory(const char *filename) {
 
 #ifdef _WIN32_WCE  /* easy way by now ... wince does not have dirs! */
     return NULL;
-#endif
+#else
 
     if (xmlInputCallbackInitialized == 0)
 	xmlRegisterDefaultInputCallbacks();
@@ -3539,6 +3539,7 @@ xmlParserGetDirectory(const char *filename) {
     }
     return(ret);
 #undef IS_XMLPGD_SEP
+#endif
 }
 
 /****************************************************************

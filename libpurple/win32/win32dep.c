@@ -158,6 +158,7 @@ gchar *wpurple_get_special_folder(int folder_type) {
 	return retval;
 }
 
+#if 0
 const char *wpurple_install_dir(void) {
 	static gboolean initialized = FALSE;
 
@@ -422,6 +423,7 @@ char *wpurple_read_reg_string(HKEY rootkey, const char *subkey, const char *valn
 
 	return result;
 }
+#endif
 
 void wpurple_init(void) {
 	WORD wVersionRequested;

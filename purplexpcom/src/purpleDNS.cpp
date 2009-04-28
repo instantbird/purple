@@ -198,7 +198,7 @@ nsresult purpleDNSRequest::OnLookupComplete(nsICancelable *request,
     hosts = g_slist_append(hosts, g_memdup(&addr.inet, sizeof(addr.inet)));
 #endif
 
-#ifdef PR_LOGGING
+#if defined(PR_LOGGING) && !defined(WINCE)
     char ipaddr[INET6_ADDRSTRLEN];
     inet_ntop(addr2->sa_family, &((struct sockaddr_in *)addr2)->sin_addr,
               ipaddr, sizeof(ipaddr));

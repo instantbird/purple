@@ -534,7 +534,7 @@ gchar *qq_get_icon_path(gchar *icon_name)
 {
 	gchar *icon_path;
 	const gchar *icon_dir;
-#ifdef _WIN32
+#if 0
 	static char *dir = NULL;
 	if (dir == NULL) {
 		dir = g_build_filename(wpurple_install_dir(), "pixmaps",
@@ -545,7 +545,7 @@ gchar *qq_get_icon_path(gchar *icon_name)
 	icon_dir = purple_prefs_get_string("/plugins/prpl/qq/icon_dir");
 	if ( icon_dir == NULL || strlen(icon_dir) == 0) {
 #ifdef _WIN32
-			icon_dir = dir;
+			icon_dir = "";
 #else
 			icon_dir = QQ_BUDDY_ICON_DIR;
 #endif
