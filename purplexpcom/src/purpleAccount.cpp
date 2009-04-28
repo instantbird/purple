@@ -174,6 +174,7 @@ nsresult purpleAccount::create(const nsACString& aName, purpleProtocol *aPrpl,
   NS_ENSURE_SUCCESS(rv, rv);
 
   mProtocol = aPrpl;
+  mHasValidProtocol = PR_TRUE;
 
   rv = GetPrefBranch();
   NS_ENSURE_SUCCESS(rv, rv);
