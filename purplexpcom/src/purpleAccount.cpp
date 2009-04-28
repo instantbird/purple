@@ -121,6 +121,9 @@ void purpleAccount::UnInit()
     savePrefsNow(nsnull, nsnull);
 
   if (mAccount) {
+    // disconnect before removing the ui_data pointer so that
+    // account-disconnected signals can be sent
+    purple_account_set_enabled(mAccount, UI_ID, FALSE);
     mAccount->ui_data = NULL;
     // This will call purple_proxy_info_destroy if there was a proxy
     purple_account_set_proxy_info(mAccount, NULL);
