@@ -98,7 +98,6 @@ PURPLE_IMPL_GETSTRING(Alias, mAlias)
 NS_IMETHODIMP purpleMessage::GetTime(PRTime *aTime)
 {
   *aTime = mTime;
-  printf("purpleMessage::GetTime mTime = %i\n", mTime);
   return NS_OK;
 }
 
