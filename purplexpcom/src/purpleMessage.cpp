@@ -94,9 +94,13 @@ PURPLE_IMPL_GETSTRING(Who, mWho)
 /* readonly attribute AUTF8String alias; */
 PURPLE_IMPL_GETSTRING(Alias, mAlias)
 
-/* readonly attribute AUTF8String time; */
-PURPLE_IMPL_GETSTRING(Time, purple_utf8_strftime("%H:%M:%S",
-                                                 localtime(&mTime)))
+/* readonly attribute PRTime time; */
+NS_IMETHODIMP purpleMessage::GetTime(PRTime *aTime)
+{
+  *aTime = mTime;
+  printf("purpleMessage::GetTime mTime = %i\n", mTime);
+  return NS_OK;
+}
 
 /* readonly attribute AUTF8String originalMessage; */
 PURPLE_IMPL_GETSTRING(OriginalMessage, mOriginalMessage)
