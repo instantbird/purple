@@ -63,10 +63,6 @@ purpleNetworkObserver::purpleNetworkObserver()
 purpleNetworkObserver::~purpleNetworkObserver()
 {
   purple_network_set_available_callback(NULL);
-
-  nsCOMPtr<nsIObserverService> observerService =
-    do_GetService("@mozilla.org/observer-service;1");
-  observerService->RemoveObserver(this, NS_NETWORK_LINK_TOPIC);
 }
 
 void
@@ -74,14 +70,18 @@ purpleNetworkObserver::init()
 {
   if (!mInstance)
     mInstance = new purpleNetworkObserver();
-  NS_ADDREF(mInstance);
 }
 
 void 
 purpleNetworkObserver::unInit()
 {
-  if (mInstance)
-    delete mInstance;
+  if (!mInstance)
+    return;
+
+  nsCOMPtr<nsIObserverService> observerService =
+    do_GetService("@mozilla.org/observer-service;1");
+  observerService->RemoveObserver(mInstance, NS_NETWORK_LINK_TOPIC);
+
   mInstance = nsnull;
 }
 
