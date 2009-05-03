@@ -53,6 +53,9 @@
 #include "purpleSockets.h"
 #include "purpleProxy.h"
 #include "purpleProxyInfo.h"
+#ifdef XP_MACOSX
+# include "nsDockTile.h"
+#endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleCoreService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleContentPolicy)
@@ -69,6 +72,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(purpleTag)
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleAccountBuddy)
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleProxy)
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleProxyInfo)
+#ifdef XP_MACOSX
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDockTile)
+#endif
 
 static NS_METHOD RegisterPurpleContentPolicy(nsIComponentManager *aCompMgr,
                                              nsIFile* aPath,
@@ -196,6 +202,14 @@ static nsModuleComponentInfo components[] =
     PURPLE_PROXY_INFO_CONTRACTID,
     purpleProxyInfoConstructor
   }
+#ifdef XP_MACOSX
+  ,{
+    "Dock Badge Service",
+    NSDOCKBADGESERVICE_CID,
+    NSDOCKBADGESERVICE_CONTRACTID,
+    nsDockTileConstructor
+  }
+#endif
 };
 
 NS_IMPL_NSGETMODULE(purpleModule, components)
