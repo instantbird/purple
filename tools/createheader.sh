@@ -83,7 +83,7 @@ EOF
 
 uuidgen-c++()
 {
-    local UUID=$(uuidgen)
+    local UUID=$(uuidgen |tr A-Z a-z)
     echo "// $UUID"
     echo "#define PURPLE_"$1"_CID \\"
     echo "{ 0x${UUID:0:8}, 0x${UUID:9:4}, 0x${UUID:14:4}, \\"
