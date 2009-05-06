@@ -98,6 +98,8 @@
 #include <nsDirectoryServiceUtils.h>
 #include <nsAppDirectoryServiceDefs.h>
 #include <nsDirectoryServiceDefs.h>
+#include <nsArrayEnumerator.h>
+#include <nsISupportsPrimitives.h>
 
 #define PURPLE_PROTOCOL_PLUGIN_CATEGORY   "purple-protocol-plugin"
 
@@ -325,22 +327,33 @@ static void conv_add_chat_users(PurpleConversation *conv,
                                 GList *cbuddies,
                                 gboolean new_arrivals)
 {
+  nsCOMArray<purpleConvChatBuddy> cBuddiesArray;
+
   while (cbuddies) {
     nsCOMPtr<purpleConvChatBuddy> buddy = new purpleConvChatBuddy();
     buddy->Init((PurpleConvChatBuddy *)cbuddies->data);
-    notify_conv(conv, buddy, "chat-buddy-add", nsnull);
+    cBuddiesArray.AppendObject(buddy);
     cbuddies = cbuddies->next;
   }
+  nsCOMPtr<nsISimpleEnumerator> enumerator;
+  NS_NewArrayEnumerator(getter_AddRefs(enumerator), cBuddiesArray);
+  notify_conv(conv, enumerator, "chat-buddy-add", nsnull);
 }
 
 static void conv_remove_chat_users(PurpleConversation *conv,
                                    GList *users)
 {
+  nsCOMArray<nsISupportsString> stringsArray;
   while (users) {
-    notify_conv(conv, nsnull, "chat-buddy-remove",
-                NS_ConvertUTF8toUTF16((const char *)users->data).get());
+    nsCOMPtr<nsISupportsString> string =
+      do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
+    string->SetData(NS_ConvertUTF8toUTF16((const char *)users->data));
+    stringsArray.AppendObject(string);
     users = users->next;
   }
+  nsCOMPtr<nsISimpleEnumerator> enumerator;
+  NS_NewArrayEnumerator(getter_AddRefs(enumerator), stringsArray);
+  notify_conv(conv, enumerator, "chat-buddy-remove", nsnull);
 }
 
 static void conv_update_chat_usr(PurpleConversation *conv, const char *user,
