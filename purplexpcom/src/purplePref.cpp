@@ -36,7 +36,12 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "purplePref.h"
+#include "purpleGListEnumerator.h"
 #include <nsStringAPI.h>
+
+#pragma GCC visibility push(default)
+#include <libpurple/util.h>
+#pragma GCC visibility pop
 
 #ifdef PR_LOGGING
 //
@@ -45,6 +50,45 @@
 static PRLogModuleInfo *gPurplePrefLog = nsnull;
 #endif
 #define LOG(args) PR_LOG(gPurplePrefLog, PR_LOG_DEBUG, args)
+
+class purpleKeyValuePair : public purpleIKeyValuePair
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_PURPLEIKEYVALUEPAIR
+
+  purpleKeyValuePair() {}
+  void Init(const PurpleKeyValuePair *aPKVP)
+  {
+    mKey = aPKVP->key;
+    mValue = (const char *)aPKVP->value;
+  }
+
+private:
+  ~purpleKeyValuePair() {}
+
+protected:
+  /* additional members */
+  nsCString mKey;
+  nsCString mValue;
+};
+
+/* Implementation file */
+NS_IMPL_ISUPPORTS1(purpleKeyValuePair, purpleIKeyValuePair)
+
+/* readonly attribute AUTF8String name; */
+NS_IMETHODIMP purpleKeyValuePair::GetName(nsACString & aName)
+{
+  aName = mKey;
+  return NS_OK;
+}
+
+/* readonly attribute AUTF8String value; */
+NS_IMETHODIMP purpleKeyValuePair::GetValue(nsACString & aValue)
+{
+  aValue = mValue;
+  return NS_OK;
+}
 
 NS_IMPL_ISUPPORTS1(purplePref, purpleIPref)
 
@@ -118,3 +162,12 @@ NS_IMETHODIMP purplePref::GetInt(PRInt32 *_retval)
 NS_IMETHODIMP purplePref::GetString(nsACString& _retval)
   PURPLE_IMPL_PREF_GET_VALUE(typeString,
     _retval = purple_account_option_get_default_string(mOpt))
+
+/* nsISimpleEnumerator getList (); */
+NS_IMETHODIMP purplePref::GetList(nsISimpleEnumerator **_retval)
+  PURPLE_IMPL_PREF_GET_VALUE(typeList,
+    purpleGListEnumerator *enumerator = new purpleGListEnumerator();
+    enumerator->Init(purple_account_option_get_list(mOpt),
+                     purpleTypeToInterface<purpleKeyValuePair,
+                     PurpleKeyValuePair>);
+    NS_ADDREF(*_retval = enumerator))
