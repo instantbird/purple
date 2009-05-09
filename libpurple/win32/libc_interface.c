@@ -985,7 +985,7 @@ wpurple_get_timezone_abbreviation(const struct tm *tm)
 
 		memset(keyname, 0, sizeof(keyname));
 		namesize = sizeof(keyname);
-		if ((r = RegEnumKeyEx(rootKey,
+		if ((r = RegEnumKeyExW(rootKey,
 							  idx,
 							  keyname,
 							  &namesize,
