@@ -71,7 +71,7 @@ private:
   PurplePluginInfo *mInfo;
 
 protected:
-  nsCOMArray<purpleIPref> mOptions;
+  /* additional members */
 };
 
 #endif /* !PURPLE_PROTOCOL_H_ */

@@ -37,6 +37,7 @@
 
 #include "purpleProtocol.h"
 #include "purplePref.h"
+#include "purpleGListEnumerator.h"
 #include <nsCOMPtr.h>
 #include <nsComponentManagerUtils.h>
 #include <nsArrayEnumerator.h>
@@ -76,15 +77,6 @@ void purpleProtocol::Init(PurplePluginInfo *aInfo)
   LOG(("Setting mInfo to @%x (%s, %s)",
        mInfo, mInfo->name, mInfo->id));
 
-  LOG(("Start init protocol options"));
-  PurplePluginProtocolInfo *prpl_info = (PurplePluginProtocolInfo *) mInfo->extra_info;
-  GList *l;
-  for (l = prpl_info->protocol_options; l; l = l->next) {
-    nsCOMPtr<purplePref> pref = do_CreateInstance(PURPLE_PREF_CONTRACTID);
-    pref->Init((PurpleAccountOption *) l->data);
-    mOptions.AppendObject(pref);
-  }
-
 #if 0
   // this code demonstrate how to get info about userSplits.
   printf("proto %s\n", mInfo->name);
@@ -94,8 +86,6 @@ void purpleProtocol::Init(PurplePluginInfo *aInfo)
            us->text, us->default_value, us->field_sep);
   }
 #endif
-
-  LOG(("End init protocol options"));
 }
 
 purpleProtocol::~purpleProtocol()
@@ -166,7 +156,14 @@ NS_IMETHODIMP purpleProtocol::GetOptions(nsISimpleEnumerator **aResult)
 { 
   NS_ENSURE_TRUE(mInfo, NS_ERROR_NOT_INITIALIZED);
 
-  return NS_NewArrayEnumerator(aResult, mOptions);
+  PurplePluginProtocolInfo *prpl_info =
+    (PurplePluginProtocolInfo *)mInfo->extra_info;
+  purpleGListEnumerator *enumerator = new purpleGListEnumerator();
+  enumerator->Init(prpl_info->protocol_options,
+                   purpleTypeToInterface<purplePref, PurpleAccountOption>);
+
+  NS_ADDREF(*aResult = enumerator);
+  return NS_OK;
 }
 
 #define PURPLE_IMPL_GETBOOLOPT(aOpt, aConst)                            \
