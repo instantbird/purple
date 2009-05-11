@@ -57,6 +57,49 @@ static PRLogModuleInfo *gPurpleProtocolLog = nsnull;
 #endif
 #define LOG(args) PR_LOG(gPurpleProtocolLog, PR_LOG_DEBUG, args)
 
+class purpleUsernameSplit : public purpleIUsernameSplit
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_PURPLEIUSERNAMESPLIT
+
+  purpleUsernameSplit() : mUserSplit(NULL) {}
+  void Init(const PurpleAccountUserSplit *aUserSplit)
+  {
+    mUserSplit = aUserSplit;
+  }
+
+private:
+  ~purpleUsernameSplit() {}
+
+protected:
+  /* additional members */
+  const PurpleAccountUserSplit *mUserSplit;
+};
+
+NS_IMPL_ISUPPORTS1(purpleUsernameSplit, purpleIUsernameSplit)
+
+#define PURPLE_IMPL_GETSPLITVALUE(aType, aName, aPurpleName, aStar)           \
+  NS_IMETHODIMP purpleUsernameSplit::Get##aName(aType a##aName)               \
+  {                                                                           \
+    NS_ENSURE_TRUE(mUserSplit, NS_ERROR_NOT_INITIALIZED);                     \
+                                                                              \
+    aStar a##aName = purple_account_user_split_get_##aPurpleName(mUserSplit); \
+    return NS_OK;                                                             \
+  }
+
+/* readonly attribute AUTF8String label; */
+PURPLE_IMPL_GETSPLITVALUE(nsACString &, Label, text, )
+
+/* readonly attribute AUTF8String defaultValue; */
+PURPLE_IMPL_GETSPLITVALUE(nsACString &, DefaultValue, default_value, )
+
+/* readonly attribute char separator; */
+PURPLE_IMPL_GETSPLITVALUE(char *, Separator, separator, *)
+
+/* readonly attribute PRBool reverse; */
+PURPLE_IMPL_GETSPLITVALUE(PRBool *, Reverse, reverse, *)
+
 /* Implementation file */
 NS_IMPL_ISUPPORTS1(purpleProtocol, purpleIProtocol)
 
@@ -76,16 +119,6 @@ void purpleProtocol::Init(PurplePluginInfo *aInfo)
   mInfo = aInfo;
   LOG(("Setting mInfo to @%x (%s, %s)",
        mInfo, mInfo->name, mInfo->id));
-
-#if 0
-  // this code demonstrate how to get info about userSplits.
-  printf("proto %s\n", mInfo->name);
-  for (l = prpl_info->user_splits; l; l = l->next) {
-    PurpleAccountUserSplit *us = (PurpleAccountUserSplit *) l->data;
-    printf(" %s (= %s), separator = '%c'\n",
-           us->text, us->default_value, us->field_sep);
-  }
-#endif
 }
 
 purpleProtocol::~purpleProtocol()
@@ -151,16 +184,30 @@ NS_IMETHODIMP purpleProtocol::AccountExists(const nsACString& aName,
   return NS_OK;
 }
 
-/* nsISimpleEnumerator getOptionEnumerator (); */
+#define GET_PROTO_INFO(aInfo) ((PurplePluginProtocolInfo *)aInfo->extra_info)
+
+/* nsISimpleEnumerator getOptions (); */
 NS_IMETHODIMP purpleProtocol::GetOptions(nsISimpleEnumerator **aResult)
 { 
   NS_ENSURE_TRUE(mInfo, NS_ERROR_NOT_INITIALIZED);
 
-  PurplePluginProtocolInfo *prpl_info =
-    (PurplePluginProtocolInfo *)mInfo->extra_info;
   purpleGListEnumerator *enumerator = new purpleGListEnumerator();
-  enumerator->Init(prpl_info->protocol_options,
+  enumerator->Init(GET_PROTO_INFO(mInfo)->protocol_options,
                    purpleTypeToInterface<purplePref, PurpleAccountOption>);
+
+  NS_ADDREF(*aResult = enumerator);
+  return NS_OK;
+}
+
+/* nsISimpleEnumerator getUsernameSplit (); */
+NS_IMETHODIMP purpleProtocol::GetUsernameSplit(nsISimpleEnumerator **aResult)
+{ 
+  NS_ENSURE_TRUE(mInfo, NS_ERROR_NOT_INITIALIZED);
+
+  purpleGListEnumerator *enumerator = new purpleGListEnumerator();
+  enumerator->Init(GET_PROTO_INFO(mInfo)->user_splits,
+                   purpleTypeToInterface<purpleUsernameSplit,
+                                         PurpleAccountUserSplit>);
 
   NS_ADDREF(*aResult = enumerator);
   return NS_OK;
@@ -171,11 +218,9 @@ NS_IMETHODIMP purpleProtocol::GetOptions(nsISimpleEnumerator **aResult)
   {                                                                     \
     NS_ENSURE_TRUE(mInfo, NS_ERROR_NOT_INITIALIZED);                    \
                                                                         \
-    PurplePluginProtocolInfo *prpl_info =                               \
-      (PurplePluginProtocolInfo *) mInfo->extra_info;                   \
-                                                                        \
     *a##aOpt =                                                          \
-      prpl_info->options & OPT_PROTO_##aConst ? PR_TRUE : PR_FALSE;     \
+      GET_PROTO_INFO(mInfo)->options & OPT_PROTO_##aConst ? PR_TRUE     \
+                                                          : PR_FALSE;   \
                                                                         \
     return NS_OK;                                                       \
   }

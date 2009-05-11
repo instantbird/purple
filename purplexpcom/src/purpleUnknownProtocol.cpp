@@ -97,8 +97,14 @@ NS_IMETHODIMP purpleUnknownProtocol::AccountExists(const nsACString& aName,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* nsISimpleEnumerator getOptionEnumerator (); */
+/* nsISimpleEnumerator getOptions (); */
 NS_IMETHODIMP purpleUnknownProtocol::GetOptions(nsISimpleEnumerator **aResult)
+{
+  return NS_NewArrayEnumerator(aResult, nsnull);
+}
+
+/* nsISimpleEnumerator getUsernameSplit (); */
+NS_IMETHODIMP purpleUnknownProtocol::GetUsernameSplit(nsISimpleEnumerator **aResult)
 {
   return NS_NewArrayEnumerator(aResult, nsnull);
 }
