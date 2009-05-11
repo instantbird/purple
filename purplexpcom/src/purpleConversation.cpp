@@ -60,6 +60,7 @@ PRLogModuleInfo *gPurpleConvLog = nsnull;
 PRUint32 purpleConversation::sLastId = 0;
 
 purpleConversation::purpleConversation()
+  : mUninitialized(PR_FALSE)
 {
   /* member initializers and constructor code */
   mId = ++sLastId;
@@ -89,6 +90,7 @@ void purpleConversation::UnInit()
   LOG(("purpleConversation::unInit (mId == %i)", mId));
   mConv->ui_data = NULL;
   mConv = NULL;
+  mUninitialized = PR_TRUE;
 }
 
 /* readonly attribute purpleIAccount account; */
@@ -124,8 +126,6 @@ NS_IMETHODIMP purpleConversation::GetTitle(nsACString& aTitle)
 /* readonly attribute long idConv; */
 NS_IMETHODIMP purpleConversation::GetId(PRUint32 *aId)
 {
-  NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
-
   *aId = mId;
   return NS_OK;
 }
@@ -191,11 +191,14 @@ NS_IMETHODIMP purpleConversation::SendMsg(const nsACString& aMsg)
 /* void close (); */
 NS_IMETHODIMP purpleConversation::Close()
 {
-  NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
+  NS_ENSURE_TRUE(mConv || mUninitialized, NS_ERROR_NOT_INITIALIZED);
 
   LOG(("purpleConversation::Close (mId = %i)", mId));
-  purple_conversation_destroy(mConv);
-  mConv = NULL;
+
+  if (!mUninitialized) {
+    purple_conversation_destroy(mConv);
+    mConv = NULL;
+  }
 
   return NS_OK;
 }
