@@ -116,6 +116,8 @@ NS_IMETHODIMP purpleMessage::SetMessage(nsACString const& aMessage)
 /* readonly attribute purpleIConversation conversation; */
 NS_IMETHODIMP purpleMessage::GetConversation(purpleIConversation * *aConversation)
 {
+  NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
+
   NS_IF_ADDREF(*aConversation = (purpleIConversation *)mConv->ui_data);
   return NS_OK;
 }
