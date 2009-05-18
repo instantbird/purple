@@ -168,7 +168,7 @@ for pack in strings:
     fhandle = open(file, 'w')
     for msg in strings[pack]:
         id = allstrings[msg]['id']
-        if files[pack][id] > 1:
+        if files[pack][id] > 1 or id == '':
             m = hashlib.md5()
             m.update(msg)
             id += m.hexdigest()[0:8]
@@ -211,7 +211,7 @@ for lang in po_files:
         fhandle = open(file, 'w')
         for msg in strings[pack]:
             id = allstrings[msg]['id']
-            if files[pack][id] > 1:
+            if files[pack][id] > 1 or id == '':
                 m = hashlib.md5()
                 m.update(msg)
                 id += m.hexdigest()[0:8]
