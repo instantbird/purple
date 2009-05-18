@@ -269,10 +269,11 @@ nsCString *purpleGetText::GetString(const char *package,
   LOG(("GetString(package = %s, %s)", package, string));
 
   const char *ident = GetTextIdentifier(string);
-
-  nsCString *result = GetStringFromProperties(package, ident);
-  if (result)
-    return result;
+  if (*ident) {
+    nsCString *result = GetStringFromProperties(package, ident);
+    if (result)
+      return result;
+  }
 
   nsCOMPtr<nsICryptoHash> hash = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID);
   NS_ENSURE_TRUE(hash, nsnull);
