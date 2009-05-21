@@ -33,7 +33,7 @@
 #include "signals.h"
 #include "util.h"
 
-#define SEND_TYPED_TIMEOUT 5000
+#define SEND_TYPED_TIMEOUT_SECONDS 5
 
 static GList *conversations = NULL;
 static GList *ims = NULL;
@@ -1125,8 +1125,9 @@ purple_conv_im_start_send_typed_timeout(PurpleConvIm *im)
 {
 	g_return_if_fail(im != NULL);
 
-	im->send_typed_timeout = purple_timeout_add(SEND_TYPED_TIMEOUT, send_typed_cb,
-											  purple_conv_im_get_conversation(im));
+	im->send_typed_timeout = purple_timeout_add_seconds(SEND_TYPED_TIMEOUT_SECONDS,
+	                                                    send_typed_cb,
+	                                                    purple_conv_im_get_conversation(im));
 }
 
 void
@@ -1479,11 +1480,11 @@ purple_conv_chat_write(PurpleConvChat *chat, const char *who, const char *messag
 		return;
 
 	if (!(flags & PURPLE_MESSAGE_WHISPER)) {
-		char *str;
+		const char *str;
 
-		str = g_strdup(purple_normalize(account, who));
+		str = purple_normalize(account, who);
 
-		if (!strcmp(str, purple_normalize(account, chat->nick))) {
+		if (!strcmp(str, chat->nick)) {
 			flags |= PURPLE_MESSAGE_SEND;
 		} else {
 			flags |= PURPLE_MESSAGE_RECV;
@@ -1491,8 +1492,6 @@ purple_conv_chat_write(PurpleConvChat *chat, const char *who, const char *messag
 			if (purple_utf8_has_word(message, chat->nick))
 				flags |= PURPLE_MESSAGE_NICK;
 		}
-
-		g_free(str);
 	}
 
 	/* Pass this on to either the ops structure or the default write func. */
