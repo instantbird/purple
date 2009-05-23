@@ -1182,8 +1182,13 @@ purple_account_disconnect(PurpleAccount *account)
 
 	gc = purple_account_get_connection(account);
 	_purple_connection_destroy(gc);
+
+	/* 
+	XXXFlo: disable this until the UI for requesting a password
+	        from the user works in Instantbird
 	if (!purple_account_get_remember_password(account))
 		purple_account_set_password(account, NULL);
+	*/
 	purple_account_set_connection(account, NULL);
 
 	account->disconnecting = FALSE;

@@ -23,6 +23,7 @@
 #include "internal.h"
 
 #include "conversation.h"
+#include "core.h"
 #include "debug.h"
 #include "notify.h"
 #include "util.h"
@@ -424,7 +425,7 @@ int irc_cmd_quit(struct irc_conn *irc, const char *cmd, const char *target, cons
 		irc->quitting = TRUE;
 
 		if (!irc->account->disconnecting)
-			purple_account_set_status(irc->account, "offline", TRUE, NULL);
+			purple_account_set_enabled(irc->account, purple_core_get_ui(), FALSE);
 	}
 
 	return 0;
