@@ -37,10 +37,12 @@
 
 #include "purpleConvIM.h"
 #include "purpleIAccountBuddy.h"
+#include "purpleCoreService.h"
 
-#include <nsXPCOM.h>
-#include <nsStringAPI.h>
 #include <nsCOMPtr.h>
+#include <nsServiceManagerUtils.h>
+#include <nsStringAPI.h>
+#include <nsXPCOM.h>
 
 #ifdef PR_LOGGING
 //
@@ -98,14 +100,21 @@ NS_IMETHODIMP purpleConvIM::GetBuddy(purpleIAccountBuddy * *aBuddy)
 {
   NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
 
-  PurpleBuddy *buddy = purple_find_buddy(purple_conversation_get_account(mConv),
-					 purple_conversation_get_name(mConv));
-  if (buddy && buddy->node.ui_data)
-    NS_IF_ADDREF(*aBuddy = (purpleIAccountBuddy *)buddy->node.ui_data);
-  else
+  PurpleBuddy *buddy =
+    purple_find_buddy(purple_conversation_get_account(mConv),
+                      purple_conversation_get_name(mConv));
+  if (!buddy) {
     *aBuddy = nsnull;
+    return NS_OK;
+  }
 
-  return NS_OK;
+  nsCOMPtr<purpleIBuddy> pBuddy;
+  nsCOMPtr<purpleICoreService> pcs =
+    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
+  nsresult rv = pcs->GetBuddyByPurpleBuddy(buddy, getter_AddRefs(pBuddy));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return pBuddy->GetAccountBuddyForPurpleBuddy(buddy, aBuddy);
 }
 
 /* readonly attribute short typingState; */
