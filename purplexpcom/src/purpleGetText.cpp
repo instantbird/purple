@@ -93,8 +93,10 @@ IMPL_PLURAL_RULE(12, n==0?5:n==1?0:n==2?1:n%100>=3&&n%100<=10?2:n%100>=11&&n%100
 IMPL_PLURAL_RULE(13, n==1?0:n==0||(n%100>0&&n%100<=10)?1:n%100>10&&n%100<20?2:3)
 // 14: Macedonian
 IMPL_PLURAL_RULE(14, n%10==1?0:n%10==2?1:2)
+// 15: Icelandic
+IMPL_PLURAL_RULE(15, n%10==1&&n%100!=11?0:1)
 
-static const purpleGetText::PluralRule pluralRules[15] = {
+static const purpleGetText::PluralRule pluralRules[] = {
   // 0: Chinese
   {1, plural_rule_0},
   // 1: English
@@ -124,10 +126,12 @@ static const purpleGetText::PluralRule pluralRules[15] = {
   // 13: Maltese
   {4, plural_rule_13},
   // 14: Macedonian
-  {3, plural_rule_14}
+  {3, plural_rule_14},
+  // 15: Icelandic
+  {2, plural_rule_15}
 };
 
-#define LAST_PLURAL_RULE 14
+#define PLURAL_RULES_COUNT ((PRInt32)(sizeof(pluralRules) / sizeof(PluralRule)))
 
 const purpleGetText::PluralRule *purpleGetText::GetPluralRule()
 {
@@ -149,7 +153,7 @@ const purpleGetText::PluralRule *purpleGetText::GetPluralRule()
   NS_ENSURE_SUCCESS(rv, nsnull);
 
   PRInt32 ruleNumber = strtol(NS_ConvertUTF16toUTF8(result).get(), NULL, 10);
-  NS_ENSURE_TRUE(ruleNumber < 0 || ruleNumber > LAST_PLURAL_RULE, nsnull);
+  NS_ENSURE_TRUE(ruleNumber >= 0 && ruleNumber < PLURAL_RULES_COUNT, nsnull);
 
   return mPluralRule = pluralRules + ruleNumber;
 }
