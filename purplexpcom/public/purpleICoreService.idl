@@ -52,7 +52,6 @@ interface mozIStorageConnection;
  * This is a proxy to the libpurple core
  */
 [ptr] native purpleNativeProtocol(purpleProtocol);
-[ptr] native PurpleNativeAccount(PurpleAccount);
 
 [scriptable, uuid(b82583f1-307b-4034-b5c7-9f727fab7d8c)]
 interface purpleICoreService: nsISupports {
@@ -75,7 +74,6 @@ interface purpleICoreService: nsISupports {
   nsISimpleEnumerator getProtocols();
 
   purpleIProtocol getProtocolById(in AUTF8String aProtocolId);
-  [noscript] purpleNativeProtocol getProtoById(in AUTF8String aProtocolId);
 
   /* accounts */
   purpleIAccount getAccountById(in AUTF8String aAccountId);

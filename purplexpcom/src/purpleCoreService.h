@@ -92,7 +92,7 @@ protected:
   PRBool mInitialized;
   PRBool mQuitting;
   PRInt16 mAutoLoginStatus;
-  nsCOMArray<purpleProtocol> mProtocols;
+  nsCOMArray<purpleIProtocol> mProtocols;
   nsCOMArray<purpleProxy> mProxies;
   nsCOMArray<purpleAccount> mAccounts;
   nsCOMArray<purpleConversation> mConversations;

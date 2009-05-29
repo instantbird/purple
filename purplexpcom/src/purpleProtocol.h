@@ -62,8 +62,6 @@ public:
 
   purpleProtocol();
   void Init(PurplePluginInfo *aInfo);
-  void UnInit() { mInfo = NULL; }
-  const char *GetId() {  return mInfo ? mInfo->id : NULL; }
 
 private:
   ~purpleProtocol();

@@ -149,3 +149,12 @@ NS_IMETHODIMP purpleUnknownProtocol::GetInfo(PurplePluginProtocolInfo * *aPrplIn
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+/* [noscript] PurpleNativeAccount createPurpleAccount (in AUTF8String aName,
+                                                       in purpleIAccount aAccount); */
+NS_IMETHODIMP purpleUnknownProtocol::CreatePurpleAccount(const nsACString & aName,
+                                                         purpleIAccount *aAccount,
+                                                         PurpleAccount * *aResult)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}

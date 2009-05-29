@@ -156,13 +156,20 @@ nsresult purpleConversation::DoCommand(const char *aMsg,
         // Check if '/' is native to the protocol. If it is, a
         // non-existing command is likely an error, don't send the
         // message
-        PurpleConnection *gc = purple_conversation_get_gc(mConv);
-        NS_ENSURE_TRUE(gc, NS_ERROR_UNEXPECTED);
-        PurplePluginProtocolInfo *prpl_info =
-          PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl);
-        NS_ENSURE_TRUE(prpl_info, NS_ERROR_UNEXPECTED);
+        nsCOMPtr<purpleIAccount> account;
+        nsresult rv = GetAccount(getter_AddRefs(account));
+        NS_ENSURE_SUCCESS(rv, rv);
+        NS_ENSURE_TRUE(account, NS_ERROR_NULL_POINTER);
 
-        if (prpl_info->options & OPT_PROTO_SLASH_COMMANDS_NATIVE) {
+        nsCOMPtr<purpleIProtocol> proto;
+        rv = account->GetProtocol(getter_AddRefs(proto));
+        NS_ENSURE_SUCCESS(rv, rv);
+        
+        PRBool slashCommandsNative = PR_FALSE;
+        rv = proto->GetSlashCommandsNative(&slashCommandsNative);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (slashCommandsNative) {
           LOG(("The '/' is native on this protocol, a non-existing command is an error"));
           return NS_ERROR_FAILURE;
         }

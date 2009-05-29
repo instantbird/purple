@@ -103,9 +103,15 @@ void purpleAccount::UnInit()
                   "Uninitializing uninitialized purpleAccount\n");
   NS_ENSURE_TRUE(INIT_CONDITION,);
 
+#ifdef DEBUG
+  nsCString protoId;
+  nsresult rv = NS_ERROR_FAILURE;
+  if (mProtocol)
+    rv = mProtocol->GetId(protoId);
   LOG(("uninitializing purpleAccount %s (%s)\n",
        mAccount ? purple_account_get_username(mAccount) : "(mAccount = NULL)",
-       (mProtocol && mHasValidProtocol) ? mProtocol->GetId() : "(mProtocol = NULL)"));
+       NS_SUCCEEDED(rv) ? protoId.get() : "mProtocol = NULL"));
+#endif
 
   if (mTimer) {
     mTimer->Cancel();
@@ -154,26 +160,31 @@ inline void purpleAccount::GetCharPref(const char *aName)
 PURPLE_IMPL_GETPREF(Bool, bool, PRBool)
 PURPLE_IMPL_GETPREF(Int, int, PRInt32)
 
-nsresult purpleAccount::create(const nsACString& aName, purpleProtocol *aPrpl,
+nsresult purpleAccount::create(const nsACString& aName, purpleIProtocol *aPrpl,
                                const nsCString& aKey)
 {
   NS_ENSURE_ARG_POINTER(aPrpl);
   NS_ENSURE_TRUE(!aName.IsEmpty(), NS_ERROR_UNEXPECTED);
 
-  PromiseFlatCString flatName(aName);
-  if (purple_accounts_find(flatName.get(), aPrpl->GetId())) {
+  nsCString prpl;
+  nsresult rv = aPrpl->GetId(prpl);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool alreadyExists = PR_FALSE;
+  rv = aPrpl->AccountExists(aName, &alreadyExists);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (alreadyExists) {
     // adding a duplicate account would confuse libpurple
-    // XXX: Should this test be included inside purple_account_new?
+    // XXX: Should this test be in purpleProtocol::CreatePurpleAccount?
     NS_WARNING("Attempted to create a duplicate account!");
     return NS_ERROR_ALREADY_INITIALIZED;
   }
 
-  mAccount = purple_account_new(flatName.get(), aPrpl->GetId());
-  NS_ENSURE_TRUE(mAccount, NS_ERROR_FAILURE);
-  mAccount->ui_data = this;
-  purple_accounts_add(mAccount);
+  rv = aPrpl->CreatePurpleAccount(aName, this, &mAccount);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsresult rv = SetId(aKey);
+  rv = SetId(aKey);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mProtocol = aPrpl;
@@ -182,10 +193,10 @@ nsresult purpleAccount::create(const nsACString& aName, purpleProtocol *aPrpl,
   rv = GetPrefBranch();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  PromiseFlatCString flatName(aName);
   mPrefBranch->SetCharPref(PREF_NAME, flatName.get());
-  mPrefBranch->SetCharPref(PREF_PRPL, aPrpl->GetId());
+  mPrefBranch->SetCharPref(PREF_PRPL, prpl.get());
 
-  nsCString prpl(aPrpl->GetId());
   rv = storeAccount(mId, flatName, prpl);
   if (NS_FAILED(rv)) {
     mPrefBranch->DeleteBranch("");
@@ -227,14 +238,11 @@ nsresult purpleAccount::load(const nsCString& aKey)
 
   /* Init the mProtocol member */
   nsCOMPtr<purpleICoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-  rv = pcs->GetProtoById(prpl, getter_AddRefs(mProtocol));
-
-  if (NS_SUCCEEDED(rv)) {
+  rv = pcs->GetProtocolById(prpl, getter_AddRefs(mProtocol));
+  if (NS_SUCCEEDED(rv) && mProtocol) {
     mHasValidProtocol = PR_TRUE;
-    mAccount = purple_account_new(name.get(), prpl.get());
-    NS_ENSURE_TRUE(mAccount, NS_ERROR_FAILURE);
-    mAccount->ui_data = this;
-    purple_accounts_add(mAccount);
+    rv = mProtocol->CreatePurpleAccount(name, this, &mAccount);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
   else {
     mConnectionErrorReason = (PurpleConnectionError) ERROR_UNKNOWN_PRPL;
@@ -242,7 +250,7 @@ nsresult purpleAccount::load(const nsCString& aKey)
       do_CreateInstance(PURPLE_UNKNOWN_PROTOCOL_CONTRACTID);
     NS_ENSURE_TRUE(unknown, NS_ERROR_OUT_OF_MEMORY);
     unknown->Init(prpl);
-    mProtocol = (purpleProtocol *)unknown.get(); // Ugly...
+    mProtocol = unknown;
   }
 
   /* Load the alias if any */
@@ -499,9 +507,15 @@ nsresult purpleAccount::remove()
   nsresult rv = GetPrefBranch();
   NS_ENSURE_SUCCESS(rv, rv);
 
+#ifdef DEBUG
+  nsCString protoId;
+  rv = NS_ERROR_FAILURE;
+  if (mProtocol)
+    rv = mProtocol->GetId(protoId);
   LOG(("Deleting purpleAccount %s (%s)\n",
        mAccount ? purple_account_get_username(mAccount) : "(mAccount = NULL)",
-       (mProtocol && mHasValidProtocol) ? mProtocol->GetId() : "(mProtocol = NULL)"));
+       NS_SUCCEEDED(rv) ? protoId.get() : "mProtocol = NULL"));
+#endif
 
   /* Remove data from the pref branch */
   rv = mPrefBranch->DeleteBranch("");

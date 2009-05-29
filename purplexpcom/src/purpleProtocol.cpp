@@ -260,3 +260,22 @@ NS_IMETHODIMP purpleProtocol::GetInfo(PurplePluginProtocolInfo * *aPrplInfo)
 
   return NS_OK;
 }
+
+/* [noscript] PurpleNativeAccount createPurpleAccount (in AUTF8String aName,
+                                                       in purpleIAccount aAccount); */
+NS_IMETHODIMP purpleProtocol::CreatePurpleAccount(const nsACString & aName,
+                                                  purpleIAccount *aAccount,
+                                                  PurpleAccount * *aResult)
+{
+  NS_ENSURE_TRUE(mInfo, NS_ERROR_NOT_INITIALIZED);
+
+  PurpleAccount *account =
+    purple_account_new(PromiseFlatCString(aName).get(), mInfo->id);
+  NS_ENSURE_TRUE(account, NS_ERROR_FAILURE);
+
+  account->ui_data = aAccount;
+  purple_accounts_add(account);
+
+  *aResult = account;
+  return NS_OK;
+}

@@ -445,7 +445,7 @@ NS_IMETHODIMP purpleCoreService::Quit()
 
   UNINIT(Conversations);
   UNINIT(Accounts);
-  UNINIT(Protocols);
+  mProtocols.Clear();
   mProxies.Clear();
   mInitialized = PR_FALSE;
   purple_core_quit();
@@ -774,7 +774,10 @@ NS_IMETHODIMP purpleCoreService::GetProtocolById(const nsACString& aProtocolId, 
   PURPLE_ENSURE_INIT(mInitialized);
 
   for (PRInt32 i = mProtocols.Count() - 1; i >= 0; --i) {
-    if (aProtocolId.Equals(mProtocols[i]->GetId())) {
+    nsCString id;
+    nsresult rv = mProtocols[i]->GetId(id);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (aProtocolId.Equals(id)) {
       NS_ADDREF(*aResult = mProtocols[i]);
       return NS_OK;
     }
@@ -783,27 +786,6 @@ NS_IMETHODIMP purpleCoreService::GetProtocolById(const nsACString& aProtocolId, 
   *aResult = nsnull;
   return NS_OK;
 }
-
-/* [noscript] purpleNativeProtocol getProtoById (in AUTF8String aProtocolId); */
-NS_IMETHODIMP purpleCoreService::GetProtoById(const nsACString& aProtocolId, purpleProtocol * *aResult)
-{
-  PURPLE_ENSURE_INIT(mInitialized);
-
-  for (PRInt32 i = mProtocols.Count() - 1; i >= 0; --i) {
-    if (aProtocolId.Equals(mProtocols[i]->GetId())) {
-      NS_ADDREF(*aResult = mProtocols[i]);
-      return NS_OK;
-    }
-  }
-
-#ifdef DEBUG
-  nsCString warning("Failed to get protocol ");
-  warning.Append(aProtocolId);
-  NS_WARNING(warning.get());
-#endif
-  return NS_ERROR_FAILURE;
-}
-
 
 nsresult purpleCoreService::InitProxies()
 {
@@ -1151,9 +1133,10 @@ NS_IMETHODIMP purpleCoreService::CreateAccount(const nsACString &aName,
   } while (found);
 
   /* Get the prpl */
-  nsCOMPtr<purpleProtocol> proto;
-  rv = GetProtoById(aPrpl, getter_AddRefs(proto));
+  nsCOMPtr<purpleIProtocol> proto;
+  rv = GetProtocolById(aPrpl, getter_AddRefs(proto));
   NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(proto, NS_ERROR_FAILURE);
 
   /* Actually create the new account */
   nsCOMPtr<purpleAccount> account = do_CreateInstance(PURPLE_ACCOUNT_CONTRACTID);

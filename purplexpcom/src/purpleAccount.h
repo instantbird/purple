@@ -70,7 +70,7 @@ public:
   const nsCString& GetKey() { return mKey; }
   PRUint32 GetId() { return mId; }
   PurpleAccount *GetPurpleAccount() { return mAccount; }
-  nsresult create(const nsACString& name, purpleProtocol *prpl,
+  nsresult create(const nsACString& name, purpleIProtocol *prpl,
                   const nsCString& aKey);
   nsresult load(const nsCString& aKey);
   nsresult checkAutoLogin();
@@ -103,7 +103,7 @@ protected:
   nsCString mKey;
   PRUint32 mId;
   PRBool mHasValidProtocol;
-  nsCOMPtr<purpleProtocol> mProtocol;
+  nsCOMPtr<purpleIProtocol> mProtocol;
   nsCOMPtr<purpleIProxyInfo> mProxy;
   nsCOMPtr<nsIPrefBranch> mPrefBranch;
   nsCOMPtr<nsIPrefBranch> mPrefOptBranch;
