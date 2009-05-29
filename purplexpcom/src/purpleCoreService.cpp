@@ -50,10 +50,12 @@
 
 #include <nsServiceManagerUtils.h>
 #include <nsComponentManagerUtils.h>
+#include <nsICategoryManager.h>
 #include <nsIIOService2.h>
 #include <nsIObserverService.h>
 #include <nsIConsoleService.h>
 #include <nsIPrefService.h>
+#include <nsISupportsPrimitives.h>
 #include <nsIXULRuntime.h>
 #include <nsCOMPtr.h>
 #include <nsCRTGlue.h>
@@ -425,6 +427,44 @@ void purpleCoreService::InitProtocols()
       mProtocols.AppendObject(proto);
     }
   }
+
+  LOG(("Init override protocols"));
+  nsCOMPtr<nsICategoryManager> catMgr =
+    do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
+  NS_ENSURE_TRUE(catMgr, );
+
+  nsCOMPtr<nsISimpleEnumerator> catEntries;
+  nsresult rv = catMgr->EnumerateCategory(PURPLE_OVERRIDE_PROTOCOL_CATEGORY,
+					  getter_AddRefs(catEntries));
+  NS_ENSURE_SUCCESS(rv, );
+
+  PRBool hasMore;
+  while (NS_SUCCEEDED(catEntries->HasMoreElements(&hasMore)) && hasMore) {
+    nsCOMPtr<nsISupports> elem;
+    rv = catEntries->GetNext(getter_AddRefs(elem));
+    NS_ENSURE_SUCCESS(rv, );
+
+    nsCOMPtr<nsISupportsCString> entry = do_QueryInterface(elem, &rv);
+    NS_ENSURE_SUCCESS(rv, );
+
+    nsCString entryName;
+    rv = entry->GetData(entryName);
+    NS_ENSURE_SUCCESS(rv, );
+
+    nsCString contractId;
+    rv = catMgr->GetCategoryEntry(PURPLE_OVERRIDE_PROTOCOL_CATEGORY,
+                                  entryName.get(), getter_Copies(contractId));
+    NS_ENSURE_SUCCESS(rv, );
+
+    LOG(("Attempting to register %s", contractId.get()));
+    nsCOMPtr<purpleIProtocol> proto = do_CreateInstance(contractId.get());
+    if (!proto) {
+      NS_WARNING("Failed attempt to register a protocol override component");
+      continue;
+    }
+
+    mProtocols.AppendObject(proto);
+  }
   LOG(("End init protocols"));
 }
 
@@ -771,7 +811,7 @@ NS_IMETHODIMP purpleCoreService::GetProtocols(nsISimpleEnumerator **aResult)
 /* purpleIProtocol getProtocolById (in AUTF8String aProtocolId); */
 NS_IMETHODIMP purpleCoreService::GetProtocolById(const nsACString& aProtocolId, purpleIProtocol **aResult)
 {
-  PURPLE_ENSURE_INIT(mInitialized);
+  PURPLE_ENSURE_INIT(mProtocols.Count());
 
   for (PRInt32 i = mProtocols.Count() - 1; i >= 0; --i) {
     nsCString id;

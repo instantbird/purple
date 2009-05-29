@@ -42,6 +42,7 @@
 #include "purpleContentPolicy.h"
 #include "purpleConvIM.h"
 #include "purpleConvChat.h"
+#include "purpleOverrideProtocol.h"
 #include "purpleProtocol.h"
 #include "purpleUnknownProtocol.h"
 #include "purplePref.h"
@@ -61,6 +62,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(purpleCoreService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleContentPolicy)
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleConvIM)
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleConvChat)
+NS_GENERIC_FACTORY_CONSTRUCTOR(purpleOverrideProtocol)
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleProtocol)
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleUnknownProtocol)
 NS_GENERIC_FACTORY_CONSTRUCTOR(purplePref)
@@ -135,6 +137,12 @@ static nsModuleComponentInfo components[] =
     PURPLE_CONV_CHAT_CID,
     PURPLE_CONV_CHAT_CONTRACTID,
     purpleConvChatConstructor
+  },
+  {
+    "PURPLE override protocol",
+    PURPLE_OVERRIDE_PROTOCOL_CID,
+    PURPLE_OVERRIDE_PROTOCOL_CONTRACTID,
+    purpleOverrideProtocolConstructor
   },
   {
     "PURPLE protocol",
