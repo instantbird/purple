@@ -708,18 +708,13 @@ void jabber_message_parse(JabberStream *js, xmlnode *packet)
 					g_free(ref);
 				}
 
-#if 0
-				/* Disable this for now in Instantbird, at least until we support correctly
-				   the difference between HTML and plain text for outgoing messages */
-
-				/* Convert all newlines to whitespace. Technically, even regular, non-XML HTML is supposed to ignore newlines, but Pidgin has, as convention
+			    /* Convert all newlines to whitespace. Technically, even regular, non-XML HTML is supposed to ignore newlines, but Pidgin has, as convention
 				 * treated \n as a newline for compatibility with other protocols
 				 */
 				for (c = jm->xhtml; *c != '\0'; c++) {
 					if (*c == '\n')
 						*c = ' ';
 				}
-#endif
 			}
 		} else if(!strcmp(child->name, "active") && !strcmp(xmlns,"http://jabber.org/protocol/chatstates")) {
 			jm->chat_state = JM_STATE_ACTIVE;
