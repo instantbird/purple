@@ -107,6 +107,7 @@ common_send(PurpleConversation *conv, const char *message, PurpleMessageFlags ms
 
 	type = purple_conversation_get_type(conv);
 
+#if 0
 	/* Always linkfy the text for display, unless we're
 	 * explicitly asked to do otheriwse*/
 	if (!(msgflags & PURPLE_MESSAGE_INVISIBLE)) {
@@ -121,6 +122,12 @@ common_send(PurpleConversation *conv, const char *message, PurpleMessageFlags ms
 		sent = g_strdup(displayed);
 	} else
 		sent = g_strdup(message);
+#else
+	/* send and display as is, linkification has already been
+	   handled by the conversation binding */
+	displayed = g_strdup(message);
+	sent = g_strdup(message);
+#endif
 
 	msgflags |= PURPLE_MESSAGE_SEND;
 
