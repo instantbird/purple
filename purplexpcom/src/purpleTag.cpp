@@ -37,8 +37,10 @@
 
 #include "purpleTag.h"
 #include "nsStringAPI.h"
+#include <nsIClassInfoImpl.h>
+#include <nsMemory.h>
 
-NS_IMPL_ISUPPORTS1(purpleTag, purpleITag)
+NS_IMPL_ISUPPORTS1_CI(purpleTag, purpleITag)
 
 purpleTag::purpleTag()
 : mId(0),

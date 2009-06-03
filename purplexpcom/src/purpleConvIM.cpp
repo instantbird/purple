@@ -43,6 +43,8 @@
 #include <nsServiceManagerUtils.h>
 #include <nsStringAPI.h>
 #include <nsXPCOM.h>
+#include <nsIClassInfoImpl.h>
+#include <nsMemory.h>
 
 #ifdef PR_LOGGING
 //
@@ -52,15 +54,18 @@ extern PRLogModuleInfo *gPurpleConvLog;
 #endif
 #define LOG(args) PR_LOG(gPurpleConvLog, PR_LOG_DEBUG, args)
 
-//NS_IMPL_ISUPPORTS2(purpleConvIM, purpleIConversation, purpleIConvIM)
+//NS_IMPL_ISUPPORTS2_CI(purpleConvIM, purpleIConversation, purpleIConvIM)
 NS_INTERFACE_MAP_BEGIN(purpleConvIM)
   NS_INTERFACE_MAP_ENTRY(purpleIConvIM)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(purpleIConversation, purpleConversation)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, purpleIConvIM)
+  NS_IMPL_QUERY_CLASSINFO(purpleConvIM)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(purpleConvIM)
 NS_IMPL_RELEASE(purpleConvIM)
+
+NS_IMPL_CI_INTERFACE_GETTER2(purpleConvIM, purpleIConversation, purpleIConvIM)
 
 purpleConvIM::purpleConvIM()
   : mSentTyping(PR_FALSE)

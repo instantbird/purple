@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "purplePref.h"
+#include "purpleClassInfo.h"
 #include "purpleGListEnumerator.h"
 #include <nsStringAPI.h>
 
@@ -51,10 +52,12 @@ static PRLogModuleInfo *gPurplePrefLog = nsnull;
 #endif
 #define LOG(args) PR_LOG(gPurplePrefLog, PR_LOG_DEBUG, args)
 
-class purpleKeyValuePair : public purpleIKeyValuePair
+class purpleKeyValuePair : public purpleIKeyValuePair,
+                           public nsIClassInfo
 {
 public:
   NS_DECL_ISUPPORTS
+  NS_DECL_NSICLASSINFO
   NS_DECL_PURPLEIKEYVALUEPAIR
 
   purpleKeyValuePair() {}
@@ -74,7 +77,7 @@ protected:
 };
 
 /* Implementation file */
-NS_IMPL_ISUPPORTS1(purpleKeyValuePair, purpleIKeyValuePair)
+PURPLE_IMPL_ISUPPORTS1_CI(purpleKeyValuePair, purpleIKeyValuePair)
 
 /* readonly attribute AUTF8String name; */
 NS_IMETHODIMP purpleKeyValuePair::GetName(nsACString & aName)
@@ -90,7 +93,7 @@ NS_IMETHODIMP purpleKeyValuePair::GetValue(nsACString & aValue)
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(purplePref, purpleIPref)
+PURPLE_IMPL_ISUPPORTS1_CI(purplePref, purpleIPref)
 
 purplePref::purplePref()
 {
@@ -169,5 +172,6 @@ NS_IMETHODIMP purplePref::GetList(nsISimpleEnumerator **_retval)
     purpleGListEnumerator *enumerator = new purpleGListEnumerator();
     enumerator->Init(purple_account_option_get_list(mOpt),
                      purpleTypeToInterface<purpleKeyValuePair,
-                     PurpleKeyValuePair>);
+                                           purpleIKeyValuePair,
+                                           PurpleKeyValuePair>);
     NS_ADDREF(*_retval = enumerator))

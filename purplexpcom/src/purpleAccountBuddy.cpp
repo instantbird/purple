@@ -42,13 +42,15 @@
 #include "purpleTooltipInfo.h"
 
 #include <nsServiceManagerUtils.h>
+#include <nsIClassInfoImpl.h>
+#include <nsMemory.h>
 #include <prprf.h>
 
 #pragma GCC visibility push(default)
 #include <libpurple/status.h>
 #pragma GCC visibility pop
 
-NS_IMPL_ISUPPORTS1(purpleAccountBuddy, purpleIAccountBuddy)
+NS_IMPL_ISUPPORTS1_CI(purpleAccountBuddy, purpleIAccountBuddy)
 
 #ifdef PR_LOGGING
 //
@@ -233,6 +235,7 @@ NS_IMETHODIMP purpleAccountBuddy::GetTooltipInfo(nsISimpleEnumerator** aTooltipI
     purpleGListEnumerator *enumerator = new purpleGListEnumerator();
     enumerator->Init(purple_notify_user_info_get_entries(user_info),
                      purpleTypeToInterface<purpleTooltipInfo,
+                                           purpleITooltipInfo,
                                            PurpleNotifyUserInfoEntry>,
                      CleanUserInfo, user_info);
     NS_ADDREF(*aTooltipInfo = enumerator);

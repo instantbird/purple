@@ -39,6 +39,8 @@
 #include "purpleCoreService.h"
 #include <nsCOMPtr.h>
 #include <nsServiceManagerUtils.h>
+#include <nsIClassInfoImpl.h>
+#include <nsMemory.h>
 
 #ifdef PR_LOGGING
 //
@@ -48,7 +50,7 @@ static PRLogModuleInfo *gPurpleMessageLog = nsnull;
 #endif
 #define LOG(args) PR_LOG(gPurpleMessageLog, PR_LOG_DEBUG, args)
 
-NS_IMPL_ISUPPORTS1(purpleMessage, purpleIMessage)
+NS_IMPL_ISUPPORTS1_CI(purpleMessage, purpleIMessage)
 
 purpleMessage::purpleMessage()
 {

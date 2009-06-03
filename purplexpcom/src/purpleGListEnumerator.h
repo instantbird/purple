@@ -69,14 +69,14 @@ private:
   void *mCleanupData;
 };
 
-template <typename iface, typename PurpleType>
+template <typename implclass, typename iface, typename PurpleType>
 nsISupports* purpleTypeToInterface(void *aData)
 {
-  iface *instance = new iface();
+  implclass *instance = new implclass();
   instance->Init((PurpleType *)aData);
 
   NS_ADDREF(instance);
-  return instance;
+  return static_cast<iface *>(instance);
 }
 
 #endif /* !PURPLE_G_LIST_ENUMERATOR_H */

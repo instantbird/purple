@@ -40,8 +40,10 @@
 #include "purpleStorage.h"
 #include <nsServiceManagerUtils.h>
 #include <nsComponentManagerUtils.h>
+#include <nsIClassInfoImpl.h>
+#include <nsMemory.h>
 
-NS_IMPL_ISUPPORTS1(purpleBuddy, purpleIBuddy)
+NS_IMPL_ISUPPORTS1_CI(purpleBuddy, purpleIBuddy)
 
 #ifdef PR_LOGGING
 //

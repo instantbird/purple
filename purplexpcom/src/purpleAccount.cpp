@@ -40,13 +40,13 @@
 #include "purpleUnknownProtocol.h"
 #include "purpleStorage.h"
 #include <nsIPrefService.h>
+#include <nsIClassInfoImpl.h>
 #include <nsServiceManagerUtils.h>
 #include <nsComponentManagerUtils.h>
-#include <nsMemory.h>
 #include <nsNetUtil.h>
 #include <prprf.h>
 
-NS_IMPL_ISUPPORTS1(purpleAccount, purpleIAccount)
+NS_IMPL_ISUPPORTS1_CI(purpleAccount, purpleIAccount)
 
 #define PREF_PREFIX             "messenger.account."
 #define PREF_OPTIONS            "options."

@@ -51,6 +51,7 @@
 #include <nsServiceManagerUtils.h>
 #include <nsComponentManagerUtils.h>
 #include <nsICategoryManager.h>
+#include <nsIClassInfoImpl.h>
 #include <nsIIOService2.h>
 #include <nsIObserverService.h>
 #include <nsIConsoleService.h>
@@ -81,7 +82,7 @@ static PRLogModuleInfo *gPurpleCoreServiceLog = nsnull;
 
 #define PREF_MESSENGER_ACCOUNTS "messenger.accounts"
 
-NS_IMPL_ISUPPORTS1(purpleCoreService, purpleICoreService)
+NS_IMPL_ISUPPORTS1_CI(purpleCoreService, purpleICoreService)
 
 extern nsresult init_libpurple();
 extern void connect_to_blist_signals();

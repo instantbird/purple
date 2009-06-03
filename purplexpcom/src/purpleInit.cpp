@@ -327,10 +327,10 @@ static void conv_add_chat_users(PurpleConversation *conv,
                                 GList *cbuddies,
                                 gboolean new_arrivals)
 {
-  nsCOMArray<purpleConvChatBuddy> cBuddiesArray;
+  nsCOMArray<purpleIConvChatBuddy> cBuddiesArray;
 
   while (cbuddies) {
-    nsCOMPtr<purpleConvChatBuddy> buddy = new purpleConvChatBuddy();
+    purpleConvChatBuddy *buddy = new purpleConvChatBuddy();
     buddy->Init((PurpleConvChatBuddy *)cbuddies->data);
     cBuddiesArray.AppendObject(buddy);
     cbuddies = cbuddies->next;
@@ -362,9 +362,10 @@ static void conv_update_chat_usr(PurpleConversation *conv, const char *user,
   PurpleConvChatBuddy *prplBuddy = purple_conv_chat_cb_find(PURPLE_CONV_CHAT(conv), user);
   NS_ENSURE_TRUE(prplBuddy,);
 
-  nsCOMPtr<purpleConvChatBuddy> buddy = new purpleConvChatBuddy();
+  purpleConvChatBuddy *buddy = new purpleConvChatBuddy();
   buddy->Init(prplBuddy);
-  notify_conv(conv, buddy, "chat-buddy-update", aData);
+  notify_conv(conv, static_cast<purpleIConvChatBuddy *>(buddy),
+              "chat-buddy-update", aData);
 }
 
 static void conv_update_chat_user(PurpleConversation *conv, const char *user)

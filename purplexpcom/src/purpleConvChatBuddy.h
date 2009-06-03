@@ -40,20 +40,15 @@
 
 #include "purpleIConversation.h"
 #include "purpleAccountBuddy.h"
-#include<nsStringAPI.h>
+#include <nsStringAPI.h>
+#include <nsIClassInfo.h>
 
-// 1dd5ce17-fc2d-46f9-a215-c6b07bb9cb5b
-#define PURPLE_CONV_CHAT_BUDDY_CID \
-{ 0x1dd5ce17, 0xfc2d, 0x46f9, \
-  { 0xa2, 0x15, 0xc6, 0xb0, 0x7b, 0xb9, 0xcb, 0x5b } \
- }
-
-#define PURPLE_CONV_CHAT_BUDDY_CONTRACTID     "@instantbird.org/purple/convchatbuddy;1"
-
-class purpleConvChatBuddy : public purpleIConvChatBuddy
+class purpleConvChatBuddy : public purpleIConvChatBuddy,
+                            public nsIClassInfo
 {
 public:
   NS_DECL_ISUPPORTS
+  NS_DECL_NSICLASSINFO
   NS_DECL_PURPLEICONVCHATBUDDY
 
   purpleConvChatBuddy();

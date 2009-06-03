@@ -36,8 +36,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "purpleConvChatBuddy.h"
+#include "purpleClassInfo.h"
 
-NS_IMPL_ISUPPORTS1(purpleConvChatBuddy, purpleIConvChatBuddy)
+PURPLE_IMPL_ISUPPORTS1_CI(purpleConvChatBuddy, purpleIConvChatBuddy)
 
 purpleConvChatBuddy::purpleConvChatBuddy()
   : mFlags(PURPLE_CBFLAGS_NONE)

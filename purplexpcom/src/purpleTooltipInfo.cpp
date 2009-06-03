@@ -36,8 +36,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "purpleTooltipInfo.h"
+#include "purpleClassInfo.h"
 
-NS_IMPL_ISUPPORTS1(purpleTooltipInfo, purpleITooltipInfo)
+PURPLE_IMPL_ISUPPORTS1_CI(purpleTooltipInfo, purpleITooltipInfo)
 
 purpleTooltipInfo::purpleTooltipInfo()
 {

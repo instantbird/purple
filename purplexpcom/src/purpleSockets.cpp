@@ -393,8 +393,8 @@ PRUint32 purpleSocketWatcher::AddWatch(gint aFd, PurpleInputCondition aCondition
   NS_ENSURE_TRUE(!NS_IsOffline(), 0);
 
   nsresult rv;
-  nsCOMPtr<purpleISocket> socket = do_CreateInstance(PURPLE_SOCKET_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, 0);
+  purpleISocket *socket = new purpleSocket();
+  NS_ENSURE_TRUE(socket, 0);
 
   PRInt32 id;
   rv = socket->Init(aFunction, aData, aFd, aCondition, &id);

@@ -37,6 +37,7 @@
 
 #include "nsIGenericFactory.h"
 #include "nsICategoryManager.h"
+#include "nsIClassInfoImpl.h"
 #include "nsServiceManagerUtils.h"
 #include "purpleCoreService.h"
 #include "purpleContentPolicy.h"
@@ -45,35 +46,35 @@
 #include "purpleOverrideProtocol.h"
 #include "purpleProtocol.h"
 #include "purpleUnknownProtocol.h"
-#include "purplePref.h"
 #include "purpleAccount.h"
 #include "purpleBuddy.h"
 #include "purpleTag.h"
 #include "purpleAccountBuddy.h"
 #include "purpleMessage.h"
-#include "purpleSockets.h"
 #include "purpleProxy.h"
 #include "purpleProxyInfo.h"
 #ifdef XP_MACOSX
 # include "nsDockTile.h"
 #endif
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(purpleCoreService)
+#define NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(_class) \
+  NS_GENERIC_FACTORY_CONSTRUCTOR(_class)                     \
+  NS_DECL_CLASSINFO(_class)
+
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleContentPolicy)
-NS_GENERIC_FACTORY_CONSTRUCTOR(purpleConvIM)
-NS_GENERIC_FACTORY_CONSTRUCTOR(purpleConvChat)
-NS_GENERIC_FACTORY_CONSTRUCTOR(purpleOverrideProtocol)
-NS_GENERIC_FACTORY_CONSTRUCTOR(purpleProtocol)
-NS_GENERIC_FACTORY_CONSTRUCTOR(purpleUnknownProtocol)
-NS_GENERIC_FACTORY_CONSTRUCTOR(purplePref)
-NS_GENERIC_FACTORY_CONSTRUCTOR(purpleAccount)
-NS_GENERIC_FACTORY_CONSTRUCTOR(purpleBuddy)
-NS_GENERIC_FACTORY_CONSTRUCTOR(purpleMessage)
-NS_GENERIC_FACTORY_CONSTRUCTOR(purpleSocket)
-NS_GENERIC_FACTORY_CONSTRUCTOR(purpleTag)
-NS_GENERIC_FACTORY_CONSTRUCTOR(purpleAccountBuddy)
-NS_GENERIC_FACTORY_CONSTRUCTOR(purpleProxy)
-NS_GENERIC_FACTORY_CONSTRUCTOR(purpleProxyInfo)
+NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleAccount)
+NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleAccountBuddy)
+NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleBuddy)
+NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleConvChat)
+NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleConvIM)
+NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleCoreService)
+NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleMessage)
+NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleOverrideProtocol)
+NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleProtocol)
+NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleProxy)
+NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleProxyInfo)
+NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleTag)
+NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleUnknownProtocol)
 #ifdef XP_MACOSX
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDockTile)
 #endif
@@ -111,104 +112,42 @@ static NS_METHOD UnregisterPurpleContentPolicy(nsIComponentManager *aCompMgr,
                                      PR_TRUE);
 }
 
+#define PURPLE_MODULE_CI(_class, _macroname, _name)     \
+  {                                                     \
+    "PURPLE "_name,                                     \
+    PURPLE_##_macroname##_CID,                          \
+    PURPLE_##_macroname##_CONTRACTID,                   \
+    purple##_class##Constructor,                        \
+    nsnull,                                             \
+    nsnull,                                             \
+    nsnull,                                             \
+    NS_CI_INTERFACE_GETTER_NAME(purple##_class),        \
+    nsnull,                                             \
+    &NS_CLASSINFO_NAME(purple##_class),                 \
+    0                                                   \
+  }
+
 static nsModuleComponentInfo components[] =
 {
-  {
-    "PURPLE core service",
-    PURPLE_CORE_SERVICE_CID,
-    PURPLE_CORE_SERVICE_CONTRACTID,
-    purpleCoreServiceConstructor
-  },
+  PURPLE_MODULE_CI(Account, ACCOUNT, "account"),
+  PURPLE_MODULE_CI(AccountBuddy, ACCOUNTBUDDY, "account buddy"),
+  PURPLE_MODULE_CI(Buddy, BUDDY, "buddy"),
+  PURPLE_MODULE_CI(ConvChat, CONV_CHAT, "chat conversation"),
+  PURPLE_MODULE_CI(ConvIM, CONV_IM, "IM conversation"),
+  PURPLE_MODULE_CI(CoreService, CORE_SERVICE, "core service"),
+  PURPLE_MODULE_CI(Message, MESSAGE, "message"),
+  PURPLE_MODULE_CI(OverrideProtocol, OVERRIDE_PROTOCOL, "override protocol"),
+  PURPLE_MODULE_CI(Protocol, PROTOCOL, "protocol"),
+  PURPLE_MODULE_CI(Proxy, PROXY, "proxy"),
+  PURPLE_MODULE_CI(ProxyInfo, PROXY_INFO, "proxy info"),
+  PURPLE_MODULE_CI(Tag, TAG, "tag"),
+  PURPLE_MODULE_CI(UnknownProtocol, UNKNOWN_PROTOCOL, "unknown protocol"),
   { "PURPLE conversation content policy",
     PURPLE_CONTENT_POLICY_CID,
     PURPLE_CONTENT_POLICY_CONTRACTID,
     purpleContentPolicyConstructor,
     RegisterPurpleContentPolicy,
     UnregisterPurpleContentPolicy
-  },
-  {
-    "PURPLE IM conversation",
-    PURPLE_CONV_IM_CID,
-    PURPLE_CONV_IM_CONTRACTID,
-    purpleConvIMConstructor
-  },
-  {
-    "PURPLE chat conversation",
-    PURPLE_CONV_CHAT_CID,
-    PURPLE_CONV_CHAT_CONTRACTID,
-    purpleConvChatConstructor
-  },
-  {
-    "PURPLE override protocol",
-    PURPLE_OVERRIDE_PROTOCOL_CID,
-    PURPLE_OVERRIDE_PROTOCOL_CONTRACTID,
-    purpleOverrideProtocolConstructor
-  },
-  {
-    "PURPLE protocol",
-    PURPLE_PROTOCOL_CID,
-    PURPLE_PROTOCOL_CONTRACTID,
-    purpleProtocolConstructor
-  },
-  {
-    "PURPLE unkown protocol",
-    PURPLE_UNKNOWN_PROTOCOL_CID,
-    PURPLE_UNKNOWN_PROTOCOL_CONTRACTID,
-    purpleUnknownProtocolConstructor
-  },
-  {
-    "PURPLE pref",
-    PURPLE_PREF_CID,
-    PURPLE_PREF_CONTRACTID,
-    purplePrefConstructor
-  },
-  {
-    "PURPLE account",
-    PURPLE_ACCOUNT_CID,
-    PURPLE_ACCOUNT_CONTRACTID,
-    purpleAccountConstructor
-  },
-  {
-    "PURPLE buddy",
-    PURPLE_BUDDY_CID,
-    PURPLE_BUDDY_CONTRACTID,
-    purpleBuddyConstructor
-  },
-  {
-    "PURPLE tag",
-    PURPLE_TAG_CID,
-    PURPLE_TAG_CONTRACTID,
-    purpleTagConstructor
-  },
-  {
-    "PURPLE account buddy",
-    PURPLE_ACCOUNTBUDDY_CID,
-    PURPLE_ACCOUNTBUDDY_CONTRACTID,
-    purpleAccountBuddyConstructor
-  },
-  {
-    "PURPLE message",
-    PURPLE_MESSAGE_CID,
-    PURPLE_MESSAGE_CONTRACTID,
-    purpleMessageConstructor
-  },
-  {
-    "PURPLE socket",
-    PURPLE_SOCKET_CID,
-    PURPLE_SOCKET_CONTRACTID,
-    purpleSocketConstructor
-  },
-  {
-    "PURPLE proxy",
-    PURPLE_PROXY_CID,
-    PURPLE_PROXY_CONTRACTID,
-    purpleProxyConstructor
-  },
-  {
-    "PURPLE proxy info",
-    PURPLE_PROXY_INFO_CID,
-    PURPLE_PROXY_INFO_CONTRACTID,
-    purpleProxyInfoConstructor
   }
 #ifdef XP_MACOSX
   ,{

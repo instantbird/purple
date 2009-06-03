@@ -37,6 +37,8 @@
 
 #include "purpleUnknownProtocol.h"
 #include <nsArrayEnumerator.h>
+#include <nsMemory.h>
+#include <nsIClassInfoImpl.h>
 
 #ifdef PR_LOGGING
 //
@@ -47,7 +49,7 @@ static PRLogModuleInfo *gPurpleUnknownProtocolLog = nsnull;
 #define LOG(args) PR_LOG(gPurpleUnknownProtocolLog, PR_LOG_DEBUG, args)
 
 /* Implementation file */
-NS_IMPL_ISUPPORTS1(purpleUnknownProtocol, purpleIProtocol)
+NS_IMPL_ISUPPORTS1_CI(purpleUnknownProtocol, purpleIProtocol)
 
 purpleUnknownProtocol::purpleUnknownProtocol()
 {

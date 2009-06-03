@@ -41,6 +41,7 @@
 #include "purpleITooltipInfo.h"
 #include <nsCOMPtr.h>
 #include <nsStringAPI.h>
+#include <nsIClassInfo.h>
 
 #pragma GCC visibility push(default)
 #include <libpurple/notify.h>
@@ -52,10 +53,12 @@
       { 0x8d, 0xf6, 0x08, 0xf8, 0x57, 0x7f, 0xe5, 0x2b }	\
   }
 
-class purpleTooltipInfo : public purpleITooltipInfo
+class purpleTooltipInfo : public purpleITooltipInfo,
+                          public nsIClassInfo
 {
 public:
   NS_DECL_ISUPPORTS
+  NS_DECL_NSICLASSINFO
   NS_DECL_PURPLEITOOLTIPINFO
 
   purpleTooltipInfo();

@@ -38,6 +38,8 @@
 #include "purpleOverrideProtocol.h"
 #include <prlog.h>
 #include <nsIXPConnect.h>
+#include <nsIClassInfoImpl.h>
+#include <nsMemory.h>
 
 #ifdef PR_LOGGING
 //
@@ -48,7 +50,7 @@ static PRLogModuleInfo *gPurpleOverrideProtocolLog = nsnull;
 #define LOG(args) PR_LOG(gPurpleOverrideProtocolLog, PR_LOG_DEBUG, args)
 
 /* Implementation file */
-NS_IMPL_ISUPPORTS2(purpleOverrideProtocol, purpleIOverrideProtocol, purpleIProtocol)
+NS_IMPL_ISUPPORTS2_CI(purpleOverrideProtocol, purpleIOverrideProtocol, purpleIProtocol)
 
 purpleOverrideProtocol::purpleOverrideProtocol()
 {

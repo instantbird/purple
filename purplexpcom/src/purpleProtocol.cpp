@@ -38,16 +38,12 @@
 #include "purpleProtocol.h"
 #include "purplePref.h"
 #include "purpleGListEnumerator.h"
+#include "purpleClassInfo.h"
 #include <nsCOMPtr.h>
 #include <nsComponentManagerUtils.h>
 #include <nsArrayEnumerator.h>
 #include <nsNetUtil.h>
 #include <nsIChromeRegistry.h>
-
-//#define CREATE_PRPL_PROPERTIES
-#ifdef CREATE_PRPL_PROPERTIES
-# include <stdio.h>
-#endif
 
 #ifdef PR_LOGGING
 //
@@ -57,10 +53,12 @@ static PRLogModuleInfo *gPurpleProtocolLog = nsnull;
 #endif
 #define LOG(args) PR_LOG(gPurpleProtocolLog, PR_LOG_DEBUG, args)
 
-class purpleUsernameSplit : public purpleIUsernameSplit
+class purpleUsernameSplit : public purpleIUsernameSplit,
+                            public nsIClassInfo
 {
 public:
   NS_DECL_ISUPPORTS
+  NS_DECL_NSICLASSINFO
   NS_DECL_PURPLEIUSERNAMESPLIT
 
   purpleUsernameSplit() : mUserSplit(NULL) {}
@@ -77,7 +75,7 @@ protected:
   const PurpleAccountUserSplit *mUserSplit;
 };
 
-NS_IMPL_ISUPPORTS1(purpleUsernameSplit, purpleIUsernameSplit)
+PURPLE_IMPL_ISUPPORTS1_CI(purpleUsernameSplit, purpleIUsernameSplit)
 
 #define PURPLE_IMPL_GETSPLITVALUE(aType, aName, aPurpleName, aStar)           \
   NS_IMETHODIMP purpleUsernameSplit::Get##aName(aType a##aName)               \
@@ -101,7 +99,7 @@ PURPLE_IMPL_GETSPLITVALUE(char *, Separator, separator, *)
 PURPLE_IMPL_GETSPLITVALUE(PRBool *, Reverse, reverse, *)
 
 /* Implementation file */
-NS_IMPL_ISUPPORTS1(purpleProtocol, purpleIProtocol)
+NS_IMPL_ISUPPORTS1_CI(purpleProtocol, purpleIProtocol)
 
 purpleProtocol::purpleProtocol()
   :mInfo(nsnull)
@@ -193,7 +191,9 @@ NS_IMETHODIMP purpleProtocol::GetOptions(nsISimpleEnumerator **aResult)
 
   purpleGListEnumerator *enumerator = new purpleGListEnumerator();
   enumerator->Init(GET_PROTO_INFO(mInfo)->protocol_options,
-                   purpleTypeToInterface<purplePref, PurpleAccountOption>);
+                   purpleTypeToInterface<purplePref,
+                                         purpleIPref,
+                                         PurpleAccountOption>);
 
   NS_ADDREF(*aResult = enumerator);
   return NS_OK;
@@ -207,6 +207,7 @@ NS_IMETHODIMP purpleProtocol::GetUsernameSplit(nsISimpleEnumerator **aResult)
   purpleGListEnumerator *enumerator = new purpleGListEnumerator();
   enumerator->Init(GET_PROTO_INFO(mInfo)->user_splits,
                    purpleTypeToInterface<purpleUsernameSplit,
+                                         purpleIUsernameSplit,
                                          PurpleAccountUserSplit>);
 
   NS_ADDREF(*aResult = enumerator);

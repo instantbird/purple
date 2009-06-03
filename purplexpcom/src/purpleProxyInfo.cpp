@@ -38,8 +38,10 @@
 #include "purpleProxyInfo.h"
 #include <nsServiceManagerUtils.h>
 #include <nsIPrefService.h>
+#include <nsIClassInfoImpl.h>
+#include <nsMemory.h>
 
-NS_IMPL_ISUPPORTS1(purpleProxyInfo, purpleIProxyInfo)
+NS_IMPL_ISUPPORTS1_CI(purpleProxyInfo, purpleIProxyInfo)
 
 purpleProxyInfo::purpleProxyInfo()
   : mType(-2)

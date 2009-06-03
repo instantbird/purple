@@ -52,15 +52,6 @@
 
 class nsIObserver;
 
-// 2e8f828f-2b2f-4a82-9efe-3cf8d983fbbf
-#define PURPLE_SOCKET_CID \
-{ 0x2e8f828f, 0x2b2f, 0x4a82, \
-  { 0x9e, 0xfe, 0x3c, 0xf8, 0xd9, 0x83, 0xfb, 0xbf } \
- }
-
-#define PURPLE_SOCKET_CONTRACTID \
-    "@instantbird.org/purple/socket;1"
-
 class purpleSocketInternal : public nsASocketHandler,
   public nsIRunnable
 {
