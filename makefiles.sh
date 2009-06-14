@@ -36,6 +36,7 @@
 
 add_makefiles "
 purple/Makefile
+purple/locales/Makefile
 purple/libraries/Makefile
 purple/libraries/libxml2/Makefile
 purple/libraries/glib/Makefile
@@ -44,8 +45,8 @@ purple/libraries/glib/gnulib/Makefile
 purple/libraries/glib/gobject/Makefile
 purple/libpurple/Makefile
 purple/libpurple/win32/Makefile
-purple/libpurple/protocols/irc/Makefile
 purple/libpurple/protocols/Makefile
+purple/libpurple/protocols/irc/Makefile
 purple/libpurple/protocols/simple/Makefile
 purple/libpurple/protocols/qq/Makefile
 purple/libpurple/protocols/msn/Makefile
@@ -53,6 +54,7 @@ purple/libpurple/protocols/gg/Makefile
 purple/libpurple/protocols/gg/lib/Makefile
 purple/libpurple/protocols/novell/Makefile
 purple/libpurple/protocols/netsoul/Makefile
+purple/libpurple/protocols/null/Makefile
 purple/libpurple/protocols/yahoo/Makefile
 purple/libpurple/protocols/myspace/Makefile
 purple/libpurple/protocols/jabber/Makefile
