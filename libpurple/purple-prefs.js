@@ -14,7 +14,6 @@ pref("purple.away.mins_before_away", 5);
 pref("purple.contact.last_match", false);
 pref("purple.conversations.chat.show_nick_change", true);
 pref("purple.conversations.im.send_typing", true);
-pref("purple.debug.timestamps", true);
 pref("purple.logging.format", "txt");
 pref("purple.logging.log_chats", true);
 pref("purple.logging.log_ims", true);

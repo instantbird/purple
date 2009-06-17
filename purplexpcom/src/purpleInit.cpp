@@ -75,6 +75,7 @@
 #include "purpleMessage.h"
 #include "purpleTimer.h"
 #include "purpleSockets.h"
+#include "purpleDebug.h"
 #include "purpleDNS.h"
 #include <purpleIPlugin.h>
 #include <xpcom-config.h>
@@ -103,10 +104,6 @@
 
 #define PURPLE_PROTOCOL_PLUGIN_CATEGORY   "purple-protocol-plugin"
 
-#define DEBUG_PURPLE_CONSOLE
-#ifdef DEBUG_PURPLE_CONSOLE
-# include <nsIConsoleService.h>
-#endif
 
 #ifdef PR_LOGGING
 //
@@ -581,36 +578,12 @@ static void connect_to_conversations_signals()
   LOG(("Connecting to conversation signals"));
 }
 
-#ifdef DEBUG_PURPLE_CONSOLE
-static void debug_print(PurpleDebugLevel level, const char *category,
-                        const char *arg)
-{
-  LOG(("pp-%s: %s", category, arg));
-  nsCOMPtr<nsIConsoleService> consoleService = 
-    do_GetService( "@mozilla.org/consoleservice;1" );
-
-  nsCString message(category);
-  message.Append(": ");
-  message.Append(arg);
-
-  nsString msg;
-  NS_CStringToUTF16(message, NS_CSTRING_ENCODING_UTF8, msg);
-
-  consoleService->LogStringMessage(msg.get());
-}
-
-static gboolean debug_enabled(PurpleDebugLevel level,
-                              const char *category)
-{
-  return true;
-}
-
 static PurpleDebugUiOps debugconsoleuiops = {
-  debug_print,
-  debug_enabled,
+  purpleDebug::ReportMessage,
+  purpleDebug::ReportMessageWithLocation,
+  purpleDebug::Enabled,
   NULL,NULL,NULL,NULL
 };
-#endif
 
 static PurpleDnsQueryUiOps dnsUiOps = {
   purpleDNS::Resolve,
@@ -1117,19 +1090,13 @@ init_libpurple()
   LOG(("Setting custom user directory to:  %s", cPath.get()));
   purple_util_set_user_dir(cPath.get());
 
-  purple_debug_set_enabled(FALSE);
-
   purple_core_set_ui_ops(&core_uiops);
   purple_conversations_set_ui_ops(&conversation_uiops);
   purple_connections_set_ui_ops(&connection_uiops);
   purple_accounts_set_ui_ops(&account_uiops);
   purple_blist_set_ui_ops(&blist_uiops);
   purple_idle_set_ui_ops(&idle_uiops);
-
-#ifdef DEBUG_PURPLE_CONSOLE
   purple_debug_set_ui_ops(&debugconsoleuiops);
-#endif
-
   purple_dnsquery_set_ui_ops(&dnsUiOps);
 
   /* The eventloop uiops use nsTimer and

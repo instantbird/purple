@@ -91,6 +91,7 @@ CPPSRCS		= \
 		purpleConvChat.cpp \
 		purpleConvChatBuddy.cpp \
 		purpleCoreService.cpp \
+		purpleDebug.cpp \
 		purpleDNS.cpp \
 		purpleInit.cpp \
 		purpleGetText.cpp \

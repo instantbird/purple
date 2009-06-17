@@ -30,17 +30,46 @@
 
 static PurpleDebugUiOps *debug_ui_ops = NULL;
 
-/*
- * This determines whether debug info should be written to the
- * console or not.
- *
- * It doesn't make sense to make this a normal Purple preference
- * because it's a command line option.  This will always be FALSE,
- * unless the user explicitly started Purple with the -d flag.
- * It doesn't matter what this value was the last time Purple was
- * started, so it doesn't make sense to save it in prefs.
- */
-static gboolean debug_enabled = FALSE;
+void
+purple_debug_with_location(PurpleDebugLevel level, const char *category,
+			   const char *file, int line, const char *function,
+			   const char *format, ...)
+{
+	va_list args;
+	PurpleDebugUiOps *ops;
+	char *arg_s = NULL;
+
+	g_return_if_fail(level != PURPLE_DEBUG_ALL);
+	g_return_if_fail(format != NULL);
+
+	ops = purple_debug_get_ui_ops();
+	if ((ops == NULL) ||
+	    (ops->print_with_location == NULL && ops->print == NULL) ||
+	    (ops->is_enabled && !ops->is_enabled(level, category)))
+		return;
+
+	va_start(args, format);
+
+	arg_s = g_strdup_vprintf(format, args);
+	if (ops->print_with_location != NULL)
+		ops->print_with_location(level, category, file, line, function, arg_s);
+	else
+		ops->print(level, category, arg_s);
+	g_free(arg_s);
+
+	va_end(args);
+}
+
+/* This is kept for ABI compatibility only. Should be removed once we
+ * change the version number and thus can safely assume that all old
+ * plugins will be disabled.
+ * New code uses purple_debug_with_location. */
+#undef purple_debug
+#undef purple_debug_misc
+#undef purple_debug_info
+#undef purple_debug_warning
+#undef purple_debug_error
+#undef purple_debug_fatal
 
 static void
 purple_debug_vargs(PurpleDebugLevel level, const char *category,
@@ -54,32 +83,12 @@ purple_debug_vargs(PurpleDebugLevel level, const char *category,
 
 	ops = purple_debug_get_ui_ops();
 
-	if (!debug_enabled && ((ops == NULL) || (ops->print == NULL) ||
-			(ops->is_enabled && !ops->is_enabled(level, category))))
+	if ((ops == NULL) || (ops->print == NULL) ||
+	    (ops->is_enabled && !ops->is_enabled(level, category)))
 		return;
 
 	arg_s = g_strdup_vprintf(format, args);
-
-	if (debug_enabled) {
-		gchar *ts_s;
-		const char *mdate;
-		time_t mtime = time(NULL);
-
-
-		mdate = purple_utf8_strftime("%H:%M:%S", localtime(&mtime));
-		ts_s = g_strdup_printf("(%s) ", mdate);
-
-		if (category == NULL)
-			g_print("%s%s", ts_s, arg_s);
-		else
-			g_print("%s%s: %s", ts_s, category, arg_s);
-
-		g_free(ts_s);
-	}
-
-	if (ops != NULL && ops->print != NULL)
-		ops->print(level, category, arg_s);
-
+	ops->print(level, category, arg_s);
 	g_free(arg_s);
 }
 
@@ -97,77 +106,25 @@ purple_debug(PurpleDebugLevel level, const char *category,
 	va_end(args);
 }
 
-void
-purple_debug_misc(const char *category, const char *format, ...)
-{
-	va_list args;
+#define PURPLE_IMPL_DEBUG_HELPER(name, NAME)				  \
+ void									  \
+ purple_debug_##name(const char *category, const char *format, ...)	  \
+ {									  \
+	 va_list args;							  \
+									  \
+	 g_return_if_fail(format != NULL);				  \
+									  \
+	 va_start(args, format);					  \
+	 purple_debug_vargs(PURPLE_DEBUG_##NAME, category, format, args); \
+	 va_end(args);							  \
+ }
 
-	g_return_if_fail(format != NULL);
-
-	va_start(args, format);
-	purple_debug_vargs(PURPLE_DEBUG_MISC, category, format, args);
-	va_end(args);
-}
-
-void
-purple_debug_info(const char *category, const char *format, ...)
-{
-	va_list args;
-
-	g_return_if_fail(format != NULL);
-
-	va_start(args, format);
-	purple_debug_vargs(PURPLE_DEBUG_INFO, category, format, args);
-	va_end(args);
-}
-
-void
-purple_debug_warning(const char *category, const char *format, ...)
-{
-	va_list args;
-
-	g_return_if_fail(format != NULL);
-
-	va_start(args, format);
-	purple_debug_vargs(PURPLE_DEBUG_WARNING, category, format, args);
-	va_end(args);
-}
-
-void
-purple_debug_error(const char *category, const char *format, ...)
-{
-	va_list args;
-
-	g_return_if_fail(format != NULL);
-
-	va_start(args, format);
-	purple_debug_vargs(PURPLE_DEBUG_ERROR, category, format, args);
-	va_end(args);
-}
-
-void
-purple_debug_fatal(const char *category, const char *format, ...)
-{
-	va_list args;
-
-	g_return_if_fail(format != NULL);
-
-	va_start(args, format);
-	purple_debug_vargs(PURPLE_DEBUG_FATAL, category, format, args);
-	va_end(args);
-}
-
-void
-purple_debug_set_enabled(gboolean enabled)
-{
-	debug_enabled = enabled;
-}
-
-gboolean
-purple_debug_is_enabled()
-{
-	return debug_enabled;
-}
+PURPLE_IMPL_DEBUG_HELPER(misc, MISC)
+PURPLE_IMPL_DEBUG_HELPER(info, INFO)
+PURPLE_IMPL_DEBUG_HELPER(warning, WARNING)
+PURPLE_IMPL_DEBUG_HELPER(error, ERROR)
+PURPLE_IMPL_DEBUG_HELPER(fatal, FATAL)
+/* End of the code kept for ABI compatibility */
 
 void
 purple_debug_set_ui_ops(PurpleDebugUiOps *ops)
@@ -179,17 +136,4 @@ PurpleDebugUiOps *
 purple_debug_get_ui_ops(void)
 {
 	return debug_ui_ops;
-}
-
-void
-purple_debug_init(void)
-{
-	purple_prefs_add_none("/purple/debug");
-
-	/*
-	 * This pref is obsolete and no longer referenced anywhere. It only
-	 * survives here because it would be an API break if we removed it.
-	 * Remove this when we get to 3.0.0 :)
-	 */
-	purple_prefs_add_bool("/purple/debug/timestamps", TRUE);
 }

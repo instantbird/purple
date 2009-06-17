@@ -120,8 +120,6 @@ purple_core_init(const char *ui)
 	 * for protocol prefs to work. */
 	purple_prefs_init();
 
-	purple_debug_init();
-
 	if (ops != NULL)
 	{
 		if (ops->ui_prefs_init != NULL)
