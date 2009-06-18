@@ -130,7 +130,6 @@ EXPORTS		= \
 		ntlm.h \
 		plugin.h \
 		pluginpref.h \
-		pounce.h \
 		prefs.h \
 		privacy.h \
 		proxy.h \
@@ -192,7 +191,6 @@ CSRCS		= \
 		notify.c \
 		plugin.c \
 		pluginpref.c \
-		pounce.c \
 		prefs.c \
 		privacy.c \
 		proxy.c \

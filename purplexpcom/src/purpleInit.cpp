@@ -53,7 +53,6 @@
 #include <libpurple/notify.h>
 #include <libpurple/prefs.h>
 #include <libpurple/prpl.h>
-#include <libpurple/pounce.h>
 #include <libpurple/savedstatuses.h>
 #include <libpurple/sound.h>
 #include <libpurple/status.h>
@@ -1117,9 +1116,6 @@ init_libpurple()
   purple_prefs_set_bool("/purple/logging/log_ims", TRUE);
   purple_prefs_set_bool("/purple/logging/log_chats", TRUE);
   purple_prefs_set_bool("/purple/logging/log_system", TRUE);
-
-  /* Load the pounces. */
-  purple_pounces_load();
 
   /* Now, to connect the account(s), create a status and activate it. */
   PurpleSavedStatus *status = purple_savedstatus_new(NULL, PURPLE_STATUS_AVAILABLE);

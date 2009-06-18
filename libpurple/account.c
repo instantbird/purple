@@ -30,7 +30,6 @@
 #include "debug.h"
 #include "network.h"
 #include "notify.h"
-#include "pounce.h"
 #include "prefs.h"
 #include "privacy.h"
 #include "prpl.h"
@@ -2565,9 +2564,6 @@ purple_accounts_delete(PurpleAccount *account)
 		if (purple_conversation_get_account(conv) == account)
 			purple_conversation_destroy(conv);
 	}
-
-	/* Remove this account's pounces */
-	purple_pounce_destroy_all_by_account(account);
 
 	/* This will cause the deletion of an old buddy icon. */
 	purple_buddy_icons_set_account_icon(account, NULL, 0);

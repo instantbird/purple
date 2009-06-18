@@ -43,7 +43,7 @@ pruneunused() {
   rm -f $1/libpurple/dbus-{a,b,d,p,s,t,u}*
   rm -f $1/libpurple/{purple.pc.in,purple.h,purple.h.in,version.h}
   rm -f $1/libpurple/gaim-compat.h
-  rm -f $1/libpurple/{certificate,desktopitem}.{c,h}
+  rm -f $1/libpurple/{certificate,desktopitem,pounce}.{c,h}
   rm -f $1/libpurple/protocols/qq/ChangeLog
   rm -f $1/libpurple/win32/{giowin32.c,global.mak,libpurplerc.rc.in,rules.mak,targets.mak}
 }
