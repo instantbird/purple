@@ -2306,6 +2306,7 @@ purple_proxy_connect_cancel_with_handle(void *handle)
 	}
 }
 
+#if 0
 static void
 proxy_pref_cb(const char *name, PurplePrefType type,
 			  gconstpointer value, gpointer data)
@@ -2339,6 +2340,7 @@ proxy_pref_cb(const char *name, PurplePrefType type,
 	else if (!strcmp(name, "/purple/proxy/password"))
 		purple_proxy_info_set_password(info, value);
 }
+#endif
 
 void *
 purple_proxy_get_handle()
@@ -2358,13 +2360,16 @@ purple_proxy_init(void)
 
 	/* Proxy */
 	purple_prefs_add_none("/purple/proxy");
+#if 0
 	purple_prefs_add_string("/purple/proxy/type", "none");
 	purple_prefs_add_string("/purple/proxy/host", "");
 	purple_prefs_add_int("/purple/proxy/port", 0);
 	purple_prefs_add_string("/purple/proxy/username", "");
 	purple_prefs_add_string("/purple/proxy/password", "");
+#endif
 	purple_prefs_add_bool("/purple/proxy/socks4_remotedns", FALSE);
 
+#if 0
 	/* Setup callbacks for the preferences. */
 	handle = purple_proxy_get_handle();
 	purple_prefs_connect_callback(handle, "/purple/proxy/type", proxy_pref_cb,
@@ -2384,6 +2389,7 @@ purple_proxy_init(void)
 	purple_prefs_trigger_callback("/purple/proxy/port");
 	purple_prefs_trigger_callback("/purple/proxy/username");
 	purple_prefs_trigger_callback("/purple/proxy/password");
+#endif
 }
 
 void
