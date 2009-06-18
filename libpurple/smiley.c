@@ -60,7 +60,7 @@ static gboolean smileys_loaded = FALSE;
 static char *smileys_dir = NULL;
 
 #define SMILEYS_DEFAULT_FOLDER			"custom_smiley"
-#define SMILEYS_LOG_ID				"smileys"
+#define SMILEYS_LOG_ID				N_("smileys")
 
 #define XML_FILE_NAME				"smileys.xml"
 
