@@ -238,7 +238,7 @@ include $(topsrcdir)/config/rules.mk
 export:: $(EXPORTS) $(PUBLIC)
 	$(INSTALL) $(IFLAGS1) $^
 
-purple.def: $(EXPORTS)
+purple.def: $(EXPORTS) $(GLOBAL_DEPS)
 	echo EXPORTS > purple.def 
 	(cd $(srcdir); cat $(EXPORTS)) |egrep '^[a-zA-Z].* \*?w?purple_[a-z_0-9]+\(' |sed -e 's/(.*//' -e 's/.* \*\?//' |sort |uniq >> purple.def
 	(cd $(srcdir); cat $(EXPORTS)) |egrep '^w?purple_[a-z_0-9]+ ?\(' |sed -e 's/(.*//' |sort |uniq >> purple.def
@@ -248,10 +248,10 @@ purple.def: $(EXPORTS)
 
 purple.dll: purple.def
 
-version.h: version.h.in $(DEPTH)/config/autoconf.mk
+version.h: version.h.in $(GLOBAL_DEPS)
 	sed 's/@''PURPLE_MAJOR_VERSION@/$(PURPLE_MAJOR_VERSION)/;s/@''PURPLE_MINOR_VERSION@/$(PURPLE_MINOR_VERSION)/;s/@''PURPLE_MICRO_VERSION@/$(PURPLE_MICRO_VERSION)/' $< > $@
 
-module.ver: module.ver.in $(DEPTH)/config/autoconf.mk
+module.ver: module.ver.in $(GLOBAL_DEPS)
 	sed 's/@''PURPLE_MAJOR_VERSION@/$(PURPLE_MAJOR_VERSION)/;s/@''PURPLE_MINOR_VERSION@/$(PURPLE_MINOR_VERSION)/;s/@''PURPLE_MICRO_VERSION@/$(PURPLE_MICRO_VERSION)/' $< > $@
 
 GARBAGE += purple.def version.h module.ver
