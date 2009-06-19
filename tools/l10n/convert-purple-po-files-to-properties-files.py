@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+#-*- coding: utf-8 -*- 
 
 import polib
 import re
@@ -32,6 +33,12 @@ strings = {'purple': []}
 
 # allstrings[entry.msgid] = {'id': id, 'packages': entry.packages}
 allstrings = {}
+
+fix_ellipsis_exp = re.compile('\.\.\.')
+
+# replace ... with the unicode ellipsis character
+def fix_ellipsis(aString):
+    return fix_ellipsis_exp.sub('…', aString)
 
 # fix paths of files that are not in the same folder in the
 # instantbird source tree and the pidgin source tree
@@ -178,7 +185,7 @@ for pack in strings:
         plural = allstrings[msg]['plural']
         if plural != '':
             msg += ';' + plural
-        fhandle.write(id + '=' + fix_multiline_string(msg) + '\n')
+        fhandle.write(id + '=' + fix_multiline_string(fix_ellipsis(msg)) + '\n')
     fhandle.close()
 
 # output the language files for all other languages
@@ -199,7 +206,7 @@ for lang in po_files:
                 msg += msgstrs[index]
         else:
             msg = entry.msgstr
-        local_strings[entry.msgid] = msg
+        local_strings[entry.msgid] = fix_ellipsis(msg)
     print lang
     for pack in strings:
         fixme = 0
