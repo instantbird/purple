@@ -254,4 +254,7 @@ version.h: version.h.in $(GLOBAL_DEPS)
 module.ver: module.ver.in $(GLOBAL_DEPS)
 	sed 's/@''PURPLE_MAJOR_VERSION@/$(PURPLE_MAJOR_VERSION)/;s/@''PURPLE_MINOR_VERSION@/$(PURPLE_MINOR_VERSION)/;s/@''PURPLE_MICRO_VERSION@/$(PURPLE_MICRO_VERSION)/' $< > $@
 
+_RC_STRING += -SRCDIR .
+module.rc: module.ver
+
 GARBAGE += purple.def version.h module.ver
