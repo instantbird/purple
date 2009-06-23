@@ -95,14 +95,30 @@ purpleDebug::PrepareFilePath(nsCString &aPath)
       do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
     NS_ENSURE_TRUE(localFile, );
 
+#ifdef XP_WIN
+    const char *begin, *end;
+    PRUint32 len = aPath.BeginReading(&begin, &end);
+    nsCString native;
+    char *dest;
+    NS_CStringGetMutableData(native, len, &dest);
+
+    for (; begin < end; ++begin, ++dest) {
+      *dest = *begin == '/' ? '\\' : *begin;
+    }
+
+    nsresult rv = localFile->InitWithNativePath(native);
+#else
     nsresult rv = localFile->InitWithNativePath(aPath);
+#endif
     NS_ENSURE_SUCCESS(rv, );
 
     PRBool exists = PR_FALSE;
     rv = localFile->Exists(&exists);
     NS_ENSURE_SUCCESS(rv, );
-    if (exists)
+    if (exists) {
+      aPath.Insert("file://", 0);
       return;
+    }
   }
 
   if (StringBeginsWith(aPath, mSourceBase))
