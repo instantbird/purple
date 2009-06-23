@@ -88,7 +88,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(purpleTimeout, nsIRunnable)
 
 NS_IMETHODIMP purpleTimeout::Run()
 {
-  NS_ASSERTION(!NS_IsMainThread(), "wrong thread");
+  NS_ASSERTION(NS_IsMainThread(), "wrong thread");
 
   mFunction(mData);
   return NS_OK;
