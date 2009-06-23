@@ -194,15 +194,14 @@ nsresult purpleDNSRequest::OnLookupComplete(nsICancelable *request,
     sockaddr *addr2 = (sockaddr *) g_memdup(&addr.inet, sizeof(addr.inet));
     addr2->sa_family = addr.inet.family; //very ugly!!
     hosts = g_slist_append(hosts, addr2);
-#else
-    hosts = g_slist_append(hosts, g_memdup(&addr.inet, sizeof(addr.inet)));
-#endif
-
-#if defined(PR_LOGGING) && !defined(WINCE)
+#if defined(PR_LOGGING)
     char ipaddr[INET6_ADDRSTRLEN];
     inet_ntop(addr2->sa_family, &((struct sockaddr_in *)addr2)->sin_addr,
               ipaddr, sizeof(ipaddr));
     LOG(("Found ip: %s", ipaddr));
+#endif
+#else
+    hosts = g_slist_append(hosts, g_memdup(&addr.inet, sizeof(addr.inet)));
 #endif
 
     record->HasMore(&more);
