@@ -45,6 +45,8 @@
 #include <prio.h>
 
 #ifdef PR_LOGGING
+#include <prnetdb.h>
+
 //
 // NSPR_LOG_MODULES=purpleDNS:5
 //
@@ -195,10 +197,11 @@ nsresult purpleDNSRequest::OnLookupComplete(nsICancelable *request,
     addr2->sa_family = addr.inet.family; //very ugly!!
     hosts = g_slist_append(hosts, addr2);
 #if defined(PR_LOGGING)
-    char ipaddr[INET6_ADDRSTRLEN];
-    inet_ntop(addr2->sa_family, &((struct sockaddr_in *)addr2)->sin_addr,
-              ipaddr, sizeof(ipaddr));
-    LOG(("Found ip: %s", ipaddr));
+    char ipaddr[64];
+    
+    if (PR_NetAddrToString(&addr, ipaddr, sizeof(ipaddr)) == PR_SUCCESS) {
+      LOG(("Found ip: %s", ipaddr));
+    }
 #endif
 #else
     hosts = g_slist_append(hosts, g_memdup(&addr.inet, sizeof(addr.inet)));

@@ -37,9 +37,9 @@
 
 #include <nsCOMPtr.h>
 #include <nsCOMArray.h>
-#include <glib.h>
 
 #pragma GCC visibility push(default)
+#include <glib.h>
 #include <libpurple/dnsquery.h>
 #pragma GCC visibility pop
 

@@ -542,7 +542,7 @@ NS_IMETHODIMP purpleAccount::Connect()
     mConnectionErrorReason = (PurpleConnectionError) NO_ERROR;
     mConnectionErrorMessage.Truncate();
 
-    if (mTimeOfNextReconnect - PR_Now() > PR_USEC_PER_SEC) {
+    if (mTimeOfNextReconnect - PR_Now() > PRTime(PR_USEC_PER_SEC)) {
       LOG(("mReconnectAttempts := 0 because: mTimeOfNextReconnect - PR_Now() = %li > PR_USEC_PER_SEC",
            mTimeOfNextReconnect - PR_Now()));
       // This is a manual reconnection, reset the auto-reconnect stuff
