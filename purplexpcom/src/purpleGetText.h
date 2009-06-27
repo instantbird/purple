@@ -36,14 +36,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <nsStringAPI.h>
-
-// We need to include stdlib.h with a default visibility before
-// nsDataHashtable.h which would include it with the current
-// visibility. If we don't do this, strtol fails to link on Linux.
-#pragma GCC visibility push(default)
-# include <stdlib.h>
-#pragma GCC visibility pop
-
 #include <nsDataHashtable.h>
 #include <nsIObserver.h>
 
