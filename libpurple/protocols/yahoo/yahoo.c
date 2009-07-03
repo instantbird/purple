@@ -1013,12 +1013,15 @@ yahoo_buddy_add_deny_noreason_cb(struct yahoo_add_request *add_req, const char*m
 static void
 yahoo_buddy_add_deny_reason_cb(gpointer data) {
 	struct yahoo_add_request *add_req = data;
+	yahoo_buddy_add_deny_cb(add_req, NULL);
+	/*
 	purple_request_input(add_req->gc, NULL, _("Authorization denied message:"),
 			NULL, _("No reason given."), TRUE, FALSE, NULL,
 			_("OK"), G_CALLBACK(yahoo_buddy_add_deny_cb),
 			_("Cancel"), G_CALLBACK(yahoo_buddy_add_deny_noreason_cb),
 			purple_connection_get_account(add_req->gc), add_req->who, NULL,
 			add_req);
+	*/
 }
 
 static void yahoo_buddy_denied_our_add(PurpleConnection *gc, const char *who, const char *reason)
