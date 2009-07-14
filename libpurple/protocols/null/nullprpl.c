@@ -175,7 +175,8 @@ static void discover_status(PurpleConnection *from, PurpleConnection *to,
         !strcmp(status_id, NULL_STATUS_AWAY) ||
         !strcmp(status_id, NULL_STATUS_OFFLINE)) {
       purple_debug_info("nullprpl", "%s sees that %s is %s: %s\n",
-                        from_username, to_username, status_id, message);
+                        from_username, to_username, status_id,
+                        message ? message : "");
       purple_prpl_got_user_status(from->account, to_username, status_id,
                                   (message) ? "message" : NULL, message, NULL);
     } else {
