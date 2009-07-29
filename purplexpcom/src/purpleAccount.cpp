@@ -39,6 +39,7 @@
 #include "purpleCoreService.h"
 #include "purpleUnknownProtocol.h"
 #include "purpleStorage.h"
+#include <nsIObserverService.h>
 #include <nsIPrefService.h>
 #include <nsIClassInfoImpl.h>
 #include <nsServiceManagerUtils.h>
@@ -662,9 +663,9 @@ inline nsresult purpleAccount::SetId(const nsCString& aId)
 
 nsresult purpleAccount::sendUpdateNotification()
 {
-  nsCOMPtr<purpleCoreService> pcs =
-    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-  return pcs->NotifyObservers(this, "account-updated");
+  nsCOMPtr<nsIObserverService> os =
+    do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+  return os->NotifyObservers(this, "account-updated", nsnull);
 }
 
 inline nsresult purpleAccount::GetPrefBranch()

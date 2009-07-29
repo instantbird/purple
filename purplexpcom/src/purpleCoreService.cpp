@@ -82,7 +82,9 @@ static PRLogModuleInfo *gPurpleCoreServiceLog = nsnull;
 
 #define PREF_MESSENGER_ACCOUNTS "messenger.accounts"
 
-NS_IMPL_ISUPPORTS1_CI(purpleCoreService, purpleICoreService)
+#define QUIT_APPLICATION_NOTIFICATION "quit-application"
+
+NS_IMPL_ISUPPORTS2_CI(purpleCoreService, purpleICoreService, nsIObserver)
 
 extern nsresult init_libpurple();
 extern void connect_to_blist_signals();
@@ -111,12 +113,33 @@ purpleCoreService::~purpleCoreService()
     this->Quit();
 }
 
+/* nsIObserver implementation */
+NS_IMETHODIMP purpleCoreService::Observe(nsISupports *aSubject,
+                                         const char *aTopic,
+                                         const PRUnichar *aData)
+{
+  NS_ENSURE_TRUE(!strcmp(QUIT_APPLICATION_NOTIFICATION, aTopic),
+                 NS_ERROR_UNEXPECTED);
+
+  return Quit();
+}
+
 /* boolean Init (); */
 NS_IMETHODIMP purpleCoreService::Init()
 {
   /* We shouldn't init the core twice. If the core service is already
      initialized, return with an error */
   NS_ENSURE_TRUE(!mInitialized, NS_ERROR_ALREADY_INITIALIZED);
+
+  /* Make sure we will uninitialize libpurple before all services are
+     destroyed */
+  nsresult rv;
+  nsCOMPtr<nsIObserverService> os =
+    do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = os->AddObserver(this, "quit-application", PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   /* Ensure that NSS is initialized */
   nsCOMPtr<nsISupports> nssComponent 
@@ -129,7 +152,7 @@ NS_IMETHODIMP purpleCoreService::Init()
   purpleTimer::init();
 
   /* Init the core of libpurple */
-  nsresult rv = init_libpurple();
+  rv = init_libpurple();
   NS_ENSURE_SUCCESS(rv, rv);
 
   /* Load the list of protocol plugins and their specific options */
@@ -476,7 +499,17 @@ NS_IMETHODIMP purpleCoreService::Quit()
   NS_ENSURE_TRUE(!mQuitting, NS_ERROR_FAILURE);
 
   mQuitting = PR_TRUE;
-  NotifyObservers(this, "purple-quit");
+
+  nsresult rv;
+  nsCOMPtr<nsIObserverService> os =
+    do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = os->RemoveObserver(this, "quit-application");
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  os->NotifyObservers(static_cast<purpleICoreService *>(this),
+                      "purple-quit", nsnull);
 
 #define UNINIT(aThing)                                          \
   for (PRInt32 i = m##aThing.Count() - 1; i >= 0; --i) {        \
@@ -1109,7 +1142,8 @@ NS_IMETHODIMP purpleCoreService::ProcessAutoLogin()
 
   // Notify observers so that any message stating that autologin is
   // disabled can be removed
-  NotifyObservers(this, "autologin-processed");
+  NotifyObservers(static_cast<purpleICoreService *>(this),
+                  "autologin-processed");
 
   return NS_OK;
 }
@@ -1337,7 +1371,8 @@ NS_IMETHODIMP purpleCoreService::Away(const nsACString &aMessage)
 
   nsString message;
   NS_CStringToUTF16(aMessage, NS_CSTRING_ENCODING_UTF8, message);
-  return NotifyObservers(this, "status-away", message.get());
+  return NotifyObservers(static_cast<purpleICoreService *>(this),
+                         "status-away", message.get());
 }
 
 /* void back (in string aMessage); */
@@ -1348,5 +1383,6 @@ NS_IMETHODIMP purpleCoreService::Back(const nsACString &aMessage)
 
   nsString message;
   NS_CStringToUTF16(aMessage, NS_CSTRING_ENCODING_UTF8, message);
-  return NotifyObservers(this, "status-back", message.get());
+  return NotifyObservers(static_cast<purpleICoreService *>(this),
+                         "status-back", message.get());
 }

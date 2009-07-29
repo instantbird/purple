@@ -52,10 +52,11 @@
 #define PURPLE_ENSURE_INIT(x)                   \
   NS_ENSURE_TRUE(x, NS_ERROR_NOT_INITIALIZED)
 
-class purpleCoreService : public purpleICoreService
+class purpleCoreService : public purpleICoreService, public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
   NS_DECL_PURPLEICORESERVICE
 
   purpleCoreService();
@@ -109,3 +110,6 @@ protected:
 
 #define PURPLE_CORE_SERVICE_CONTRACTID \
     "@instantbird.org/purple/core;1"
+
+#define NATIVE_PCS(aPcs)			\
+  static_cast<purpleCoreService *>(aPcs.get())

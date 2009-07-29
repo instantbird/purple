@@ -138,7 +138,7 @@ static void connect_progress(PurpleConnection *gc, const char *text,
   IMPL_GET_ACCOUNT;
   account->SetConnectionStateMsg(text);
 
-  nsCOMPtr<purpleCoreService> pcs =
+  nsCOMPtr<purpleICoreService> pcs =
     do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
   pcs->NotifyObservers(account, "account-connect-progress", nsnull);
 }
@@ -156,7 +156,7 @@ static void report_disconnect_reason(PurpleConnection *gc,
   IMPL_GET_ACCOUNT;
   account->SetDisconnectReason(reason, text);
 
-  nsCOMPtr<purpleCoreService> pcs =
+  nsCOMPtr<purpleICoreService> pcs =
     do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
   pcs->NotifyObservers(account, "account-connect-error", nsnull);
 }
@@ -279,16 +279,18 @@ static void create_conv(PurpleConversation *aConv)
   NS_ENSURE_TRUE(conv, );
   conv->SetConv(aConv);
 
-  nsCOMPtr<purpleCoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-  pcs->AddConversation(conv);
+  nsCOMPtr<purpleICoreService> pcs =
+    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
+  NATIVE_PCS(pcs)->AddConversation(conv);
 }
 
 static void destroy_conv(PurpleConversation *aConv)
 {
   LOG(("destroy_conv uiop called"));
 
-  nsCOMPtr<purpleCoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-  pcs->RemoveConversation(aConv);
+  nsCOMPtr<purpleICoreService> pcs =
+    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
+  NATIVE_PCS(pcs)->RemoveConversation(aConv);
 }
 
 static void notify_conv(PurpleConversation *aConv, nsISupports *aSubject,
@@ -308,12 +310,14 @@ static void write_conv(PurpleConversation *conv, const char *who,
                        PurpleMessageFlags flags, time_t mtime)
 {
   nsresult rv;
-  nsCOMPtr<purpleMessage> msg = do_CreateInstance(PURPLE_MESSAGE_CONTRACTID, &rv);
+  nsCOMPtr<purpleMessage> msg =
+    do_CreateInstance(PURPLE_MESSAGE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv,);
 
   msg->Init(conv, who, alias, message, flags, mtime);
 
-  nsCOMPtr<purpleICoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID, &rv);
+  nsCOMPtr<purpleICoreService> pcs =
+    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID, &rv);
   pcs->NotifyObservers(msg, "new-text", nsnull);
 
   notify_conv(conv, msg, "new-text", nsnull);
@@ -401,7 +405,10 @@ static void account_signals(PurpleAccount *account, const char *signal)
   LOG(("%s: %s (%s)\n", signal,
        account->username, account->protocol_id));
 
-  nsCOMPtr<purpleCoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
+  nsCOMPtr<purpleICoreService> pcs =
+    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(pcs, );
+
   pcs->FireAccountEvent(account, signal);
 }
 
@@ -441,7 +448,8 @@ connect_to_accounts_signals()
 
 static void buddy_signals(PurpleBuddy *aBuddy, const char *aSignal)
 {
-  nsCOMPtr<purpleCoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
+  nsCOMPtr<purpleICoreService> pcs =
+    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
   pcs->FireBuddyEvent(aBuddy, aSignal);
 }
 
@@ -460,7 +468,8 @@ static void buddy_removed(PurpleBuddy *buddy, void *null)
   // request the deletion of a buddy in her list)
 
   // send the signal first, before actually removing the buddy
-  nsCOMPtr<purpleCoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
+  nsCOMPtr<purpleICoreService> pcs =
+    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
   pcs->FireBuddyEvent(buddy, "buddy-deleted");
   pcs->PurpleBuddyRemoved(buddy);
 }
@@ -611,7 +620,7 @@ static PurpleCmdRet away_command_cb(PurpleConversation *conv,
 {
   nsCString message(args[0]);
 
-  nsCOMPtr<purpleCoreService> pcs =
+  nsCOMPtr<purpleICoreService> pcs =
     do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
   pcs->Away(message);
 
@@ -623,7 +632,7 @@ static PurpleCmdRet back_command_cb(PurpleConversation *conv,
 {
   nsCString message(args[0]);
 
-  nsCOMPtr<purpleCoreService> pcs =
+  nsCOMPtr<purpleICoreService> pcs =
     do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
   pcs->Back(message);
 

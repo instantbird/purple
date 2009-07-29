@@ -70,6 +70,7 @@ void purpleDebug::ReportMessage(PurpleDebugLevel level, const char *category,
 
   nsCOMPtr<nsIConsoleService> consoleService =
     do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(consoleService, );
 
   nsCString message(category);
   message.Append(": ");

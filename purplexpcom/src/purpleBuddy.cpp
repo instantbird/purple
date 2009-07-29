@@ -138,9 +138,11 @@ nsresult purpleBuddy::AddAccount(PurpleBuddy *aBuddy)
   purpleAccount *account = (purpleAccount *)aBuddy->account->ui_data;
   NS_ENSURE_TRUE(account, NS_ERROR_UNEXPECTED);
 
-  nsCOMPtr<purpleCoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
+  nsCOMPtr<purpleICoreService> pcs =
+    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
   nsCOMPtr<purpleTag> tag;
-  nsresult rv = pcs->GetTagFromPurpleBuddy(aBuddy, getter_AddRefs(tag));
+  nsresult rv = NATIVE_PCS(pcs)->GetTagFromPurpleBuddy(aBuddy,
+                                                       getter_AddRefs(tag));
   NS_ENSURE_SUCCESS(rv, rv);
 
   purpleAccountBuddy *pab = AddAccount(account, aBuddy, tag);

@@ -123,7 +123,8 @@ NS_IMETHODIMP purpleAccountBuddy::GetBuddy(purpleIBuddy * *aBuddy)
 {
   NS_ENSURE_TRUE(mBuddy, NS_ERROR_NOT_INITIALIZED);
 
-  nsCOMPtr<purpleCoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
+  nsCOMPtr<purpleICoreService> pcs =
+    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
   return pcs->GetBuddyByPurpleBuddy(mBuddy, aBuddy);
 }
 
