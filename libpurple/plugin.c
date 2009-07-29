@@ -798,9 +798,9 @@ purple_plugin_reload(PurplePlugin *plugin)
 void
 purple_plugin_destroy(PurplePlugin *plugin)
 {
-#ifdef PURPLE_PLUGINS
 	g_return_if_fail(plugin != NULL);
 
+#ifdef PURPLE_PLUGINS
 	if (purple_plugin_is_loaded(plugin))
 		purple_plugin_unload(plugin);
 
@@ -887,6 +887,17 @@ purple_plugin_destroy(PurplePlugin *plugin)
 				loader_info->destroy(plugin);
 		}
 	}
+#else
+	if (plugin->info != NULL) {
+		if (PURPLE_IS_PROTOCOL_PLUGIN(plugin))
+			protocol_plugins = g_list_remove(protocol_plugins, plugin);
+
+		if (plugin->info->unload)
+			plugin->info->unload(plugin);
+	}
+
+	plugins = g_list_remove(plugins, plugin);
+#endif /* !PURPLE_PLUGINS */
 
 	g_free(plugin->path);
 	g_free(plugin->error);
@@ -894,7 +905,6 @@ purple_plugin_destroy(PurplePlugin *plugin)
 	PURPLE_DBUS_UNREGISTER_POINTER(plugin);
 
 	g_free(plugin);
-#endif /* !PURPLE_PLUGINS */
 }
 
 gboolean
@@ -1233,12 +1243,8 @@ purple_plugins_unload_all(void)
 void
 purple_plugins_destroy_all(void)
 {
-#ifdef PURPLE_PLUGINS
-
 	while (plugins != NULL)
 		purple_plugin_destroy(plugins->data);
-
-#endif /* PURPLE_PLUGINS */
 }
 
 #if 0

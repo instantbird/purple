@@ -502,6 +502,7 @@ NS_IMETHODIMP purpleCoreService::Quit()
   purpleGetText::unInit();
 
   mInitialized = PR_FALSE;
+  mQuitting = PR_FALSE;
   return NS_OK;
 }
 

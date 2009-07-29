@@ -59,6 +59,7 @@ class purpleStorage
 
  private:
   static purpleStorage *mInstance;
+  ~purpleStorage() { if (mInstance == this) mInstance = nsnull; }
   nsresult Init();
   nsCOMPtr<mozIStorageService> mDBService;
   nsCOMPtr<mozIStorageConnection> mDBConn;
