@@ -394,6 +394,11 @@ void purpleAccount::finishedAutoLogin()
 
 nsresult purpleAccount::checkAutoLogin()
 {
+  /* If we don't have a valid protocol, we can't autologin so don't
+     bother checking the value of the pref */
+  if (!mHasValidProtocol)
+    return NS_OK;
+
   /* Check if we should connect the account automatically */
   PRBool autoLogin;
   nsresult rv = GetPrefBranch();
