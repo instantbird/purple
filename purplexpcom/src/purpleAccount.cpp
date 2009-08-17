@@ -576,6 +576,17 @@ NS_IMETHODIMP purpleAccount::Disconnect()
   return NS_OK;
 }
 
+/* void cancelReconnection(); */
+NS_IMETHODIMP purpleAccount::CancelReconnection()
+{
+  if (mTimer) {
+    mTimer->Cancel();
+    mTimer = nsnull;
+    mReconnectAttempts = 0;
+  }
+  return NS_OK;
+}
+
 /* purpleIConversation createConversation (in AUTF8String aName); */
 NS_IMETHODIMP purpleAccount::CreateConversation(const nsACString& aName,
                                                 purpleIConversation **aResult)
