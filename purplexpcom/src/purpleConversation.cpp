@@ -249,7 +249,10 @@ NS_IMETHODIMP purpleConversation::SetBaseURI(nsIDOMDocument *aDocument, nsIURI *
 {
   NS_ENSURE_ARG_POINTER(aDocument);
   NS_ENSURE_ARG_POINTER(aURI);
+
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDocument);
+  NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
+
   nsresult rv = doc->SetBaseURI(aURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
