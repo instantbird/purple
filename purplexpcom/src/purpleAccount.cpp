@@ -56,6 +56,7 @@ NS_IMPL_ISUPPORTS1_CI(purpleAccount, purpleIAccount)
 #define PREF_ALIAS              "alias"
 #define PREF_PROXY              "proxy"
 #define PREF_AUTOLOGIN          "autoLogin"
+#define PREF_FIRST_CONNECTION_STATE "firstConnectionState"
 #define PREF_PASSWORD           "password"
 #define PREF_REMEMBER_PASSWORD  "rememberPassword"
 
@@ -122,6 +123,9 @@ void purpleAccount::UnInit()
   // remove any pending autologin preference used for crash detection
   if (mAutoLoginPending)
     finishedAutoLogin();
+
+  // If the first connection was pending on quit, we set it back to "set"
+  CheckAndSetFirstConnectionState(FIRST_CONNECTION_SET);
 
   // and make sure we cleanup the save pref timer
   if (sSavePrefsTimer)
@@ -208,6 +212,8 @@ nsresult purpleAccount::create(const nsACString& aName, purpleIProtocol *aPrpl,
   NS_ENSURE_TRUE(mProxy, NS_ERROR_OUT_OF_MEMORY);
 
   mProxy->SetType(purpleIProxyInfo::useGlobal);
+
+  SetFirstConnectionState(FIRST_CONNECTION_SET);
   return NS_OK;
 }
 
@@ -244,6 +250,15 @@ nsresult purpleAccount::load(const nsCString& aKey)
     mHasValidProtocol = PR_TRUE;
     rv = mProtocol->CreatePurpleAccount(name, this, &mAccount);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    /* We previously crashed while connecting an account individually. */
+    PRInt16 currentState;
+    if (NS_SUCCEEDED(GetFirstConnectionState(&currentState)) &&
+        (currentState == FIRST_CONNECTION_PENDING ||
+         currentState == FIRST_CONNECTION_CRASHED)) {
+      SetFirstConnectionState(FIRST_CONNECTION_CRASHED);
+      mConnectionErrorReason = (PurpleConnectionError) ERROR_CRASHED;
+    }
   }
   else {
     mConnectionErrorReason = (PurpleConnectionError) ERROR_UNKNOWN_PRPL;
@@ -392,11 +407,42 @@ void purpleAccount::finishedAutoLogin()
   }
 }
 
+/* Function called to change the state of firstConnectionState
+   Called on connecting, disconnecting, crashed, Uninit or connected to set or reset
+   the value of firstConnectionState.
+   For example, this function prevents from setting firstConnectionState to
+   FIRST_CONNECTION_PENDING while connecting and the account is already reliable. */
+inline void purpleAccount::CheckAndSetFirstConnectionState(const PRInt16 aState)
+{
+  PRInt16 currentState;
+  if (NS_FAILED(GetFirstConnectionState(&currentState)) ||
+      currentState == FIRST_CONNECTION_NONE || currentState == aState ||
+      (currentState == FIRST_CONNECTION_CRASHED && aState == FIRST_CONNECTION_SET))
+    return;
+
+  LOG(("purpleAccount::CheckAndSetFirstConnectionState"));
+  LOG(("\tOld State: %d\tAsked State: %d", currentState, aState));
+
+  nsresult rv = SetFirstConnectionState(aState);
+  NS_ENSURE_SUCCESS(rv, );
+}
+
 nsresult purpleAccount::checkAutoLogin()
 {
+  PURPLE_ENSURE_INIT(INIT_CONDITION);
+
   /* If we don't have a valid protocol, we can't autologin so don't
      bother checking the value of the pref */
   if (!mHasValidProtocol)
+    return NS_OK;
+
+  /* We don't want to connect an already connecting account. */
+  if (mAccount->gc && mAccount->gc->state == PURPLE_CONNECTING)
+    return NS_OK;
+
+  PRInt16 currentState;
+  if (NS_SUCCEEDED(GetFirstConnectionState(&currentState)) &&
+      currentState == FIRST_CONNECTION_CRASHED)
     return NS_OK;
 
   /* Check if we should connect the account automatically */
@@ -558,6 +604,8 @@ NS_IMETHODIMP purpleAccount::Connect()
     }
   }
 
+  // Sets the firstConnectionState pref as pending if needed.
+  CheckAndSetFirstConnectionState(FIRST_CONNECTION_PENDING);
   /* enabling an account in libpurple connects it automatically */
   purple_account_set_enabled(mAccount, UI_ID, TRUE);
   // purple_account_connect(mAccount);
@@ -740,6 +788,45 @@ NS_IMETHODIMP purpleAccount::SetAutoLogin(PRBool aAutoLogin)
 
   initSavePrefsTimer();
   return sendUpdateNotification();
+}
+
+/* attribute short firstConnectionState; */
+NS_IMETHODIMP purpleAccount::GetFirstConnectionState(PRInt16 *aState)
+{
+  PURPLE_ENSURE_INIT(!mKey.IsEmpty());
+
+  nsresult rv = GetPrefBranch();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 prefState;
+  rv = mPrefBranch->GetIntPref(PREF_FIRST_CONNECTION_STATE, &prefState);
+
+  /* If the pref does not exist, this is not the first connection. */
+  if (NS_FAILED(rv))
+    prefState = FIRST_CONNECTION_NONE;
+
+  // GetIntPref takes a *PRInt32 as second argument and aState is *PRInt16
+  *aState = static_cast<PRInt16>(prefState);
+  return NS_OK;
+}
+NS_IMETHODIMP purpleAccount::SetFirstConnectionState(PRInt16 aState)
+{
+  PURPLE_ENSURE_INIT(mProtocol);
+
+  nsresult rv = GetPrefBranch();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aState != FIRST_CONNECTION_NONE)
+    rv = mPrefBranch->SetIntPref(PREF_FIRST_CONNECTION_STATE, aState);
+  else
+    rv = mPrefBranch->DeleteBranch(PREF_FIRST_CONNECTION_STATE);
+
+  // We want to save this pref immediately when trying to connect.
+  if (aState == FIRST_CONNECTION_PENDING)
+    savePrefsNow(nsnull, nsnull);
+  else
+    initSavePrefsTimer();
+  return NS_OK;
 }
 
 /* attribute AUTF8String password; */
@@ -973,6 +1060,7 @@ void purpleAccount::SetDisconnectReason(PurpleConnectionError reason,
   mConnectionStateMsg.Truncate();
 
   finishedAutoLogin();
+  CheckAndSetFirstConnectionState(FIRST_CONNECTION_SET);
 
   /* Disable the account, otherwise libpurple will attempt to reconnect it
      when the status changes (including when idleness changes)
@@ -1040,6 +1128,7 @@ void purpleAccount::Connected()
   mReconnectAttempts = 0;
 
   finishedAutoLogin();
+  CheckAndSetFirstConnectionState(FIRST_CONNECTION_NONE);
 
   // FIXME: this is probably obsolete
   /* Remove the current connection state message so that the UI

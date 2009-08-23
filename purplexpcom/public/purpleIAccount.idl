@@ -66,6 +66,21 @@ interface purpleIAccount: nsISupports {
 
   attribute boolean autoLogin;
 
+  /* This is the value when the preference firstConnectionState is not set.
+     It indicates that the account has already been successfully connected at
+     least once with the current parameters. */
+  const short FIRST_CONNECTION_NONE = 0;
+  /* Set when the account has never had a successful connection
+     with the current parameters */
+  const short FIRST_CONNECTION_SET = 1;
+  /* Set when the account is trying to connect for the first time
+     with the current parameters (removed after a successsful connection) */
+  const short FIRST_CONNECTION_PENDING = 2;
+  /* Set at startup when the previous state was pending */
+  const short FIRST_CONNECTION_CRASHED = 4;
+
+  attribute short firstConnectionState;
+
   // FIXME password should be in password manager
   attribute AUTF8String password;
   attribute boolean rememberPassword;
@@ -115,6 +130,7 @@ interface purpleIAccount: nsISupports {
   // use a big enough number so that it doesn't conflict with error
   // codes added in libpurple later
   const short ERROR_UNKNOWN_PRPL = 42;
+  const short ERROR_CRASHED = 43;
 
   /* A message describing the connection error */
   readonly attribute AUTF8String connectionErrorMessage;

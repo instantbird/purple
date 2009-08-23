@@ -96,6 +96,7 @@ private:
   inline void GetBoolPref(const char *aName);
   inline void GetIntPref(const char *aName);
   inline void GetCharPref(const char *aName);
+  inline void CheckAndSetFirstConnectionState(const PRInt16 aState);
 
 protected:
   /* additional members */

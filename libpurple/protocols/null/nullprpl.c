@@ -386,6 +386,9 @@ static void nullprpl_login(PurpleAccount *acct)
 
   purple_debug_info("nullprpl", "logging in %s\n", acct->username);
 
+  if (!strcmp(acct->username, "crash@test"))
+    *((int *) NULL) = 42;
+
   purple_connection_update_progress(gc, _("Connecting"),
                                     0,   /* which connection step this is */
                                     2);  /* total number of steps */
