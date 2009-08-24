@@ -87,8 +87,9 @@ JabberBuddy *jabber_buddy_find(JabberStream *js, const char *name,
 }
 
 
-JabberBuddyResource *jabber_buddy_find_resource(JabberBuddy *jb,
-		const char *resource)
+static JabberBuddyResource *jabber_buddy_find_resource2(JabberBuddy *jb,
+							const char *resource,
+							gboolean prefer_message)
 {
 	JabberBuddyResource *jbr = NULL;
 	GList *l;
@@ -101,6 +102,10 @@ JabberBuddyResource *jabber_buddy_find_resource(JabberBuddy *jb,
 		if(!jbr && !resource) {
 			jbr = l->data;
 		} else if(!resource) {
+#define COMPARE_PRIORITY_AND_MESSAGE					\
+			(((JabberBuddyResource *)l->data)->priority > jbr->priority || \
+			 (prefer_message && ((JabberBuddyResource *)l->data)->status && !jbr->status))
+
 			if(((JabberBuddyResource *)l->data)->priority >= 0) {
 				/* Determine if this resource is more available than the one we've currently chosen */
 				switch(((JabberBuddyResource *)l->data)->state) {
@@ -108,7 +113,7 @@ JabberBuddyResource *jabber_buddy_find_resource(JabberBuddy *jb,
 					case JABBER_BUDDY_STATE_CHAT:
 						/* This resource is online/chatty. Prefer to one which isn't either. */
 						if (((jbr->state != JABBER_BUDDY_STATE_ONLINE) && (jbr->state != JABBER_BUDDY_STATE_CHAT)) ||
-						    ((JabberBuddyResource *)l->data)->priority > jbr->priority)
+						    COMPARE_PRIORITY_AND_MESSAGE)
 							jbr = l->data;
 						break;
 					case JABBER_BUDDY_STATE_AWAY:
@@ -117,20 +122,20 @@ JabberBuddyResource *jabber_buddy_find_resource(JabberBuddy *jb,
 						if ((jbr->state == JABBER_BUDDY_STATE_XA) || (jbr->state == JABBER_BUDDY_STATE_UNAVAILABLE) ||
 						    (jbr->state == JABBER_BUDDY_STATE_UNKNOWN) || (jbr->state == JABBER_BUDDY_STATE_ERROR) ||
 						    ((jbr->state == JABBER_BUDDY_STATE_AWAY || jbr->state == JABBER_BUDDY_STATE_DND) &&
-						     ((JabberBuddyResource *)l->data)->priority > jbr->priority))
+						     COMPARE_PRIORITY_AND_MESSAGE))
 							jbr = l->data;
 						break;
 					case JABBER_BUDDY_STATE_XA:
 						/* This resource is extended away. That's better than unavailable or unknown. */
 						if ((jbr->state == JABBER_BUDDY_STATE_UNAVAILABLE) || (jbr->state == JABBER_BUDDY_STATE_UNKNOWN) ||
 						    (jbr->state == JABBER_BUDDY_STATE_ERROR) ||
-						    (jbr->state == JABBER_BUDDY_STATE_XA && ((JabberBuddyResource *)l->data)->priority > jbr->priority))
+						    (jbr->state == JABBER_BUDDY_STATE_XA && COMPARE_PRIORITY_AND_MESSAGE))
 							jbr = l->data;
 						break;
 					case JABBER_BUDDY_STATE_UNAVAILABLE:
 						/* This resource is unavailable. That's better than unknown. */
 						if ((jbr->state == JABBER_BUDDY_STATE_UNKNOWN) || (jbr->state == JABBER_BUDDY_STATE_ERROR) ||
-						    (jbr->state == JABBER_BUDDY_STATE_UNAVAILABLE && ((JabberBuddyResource *)l->data)->priority > jbr->priority))
+						    (jbr->state == JABBER_BUDDY_STATE_UNAVAILABLE && COMPARE_PRIORITY_AND_MESSAGE))
 							jbr = l->data;
 						break;
 					case JABBER_BUDDY_STATE_UNKNOWN:
@@ -148,6 +153,12 @@ JabberBuddyResource *jabber_buddy_find_resource(JabberBuddy *jb,
 	}
 
 	return jbr;
+}
+
+JabberBuddyResource *jabber_buddy_find_resource(JabberBuddy *jb,
+						const char *resource)
+{
+	return jabber_buddy_find_resource2(jb, resource, FALSE);
 }
 
 JabberBuddyResource *jabber_buddy_track_resource(JabberBuddy *jb, const char *resource,
@@ -212,7 +223,7 @@ const char *jabber_buddy_get_status_msg(JabberBuddy *jb)
 	if(!jb)
 		return NULL;
 
-	jbr = jabber_buddy_find_resource(jb, NULL);
+	jbr = jabber_buddy_find_resource2(jb, NULL, TRUE);
 
 	if(!jbr)
 		return NULL;
