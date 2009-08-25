@@ -201,7 +201,7 @@ NS_IMETHODIMP purpleProtocol::GetOptions(nsISimpleEnumerator **aResult)
 
 /* nsISimpleEnumerator getUsernameSplit (); */
 NS_IMETHODIMP purpleProtocol::GetUsernameSplit(nsISimpleEnumerator **aResult)
-{ 
+{
   NS_ENSURE_TRUE(mInfo, NS_ERROR_NOT_INITIALIZED);
 
   purpleGListEnumerator *enumerator = new purpleGListEnumerator();
@@ -211,6 +211,24 @@ NS_IMETHODIMP purpleProtocol::GetUsernameSplit(nsISimpleEnumerator **aResult)
                                          PurpleAccountUserSplit>);
 
   NS_ADDREF(*aResult = enumerator);
+  return NS_OK;
+}
+
+/* readonly attribute AUTF8String usernameEmptyText; */
+NS_IMETHODIMP purpleProtocol::GetUsernameEmptyText(nsACString &aUsernameEmptyText)
+{
+  NS_ENSURE_TRUE(mInfo, NS_ERROR_NOT_INITIALIZED);
+
+  aUsernameEmptyText = "";
+  if (GET_PROTO_INFO(mInfo)->get_account_text_table) {
+    GHashTable *table = GET_PROTO_INFO(mInfo)->get_account_text_table(NULL);
+    const char *label =
+      (const char *)g_hash_table_lookup(table, "login_label");
+    if (label)
+      aUsernameEmptyText = label;
+    g_hash_table_destroy(table);
+  }
+
   return NS_OK;
 }
 

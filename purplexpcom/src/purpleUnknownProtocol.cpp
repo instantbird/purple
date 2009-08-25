@@ -111,6 +111,13 @@ NS_IMETHODIMP purpleUnknownProtocol::GetUsernameSplit(nsISimpleEnumerator **aRes
   return NS_NewArrayEnumerator(aResult, nsnull);
 }
 
+/* readonly attribute AUTF8String usernameEmptyText; */
+NS_IMETHODIMP purpleUnknownProtocol::GetUsernameEmptyText(nsACString &aUsernameEmptyText)
+{
+  aUsernameEmptyText = "";
+  return NS_OK;
+}
+
 #define PURPLE_IMPL_GETBOOLOPT(aOpt, aConst)                            \
   NS_IMETHODIMP purpleUnknownProtocol::Get##aOpt(PRBool *a##aOpt)       \
   {                                                                     \

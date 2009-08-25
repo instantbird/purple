@@ -117,6 +117,7 @@ IMPL_FORWARD(GetId, (nsACString & aId), (aId))
 IMPL_FORWARD(GetIconBaseURI, (nsACString & aIconBaseURI), (aIconBaseURI))
 IMPL_FORWARD(GetOptions, (nsISimpleEnumerator **_retval), (_retval))
 IMPL_FORWARD(GetUsernameSplit, (nsISimpleEnumerator **_retval), (_retval))
+IMPL_FORWARD(GetUsernameEmptyText, (nsACString &aUsernameEmptyText), (aUsernameEmptyText))
 IMPL_FORWARD(AccountExists, (const nsACString & aName, PRBool *_retval),
              (aName, _retval))
 
