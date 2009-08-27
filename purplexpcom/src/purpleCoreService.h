@@ -43,6 +43,7 @@
 #include "purpleConversation.h"
 #include<nsIMutableArray.h>
 #include<nsCOMPtr.h>
+#include <nsIPrefBranch2.h>
 #include <nsInterfaceHashtable.h>
 #include <nsDataHashtable.h>
 #include "purpleBuddy.h"
@@ -78,12 +79,14 @@ private:
   void InitProtocols();
   nsresult InitProxies();
   nsresult InitAccounts();
+  nsresult UpdateAccountList();
   nsresult InitBuddyList();
 #ifdef MOZ_CRASHREPORTER
   nsresult GetLastCrashTime(PRInt32 *aLastCrashTime);
 #endif
   void InitAutoLoginStatus();
   nsCOMPtr<nsIPrefBranch> mPrefService;
+  nsCOMPtr<nsIPrefBranch2> mPrefBranch2;
   inline void UnInitAccounts();
   inline void UnInitProtocols();
   nsresult GetAccountById(PRUint32 aAccountId, purpleAccount **aResult);

@@ -103,6 +103,7 @@ purpleCoreService::purpleCoreService()
     gPurpleCoreServiceLog = PR_NewLogModule("purpleCoreService");
 #endif
   mPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  mPrefBranch2 = do_QueryInterface(mPrefService);
   mBuddiesById.Init();
   mTagById.Init();
 }
@@ -118,10 +119,15 @@ NS_IMETHODIMP purpleCoreService::Observe(nsISupports *aSubject,
                                          const char *aTopic,
                                          const PRUnichar *aData)
 {
-  NS_ENSURE_TRUE(!strcmp(QUIT_APPLICATION_NOTIFICATION, aTopic),
-                 NS_ERROR_UNEXPECTED);
+  if(!strcmp(QUIT_APPLICATION_NOTIFICATION, aTopic))
+    return Quit();
 
-  return Quit();
+  if (!strcmp(NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, aTopic)) {
+    UpdateAccountList();
+    return NS_OK;
+  }
+
+  return NS_ERROR_UNEXPECTED;
 }
 
 /* boolean Init (); */
@@ -178,6 +184,10 @@ NS_IMETHODIMP purpleCoreService::Init()
   /* Connect accounts that should be connected at startup */
   if (mAutoLoginStatus == AUTOLOGIN_ENABLED)
     ProcessAutoLogin();
+
+  /* Observe for changes in the order of accounts */
+  rv = mPrefBranch2->AddObserver(PREF_MESSENGER_ACCOUNTS, this, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   LOG(("Libpurple initialized"));
   return NS_OK;
@@ -506,6 +516,9 @@ NS_IMETHODIMP purpleCoreService::Quit()
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = os->RemoveObserver(this, "quit-application");
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mPrefBranch2->RemoveObserver(PREF_MESSENGER_ACCOUNTS, this);
   NS_ENSURE_SUCCESS(rv, rv);
 
   os->NotifyObservers(static_cast<purpleICoreService *>(this),
@@ -1083,6 +1096,7 @@ nsresult purpleCoreService::InitAccounts()
   nsCString accountList;
   nsresult rv = mPrefService->GetCharPref(PREF_MESSENGER_ACCOUNTS,
                                           getter_Copies(accountList));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   LOG(("InitAccounts list = %s", accountList.get()));
 
@@ -1111,6 +1125,51 @@ nsresult purpleCoreService::InitAccounts()
   }
 
   return NS_OK;
+}
+
+nsresult purpleCoreService::UpdateAccountList()
+{
+  PURPLE_ENSURE_INIT(mInitialized);
+
+  /* Get the list of accounts */
+  nsCString accountList;
+  nsresult rv = mPrefService->GetCharPref(PREF_MESSENGER_ACCOUNTS,
+                                          getter_Copies(accountList));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  LOG(("UpdateAccountList list = %s", accountList.get()));
+
+  nsCOMPtr<purpleAccount> account;
+  char *newStr = accountList.BeginWriting();
+  nsCAutoString key;
+  PRInt32 i = 0;
+  PRInt32 accountCount = mAccounts.Count();
+  for (char *token = NS_strtok(",", &newStr);
+       token;
+       token = NS_strtok(",", &newStr)) {
+    key = token;
+    key.StripWhitespace();
+
+    if (key.IsEmpty()) {
+      continue;
+    }
+
+    for (PRInt32 j = i; j < accountCount; ++j) {
+      if (mAccounts[j]->GetKey().Equals(key)) {
+        if (i < j) {
+          account = mAccounts[j];
+          mAccounts.RemoveObject(account);
+          mAccounts.InsertObjectAt(account, i);
+        }
+        break;
+      }
+    }
+
+    ++i;
+  }
+
+  return NotifyObservers(static_cast<purpleICoreService *>(this),
+                         "account-list-updated", nsnull);
 }
 
 /* attribute short autoLoginStatus; */

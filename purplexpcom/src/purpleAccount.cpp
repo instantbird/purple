@@ -631,6 +631,7 @@ NS_IMETHODIMP purpleAccount::CancelReconnection()
     mTimer->Cancel();
     mTimer = nsnull;
     mReconnectAttempts = 0;
+    mTimeOfNextReconnect = 0;
   }
   return NS_OK;
 }
