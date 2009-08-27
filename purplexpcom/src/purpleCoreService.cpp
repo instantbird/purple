@@ -506,7 +506,10 @@ void purpleCoreService::InitProtocols()
 NS_IMETHODIMP purpleCoreService::Quit()
 {
   PURPLE_ENSURE_INIT(mInitialized);
-  NS_ENSURE_TRUE(!mQuitting, NS_ERROR_FAILURE);
+
+  // Avoid reentering when called from the unload handler of the buddy list
+  if (mQuitting)
+    return NS_OK;
 
   mQuitting = PR_TRUE;
 
