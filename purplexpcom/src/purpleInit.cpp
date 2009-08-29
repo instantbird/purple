@@ -567,8 +567,20 @@ static void update_chat_topic(PurpleConversation *aConv,
 
 static void conversation_updated(PurpleConversation *aConv, PurpleConvUpdateType aType)
 {
-  if (aType == PURPLE_CONV_UPDATE_TYPING)
-    notify_conv(aConv, nsnull, "update-typing", nsnull);
+  switch (aType) {
+    case PURPLE_CONV_UPDATE_TYPING:
+      notify_conv(aConv, nsnull, "update-typing", nsnull);
+      break;
+
+    case PURPLE_CONV_UPDATE_AWAY:
+    case PURPLE_CONV_ACCOUNT_ONLINE:
+    case PURPLE_CONV_ACCOUNT_OFFLINE:
+      notify_conv(aConv, nsnull, "update-buddy-status", nsnull);
+      break;
+
+    default:
+      ;
+  }
 }
 
 static void connect_to_conversations_signals()

@@ -13,7 +13,7 @@
 #define STATENOTIFY_PLUGIN_ID "core-statenotify"
 
 static void
-write_status(PurpleBuddy *buddy, const char *message)
+write_status(PurpleBuddy *buddy, const char *message, PurpleConvUpdateType type)
 {
 	PurpleAccount *account = NULL;
 	PurpleConversation *conv;
@@ -43,6 +43,7 @@ write_status(PurpleBuddy *buddy, const char *message)
 	g_free(escaped);
 
 	purple_conv_im_write(conv->u.im, NULL, buf, PURPLE_MESSAGE_SYSTEM | PURPLE_MESSAGE_ACTIVE_ONLY | PURPLE_MESSAGE_NO_LINKIFY, time(NULL));
+	purple_conversation_update(conv, type);
 }
 
 static void
@@ -60,9 +61,9 @@ buddy_status_changed_cb(PurpleBuddy *buddy, PurpleStatus *old_status,
 
 	if (purple_prefs_get_bool("/plugins/core/statenotify/notify_away")) {
 		if (available && !old_available)
-			write_status(buddy, _("%s is no longer away."));
+			write_status(buddy, _("%s is no longer away."), PURPLE_CONV_UPDATE_AWAY);
 		else if (!available && old_available)
-			write_status(buddy, _("%s has gone away."));
+			write_status(buddy, _("%s has gone away."), PURPLE_CONV_UPDATE_AWAY);
 	}
 }
 
@@ -72,9 +73,9 @@ buddy_idle_changed_cb(PurpleBuddy *buddy, gboolean old_idle, gboolean idle,
 {
 	if (purple_prefs_get_bool("/plugins/core/statenotify/notify_idle")) {
 		if (idle) {
-			write_status(buddy, _("%s has become idle."));
+			write_status(buddy, _("%s has become idle."), PURPLE_CONV_UPDATE_AWAY);
 		} else {
-			write_status(buddy, _("%s is no longer idle."));
+			write_status(buddy, _("%s is no longer idle."), PURPLE_CONV_UPDATE_AWAY);
 		}
 	}
 }
@@ -83,14 +84,14 @@ static void
 buddy_signon_cb(PurpleBuddy *buddy, void *data)
 {
 	if (purple_prefs_get_bool("/plugins/core/statenotify/notify_signon"))
-		write_status(buddy, _("%s has signed on."));
+		write_status(buddy, _("%s has signed on."), PURPLE_CONV_ACCOUNT_ONLINE);
 }
 
 static void
 buddy_signoff_cb(PurpleBuddy *buddy, void *data)
 {
 	if (purple_prefs_get_bool("/plugins/core/statenotify/notify_signon"))
-		write_status(buddy, _("%s has signed off."));
+		write_status(buddy, _("%s has signed off."), PURPLE_CONV_ACCOUNT_OFFLINE);
 }
 
 #if 0
