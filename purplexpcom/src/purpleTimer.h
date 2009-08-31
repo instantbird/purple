@@ -67,8 +67,8 @@ class purpleTimer
   static void unInit();
 
   static PRUint32 AddTimeout(PRUint32 aInterval,
-			     GSourceFunc aFunction,
-			     gpointer aData);
+                             GSourceFunc aFunction,
+                             gpointer aData);
   static void ExecTimer(nsITimer *aTimer, void *aTimerClosure);
   static PRBool CancelTimer(PRUint32 aId);
 

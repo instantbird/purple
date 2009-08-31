@@ -37,7 +37,7 @@
 
 #include "nsISupports.idl"
 
-/* 
+/*
  * This is a proxy for libpurple PurpleGroup but is also used for tags
  * that aren't stored on the servers (and on libpurple's data
  * structures)

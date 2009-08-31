@@ -114,5 +114,5 @@ protected:
 #define PURPLE_CORE_SERVICE_CONTRACTID \
     "@instantbird.org/purple/core;1"
 
-#define NATIVE_PCS(aPcs)			\
+#define NATIVE_PCS(aPcs) \
   static_cast<purpleCoreService *>(aPcs.get())

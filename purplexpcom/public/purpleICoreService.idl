@@ -48,7 +48,7 @@
 //forward declarations
 interface mozIStorageConnection;
 
-/* 
+/*
  * This is a proxy to the libpurple core
  */
 [ptr] native purpleNativeProtocol(purpleProtocol);
@@ -123,16 +123,16 @@ interface purpleICoreService: nsISupports {
                        [optional] in wstring aData);
 
   [noscript] void fireAccountEvent(in PurpleNativeAccount aAccount,
-				   in string aEvent);
+                                   in string aEvent);
   /* account related event fired:
       - account-added: a new account has been created
       - account-removed: the account has been deleted
       - account-signin-on: a connection is being created for the account
          This is fired when a connection is created for connecting an account,
-	 but is also fired when a connection is created for registering an account.
+         but is also fired when a connection is created for registering an account.
       - account-connecting: the account is being connected
          This is not fired when registering an account
-	 This event is fired *after* account-signing-on
+         This event is fired *after* account-signing-on
       - account-connected: the account is now connected
       - account-disconnecting: the account is being disconnected
       - account-disconnected: the account is now disconnected
@@ -142,7 +142,7 @@ interface purpleICoreService: nsISupports {
   */
 
   [noscript] void fireBuddyEvent(in PurpleNativeBuddy aBuddy,
-				   in string aEvent);
+                                 in string aEvent);
   /* buddy related event fired:
       - buddy-added: a new buddy has been added to the buddy list
       - buddy-signed-on: this buddy has just signed on

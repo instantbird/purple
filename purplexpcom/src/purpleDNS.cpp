@@ -198,7 +198,7 @@ nsresult purpleDNSRequest::OnLookupComplete(nsICancelable *request,
     hosts = g_slist_append(hosts, addr2);
 #if defined(PR_LOGGING)
     char ipaddr[64];
-    
+
     if (PR_NetAddrToString(&addr, ipaddr, sizeof(ipaddr)) == PR_SUCCESS) {
       LOG(("Found ip: %s", ipaddr));
     }

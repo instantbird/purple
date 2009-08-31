@@ -114,13 +114,13 @@ nsresult purpleProxy::Init(nsCString& aKey)
 }
 
 nsresult purpleProxy::Init(nsCString& aKey, PRInt16 aType,
-			   const nsACString& aHostname, PRUint32 aPort,
-			   const nsACString& aUsername, const nsACString& aPassword)
+                           const nsACString& aHostname, PRUint32 aPort,
+                           const nsACString& aUsername, const nsACString& aPassword)
 {
   NS_ENSURE_TRUE(!aKey.IsEmpty(), NS_ERROR_INVALID_ARG);
   NS_ENSURE_TRUE(aType >= purpleIProxy::httpProxy &&
-		 aType <= purpleIProxy::socks5Proxy,
-		 NS_ERROR_INVALID_ARG);
+                 aType <= purpleIProxy::socks5Proxy,
+                 NS_ERROR_INVALID_ARG);
 
   mKey = aKey;
   nsCOMPtr<nsIPrefBranch> prefBranch;
@@ -161,7 +161,7 @@ nsresult purpleProxy::Init(nsCString& aKey, PRInt16 aType,
                                  PromiseFlatCString(aUsername).get());
     NS_ENSURE_SUCCESS(rv, rv);
   }
-    
+
   mPassword = aPassword;
   if (!aPassword.IsEmpty()) {
     rv = prefBranch->SetCharPref(PROXY_PREF_PASSWORD,
@@ -186,8 +186,8 @@ PRBool purpleProxy::Equals(PRInt16 aType, const nsACString& aHostname, PRUint32 
 NS_IMETHODIMP purpleProxy::GetPurpleProxy(PurpleProxyInfo * *aResult)
 {
   NS_ENSURE_TRUE(mType >= purpleIProxyInfo::httpProxy &&
-		 mType <= purpleIProxyInfo::socks5Proxy,
-		 NS_ERROR_FAILURE);
+                 mType <= purpleIProxyInfo::socks5Proxy,
+                 NS_ERROR_FAILURE);
 
   PurpleProxyInfo *result = purple_proxy_info_new();
 

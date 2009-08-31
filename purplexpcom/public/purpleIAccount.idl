@@ -40,7 +40,7 @@
 #include "purpleIConversation.idl"
 #include "purpleIProxy.idl"
 
-/* 
+/*
  * This is a proxy to libpurple PurpleAccount
  */
 
@@ -145,13 +145,13 @@ interface purpleIAccount: nsISupports {
 
   /* From PurpleConnectionState */
 
-  //   PURPLE_DISCONNECTED 	Disconnected.
+  //   PURPLE_DISCONNECTED     Disconnected.
   readonly attribute boolean disconnected;
 
-  //   PURPLE_CONNECTED 	Connected.
+  //   PURPLE_CONNECTED        Connected.
   readonly attribute boolean connected;
 
-  //   PURPLE_CONNECTING 	Connecting. 
+  //   PURPLE_CONNECTING       Connecting.
   readonly attribute boolean connecting;
 
   /* From PurpleConnectionFlags */

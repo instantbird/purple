@@ -164,7 +164,7 @@ nsresult purpleConversation::DoCommand(const char *aMsg,
         nsCOMPtr<purpleIProtocol> proto;
         rv = account->GetProtocol(getter_AddRefs(proto));
         NS_ENSURE_SUCCESS(rv, rv);
-        
+
         PRBool slashCommandsNative = PR_FALSE;
         rv = proto->GetSlashCommandsNative(&slashCommandsNative);
         NS_ENSURE_SUCCESS(rv, rv);

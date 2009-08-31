@@ -45,12 +45,12 @@
 #include "nsStringAPI.h"
 
 // 0ca0b0a3-ab52-434a-9176-a7d7daa74bad
-#define PURPLE_MESSAGE_CID					\
-  { 0x0ca0b0a3, 0xab52, 0x434a,					\
-      { 0x91, 0x76, 0xa7, 0xd7, 0xda, 0xa7, 0x4b, 0xad }	\
+#define PURPLE_MESSAGE_CID                                      \
+  { 0x0ca0b0a3, 0xab52, 0x434a,                                 \
+      { 0x91, 0x76, 0xa7, 0xd7, 0xda, 0xa7, 0x4b, 0xad }        \
   }
 
-#define PURPLE_MESSAGE_CONTRACTID		\
+#define PURPLE_MESSAGE_CONTRACTID \
   "@instantbird.org/purple/message;1"
 
 class purpleMessage : public purpleIMessage
@@ -61,7 +61,7 @@ public:
 
   purpleMessage();
   nsresult Init(PurpleConversation *conv, const char *who, const char *alias,
-		const char *message, PurpleMessageFlags flags, time_t mtime);
+                const char *message, PurpleMessageFlags flags, time_t mtime);
 
 private:
   ~purpleMessage();

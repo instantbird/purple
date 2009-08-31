@@ -48,9 +48,9 @@
 #pragma GCC visibility pop
 
 // dd535741-4b04-49ca-8df6-08f8577fe52b
-#define PURPLE_TOOLTIPINFO_CID					\
-  { 0xdd535741, 0x4b04, 0x49ca,					\
-      { 0x8d, 0xf6, 0x08, 0xf8, 0x57, 0x7f, 0xe5, 0x2b }	\
+#define PURPLE_TOOLTIPINFO_CID                                  \
+  { 0xdd535741, 0x4b04, 0x49ca,                                 \
+      { 0x8d, 0xf6, 0x08, 0xf8, 0x57, 0x7f, 0xe5, 0x2b }        \
   }
 
 class purpleTooltipInfo : public purpleITooltipInfo,

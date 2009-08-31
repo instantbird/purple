@@ -40,7 +40,7 @@
 #include "purpleIBuddy.idl"
 #include "purpleITag.idl"
 
-/* 
+/*
  * This interface provides access to the link between an account and a
  * buddy.
  */

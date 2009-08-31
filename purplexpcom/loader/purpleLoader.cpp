@@ -80,7 +80,7 @@ static char const *const kDependentLibraries[] =
 // component.dll on windows, libcomponent.dll on linux
 static char kRealComponent[] = DLL_PREFIX "purplexpcom" DLL_SUFFIX;
 
-extern "C" NS_EXPORT nsresult PR_CALLBACK 
+extern "C" NS_EXPORT nsresult PR_CALLBACK
 NSGetModule(nsIComponentManager* aCompMgr,
             nsIFile* aLocation,
             nsIModule* *aResult)
@@ -125,7 +125,7 @@ NSGetModule(nsIComponentManager* aCompMgr,
 
 #ifdef XP_MACOSX
 # ifdef DEBUG_PURPLE_LOADER
-    void* lib = 
+    void* lib =
 # endif
       (void *) NSAddImage(pathName.get(),
                           NSADDIMAGE_OPTION_RETURN_ON_ERROR |
@@ -139,7 +139,7 @@ NSGetModule(nsIComponentManager* aCompMgr,
     libSpec.value.pathname = pathName.get();
 
 # ifdef DEBUG_PURPLE_LOADER
-    PRLibrary *lib = 
+    PRLibrary *lib =
 # endif
       PR_LoadLibraryWithFlags(libSpec, PR_LD_NOW|PR_LD_GLOBAL);
     //    rv = library->Load(&lib);

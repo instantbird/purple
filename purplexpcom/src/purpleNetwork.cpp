@@ -72,7 +72,7 @@ purpleNetworkObserver::init()
     mInstance = new purpleNetworkObserver();
 }
 
-void 
+void
 purpleNetworkObserver::unInit()
 {
   if (!mInstance)

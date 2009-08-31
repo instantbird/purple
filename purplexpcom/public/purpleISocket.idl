@@ -37,7 +37,7 @@
 
 #include "nsISupports.idl"
 
-/* 
+/*
  * This is a proxy for purpleSocket so that it can be called from the
  * socket thread.
  */

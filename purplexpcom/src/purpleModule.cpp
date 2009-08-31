@@ -106,7 +106,7 @@ static NS_METHOD UnregisterPurpleContentPolicy(nsIComponentManager *aCompMgr,
   nsCOMPtr<nsICategoryManager> catman =
     do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   return catman->DeleteCategoryEntry(NS_CONTENTPOLICY_CATEGORY,
                                      PURPLE_CONTENT_POLICY_CONTRACTID,
                                      PR_TRUE);

@@ -386,7 +386,7 @@ nsISocketTransportService *purpleSocketWatcher::getSts()
 }
 
 PRUint32 purpleSocketWatcher::AddWatch(gint aFd, PurpleInputCondition aCondition,
-				       PurpleInputFunction aFunction, gpointer aData)
+                                       PurpleInputFunction aFunction, gpointer aData)
 {
   NS_ENSURE_TRUE(sSockets, NS_ERROR_FAILURE);
   NS_ASSERTION(NS_IsMainThread(), "wrong thread");

@@ -45,12 +45,12 @@
 #include "nsTArray.h"
 
 // 9090b5e6-51fb-4495-92d1-a0f713f4f7f9
-#define PURPLE_BUDDY_CID					\
-  { 0x9090b5e6, 0x51fb, 0x4495,					\
-      { 0x92, 0xd1, 0xa0, 0xf7, 0x13, 0xf4, 0xf7, 0xf9 }	\
+#define PURPLE_BUDDY_CID                                        \
+  { 0x9090b5e6, 0x51fb, 0x4495,                                 \
+      { 0x92, 0xd1, 0xa0, 0xf7, 0x13, 0xf4, 0xf7, 0xf9 }        \
   }
 
-#define PURPLE_BUDDY_CONTRACTID			\
+#define PURPLE_BUDDY_CONTRACTID                 \
   "@instantbird.org/purple/buddy;1"
 
 class purpleBuddy : public purpleIBuddy

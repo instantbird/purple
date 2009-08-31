@@ -177,7 +177,7 @@ PurpleConnectionUiOps connection_uiops = {
 /*** Account uiops ***/
 static void *request_authorize(PurpleAccount *account, const char *remote_user,
                                const char *id, const char *alias,
-                               const char *message, gboolean on_list, 
+                               const char *message, gboolean on_list,
                                PurpleAccountRequestAuthorizationCb authorize_cb,
                                PurpleAccountRequestAuthorizationCb deny_cb,
                                void *user_data)
@@ -224,7 +224,7 @@ static void *request_authorize(PurpleAccount *account, const char *remote_user,
   NS_ENSURE_TRUE(wm, NULL);
   nsCOMPtr<nsIDOMWindowInternal> window;
   wm->GetMostRecentWindow(NS_LITERAL_STRING("Messenger:blist").get(),
-			  getter_AddRefs(window));
+                          getter_AddRefs(window));
 
   PRInt32 result;
   PRUint32 flags = (nsIPromptService::BUTTON_POS_0 +
@@ -560,7 +560,7 @@ received_im_msg(PurpleAccount *account, char *sender, char *message,
 
 static void update_chat_topic(PurpleConversation *aConv,
                               const char *aWho,
-       	                      const char *aNew)
+                              const char *aNew)
 {
   notify_conv(aConv, nsnull, "chat-update-topic", nsnull);
 }
@@ -670,7 +670,7 @@ static time_t idle_time()
 static PurpleIdleUiOps idle_uiops =
 {
   idle_time,
- 
+
   /* padding */
   NULL, NULL, NULL, NULL
 };
@@ -697,8 +697,8 @@ class prefsObserver : public nsIObserver
 NS_IMPL_ISUPPORTS1(prefsObserver, nsIObserver)
 
 NS_IMETHODIMP prefsObserver::Observe(nsISupports *aSubject,
-				     const char *aTopic,
-				     const PRUnichar *someData)
+                                     const char *aTopic,
+                                     const PRUnichar *someData)
 {
   LOG(("prefsObserver::Observe topic = %s\n", aTopic));
   purple_prefs_observe(callback);
@@ -707,20 +707,20 @@ NS_IMETHODIMP prefsObserver::Observe(nsISupports *aSubject,
 }
 
 // Prefs ui ops
-#define DEFINE_mozName_from_name(name)		\
-  NS_ENSURE_TRUE(name && *name == '/',);	\
-						\
-  char *mozName = g_strdup(name + 1);		\
-  for (int i = 0; mozName[i]; ++i)		\
-    if (mozName[i] == '/')			\
+#define DEFINE_mozName_from_name(name)          \
+  NS_ENSURE_TRUE(name && *name == '/',);        \
+                                                \
+  char *mozName = g_strdup(name + 1);           \
+  for (int i = 0; mozName[i]; ++i)              \
+    if (mozName[i] == '/')                      \
       mozName[i] = '.';
 
-#define DEFINE_mozName_from_name_with_default(name, default)	\
-  NS_ENSURE_TRUE(name && *name == '/', default);		\
-  								\
-  char *mozName = g_strdup(name + 1);				\
-  for (int i = 0; mozName[i]; ++i)				\
-    if (mozName[i] == '/')					\
+#define DEFINE_mozName_from_name_with_default(name, default)    \
+  NS_ENSURE_TRUE(name && *name == '/', default);                \
+                                                                \
+  char *mozName = g_strdup(name + 1);                           \
+  for (int i = 0; mozName[i]; ++i)                              \
+    if (mozName[i] == '/')                                      \
       mozName[i] = '.';
 
 void prefs_add_none(const char *name)
@@ -1042,7 +1042,7 @@ static void ui_register_plugins()
   // XPCOM components and register them with libpurple
   nsCOMPtr<nsISimpleEnumerator> catEntries;
   nsresult rv = catMgr->EnumerateCategory(PURPLE_PROTOCOL_PLUGIN_CATEGORY,
-					  getter_AddRefs(catEntries));
+                                          getter_AddRefs(catEntries));
   NS_ENSURE_SUCCESS(rv, );
 
   PRBool hasMore;

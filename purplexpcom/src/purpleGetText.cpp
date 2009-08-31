@@ -139,7 +139,7 @@ const purpleGetText::PluralRule *purpleGetText::GetPluralRule()
     return mPluralRule;
 
   nsresult rv;
-  nsCOMPtr<nsIStringBundleService> stringService = 
+  nsCOMPtr<nsIStringBundleService> stringService =
      do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, nsnull);
 
@@ -234,7 +234,7 @@ nsCString *purpleGetText::GetStringFromProperties(const char *package,
                                                   const char *ident)
 {
   nsresult rv;
-  nsCOMPtr<nsIStringBundleService> stringService = 
+  nsCOMPtr<nsIStringBundleService> stringService =
      do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, nsnull);
 
@@ -291,7 +291,7 @@ nsCString *purpleGetText::GetString(const char *package,
   nsCAutoString hashed;
   rv = hash->Finish(PR_FALSE, hashed);
   NS_ENSURE_SUCCESS(rv, nsnull);
- 
+
 #define NB_HEXA_DIGIT 4
   PRUint8 buf[NB_HEXA_DIGIT];
   memcpy(buf, hashed.BeginReading(), NB_HEXA_DIGIT);
@@ -486,7 +486,7 @@ const char *purpleGetText::GetPluralText(const char *package,
 
 NS_IMETHODIMP
 purpleGetText::Observe(nsISupports *aSubject,
-                       const char *aTopic, 
+                       const char *aTopic,
                        const PRUnichar *aSomeData)
 {
   LOG(("purpleGetText::Observer(%s)\n", aTopic));
@@ -513,7 +513,7 @@ nsresult purpleGetText::init()
     NS_ENSURE_TRUE(sInstance, NS_ERROR_OUT_OF_MEMORY);
     NS_ADDREF(sInstance);
 
-    nsCOMPtr<nsIObserverService> os = 
+    nsCOMPtr<nsIObserverService> os =
       do_GetService("@mozilla.org/observer-service;1");
     if (os)
       os->AddObserver(sInstance, NS_CHROME_FLUSH_TOPIC, PR_FALSE);
@@ -537,7 +537,7 @@ void purpleGetText::unInit()
   if (!sInstance)
     return;
 
-  nsCOMPtr<nsIObserverService> os = 
+  nsCOMPtr<nsIObserverService> os =
     do_GetService("@mozilla.org/observer-service;1");
   if (os)
     os->RemoveObserver(sInstance, NS_CHROME_FLUSH_TOPIC);

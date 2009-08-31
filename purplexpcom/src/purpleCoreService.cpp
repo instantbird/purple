@@ -148,7 +148,7 @@ NS_IMETHODIMP purpleCoreService::Init()
   NS_ENSURE_SUCCESS(rv, rv);
 
   /* Ensure that NSS is initialized */
-  nsCOMPtr<nsISupports> nssComponent 
+  nsCOMPtr<nsISupports> nssComponent
     = do_GetService("@mozilla.org/psm;1");
   NS_ASSERTION(nssComponent, "Failed to initialize NSS");
 
@@ -469,7 +469,7 @@ void purpleCoreService::InitProtocols()
 
   nsCOMPtr<nsISimpleEnumerator> catEntries;
   nsresult rv = catMgr->EnumerateCategory(PURPLE_OVERRIDE_PROTOCOL_CATEGORY,
-					  getter_AddRefs(catEntries));
+                                          getter_AddRefs(catEntries));
   NS_ENSURE_SUCCESS(rv, );
 
   PRBool hasMore;
@@ -1258,7 +1258,7 @@ NS_IMETHODIMP purpleCoreService::CreateAccount(const nsACString &aName,
       NS_ENSURE_SUCCESS(rv, rv);
       if (found) {
         /* This should never happen so log a string to the error console */
-        nsCOMPtr<nsIConsoleService> consoleService = 
+        nsCOMPtr<nsIConsoleService> consoleService =
           do_GetService( "@mozilla.org/consoleservice;1" );
 
         nsString msg(NS_LITERAL_STRING("No account "));

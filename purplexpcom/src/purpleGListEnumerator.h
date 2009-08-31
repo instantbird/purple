@@ -57,8 +57,8 @@ public:
   typedef void (*cleanupCallback) (void *);
 
   nsresult Init(GList *aGList, converterCallback aDataToSupports,
-		cleanupCallback aCleanupCallback = NULL,
-		void *aCleanupData = NULL);
+                cleanupCallback aCleanupCallback = NULL,
+                void *aCleanupData = NULL);
 
 private:
   void Cleanup();

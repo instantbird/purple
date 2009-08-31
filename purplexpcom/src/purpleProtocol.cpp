@@ -186,7 +186,7 @@ NS_IMETHODIMP purpleProtocol::AccountExists(const nsACString& aName,
 
 /* nsISimpleEnumerator getOptions (); */
 NS_IMETHODIMP purpleProtocol::GetOptions(nsISimpleEnumerator **aResult)
-{ 
+{
   NS_ENSURE_TRUE(mInfo, NS_ERROR_NOT_INITIALIZED);
 
   purpleGListEnumerator *enumerator = new purpleGListEnumerator();

@@ -82,11 +82,11 @@ NS_IMETHODIMP purpleConvChatBuddy::GetBuddy(PRBool *aBuddy)
 
 
 /* Get flag from PurpleConvChatBuddyFlags */
-#define PURPLE_IMPL_GETFLAG(aName, aFlag)				\
-  NS_IMETHODIMP purpleConvChatBuddy::Get##aName(PRBool *a##aName)	\
-  {									\
+#define PURPLE_IMPL_GETFLAG(aName, aFlag)                               \
+  NS_IMETHODIMP purpleConvChatBuddy::Get##aName(PRBool *a##aName)       \
+  {                                                                     \
     *a##aName = (mFlags & PURPLE_CBFLAGS_##aFlag) ? PR_TRUE : PR_FALSE; \
-    return NS_OK;							\
+    return NS_OK;                                                       \
   }
 
 /* readonly attribute boolean noFlags; */

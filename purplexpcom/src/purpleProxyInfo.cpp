@@ -88,7 +88,7 @@ NS_IMETHODIMP purpleProxyInfo::GetKey(nsACString & aKey)
     NS_NOTREACHED("unknown proxy type...");
     return NS_ERROR_FAILURE;
   }
-  
+
   return NS_OK;
 }
 

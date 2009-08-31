@@ -147,11 +147,11 @@ void purpleAccount::UnInit()
 }
 
 #define PURPLE_IMPL_GETPREF(prettyType, purpleType, PRType)             \
-  inline void purpleAccount::Get##prettyType##Pref(const char *aName)	\
-  {									\
-    PRType val;								\
-    nsresult rv = mPrefOptBranch->Get##prettyType##Pref(aName, &val);	\
-    if (NS_SUCCEEDED(rv)) {						\
+  inline void purpleAccount::Get##prettyType##Pref(const char *aName)   \
+  {                                                                     \
+    PRType val;                                                         \
+    nsresult rv = mPrefOptBranch->Get##prettyType##Pref(aName, &val);   \
+    if (NS_SUCCEEDED(rv)) {                                             \
       purple_account_set_##purpleType(mAccount, aName, val);            \
     }                                                                   \
   }
@@ -901,7 +901,7 @@ NS_IMETHODIMP purpleAccount::GetAlias(nsACString& aAlias)
     aAlias = NS_SUCCEEDED(rv) ? alias : EmptyCString();
     return NS_OK;
   }
-  
+
   aAlias = purple_account_get_alias(mAccount);
   return NS_OK;
 }
@@ -961,19 +961,19 @@ NS_IMETHODIMP purpleAccount::SetProxyInfo(purpleIProxyInfo * aProxyInfo)
 }
 
 #define PURPLE_IMPL_SET(prettyType, purpleType, PRType, prefType)       \
-  NS_IMETHODIMP purpleAccount::Set##prettyType(const char *aName,	\
-					       PRType aVal)		\
-  {									\
-    PURPLE_ENSURE_INIT(mAccount);					\
-									\
-    /* Give that pref to libpurple */					\
-    purple_account_set_##purpleType(mAccount, aName, aVal);		\
-    									\
-    /* Save the pref in our preference system */			\
-    nsresult rv = GetPrefBranch();					\
-    NS_ENSURE_SUCCESS(rv, rv);						\
-									\
-    return mPrefOptBranch->Set##prefType##Pref(aName, aVal);		\
+  NS_IMETHODIMP purpleAccount::Set##prettyType(const char *aName,       \
+                                               PRType aVal)             \
+  {                                                                     \
+    PURPLE_ENSURE_INIT(mAccount);                                       \
+                                                                        \
+    /* Give that pref to libpurple */                                   \
+    purple_account_set_##purpleType(mAccount, aName, aVal);             \
+                                                                        \
+    /* Save the pref in our preference system */                        \
+    nsresult rv = GetPrefBranch();                                      \
+    NS_ENSURE_SUCCESS(rv, rv);                                          \
+                                                                        \
+    return mPrefOptBranch->Set##prefType##Pref(aName, aVal);            \
   }
 
 /* void setBool (in string aName, in boolean aVal); */
@@ -1020,15 +1020,15 @@ NS_IMETHODIMP purpleAccount::Save()
   return NS_OK;
 }
 
-#define PURPLE_IMPL_SETPREF(prettyType, prefType, PRType)		\
-  nsresult purpleAccount::Set##prettyType##Pref(const char *aName,	\
-						PRType aValue)		\
-  {									\
-    nsresult rv = GetPrefBranch();					\
-    NS_ENSURE_SUCCESS(rv, rv);						\
-									\
-    rv = mPrefBranch->Set##prefType##Pref(aName, aValue);		\
-    NS_ENSURE_SUCCESS(rv, rv);						\
+#define PURPLE_IMPL_SETPREF(prettyType, prefType, PRType)               \
+  nsresult purpleAccount::Set##prettyType##Pref(const char *aName,      \
+                                                PRType aValue)          \
+  {                                                                     \
+    nsresult rv = GetPrefBranch();                                      \
+    NS_ENSURE_SUCCESS(rv, rv);                                          \
+                                                                        \
+    rv = mPrefBranch->Set##prefType##Pref(aName, aValue);               \
+    NS_ENSURE_SUCCESS(rv, rv);                                          \
                                                                         \
     initSavePrefsTimer();                                               \
     return NS_OK;                                                       \
@@ -1071,7 +1071,7 @@ void purpleAccount::SetDisconnectReason(PurpleConnectionError reason,
      when the status changes (including when idleness changes)
 
      Warning: the following is very ugly!
-     
+
      When we disable the account, libpurple disconnect it, which destroys
      the PurpleConnection associated with the account. Then, it crashes in
      set_current_error because the gc field of the account points to
@@ -1132,7 +1132,7 @@ void purpleAccount::SetDisconnectReason(PurpleConnectionError reason,
   mTimeOfNextReconnect = PR_Now() + timer * PR_USEC_PER_SEC;
   mTimer->InitWithFuncCallback(reconnectTimerCallback, this,
                                timer * PR_MSEC_PER_SEC,
-			       nsITimer::TYPE_ONE_SHOT);
+                               nsITimer::TYPE_ONE_SHOT);
   LOG(("timer initialized with %i s", timer));
 }
 
@@ -1185,19 +1185,19 @@ NS_IMETHODIMP purpleAccount::GetTimeOfLastConnect(PRInt64 *aTimeOfLastConnect)
 }
 
 #define PURPLE_IMPL_GETBOOL(aName, aDefault, aVal)              \
-  NS_IMETHODIMP purpleAccount::Get##aName(PRBool *a##aName)	\
-  {								\
-    PURPLE_ENSURE_INIT(mProtocol);				\
+  NS_IMETHODIMP purpleAccount::Get##aName(PRBool *a##aName)     \
+  {                                                             \
+    PURPLE_ENSURE_INIT(mProtocol);                              \
                                                                 \
     if (!mHasValidProtocol) {                                   \
       *a##aName = aDefault;                                     \
       return NS_OK;                                             \
     }                                                           \
                                                                 \
-    PURPLE_ENSURE_INIT(mAccount);				\
-    								\
-    *a##aName = aVal;						\
-    return NS_OK;						\
+    PURPLE_ENSURE_INIT(mAccount);                               \
+                                                                \
+    *a##aName = aVal;                                           \
+    return NS_OK;                                               \
   }
 
 
@@ -1206,25 +1206,25 @@ PURPLE_IMPL_GETBOOL(Disconnecting, PR_FALSE, mAccount->disconnecting)
 
 /* readonly attribute boolean disconnected; */
 PURPLE_IMPL_GETBOOL(Disconnected, PR_TRUE,
-		    !mAccount->gc || mAccount->gc->state == PURPLE_DISCONNECTED)
+                    !mAccount->gc || mAccount->gc->state == PURPLE_DISCONNECTED)
 
 /* readonly attribute boolean connected; */
 PURPLE_IMPL_GETBOOL(Connected, PR_FALSE,
-		    mAccount->gc && mAccount->gc->state == PURPLE_CONNECTED)
+                    mAccount->gc && mAccount->gc->state == PURPLE_CONNECTED)
 
 /* readonly attribute boolean connecting; */
 PURPLE_IMPL_GETBOOL(Connecting, PR_FALSE,
-		    mAccount->gc && mAccount->gc->state == PURPLE_CONNECTING)
+                    mAccount->gc && mAccount->gc->state == PURPLE_CONNECTING)
 
 /* Get flag from PurpleConnection->flags */
-#define PURPLE_IMPL_GETFLAG(aName, aFlag)				\
-  NS_IMETHODIMP purpleAccount::Get##aName(PRBool *a##aName)		\
-  {									\
-    PURPLE_ENSURE_INIT(mAccount);					\
-    PURPLE_ENSURE_INIT(mAccount->gc);					\
-    PurpleConnectionFlags flags = mAccount->gc->flags;			\
+#define PURPLE_IMPL_GETFLAG(aName, aFlag)                                 \
+  NS_IMETHODIMP purpleAccount::Get##aName(PRBool *a##aName)               \
+  {                                                                       \
+    PURPLE_ENSURE_INIT(mAccount);                                         \
+    PURPLE_ENSURE_INIT(mAccount->gc);                                     \
+    PurpleConnectionFlags flags = mAccount->gc->flags;                    \
     *a##aName = (flags & PURPLE_CONNECTION_##aFlag) ? PR_TRUE : PR_FALSE; \
-    return NS_OK;							\
+    return NS_OK;                                                         \
   }
 
 /* readonly attribute boolean HTMLEnabled; */

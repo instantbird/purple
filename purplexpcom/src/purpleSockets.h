@@ -111,7 +111,7 @@ class purpleSocketWatcher
 {
  public:
   static PRUint32 AddWatch(gint aFd, PurpleInputCondition aCondition,
-			   PurpleInputFunction aFunction, gpointer aData);
+                           PurpleInputFunction aFunction, gpointer aData);
   static PRBool CancelWatch(PRUint32 aId);
   static nsISocketTransportService *getSts();
   static void init();

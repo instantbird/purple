@@ -166,7 +166,7 @@ NS_IMETHODIMP purpleConvIM::SendTyping(PRUint32 aLength)
   // Check if we need to send a TYPING message to the server.
   // We need to send a message if we just typed the first character
   // or if the type_again value is not null and is less than the
-  // current timestamp 
+  // current timestamp
   if (!mSentTyping || (purple_conv_im_get_type_again(im) != 0 &&
                        time(NULL) > purple_conv_im_get_type_again(im))) {
     unsigned int timeout = serv_send_typing(purple_conversation_get_gc(mConv),

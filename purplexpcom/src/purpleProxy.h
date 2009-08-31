@@ -48,12 +48,12 @@
 #include "nsCOMPtr.h"
 
 // 48293b02-4972-424a-a1c0-72b413a8b5d9
-#define PURPLE_PROXY_CID					\
-  { 0x48293b02, 0x4972, 0x424a,					\
-      { 0xa1, 0xc0, 0x72, 0xb4, 0x13, 0xa8, 0xb5, 0xd9 }	\
+#define PURPLE_PROXY_CID                                        \
+  { 0x48293b02, 0x4972, 0x424a,                                 \
+      { 0xa1, 0xc0, 0x72, 0xb4, 0x13, 0xa8, 0xb5, 0xd9 }        \
   }
 
-#define PURPLE_PROXY_CONTRACTID	\
+#define PURPLE_PROXY_CONTRACTID \
   "@instantbird.org/purple/proxy;1"
 
 #define PREF_MESSENGER_GLOBAL_PROXY "messenger.globalProxy"
@@ -85,8 +85,8 @@ public:
   // initialize the purpleProxy members, and store the values in the
   // preferences.
   nsresult Init(nsCString& aKey, PRInt16 aType,
-		const nsACString& aHostname, PRUint32 aPort,
-		const nsACString& aUsername, const nsACString& aPassword);
+                const nsACString& aHostname, PRUint32 aPort,
+                const nsACString& aUsername, const nsACString& aPassword);
 
   PurpleProxyInfo *getPurpleProxy();
 
