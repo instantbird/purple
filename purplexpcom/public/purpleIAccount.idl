@@ -108,6 +108,9 @@ interface purpleIAccount: nsISupports {
   /* Time stamp of the next reconnection attempt */
   readonly attribute PRInt64 timeOfNextReconnect;
 
+  /* Time stamp of the last connection (value not reliable if not connected) */
+  readonly attribute PRInt64 timeOfLastConnect;
+
   const short NO_ERROR = -1;
   const short ERROR_NETWORK_ERROR = 0;
   const short ERROR_INVALID_USERNAME = 1;

@@ -62,6 +62,8 @@ NS_IMPL_ISUPPORTS1_CI(purpleAccount, purpleIAccount)
 
 #define AUTO_SAVE_PREFS_TIMER   5000
 
+#define TIME_BEFORE_CONSIDERING_CONNECTION_AS_SUCCESSFUL 10
+
 #define INIT_CONDITION          (mProtocol && (!mHasValidProtocol || mAccount))
 
 #ifdef PR_LOGGING
@@ -81,6 +83,7 @@ purpleAccount::purpleAccount()
     mConnectionErrorReason((PurpleConnectionError)NO_ERROR),
     mReconnectAttempts(0),
     mTimeOfNextReconnect(0),
+    mTimeOfLastConnect(0),
     mAutoLoginPending(PR_FALSE)
 {
   /* member initializers and constructor code */
@@ -599,6 +602,7 @@ NS_IMETHODIMP purpleAccount::Connect()
            mTimeOfNextReconnect - PR_Now()));
       // This is a manual reconnection, reset the auto-reconnect stuff
       mReconnectAttempts = 0;
+      mTimeOfLastConnect = 0;
       if (mTimer)
         mTimer->Cancel();
     }
@@ -1100,6 +1104,14 @@ void purpleAccount::SetDisconnectReason(PurpleConnectionError reason,
                                    getter_Copies(timers));
   NS_ENSURE_SUCCESS(rv, );
 
+  /* If the last successful connection is older than 10 seconds, reset the
+     number of reconnection attemps. */
+  if (mTimeOfLastConnect && mTimeOfLastConnect +
+      TIME_BEFORE_CONSIDERING_CONNECTION_AS_SUCCESSFUL * PR_USEC_PER_SEC < PR_Now()) {
+    mReconnectAttempts = 0;
+    mTimeOfLastConnect = 0;
+  }
+
   char *newStr = timers.BeginWriting();
   nsCAutoString time;
   PRUint32 i = 0;
@@ -1126,9 +1138,8 @@ void purpleAccount::SetDisconnectReason(PurpleConnectionError reason,
 
 void purpleAccount::Connected()
 {
-  mReconnectAttempts = 0;
-
   finishedAutoLogin();
+  mTimeOfLastConnect = PR_Now();
   CheckAndSetFirstConnectionState(FIRST_CONNECTION_NONE);
 
   // FIXME: this is probably obsolete
@@ -1159,10 +1170,17 @@ NS_IMETHODIMP purpleAccount::GetConnectionErrorMessage(nsACString & aConnectionE
   return NS_OK;
 }
 
-/* readonly attribute long timeUntilReconnect; */
+/* readonly attribute PRInt64 timeOfNextReconnect; */
 NS_IMETHODIMP purpleAccount::GetTimeOfNextReconnect(PRInt64 *aTimeOfNextReconnect)
 {
   *aTimeOfNextReconnect = mTimeOfNextReconnect / 1000;
+  return NS_OK;
+}
+
+/* readonly attribute PRInt64 timeOfLastConnect; */
+NS_IMETHODIMP purpleAccount::GetTimeOfLastConnect(PRInt64 *aTimeOfLastConnect)
+{
+  *aTimeOfLastConnect = mTimeOfLastConnect / 1000;
   return NS_OK;
 }
 
