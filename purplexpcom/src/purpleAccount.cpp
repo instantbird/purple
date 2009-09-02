@@ -601,10 +601,8 @@ NS_IMETHODIMP purpleAccount::Connect()
       LOG(("mReconnectAttempts := 0 because: mTimeOfNextReconnect - PR_Now() = %li > PR_USEC_PER_SEC",
            mTimeOfNextReconnect - PR_Now()));
       // This is a manual reconnection, reset the auto-reconnect stuff
-      mReconnectAttempts = 0;
       mTimeOfLastConnect = 0;
-      if (mTimer)
-        mTimer->Cancel();
+      CancelReconnection();
     }
   }
 
@@ -634,9 +632,10 @@ NS_IMETHODIMP purpleAccount::CancelReconnection()
   if (mTimer) {
     mTimer->Cancel();
     mTimer = nsnull;
-    mReconnectAttempts = 0;
-    mTimeOfNextReconnect = 0;
   }
+
+  mReconnectAttempts = 0;
+  mTimeOfNextReconnect = 0;
   return NS_OK;
 }
 
