@@ -76,7 +76,7 @@ purpleConvChat::purpleConvChat()
 purpleConvChat::~purpleConvChat()
 {
   /* destructor code */
-  LOG(("destructing IM conversation with id %i", mId));
+  LOG(("destructing chat conversation with id %i", mId));
 }
 
 /* void sendMsg (in AUTF8String aMsg); */
@@ -101,6 +101,7 @@ NS_IMETHODIMP purpleConvChat::SendMsg(const nsACString& aMsg)
 NS_IMETHODIMP purpleConvChat::GetParticipants(nsISimpleEnumerator **_retval NS_OUTPARAM)
 {
   NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
+  LOG(("GetParticipants of conversation with id %i", mId));
 
   PurpleConvChat *chat = purple_conversation_get_chat_data(mConv);
   NS_ENSURE_TRUE(chat, NS_ERROR_FAILURE);
