@@ -1192,7 +1192,9 @@ NS_IMETHODIMP purpleCoreService::SetAutoLoginStatus(PRInt16 aAutoLoginStatus)
 /* void processAutoLogin (); */
 NS_IMETHODIMP purpleCoreService::ProcessAutoLogin()
 {
+#ifndef DEBUG
   NS_ENSURE_TRUE(!NS_IsOffline(), NS_ERROR_FAILURE);
+#endif
 
   for (PRInt32 i = 0; i < mAccounts.Count(); ++i)
     mAccounts[i]->checkAutoLogin();

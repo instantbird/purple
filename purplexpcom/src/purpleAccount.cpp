@@ -456,7 +456,11 @@ nsresult purpleAccount::checkAutoLogin()
   if (NS_FAILED(rv) || autoLogin) {
     LOG(("autologin\n"));
     startAutoLogin();
-    Connect();
+    rv = Connect();
+#ifdef DEBUG
+    if (NS_FAILED(rv))
+      finishedAutoLogin();
+#endif
   }
 
   mPrefBranch = nsnull;
@@ -589,7 +593,10 @@ NS_IMETHODIMP purpleAccount::Connect()
 {
   PURPLE_ENSURE_INIT(mAccount);
   LOG(("Attempting to connect %s\n", mAccount->username));
-  NS_ENSURE_TRUE(!NS_IsOffline(), NS_ERROR_FAILURE);
+#ifdef DEBUG
+  if (strcmp("prpl-null", purple_account_get_protocol_id(mAccount)))
+#endif
+    NS_ENSURE_TRUE(!NS_IsOffline(), NS_ERROR_FAILURE);
 
   if (mConnectionErrorReason != (PurpleConnectionError) NO_ERROR) {
     /* The account is offline because of an error, clear the error */
