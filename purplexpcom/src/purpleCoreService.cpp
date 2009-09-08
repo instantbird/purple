@@ -505,7 +505,9 @@ void purpleCoreService::InitProtocols()
 /* void Quit (); */
 NS_IMETHODIMP purpleCoreService::Quit()
 {
-  PURPLE_ENSURE_INIT(mInitialized);
+  // This seems to happen when Windows is shutting down, don't know why... :(
+  if (!mInitialized)
+    return NS_OK;
 
   // Avoid reentering when called from the unload handler of the buddy list
   if (mQuitting)
@@ -550,7 +552,6 @@ NS_IMETHODIMP purpleCoreService::Quit()
   purpleTimer::unInit();
   purpleGetText::unInit();
 
-  mInitialized = PR_FALSE;
   mQuitting = PR_FALSE;
   return NS_OK;
 }
