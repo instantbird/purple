@@ -80,6 +80,7 @@ static PRLogModuleInfo *gPurpleCoreServiceLog = nsnull;
 #define LOG(args) PR_LOG(gPurpleCoreServiceLog, PR_LOG_DEBUG, args)
 
 
+#define PREF_STARTUP_ACTION     "messenger.startup.action"
 #define PREF_MESSENGER_ACCOUNTS "messenger.accounts"
 
 #define QUIT_APPLICATION_NOTIFICATION "quit-application"
@@ -199,6 +200,14 @@ void purpleCoreService::InitAutoLoginStatus()
   if (mAutoLoginStatus != AUTOLOGIN_ENABLED)
     return;
 
+  PRInt32 startupAction;
+  nsresult rv = mPrefService->GetIntPref(PREF_STARTUP_ACTION, &startupAction);
+  if (NS_SUCCEEDED(rv) && !startupAction) {
+    // the value 0 means that we start without connecting the accounts
+    mAutoLoginStatus = AUTOLOGIN_USER_DISABLED;
+    return;
+  }
+
   /* Disable auto-login if we are running in safe mode */
   nsCOMPtr<nsIXULRuntime> xai =
     do_GetService("@mozilla.org/xre/app-info;1");
@@ -225,8 +234,7 @@ void purpleCoreService::InitAutoLoginStatus()
 
   /* Check if we crashed at the last startup during autologin */
   PRInt32 autoLoginPending;
-  nsresult rv = mPrefService->GetIntPref(PREF_AUTOLOGIN_PENDING,
-                                         &autoLoginPending);
+  rv = mPrefService->GetIntPref(PREF_AUTOLOGIN_PENDING, &autoLoginPending);
   if (NS_FAILED(rv) || !autoLoginPending) {
     // if the pref isn't set, then we haven't crashed: keep autologin enabled
     return;
