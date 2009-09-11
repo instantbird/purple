@@ -94,6 +94,25 @@ buddy_signoff_cb(PurpleBuddy *buddy, void *data)
 		write_status(buddy, _("%s has signed off."), PURPLE_CONV_ACCOUNT_OFFLINE);
 }
 
+static void
+account_signed_off_cb(PurpleConnection *gc, gpointer event)
+{
+	GList *iter;
+
+	if (!gc || !gc->account)
+		return;
+
+	for (iter = purple_get_conversations(); iter; iter = iter->next)
+	{
+		PurpleConversation *conv = iter->data;
+		if (purple_conversation_get_account(conv) == gc->account)
+		{
+			purple_conversation_update(conv, PURPLE_CONV_ACCOUNT_OFFLINE);
+			purple_conversation_write(conv, NULL, _("Your account is disconnected."), PURPLE_MESSAGE_SYSTEM | PURPLE_MESSAGE_ACTIVE_ONLY | PURPLE_MESSAGE_NO_LINKIFY, time(NULL));
+		}
+	}
+}
+
 #if 0
 static PurplePluginPrefFrame *
 get_plugin_pref_frame(PurplePlugin *plugin)
@@ -132,6 +151,9 @@ plugin_load(PurplePlugin *plugin)
 	                    PURPLE_CALLBACK(buddy_signon_cb), NULL);
 	purple_signal_connect(blist_handle, "buddy-signed-off", plugin,
 	                    PURPLE_CALLBACK(buddy_signoff_cb), NULL);
+
+	purple_signal_connect(purple_connections_get_handle(), "signed-off", plugin,
+	                      G_CALLBACK(account_signed_off_cb), NULL);
 
 	return TRUE;
 }
