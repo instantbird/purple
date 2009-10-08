@@ -283,6 +283,17 @@ PURPLE_PRESENCE_GET_BOOL_IMPL(Available, available)
 /* readonly attribute boolean idle; */
 PURPLE_PRESENCE_GET_BOOL_IMPL(Idle, idle)
 
+/* readonly attribute boolean mobile; */
+NS_IMETHODIMP purpleAccountBuddy::GetMobile(PRBool *aMobile)
+{
+  NS_ENSURE_TRUE(mBuddy, NS_ERROR_NOT_INITIALIZED);
+
+  *aMobile =
+    purple_presence_is_status_primitive_active(purple_buddy_get_presence(mBuddy),
+                                               PURPLE_STATUS_MOBILE);
+  return NS_OK;
+}
+
 /* readonly attribute string status; */
 NS_IMETHODIMP purpleAccountBuddy::GetStatus(nsACString &aStatus)
 {

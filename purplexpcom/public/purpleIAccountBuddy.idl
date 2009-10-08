@@ -62,5 +62,6 @@ interface purpleIAccountBuddy: nsISupports {
   readonly attribute boolean online;
   readonly attribute boolean available;
   readonly attribute boolean idle;
+  readonly attribute boolean mobile;
   readonly attribute AUTF8String status;
 };
