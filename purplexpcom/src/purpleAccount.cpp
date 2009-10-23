@@ -36,7 +36,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "purpleAccount.h"
+#include "purpleClassInfo.h"
 #include "purpleCoreService.h"
+#include "purpleGListEnumerator.h"
 #include "purpleUnknownProtocol.h"
 #include "purpleStorage.h"
 #include <nsIObserverService.h>
@@ -73,6 +75,153 @@ NS_IMPL_ISUPPORTS1_CI(purpleAccount, purpleIAccount)
 static PRLogModuleInfo *gPurpleAccountLog = nsnull;
 #endif
 #define LOG(args) PR_LOG(gPurpleAccountLog, PR_LOG_DEBUG, args)
+
+
+class purpleChatRoomField : public purpleIChatRoomField,
+                            public nsIClassInfo
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSICLASSINFO
+  NS_DECL_PURPLEICHATROOMFIELD
+
+  purpleChatRoomField() : mType(-1) {}
+  void Init(const proto_chat_entry *aChatRoomField)
+  {
+    mType =
+      aChatRoomField->is_int ? (PRInt32) purpleIChatRoomField::TYPE_INT :
+      aChatRoomField->secret ? (PRInt32) purpleIChatRoomField::TYPE_PASSWORD :
+                               (PRInt32) purpleIChatRoomField::TYPE_TEXT;
+    mLabel = aChatRoomField->label;
+    mIdentifier = aChatRoomField->identifier;
+    mRequired = aChatRoomField->required;
+    mMin = aChatRoomField->min;
+    mMax = aChatRoomField->max;
+  }
+
+private:
+  ~purpleChatRoomField() {}
+
+protected:
+  /* additional members */
+  PRInt32 mType;
+  PRInt32 mMin, mMax;
+  nsCString mLabel;
+  nsCString mIdentifier;
+  PRPackedBool mRequired;
+};
+
+PURPLE_IMPL_ISUPPORTS1_CI(purpleChatRoomField, purpleIChatRoomField)
+
+#define PURPLE_IMPL_GETFIELDVALUE(aType, aName, aStar)                  \
+  NS_IMETHODIMP purpleChatRoomField::Get##aName(aType a##aName)         \
+  {                                                                     \
+    NS_ENSURE_TRUE(mType != -1, NS_ERROR_NOT_INITIALIZED);              \
+                                                                        \
+    aStar a##aName = m##aName;                                          \
+    return NS_OK;                                                       \
+  }
+
+/* readonly attribute AUTF8String label; */
+PURPLE_IMPL_GETFIELDVALUE(nsACString &, Label, )
+
+/* readonly attribute AUTF8String identifier; */
+PURPLE_IMPL_GETFIELDVALUE(nsACString &, Identifier, )
+
+/* readonly attribute boolean required; */
+PURPLE_IMPL_GETFIELDVALUE(PRBool *, Required, *)
+
+/* readonly attribute short type; */
+PURPLE_IMPL_GETFIELDVALUE(PRInt16 *, Type, *)
+
+/* readonly attribute long min; */
+PURPLE_IMPL_GETFIELDVALUE(PRInt32 *, Min, *)
+
+/* readonly attribute long max; */
+PURPLE_IMPL_GETFIELDVALUE(PRInt32 *, Max, *)
+
+#define MAX_KEYS 8
+
+class purpleChatRoomFieldValues : public purpleIChatRoomFieldValues,
+                                  public nsIClassInfo
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSICLASSINFO
+  NS_DECL_PURPLEICHATROOMFIELDVALUES
+
+  purpleChatRoomFieldValues(GHashTable *aHashTable) :
+    mHashTable(aHashTable),
+    mKeyCount(0) {
+  }
+
+private:
+  ~purpleChatRoomFieldValues() {
+    if (NS_LIKELY(mHashTable))
+      g_hash_table_destroy(mHashTable);
+
+    while (mKeyCount)
+      g_free(mKeys[--mKeyCount]);
+  }
+
+protected:
+  /* additional members */
+  GHashTable *mHashTable;
+
+  PRInt32 mKeyCount;
+  gchar *mKeys[MAX_KEYS];
+};
+
+PURPLE_IMPL_ISUPPORTS1_CI(purpleChatRoomFieldValues, purpleIChatRoomFieldValues)
+
+/* AUTF8String getValue (in AUTF8String aIdentifier); */
+NS_IMETHODIMP
+purpleChatRoomFieldValues::GetValue(const nsACString & aIdentifier,
+                                    nsACString & aResult)
+{
+  if (NS_UNLIKELY(!mHashTable)) {
+    aResult.Truncate();
+    return NS_OK;
+  }
+
+  aResult =
+    static_cast<const char *>(g_hash_table_lookup(mHashTable,
+                                                  PromiseFlatCString(aIdentifier).get()));
+  return NS_OK;
+}
+
+/* void setValue (in AUTF8String aIdentifier, in AUTF8String aValue); */
+NS_IMETHODIMP
+purpleChatRoomFieldValues::SetValue(const nsACString & aIdentifier,
+                                    const nsACString & aValue)
+{
+  if (NS_UNLIKELY(!mHashTable)) {
+    mHashTable = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, g_free);
+  }
+
+  PromiseFlatCString identifier(aIdentifier);
+  char *key = const_cast<char *>(identifier.get());
+  char *value = g_strdup(PromiseFlatCString(aValue).get());
+
+  if (!g_hash_table_lookup(mHashTable, key)) {
+    key = g_strdup(key);
+    if (mKeyCount < MAX_KEYS)
+      mKeys[mKeyCount++] = key;
+    // If we have already MAX_KEYS keys, we will leak, but something
+    // is already seriously wrong anyway...
+  }
+  g_hash_table_insert(mHashTable, key, value);
+
+  return NS_OK;
+}
+
+/* [noscript] readonly attribute GHashTablePtr hashTable; */
+NS_IMETHODIMP
+purpleChatRoomFieldValues::GetHashTable(GHashTable * *aHashTable)
+{
+  *aHashTable = mHashTable;
+  return NS_OK;
+}
 
 nsCOMPtr<nsITimer> purpleAccount::sSavePrefsTimer;
 PRUint32 purpleAccount::sAutoLoginsPending = 0;
@@ -664,31 +813,78 @@ NS_IMETHODIMP purpleAccount::CreateConversation(const nsACString& aName,
   return NS_OK;
 }
 
-/* purpleIConversation joinChat (in AUTF8String aName); */
-NS_IMETHODIMP purpleAccount::JoinChat(const nsACString& aName,
-                                      purpleIConversation **aResult)
+/* nsISimpleEnumerator getChatRoomFields (); */
+NS_IMETHODIMP purpleAccount::GetChatRoomFields(nsISimpleEnumerator **aResult)
 {
+  PURPLE_ENSURE_INIT(mProtocol && mAccount);
+  PurpleConnection *gc = purple_account_get_connection(mAccount);
+  NS_ENSURE_TRUE(gc, NS_ERROR_FAILURE);
+
+  PurplePluginProtocolInfo *prplInfo;
+  nsresult rv = mProtocol->GetInfo(&prplInfo);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  purpleGListEnumerator *enumerator = new purpleGListEnumerator();
+  enumerator->Init(prplInfo->chat_info(gc),
+                   purpleTypeToInterface<purpleChatRoomField,
+                                         purpleIChatRoomField,
+                                         proto_chat_entry>);
+
+  NS_ADDREF(*aResult = enumerator);
+  return NS_OK;
+}
+
+/* readonly attribute boolean canJoinChat; */
+NS_IMETHODIMP purpleAccount::GetCanJoinChat(PRBool *aCanJoinChat)
+{
+  PURPLE_ENSURE_INIT(mProtocol);
+
+  PurplePluginProtocolInfo *prplInfo;
+  nsresult rv = mProtocol->GetInfo(&prplInfo);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aCanJoinChat =
+    prplInfo->join_chat && prplInfo->chat_info && prplInfo->chat_info_defaults;
+  return NS_OK;
+}
+
+/* purpleIChatRoomFieldValues getChatRoomDefaultFieldValues ([optional] in AUTF8String aDefaultChatName); */
+NS_IMETHODIMP
+purpleAccount::GetChatRoomDefaultFieldValues(const nsACString & aDefaultChatName,
+                                             purpleIChatRoomFieldValues **aResult)
+{
+  PURPLE_ENSURE_INIT(mProtocol && mAccount);
+  PurpleConnection *gc = purple_account_get_connection(mAccount);
+  NS_ENSURE_TRUE(gc, NS_ERROR_FAILURE);
+
+  PurplePluginProtocolInfo *prplInfo;
+  nsresult rv = mProtocol->GetInfo(&prplInfo);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PromiseFlatCString defaultChatName(aDefaultChatName);
+  const char *chatName = defaultChatName.get();
+  if (!*chatName)
+    chatName = NULL;
+  NS_ENSURE_TRUE(prplInfo->chat_info_defaults, NS_ERROR_UNEXPECTED);
+  GHashTable *hashTable = prplInfo->chat_info_defaults(gc, chatName);
+  NS_ADDREF(*aResult = new purpleChatRoomFieldValues(hashTable));
+  return NS_OK;
+}
+
+/* void joinChat (in purpleIChatRoomFieldValues aComponents); */
+NS_IMETHODIMP purpleAccount::JoinChat(purpleIChatRoomFieldValues *aComponents)
+{
+  NS_ENSURE_TRUE(aComponents, NS_ERROR_INVALID_ARG);
+
   PURPLE_ENSURE_INIT(mAccount);
   PurpleConnection *gc = purple_account_get_connection(mAccount);
   NS_ENSURE_TRUE(gc, NS_ERROR_FAILURE);
 
-  PromiseFlatCString flatName(aName);
-  GHashTable *components = g_hash_table_new(g_str_hash, g_str_equal);
-  g_hash_table_insert(components, const_cast<char *>("channel"),
-                      const_cast<char *>(flatName.get()));
+  GHashTable *components;
+  nsresult rv = aComponents->GetHashTable(&components);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   serv_join_chat(gc, components);
-  g_hash_table_destroy(components);
-
-  PurpleConversation *conv =
-    purple_find_conversation_with_account(PURPLE_CONV_TYPE_CHAT, flatName.get(), mAccount);
-  if (conv) {
-    purpleIConversation *result = (purpleIConversation *)conv->ui_data;
-    NS_ENSURE_TRUE(result, NS_ERROR_NOT_INITIALIZED);
-    NS_ADDREF(*aResult = result);
-    return NS_OK;
-  }
-
-  *aResult = nsnull;
   return NS_OK;
 }
 

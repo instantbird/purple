@@ -41,9 +41,37 @@
 #include "purpleIProxy.idl"
 
 /*
- * This is a proxy to libpurple PurpleAccount
+ * Used to join chat rooms.
  */
 
+[ptr] native GHashTablePtr(GHashTable);
+
+[scriptable, uuid(ea7ab156-d25e-46cc-93ef-29f77b3c0795)]
+interface purpleIChatRoomFieldValues: nsISupports {
+  AUTF8String getValue(in AUTF8String aIdentifier);
+  void setValue(in AUTF8String aIdentifier, in AUTF8String aValue);
+
+  [noscript] readonly attribute GHashTablePtr hashTable;
+};
+
+[scriptable, uuid(19dff981-b125-4a70-bc1a-efc783d07137)]
+interface purpleIChatRoomField: nsISupports {
+  readonly attribute AUTF8String label;
+  readonly attribute AUTF8String identifier;
+  readonly attribute boolean required;
+
+  const short TYPE_TEXT = 0;
+  const short TYPE_PASSWORD = 1;
+  const short TYPE_INT = 2;
+
+  readonly attribute short type;
+  readonly attribute long min;
+  readonly attribute long max;
+};
+
+/*
+ * This is a proxy to libpurple PurpleAccount
+ */
 [scriptable, uuid(3c01ec75-6504-40df-af18-b8dc402c75a6)]
 interface purpleIAccount: nsISupports {
   void connect();
@@ -55,11 +83,15 @@ interface purpleIAccount: nsISupports {
 
   purpleIConversation createConversation(in AUTF8String aName);
 
+  readonly attribute boolean canJoinChat;
+  nsISimpleEnumerator getChatRoomFields();
+  purpleIChatRoomFieldValues getChatRoomDefaultFieldValues([optional] in AUTF8String aDefaultChatName);
   /*
    * Create a new chat conversation if it doesn't already exist.
    * Returns the conversation if it already existed, null otherwise
    */
-  purpleIConversation joinChat(in AUTF8String aName);
+  void joinChat(in purpleIChatRoomFieldValues aComponents);
+
   readonly attribute AUTF8String name;
   readonly attribute AUTF8String id;
   readonly attribute purpleIProtocol protocol;
