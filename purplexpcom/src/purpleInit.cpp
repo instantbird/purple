@@ -54,7 +54,6 @@
 #include <libpurple/prefs.h>
 #include <libpurple/prpl.h>
 #include <libpurple/savedstatuses.h>
-#include <libpurple/sound.h>
 #include <libpurple/status.h>
 #include <libpurple/util.h>
 #include <libpurple/whiteboard.h>
