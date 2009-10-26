@@ -30,6 +30,14 @@
 
 static PurpleDebugUiOps *debug_ui_ops = NULL;
 
+/*
+ * These determine whether verbose or unsafe debugging are desired.  I
+ * don't want to make these purple preferences because their values should
+ * not be remembered across instances of the UI.
+ */
+static gboolean debug_verbose = FALSE;
+static gboolean debug_unsafe = FALSE;
+
 void
 purple_debug_with_location(PurpleDebugLevel level, const char *category,
 			   const char *file, int line, const char *function,
@@ -130,6 +138,30 @@ void
 purple_debug_set_ui_ops(PurpleDebugUiOps *ops)
 {
 	debug_ui_ops = ops;
+}
+
+gboolean
+purple_debug_is_verbose()
+{
+	return debug_verbose;
+}
+
+void
+purple_debug_set_verbose(gboolean verbose)
+{
+	debug_verbose = verbose;
+}
+
+gboolean
+purple_debug_is_unsafe()
+{
+	return debug_unsafe;
+}
+
+void
+purple_debug_set_unsafe(gboolean unsafe)
+{
+	debug_unsafe = unsafe;
 }
 
 PurpleDebugUiOps *

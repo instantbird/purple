@@ -43,7 +43,6 @@
 #include "savedstatuses.h"
 #include "signals.h"
 #include "smiley.h"
-#include "sound.h"
 #include "sslconn.h"
 #include "status.h"
 #include "stun.h"
@@ -170,14 +169,12 @@ purple_core_init(const char *ui)
 	purple_privacy_init();
 	purple_proxy_init();
 	purple_dnsquery_init();
-	purple_sound_init();
 	purple_ssl_init();
 	purple_stun_init();
 	purple_xfers_init();
 	purple_idle_init();
 	purple_smileys_init();
 	purple_statenotify_init();
-
 #ifndef WINCE
 	/*
 	 * Call this early on to try to auto-detect our IP address and
@@ -216,6 +213,14 @@ purple_core_quit(void)
 	purple_certificate_uninit();
 #endif
 
+	/* The SSL plugins must be uninit before they're unloaded */
+	purple_ssl_uninit();
+
+	/* Unload all non-loader, non-prpl plugins before shutting down
+	 * subsystems. */
+	purple_debug_info("main", "Unloading normal plugins\n");
+	purple_plugins_unload(PURPLE_PLUGIN_STANDARD);
+
 	/* Save .xml files, remove signals, etc. */
 	purple_smileys_uninit();
 	purple_idle_uninit();
@@ -225,19 +230,17 @@ purple_core_quit(void)
 	purple_conversations_uninit();
 	purple_connections_uninit();
 	purple_buddy_icons_uninit();
-	purple_accounts_uninit();
 	purple_savedstatuses_uninit();
 	purple_status_uninit();
-	purple_sound_uninit();
+	purple_accounts_uninit();
 	purple_xfers_uninit();
 	purple_proxy_uninit();
 	purple_dnsquery_uninit();
 	purple_imgstore_uninit();
 	purple_network_uninit();
 
-	/* The SSL plugins must be uninit before they're unloaded */
-	purple_ssl_uninit();
-
+	/* Everything after unloading all plugins must not fail if prpls aren't
+	 * around */
 	purple_debug_info("main", "Unloading all plugins\n");
 	purple_plugins_destroy_all();
 
@@ -245,7 +248,7 @@ purple_core_quit(void)
 	if (ops != NULL && ops->quit != NULL)
 		ops->quit();
 
-	/* Everything after this must not try to read any prefs */
+	/* Everything after prefs_uninit must not try to read any prefs */
 	purple_prefs_uninit();
 	purple_plugins_uninit();
 #ifdef HAVE_DBUS
@@ -253,8 +256,9 @@ purple_core_quit(void)
 #endif
 
 	purple_cmds_uninit();
-	/* Everything after this cannot try to write things to the confdir */
+	/* Everything after util_uninit cannot try to write things to the confdir */
 	purple_util_uninit();
+	purple_log_uninit();
 
 	purple_signals_uninit();
 
@@ -358,15 +362,7 @@ purple_core_ensure_single_instance()
 			const char *user_dir = purple_user_dir();
 			char *dbus_owner_user_dir = purple_dbus_owner_user_dir();
 
-			if (NULL == user_dir && NULL != dbus_owner_user_dir)
-				is_single_instance = TRUE;
-			else if (NULL != user_dir && NULL == dbus_owner_user_dir)
-				is_single_instance = TRUE;
-			else if (NULL == user_dir && NULL == dbus_owner_user_dir)
-				is_single_instance = FALSE;
-			else
-				is_single_instance = strcmp(dbus_owner_user_dir, user_dir);
-
+			is_single_instance = !purple_strequal(dbus_owner_user_dir, user_dir);
 			g_free(dbus_owner_user_dir);
 		}
 	}
@@ -498,11 +494,11 @@ purple_core_migrate(void)
 		if (g_file_test(name, G_FILE_TEST_IS_SYMLINK))
 		{
 			/* We're only going to duplicate a logs symlink. */
-			if (!strcmp(entry, "logs"))
+			if (purple_strequal(entry, "logs"))
 			{
 				char *link;
 #if GLIB_CHECK_VERSION(2,4,0)
-				GError *err = NULL;
+				err = NULL;
 
 				if ((link = g_file_read_link(name, &err)) == NULL)
 				{
@@ -541,7 +537,8 @@ purple_core_migrate(void)
 
 				logs_dir = g_build_filename(user_dir, "logs", NULL);
 
-				if (!strcmp(link, "../.purple/logs") || !strcmp(link, logs_dir))
+				if (purple_strequal(link, "../.purple/logs") ||
+				    purple_strequal(link, logs_dir))
 				{
 					/* If the symlink points to the new directory, we're
 					 * likely just trying again after a failed migration,
@@ -586,7 +583,7 @@ purple_core_migrate(void)
 		/* Deal with directories... */
 		if (g_file_test(name, G_FILE_TEST_IS_DIR))
 		{
-			if (!strcmp(entry, "icons"))
+			if (purple_strequal(entry, "icons"))
 			{
 				/* This is a special case for the Album plugin, which
 				 * stores data in the icons folder.  We're not copying
@@ -655,7 +652,7 @@ purple_core_migrate(void)
 
 				g_dir_close(icons_dir);
 			}
-			else if (!strcmp(entry, "plugins"))
+			else if (purple_strequal(entry, "plugins"))
 			{
 				/* Do nothing, because we broke plugin compatibility.
 				 * This means that the plugins directory gets left behind. */

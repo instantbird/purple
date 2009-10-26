@@ -47,7 +47,6 @@
 #define QQ_GET_ONLINE_BUDDY_03          0x03	/* unknown function */
 
 typedef struct _qq_buddy_online {
-	qq_buddy_status bs;
 	guint16 unknown1;
 	guint8 ext_flag;
 	guint8 comm_flag;
@@ -216,7 +215,7 @@ guint8 qq_process_get_buddies_online(guint8 *data, gint data_len, PurpleConnecti
 		if (qd->client_version >= 2007)	bytes += 4;
 
 		if (bs.uid == 0 || (bytes - bytes_start) != entry_len) {
-			purple_debug_error("QQ", "uid=0 or entry complete len(%d) != %d",
+			purple_debug_error("QQ", "uid=0 or entry complete len(%d) != %d\n",
 					(bytes - bytes_start), entry_len);
 			continue;
 		}	/* check if it is a valid entry */
@@ -233,7 +232,7 @@ guint8 qq_process_get_buddies_online(guint8 *data, gint data_len, PurpleConnecti
 			/* create no-auth buddy */
 			buddy = qq_buddy_new(gc, bs.uid);
 		}
-		bd = (buddy == NULL) ? NULL : (qq_buddy_data *)buddy->proto_data;
+		bd = (buddy == NULL) ? NULL : (qq_buddy_data *)purple_buddy_get_protocol_data(buddy);
 		if (bd == NULL) {
 			purple_debug_error("QQ",
 					"Got an online buddy %u, but not in my buddy list\n", bs.uid);
@@ -282,7 +281,7 @@ guint16 qq_process_get_buddies(guint8 *data, gint data_len, PurpleConnection *gc
 	qd = (qq_data *) gc->proto_data;
 
 	if (data_len <= 2) {
-		purple_debug_error("QQ", "empty buddies list");
+		purple_debug_error("QQ", "empty buddies list\n");
 		return -1;
 	}
 	/* qq_show_packet("QQ get buddies list", data, data_len); */
@@ -335,7 +334,7 @@ guint16 qq_process_get_buddies(guint8 *data, gint data_len, PurpleConnection *gc
 #endif
 
 		buddy = qq_buddy_find_or_new(gc, bd.uid);
-		if (buddy == NULL || buddy->proto_data == NULL) {
+		if (buddy == NULL || purple_buddy_get_protocol_data(buddy) == NULL) {
 			g_free(bd.nickname);
 			continue;
 		}
@@ -343,7 +342,7 @@ guint16 qq_process_get_buddies(guint8 *data, gint data_len, PurpleConnection *gc
 		bd.last_update = time(NULL);
 		qq_update_buddy_status(gc, bd.uid, bd.status, bd.comm_flag);
 
-		g_memmove(buddy->proto_data, &bd, sizeof(qq_buddy_data));
+		g_memmove(purple_buddy_get_protocol_data(buddy), &bd, sizeof(qq_buddy_data));
 		/* nickname has been copy to buddy_data do not free
 		   g_free(bd.nickname);
 		*/
@@ -353,7 +352,7 @@ guint16 qq_process_get_buddies(guint8 *data, gint data_len, PurpleConnection *gc
 
 	if(bytes > data_len) {
 		purple_debug_error("QQ",
-				"qq_process_get_buddies: Dangerous error! maybe protocol changed, notify developers!");
+				"qq_process_get_buddies: Dangerous error! maybe protocol changed, notify developers!\n");
 	}
 
 	purple_debug_info("QQ", "Received %d buddies, nextposition=%u\n",
@@ -398,7 +397,7 @@ guint32 qq_process_get_buddies_and_rooms(guint8 *data, gint data_len, PurpleConn
 		/* 05: skip unknow 0x00 */
 		bytes += 1;
 		if (uid == 0 || (type != 0x1 && type != 0x4)) {
-			purple_debug_info("QQ", "Buddy entry, uid=%u, type=%d", uid, type);
+			purple_debug_info("QQ", "Buddy entry, uid=%u, type=%d\n", uid, type);
 			continue;
 		}
 		if(0x1 == type) { /* a buddy */
@@ -408,7 +407,7 @@ guint32 qq_process_get_buddies_and_rooms(guint8 *data, gint data_len, PurpleConn
 		} else { /* a group */
 			rmd = qq_room_data_find(gc, uid);
 			if(rmd == NULL) {
-				purple_debug_info("QQ", "Unknow room id %u", uid);
+				purple_debug_info("QQ", "Unknown room id %u\n", uid);
 				qq_send_room_cmd_only(gc, QQ_ROOM_CMD_GET_INFO, uid);
 			} else {
 				rmd->my_role = QQ_ROOM_ROLE_YES;
@@ -419,7 +418,7 @@ guint32 qq_process_get_buddies_and_rooms(guint8 *data, gint data_len, PurpleConn
 
 	if(bytes > data_len) {
 		purple_debug_error("QQ",
-				"qq_process_get_buddies_and_rooms: Dangerous error! maybe protocol changed, notify developers!");
+				"qq_process_get_buddies_and_rooms: Dangerous error! maybe protocol changed, notify developers!\n");
 	}
 
 	purple_debug_info("QQ", "Received %d buddies and %d groups, nextposition=%u\n", i, j, (guint) position);
@@ -570,7 +569,7 @@ void qq_process_buddy_change_status(guint8 *data, gint data_len, PurpleConnectio
 		/* create no-auth buddy */
 		buddy = qq_buddy_new(gc, bs.uid);
 	}
-	bd = (buddy == NULL) ? NULL : (qq_buddy_data *) buddy->proto_data;
+	bd = (buddy == NULL) ? NULL : (qq_buddy_data *)purple_buddy_get_protocol_data(buddy);
 	if (bd == NULL) {
 		purple_debug_warning("QQ", "Got status of no-auth buddy %u\n", bs.uid);
 		return;
@@ -662,9 +661,10 @@ void qq_update_buddyies_status(PurpleConnection *gc)
 	for (it = buddies; it; it = it->next) {
 		buddy = it->data;
 		if (buddy == NULL) continue;
-		if (buddy->proto_data == NULL) continue;
 
-		bd = (qq_buddy_data *)buddy->proto_data;
+		bd = purple_buddy_get_protocol_data(buddy);
+		if (bd == NULL) continue;
+
 		if (bd->uid == 0) continue;
 		if (bd->uid == qd->uid) continue;	/* my status is always online in my buddy list */
 		if (tm_limit < bd->last_update) continue;
@@ -684,16 +684,20 @@ void qq_buddy_data_free_all(PurpleConnection *gc)
 	GSList *buddies, *it;
 	gint count = 0;
 
-	qd = (qq_data *) (gc->proto_data);
+	qd = (qq_data *)purple_connection_get_protocol_data(gc);
 
 	buddies = purple_find_buddies(purple_connection_get_account(gc), NULL);
 	for (it = buddies; it; it = it->next) {
+		qq_buddy_data *qbd = NULL;
+
 		buddy = it->data;
 		if (buddy == NULL) continue;
-		if (buddy->proto_data == NULL) continue;
 
-		qq_buddy_data_free(buddy->proto_data);
-		buddy->proto_data = NULL;
+		qbd = purple_buddy_get_protocol_data(buddy);
+		if (qbd == NULL) continue;
+
+		qq_buddy_data_free(qbd);
+		purple_buddy_set_protocol_data(buddy, NULL);
 
 		count++;
 	}

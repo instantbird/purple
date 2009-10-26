@@ -33,7 +33,7 @@ write_status(PurpleBuddy *buddy, const char *message, PurpleConvUpdateType type)
 	g_return_if_fail(conv->type == PURPLE_CONV_TYPE_IM);
 
 	/* Prevent duplicate notifications for buddies in multiple groups */
-	if (buddy != purple_find_buddy(buddy->account, buddy->name))
+	if (buddy != purple_find_buddy(account, buddy_name))
 		return;
 
 	who = purple_buddy_get_alias(buddy);
@@ -72,9 +72,9 @@ buddy_idle_changed_cb(PurpleBuddy *buddy, gboolean old_idle, gboolean idle,
                       void *data)
 {
 	if (purple_prefs_get_bool("/plugins/core/statenotify/notify_idle")) {
-		if (idle) {
+		if (idle && !old_idle) {
 			write_status(buddy, _("%s has become idle."), PURPLE_CONV_UPDATE_AWAY);
-		} else {
+		} else if (!idle && old_idle) {
 			write_status(buddy, _("%s is no longer idle."), PURPLE_CONV_UPDATE_AWAY);
 		}
 	}

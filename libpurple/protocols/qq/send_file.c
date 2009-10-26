@@ -156,7 +156,7 @@ static void _qq_xfer_recv_packet(gpointer data, gint source, PurpleInputConditio
 	gint size;
 	/* FIXME: It seems that the transfer never use a packet
 	 * larger than 1500 bytes, so if it happened to be a
-	 * larger packet, either error occured or protocol should
+	 * larger packet, either error occurred or protocol should
 	 * be modified
 	 */
 	ft_info *info;
@@ -394,7 +394,7 @@ static void _qq_xfer_init_socket(PurpleXfer *xfer)
 	info->local_real_ip = 0x7f000001;
 	*/
 	info->local_real_ip = g_ntohl(inet_addr(purple_network_get_my_ip(-1)));
-	purple_debug_info("QQ", "local real ip is %x", info->local_real_ip);
+	purple_debug_info("QQ", "local real ip is %x\n", info->local_real_ip);
 
 	for (i = 0; i < 2; i++) {
 		sockfd = socket(PF_INET, SOCK_DGRAM, 0);
@@ -562,7 +562,7 @@ static void _qq_send_packet_file_reject (PurpleConnection *gc, guint32 to_uid)
 	guint8 *raw_data;
 	gint packet_len, bytes;
 
-	purple_debug_info("_qq_send_packet_file_reject", "start");
+	purple_debug_info("_qq_send_packet_file_reject", "start\n");
 	qd = (qq_data *) gc->proto_data;
 
 	packet_len = 64;
@@ -734,7 +734,7 @@ void qq_process_recv_file_cancel (guint8 *data, gint data_len,
 	*/
 	filename = g_path_get_basename(purple_xfer_get_local_filename(qd->xfer));
 	msg = g_strdup_printf
-		(_("%d canceled the transfer of %s"),
+		(_("%d cancelled the transfer of %s"),
 		 sender_uid, filename);
 
 	purple_notify_warning (gc, _("File Send"), msg, NULL);
@@ -812,7 +812,7 @@ void qq_process_recv_file_request(guint8 *data, gint data_len, guint32 sender_ui
 			    "Received a FACE ip detect from %d, so he/she must be online :)\n", sender_uid);
 
 		b = purple_find_buddy(gc->account, sender_name);
-		bd = (b == NULL) ? NULL : (qq_buddy_data *) b->proto_data;
+		bd = (b == NULL) ? NULL : purple_buddy_get_protocol_data(b);
 		if (bd) {
 			if(0 != info->remote_real_ip) {
 				g_memmove(&(bd->ip), &info->remote_real_ip, sizeof(bd->ip));

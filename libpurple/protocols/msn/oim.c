@@ -21,7 +21,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301,  USA
  */
 #include "msn.h"
 #include "soap.h"
@@ -153,7 +153,7 @@ typedef struct _MsnOimRequestData {
 	gpointer cb_data;
 } MsnOimRequestData;
 
-static void msn_oim_request_helper(MsnOimRequestData *data);
+static gboolean msn_oim_request_helper(MsnOimRequestData *data);
 
 static void
 msn_oim_request_cb(MsnSoapMessage *request, MsnSoapMessage *response,
@@ -174,7 +174,7 @@ msn_oim_request_cb(MsnSoapMessage *request, MsnSoapMessage *response,
 		gchar *faultcode_str = xmlnode_get_data(faultcode);
 
 		if (faultcode_str && g_str_equal(faultcode_str, "q0:BadContextToken")) {
-			purple_debug_warning("msn", "OIM Request Error, Updating token now.");
+			purple_debug_warning("msn", "OIM Request Error, Updating token now.\n");
 			msn_nexus_update_token(data->oim->session->nexus,
 				data->send ? MSN_AUTH_LIVE_SECURE : MSN_AUTH_MESSENGER_WEB,
 				(GSourceFunc)msn_oim_request_helper, data);
@@ -183,7 +183,7 @@ msn_oim_request_cb(MsnSoapMessage *request, MsnSoapMessage *response,
 
 		} else if (faultcode_str && g_str_equal(faultcode_str, "q0:AuthenticationFailed")) {
 			if (xmlnode_get_child(fault, "detail/RequiredAuthPolicy") != NULL) {
-				purple_debug_warning("msn", "OIM Request Error, Updating token now.");
+				purple_debug_warning("msn", "OIM Request Error, Updating token now.\n");
 				msn_nexus_update_token(data->oim->session->nexus,
 					data->send ? MSN_AUTH_LIVE_SECURE : MSN_AUTH_MESSENGER_WEB,
 					(GSourceFunc)msn_oim_request_helper, data);
@@ -200,7 +200,7 @@ msn_oim_request_cb(MsnSoapMessage *request, MsnSoapMessage *response,
 	g_free(data);
 }
 
-static void
+static gboolean
 msn_oim_request_helper(MsnOimRequestData *data)
 {
 	MsnSession *session = data->oim->session;
@@ -222,13 +222,13 @@ msn_oim_request_helper(MsnOimRequestData *data)
 		const char *msn_p;
 
 		token = msn_nexus_get_token(session->nexus, MSN_AUTH_MESSENGER_WEB);
-		g_return_if_fail(token != NULL);
+		g_return_val_if_fail(token != NULL, FALSE);
 
 		msn_t = g_hash_table_lookup(token, "t");
 		msn_p = g_hash_table_lookup(token, "p");
 
-		g_return_if_fail(msn_t != NULL);
-		g_return_if_fail(msn_p != NULL);
+		g_return_val_if_fail(msn_t != NULL, FALSE);
+		g_return_val_if_fail(msn_p != NULL, FALSE);
 
 		passport = xmlnode_get_child(data->body, "Header/PassportCookie");
 		xml_t = xmlnode_get_child(passport, "t");
@@ -246,6 +246,8 @@ msn_oim_request_helper(MsnOimRequestData *data)
 		msn_soap_message_new(data->action, xmlnode_copy(data->body)),
 		data->host, data->url, FALSE,
 		msn_oim_request_cb, data);
+
+	return FALSE;
 }
 
 
@@ -371,6 +373,7 @@ msn_oim_send_read_cb(MsnSoapMessage *request, MsnSoapMessage *response,
 								msg->oim_msg);
 							g_queue_push_head(oim->send_queue, msg);
 							msn_oim_send_msg(oim);
+							msg = NULL;
 						} else {
 							purple_debug_info("msn",
 								"Can't find lock key for OIM: %s\n",
@@ -391,6 +394,7 @@ msn_oim_send_read_cb(MsnSoapMessage *request, MsnSoapMessage *response,
 						purple_debug_info("msn", "Resending OIM: %s\n", msg->oim_msg);
 						g_queue_push_head(oim->send_queue, msg);
 						msn_oim_send_msg(oim);
+						msg = NULL;
 					}
 				} else {
 					/* Report the error */
@@ -424,6 +428,9 @@ msn_oim_send_read_cb(MsnSoapMessage *request, MsnSoapMessage *response,
 			}
 		}
 	}
+
+	if (msg)
+		msn_oim_free_send_req(msg);
 }
 
 void

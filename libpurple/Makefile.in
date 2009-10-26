@@ -145,7 +145,6 @@ EXPORTS		= \
 		status.h \
 		stringref.h \
 		stun.h \
-		sound.h \
 		sslconn.h \
 		upnp.h \
 		util.h \
@@ -207,7 +206,6 @@ CSRCS		= \
 		status.c \
 		stringref.c \
 		stun.c \
-		sound.c \
 		sslconn.c \
 		upnp.c \
 		util.c \

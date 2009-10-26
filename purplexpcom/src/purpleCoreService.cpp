@@ -345,10 +345,7 @@ nsresult purpleCoreService::GetLastCrashTime(PRInt32 *aLastCrashTime)
 
 nsresult purpleCoreService::InitBuddyList()
 {
-  /* Create the purple buddylist. */
-  purple_set_blist(purple_blist_new());
-  /* This returns early because the file blist.xml can't be found, but
-     the important thing is that it sets blist_loaded to TRUE */
+  /* The only effect is to set blist_loaded to TRUE */
   purple_blist_load();
 
   /* Now, let's read the real data from mozStorage */

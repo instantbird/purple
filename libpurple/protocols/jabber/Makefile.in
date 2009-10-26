@@ -51,10 +51,12 @@ endif
 CSRCS		= \
 		auth.c \
 		buddy.c \
+		bosh.c \
 		chat.c \
 		disco.c \
 		data.c \
 		google.c \
+		ibb.c \
 		iq.c \
 		jabber.c \
 		jutil.c \
@@ -69,6 +71,7 @@ CSRCS		= \
 		caps.c \
 		adhoccommands.c \
 		pep.c \
+		useravatar.c \
 		usermood.c \
 		usernick.c \
 		usertune.c \

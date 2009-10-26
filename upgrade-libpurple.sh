@@ -39,11 +39,13 @@ pruneunused() {
   mv $1/libpurple/plugins/statenotify.c $1/libpurple
   rm -rf $1/libpurple/{plugins,gconf,example,tests}
   rm -rf $1/libpurple/protocols/{bonjour,msnp9,sametime,silc,silc10,toc,zephyr}
+  rm -rf $1/libpurple/protocols/jabber/jingle
   rm -f $1/libpurple/purple-*
   rm -f $1/libpurple/dbus-{a,b,d,p,s,t,u}*
+  rm -f $1/libpurple/marshallers.{c,h,list}
   rm -f $1/libpurple/{purple.pc.in,purple.h,purple.h.in,version.h}
-  rm -f $1/libpurple/gaim-compat.h
-  rm -f $1/libpurple/{certificate,desktopitem,pounce}.{c,h}
+  rm -f $1/libpurple/{gaim-compat,media-gst,valgrind}.h
+  rm -f $1/libpurple/{certificate,desktopitem,pounce,media,mediamanager,theme,theme-loader,theme-manager,sound,sound-theme,sound-theme-loader}.{c,h}
   rm -f $1/libpurple/protocols/qq/ChangeLog
   rm -f $1/libpurple/win32/{giowin32.c,global.mak,libpurplerc.rc.in,rules.mak,targets.mak}
 }

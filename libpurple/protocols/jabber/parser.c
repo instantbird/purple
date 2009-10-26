@@ -1,7 +1,9 @@
 /*
  * purple - Jabber XML parser stuff
  *
- * Copyright (C) 2003, Nathan Walp <faceprint@faceprint.com>
+ * Purple is the legal property of its developers, whose names are too numerous
+ * to list here.  Please refer to the COPYRIGHT file distributed with this
+ * source distribution.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -86,6 +88,8 @@ jabber_parser_element_start_libxml(void *user_data,
 			}
 		}
 		for(i=0; i < nb_attributes * 5; i+=5) {
+			const char *name = (const char *)attributes[i];
+			const char *prefix = (const char *)attributes[i+1];
 			const char *attrib_ns = (const char *)attributes[i+2];
 			char *txt;
 			int attrib_len = attributes[i+4] - attributes[i+3];
@@ -97,7 +101,7 @@ jabber_parser_element_start_libxml(void *user_data,
 			txt = attrib;
 			attrib = purple_unescape_html(txt);
 			g_free(txt);
-			xmlnode_set_attrib_with_namespace(node, (const char*) attributes[i], attrib_ns, attrib);
+			xmlnode_set_attrib_full(node, name, attrib_ns, prefix, attrib);
 			g_free(attrib);
 		}
 

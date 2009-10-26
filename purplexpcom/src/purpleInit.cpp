@@ -1163,5 +1163,8 @@ init_libpurple()
                       "back &lt;message&gt;:  Get Back and use |message| as status message.",
                       NULL);
 
+  /* Create the purple buddylist. */
+  purple_set_blist(purple_blist_new());
+
   return NS_OK;
 }

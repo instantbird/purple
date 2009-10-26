@@ -44,6 +44,7 @@ include $(srcdir)/../prpl.mk
 
 CSRCS		=                   \
 		bstream.c           \
+		clientlogin.c       \
 		family_admin.c      \
 		family_advert.c     \
 		family_alert.c      \

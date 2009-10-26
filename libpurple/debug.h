@@ -190,6 +190,46 @@ void purple_debug_fatal(const char *category, const char *format, ...) G_GNUC_PR
 #define purple_debug_fatal(category, ...) \
 	purple_debug(PURPLE_DEBUG_FATAL, category, __VA_ARGS__)
 
+/**
+ * Enable or disable verbose debugging.  This ordinarily should only be called
+ * by #purple_debug_init, but there are cases where this can be useful for
+ * plugins.
+ *
+ * @param verbose TRUE to enable verbose debugging or FALSE to disable it.
+ *
+ * @since 2.6.0
+ */
+void purple_debug_set_verbose(gboolean verbose);
+
+/**
+ * Check if verbose logging is enabled.
+ *
+ * @return TRUE if verbose debugging is enabled, FALSE if it is not.
+ *
+ * @since 2.6.0
+ */
+gboolean purple_debug_is_verbose(void);
+
+/**
+ * Enable or disable verbose debugging.  This ordinarily should only be called
+ * by #purple_debug_init, but there are cases where this can be useful for
+ * plugins.
+ *
+ * @param unsafe  TRUE to enable verbose debugging or FALSE to disable it.
+ *
+ * @since 2.6.0
+ */
+void purple_debug_set_unsafe(gboolean unsafe);
+
+/**
+ * Check if unsafe debugging is enabled.
+ *
+ * @return TRUE if verbose debugging is enabled, FALSE if it is not.
+ *
+ * @since 2.6.0
+ */
+gboolean purple_debug_is_unsafe(void);
+
 /*@}*/
 
 /**************************************************************************/

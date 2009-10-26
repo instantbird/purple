@@ -296,7 +296,7 @@ GList *
 purple_prefs_get_children_names(const char *name)
 	UIOP_return(get_children_names(name), NULL)
 
-static void *
+void *
 purple_prefs_get_handle(void)
 {
 	static int handle;
@@ -346,6 +346,7 @@ purple_prefs_uninit()
 		save_cb(NULL);
 	}
 
+	purple_prefs_disconnect_by_handle(purple_prefs_get_handle());
 
 	prefs_loaded = FALSE;
 }

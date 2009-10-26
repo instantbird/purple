@@ -310,9 +310,8 @@ msg_cmd_post(MsnCmdProc *cmdproc, MsnCommand *cmd, char *payload,
 	msg = msn_message_new_from_cmd(cmdproc->session, cmd);
 
 	msn_message_parse_payload(msg, payload, len, MSG_LINE_DEM, MSG_BODY_DEM);
-#ifdef MSN_DEBUG_NS
-	msn_message_show_readable(msg, "Notification", TRUE);
-#endif
+	if (purple_debug_is_verbose())
+		msn_message_show_readable(msg, "Notification", TRUE);
 
 	msn_cmdproc_process_msg(cmdproc, msg);
 
@@ -327,14 +326,13 @@ msg_cmd(MsnCmdProc *cmdproc, MsnCommand *cmd)
 	/* NOTE: cmd is not always cmdproc->last_cmd, sometimes cmd is a queued
 	 * command and we are processing it */
 	if (cmd->payload == NULL) {
-		cmdproc->last_cmd->payload_cb  = msg_cmd_post;
+		cmdproc->last_cmd->payload_cb = msg_cmd_post;
 		cmd->payload_len = atoi(cmd->params[2]);
-
 	} else {
 		g_return_if_fail(cmd->payload_cb != NULL);
 
 #if 0 /* glib on win32 doesn't correctly support precision modifiers for a string */
-		purple_debug_info("msn", "MSG payload:{%.*s}\n", cmd->payload_len, cmd->payload);
+		purple_debug_info("msn", "MSG payload:{%.*s}\n", (guint)cmd->payload_len, cmd->payload);
 #endif
 		cmd->payload_cb(cmdproc, cmd, cmd->payload, cmd->payload_len);
 	}
@@ -377,9 +375,8 @@ ubm_cmd_post(MsnCmdProc *cmdproc, MsnCommand *cmd, char *payload,
 	msg = msn_message_new_from_cmd(cmdproc->session, cmd);
 
 	msn_message_parse_payload(msg, payload, len,MSG_LINE_DEM,MSG_BODY_DEM);
-#ifdef MSN_DEBUG_NS
-	msn_message_show_readable(msg, "Notification", TRUE);
-#endif
+	if (purple_debug_is_verbose())
+		msn_message_show_readable(msg, "Notification", TRUE);
 
 	gc = cmdproc->session->account->gc;
 	passport = msg->remote_user;
@@ -602,6 +599,8 @@ update_contact_network(MsnSession *session, const char *passport, MsnNetwork net
 		/* Decrement the count for unknown results so that we'll continue login.
 		   Also, need to finish the login process here as well, because ADL OK
 		   will not be called. */
+		if (purple_debug_is_verbose())
+			purple_debug_info("msn", "ADL/FQY count is %d\n", session->adl_fqy);
 		if (--session->adl_fqy == 0)
 			msn_session_finish_login(session);
 		return;
@@ -683,6 +682,9 @@ msn_notification_dump_contact(MsnSession *session)
 
 				/* ADL's are returned all-together */
 				session->adl_fqy++;
+				if (purple_debug_is_verbose())
+					purple_debug_info("msn", "Posting ADL, count is %d\n",
+					                  session->adl_fqy);
 
 				msn_notification_post_adl(session->notification->cmdproc,
 					payload, payload_len);
@@ -697,6 +699,9 @@ msn_notification_dump_contact(MsnSession *session)
 		} else {
 			/* FQY's are returned one-at-a-time */
 			session->adl_fqy++;
+			if (purple_debug_is_verbose())
+				purple_debug_info("msn", "Adding FQY address, count is %d\n",
+				                  session->adl_fqy);
 
 			msn_add_contact_xml(session, fqy_node, user->passport,
 				0, user->networkid);
@@ -721,6 +726,9 @@ msn_notification_dump_contact(MsnSession *session)
 
 		/* ADL's are returned all-together */
 		session->adl_fqy++;
+		if (purple_debug_is_verbose())
+			purple_debug_info("msn", "Posting ADL, count is %d\n",
+			                  session->adl_fqy);
 
 		msn_notification_post_adl(session->notification->cmdproc, payload, payload_len);
 
@@ -812,6 +820,9 @@ adl_cmd(MsnCmdProc *cmdproc, MsnCommand *cmd)
 
 	if (!strcmp(cmd->params[1], "OK")) {
 		/* ADL ack */
+		if (purple_debug_is_verbose())
+			purple_debug_info("msn", "ADL ACK, count is %d\n",
+			                  session->adl_fqy);
 		if (--session->adl_fqy == 0)
 			msn_session_finish_login(session);
 	} else {
@@ -828,10 +839,10 @@ adl_error_parse(MsnCmdProc *cmdproc, MsnCommand *cmd, char *payload, size_t len)
 	MsnSession *session;
 	PurpleAccount *account;
 	PurpleConnection *gc;
-	/*char *adl = g_strndup(payload, len);*/
-	char *reason = g_strdup_printf(_("Unknown error (%d)"),
-		GPOINTER_TO_INT(cmd->payload_cbdata)/*, adl*/);
-	/*g_free(adl);*/
+	char *adl = g_strndup(payload, len);
+	char *reason = g_strdup_printf(_("Unknown error (%d): %s"),
+		GPOINTER_TO_INT(cmd->payload_cbdata), adl);
+	g_free(adl);
 
 	session = cmdproc->session;
 	account = session->account;
@@ -1181,14 +1192,36 @@ ipg_cmd_post(MsnCmdProc *cmdproc, MsnCommand *cmd, char *payload, size_t len)
 	id = xmlnode_get_attrib(msg, "id");
 
 	if (id && !strcmp(id, "407")) {
-		/* TODO: Use this to NAK the transaction, maybe print the text, too.
-		unsigned int trId;
-		id = xmlnode_get_attrib(payloadNode, "id");
-		trId = atol(id);
-		*/
-		purple_conv_present_error(who, gc->account,
-			_("Mobile message was not sent because it was too long."));
+		PurpleConversation *conv
+			= purple_find_conversation_with_account(PURPLE_CONV_TYPE_ANY,
+			                                        who, gc->account);
+		if (conv != NULL) {
+			purple_conversation_write(conv, NULL,
+			                          _("Mobile message was not sent because it was too long."),
+			                          PURPLE_MESSAGE_ERROR, time(NULL));
 
+			if ((id = xmlnode_get_attrib(payloadNode, "id")) != NULL) {
+				unsigned int trId = atol(id);
+				MsnTransaction *trans;
+				MsnMessage *msg;
+
+				trans = msn_history_find(cmdproc->history, trId);
+				msg = (MsnMessage *)trans->data;
+
+				if (msg) {
+					char *body_str = msn_message_to_string(msg);
+					char *body_enc = g_markup_escape_text(body_str, -1);
+
+					purple_conversation_write(conv, NULL, body_enc,
+					                          PURPLE_MESSAGE_RAW, time(NULL));
+
+					g_free(body_str);
+					g_free(body_enc);
+					msn_message_destroy(msg);
+					trans->data = NULL;
+				}
+			}
+		}
 	} else {
 		serv_got_im(gc, who, text, 0, time(NULL));
 	}
@@ -1477,7 +1510,7 @@ gcf_cmd_post(MsnCmdProc *cmdproc, MsnCommand *cmd, char *payload,
 
 	if ( (root = xmlnode_from_str(cmd->payload, cmd->payload_len)) == NULL)
 	{
-		purple_debug_error("msn", "Unable to parse GCF payload into a XML tree");
+		purple_debug_error("msn", "Unable to parse GCF payload into a XML tree\n");
 		return;
 	}
 
@@ -1550,7 +1583,7 @@ ubx_cmd_post(MsnCmdProc *cmdproc, MsnCommand *cmd, char *payload,
 	user = msn_userlist_find_user(session->userlist, passport);
 	if (user == NULL) {
 		char *str = g_strndup(payload, len);
-		purple_debug_info("msn", "unknown user %s, payload is %s",
+		purple_debug_info("msn", "unknown user %s, payload is %s\n",
 			passport, str);
 		g_free(str);
 		return;
