@@ -83,7 +83,7 @@ static PRLogModuleInfo *gPurpleCoreServiceLog = nsnull;
 #define PREF_STARTUP_ACTION     "messenger.startup.action"
 #define PREF_MESSENGER_ACCOUNTS "messenger.accounts"
 
-#define QUIT_APPLICATION_NOTIFICATION "quit-application"
+#define QUIT_APPLICATION_GRANTED_NOTIFICATION "quit-application-granted"
 
 NS_IMPL_ISUPPORTS2_CI(purpleCoreService, purpleICoreService, nsIObserver)
 
@@ -120,7 +120,7 @@ NS_IMETHODIMP purpleCoreService::Observe(nsISupports *aSubject,
                                          const char *aTopic,
                                          const PRUnichar *aData)
 {
-  if(!strcmp(QUIT_APPLICATION_NOTIFICATION, aTopic))
+  if(!strcmp(QUIT_APPLICATION_GRANTED_NOTIFICATION, aTopic))
     return Quit();
 
   if (!strcmp(NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, aTopic)) {
@@ -145,7 +145,7 @@ NS_IMETHODIMP purpleCoreService::Init()
     do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = os->AddObserver(this, "quit-application", PR_FALSE);
+  rv = os->AddObserver(this, QUIT_APPLICATION_GRANTED_NOTIFICATION, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   /* Ensure that NSS is initialized */
@@ -525,7 +525,7 @@ NS_IMETHODIMP purpleCoreService::Quit()
     do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = os->RemoveObserver(this, "quit-application");
+  rv = os->RemoveObserver(this, QUIT_APPLICATION_GRANTED_NOTIFICATION);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mPrefBranch2->RemoveObserver(PREF_MESSENGER_ACCOUNTS, this);
