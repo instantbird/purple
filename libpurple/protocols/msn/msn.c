@@ -1529,12 +1529,15 @@ msn_add_buddy(PurpleConnection *gc, PurpleBuddy *buddy, PurpleGroup *group)
 	data->buddy = buddy;
 	data->group = group;
 
+	finish_auth_request(data, NULL);
+#if 0
 	purple_request_input(gc, NULL, _("Authorization Request Message:"),
 	                     NULL, _("Please authorize me!"), TRUE, FALSE, NULL,
 	                     _("_OK"), G_CALLBACK(finish_auth_request),
 	                     _("_Cancel"), G_CALLBACK(cancel_auth_request),
 	                     purple_connection_get_account(gc), bname, NULL,
 	                     data);
+#endif
 }
 
 static void
