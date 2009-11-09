@@ -38,6 +38,7 @@
 #include "purpleAccountBuddy.h"
 #include "purpleCoreService.h"
 #include "purpleStorage.h"
+#include "purpleGetText.h"
 #include "purpleGListEnumerator.h"
 #include "purpleTooltipInfo.h"
 
@@ -232,6 +233,20 @@ NS_IMETHODIMP purpleAccountBuddy::GetTooltipInfo(nsISimpleEnumerator** aTooltipI
 
   if (prpl_info->tooltip_text && mBuddy->account->gc) {
     PurpleNotifyUserInfo *user_info = purple_notify_user_info_new();
+
+    /* Idle */
+    PurplePresence *presence = purple_buddy_get_presence(mBuddy);
+    if (purple_presence_is_idle(presence)) {
+      time_t idle_secs = purple_presence_get_idle_time(presence);
+      if (idle_secs > 0) {
+        char *tmp = purple_str_seconds_to_string(time(NULL) - idle_secs);
+        purple_notify_user_info_add_pair(user_info,
+                                         purpleGetText::GetText("purple", "Idle"),
+                                         tmp);
+        g_free(tmp);
+      }
+    }
+
     prpl_info->tooltip_text(mBuddy, user_info, true);
     purpleGListEnumerator *enumerator = new purpleGListEnumerator();
     enumerator->Init(purple_notify_user_info_get_entries(user_info),
