@@ -920,12 +920,12 @@ resolve_host(gpointer data)
 	query_data->timeout = 0;
 
 	if (purple_dnsquery_ui_resolve(query_data))
-#if 0
 	{
 		/* The UI is handling the resolve; we're done */
 		return FALSE;
 	}
 
+#if 0
 	if (!inet_aton(query_data->hostname, &sin.sin_addr)) {
 		struct hostent *hp;
 		gchar *hostname;
