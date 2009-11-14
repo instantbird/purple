@@ -1372,6 +1372,13 @@ NS_IMETHODIMP purpleAccount::GetConnectionErrorMessage(nsACString & aConnectionE
   return NS_OK;
 }
 
+/* readonly attribute PRUint16 reconnectAttempt; */
+NS_IMETHODIMP purpleAccount::GetReconnectAttempt(PRUint16 *aReconnectAttempt)
+{
+  *aReconnectAttempt = mReconnectAttempts;
+  return NS_OK;
+}
+
 /* readonly attribute PRInt64 timeOfNextReconnect; */
 NS_IMETHODIMP purpleAccount::GetTimeOfNextReconnect(PRInt64 *aTimeOfNextReconnect)
 {

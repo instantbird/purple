@@ -137,6 +137,12 @@ interface purpleIAccount: nsISupports {
   /* When a connection error occured, this value indicates the type of error */
   readonly attribute short connectionErrorReason;
 
+  /* Number of the reconnection attempt
+   *  0 means that no automatic reconnection currently pending
+   *  n means the nth reconnection attempt is pending
+   */
+  readonly attribute PRUint16 reconnectAttempt;
+
   /* Time stamp of the next reconnection attempt */
   readonly attribute PRInt64 timeOfNextReconnect;
 
