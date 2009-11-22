@@ -52,6 +52,8 @@ static PRLogModuleInfo *gPurpleMessageLog = nsnull;
 
 NS_IMPL_ISUPPORTS1_CI(purpleMessage, purpleIMessage)
 
+PRUint32 purpleMessage::sLastId = 0;
+
 purpleMessage::purpleMessage()
 {
   /* member initializers and constructor code */
@@ -60,6 +62,7 @@ purpleMessage::purpleMessage()
     gPurpleMessageLog = PR_NewLogModule("purpleMessage");
 #endif
   LOG(("Constructing purpleMessage @%x", this));
+  mId = ++sLastId;
 }
 
 purpleMessage::~purpleMessage()
@@ -89,6 +92,13 @@ nsresult purpleMessage::Init(PurpleConversation *conv, const char *who, const ch
     a##aName = aString;                                         \
     return NS_OK;                                               \
   }
+
+/* readonly attribute PRUint32 id; */
+NS_IMETHODIMP purpleMessage::GetId(PRUint32 *aId)
+{
+  *aId = mId;
+  return NS_OK;
+}
 
 /* readonly attribute AUTF8String who; */
 PURPLE_IMPL_GETSTRING(Who, mWho)

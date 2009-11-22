@@ -68,6 +68,8 @@ private:
 
 protected:
   /* additional members */
+  PRUint32 mId;
+  static PRUint32 sLastId;
   PurpleConversation *mConv;
   nsCString mOriginalMessage;
   nsCString mMessage;
