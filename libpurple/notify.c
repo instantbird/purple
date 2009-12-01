@@ -28,6 +28,7 @@
 #include "internal.h"
 #include "dbus-maybe.h"
 #include "notify.h"
+#include "debug.h"
 
 static PurpleNotifyUiOps *notify_ui_ops = NULL;
 static GList *handles = NULL;
@@ -84,6 +85,18 @@ purple_notify_message(void *handle, PurpleNotifyMsgType type,
 			return info->ui_handle;
 		}
 
+	}
+	else {
+		int level;
+		if (type == PURPLE_NOTIFY_MSG_ERROR)
+			level = PURPLE_DEBUG_ERROR;
+		else if (type == PURPLE_NOTIFY_MSG_WARNING)
+			level = PURPLE_DEBUG_WARNING;
+		else
+			level = PURPLE_DEBUG_INFO;
+		purple_debug(level, "notify", "Notification: %s (%s)",
+			     title ? title : "(null)",
+			     primary ? primary : "(null)");
 	}
 
 	if (cb != NULL)

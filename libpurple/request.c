@@ -1160,6 +1160,11 @@ purple_request_field_account_get_filter(const PurpleRequestField *field)
 
 /* -- */
 
+#define PURPLE_REQUEST_NO_OPS(type, title, description)		    \
+	purple_debug_error("request", "Requesting "type": %s (%s)", \
+			   title ? title : "(null)",		    \
+			   description ? description : "(null)")
+
 void *
 purple_request_input(void *handle, const char *title, const char *primary,
 				   const char *secondary, const char *default_value,
@@ -1194,6 +1199,8 @@ purple_request_input(void *handle, const char *title, const char *primary,
 
 		return info->ui_handle;
 	}
+	else
+		PURPLE_REQUEST_NO_OPS("input", title, primary);
 
 	return NULL;
 }
@@ -1256,6 +1263,8 @@ purple_request_choice_varg(void *handle, const char *title,
 
 		return info->ui_handle;
 	}
+	else
+		PURPLE_REQUEST_NO_OPS("choice", title, primary);
 
 	return NULL;
 }
@@ -1307,6 +1316,8 @@ purple_request_action_varg(void *handle, const char *title,
 
 		return info->ui_handle;
 	}
+	else
+		PURPLE_REQUEST_NO_OPS("action", title, primary);
 
 	return NULL;
 }
@@ -1344,6 +1355,8 @@ purple_request_fields(void *handle, const char *title, const char *primary,
 
 		return info->ui_handle;
 	}
+	else
+		PURPLE_REQUEST_NO_OPS("fields", title, primary);
 
 	return NULL;
 }
@@ -1371,6 +1384,8 @@ purple_request_file(void *handle, const char *title, const char *filename,
 		handles = g_list_append(handles, info);
 		return info->ui_handle;
 	}
+	else
+		PURPLE_REQUEST_NO_OPS("file", title, filename);
 
 	return NULL;
 }
@@ -1398,6 +1413,8 @@ purple_request_folder(void *handle, const char *title, const char *dirname,
 		handles = g_list_append(handles, info);
 		return info->ui_handle;
 	}
+	else
+		PURPLE_REQUEST_NO_OPS("folder", title, dirname);
 
 	return NULL;
 }
