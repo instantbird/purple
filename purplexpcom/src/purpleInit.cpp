@@ -904,7 +904,11 @@ const char *prefs_get_string(const char *name)
   prefs->GetCharPref(mozName, &result);
   g_free(mozName);
 
-  purple_debug_warning("prefs", "leaking the value of %s\n", name);
+#ifdef DEBUG
+  char warnMsg[1024];
+  if (PR_snprintf(warnMsg, 1024, "prefs_get_string: leaking the value of %s: %s", name, result) > 0)
+    NS_WARNING(warnMsg);
+#endif
   return result;
 }
 
