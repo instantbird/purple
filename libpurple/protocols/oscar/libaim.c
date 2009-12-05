@@ -143,7 +143,7 @@ gboolean purple_init_icq_plugin(void);
 static void
 init_plugin(PurplePlugin *plugin)
 {
-	oscar_init(PURPLE_PLUGIN_PROTOCOL_INFO(plugin));
+	oscar_init(plugin);
 	purple_init_icq_plugin();
 }
 
