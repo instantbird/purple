@@ -100,7 +100,7 @@ static void netsoul_login_greeting (gpointer data, gint source, PurpleInputCondi
   buf[length] = 0;
   purple_debug_info("netsoul", "netsoul_login_connect received: %s\n", buf);
   tab = g_strsplit(buf, " ", 6);
-  if (strncmp(tab[0], "salut", 5) || !tab[4]) {
+  if (!tab[0] || strncmp(tab[0], "salut", 5) || !tab[4]) {
     purple_connection_error(gc, _("Wrong greetings from server\n"));
     purple_debug_info("netsoul", "Error on str : %s\n", buf);
     g_strfreev(tab);
