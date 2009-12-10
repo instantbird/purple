@@ -134,6 +134,18 @@ NS_IMETHODIMP purpleMessage::GetConversation(purpleIConversation * *aConversatio
   return NS_OK;
 }
 
+/* attribute AUTF8String color; */
+NS_IMETHODIMP purpleMessage::GetColor(nsACString & aColor)
+{
+  aColor = mColor;
+  return NS_OK;
+}
+NS_IMETHODIMP purpleMessage::SetColor(const nsACString & aColor)
+{
+  mColor = aColor;
+  return NS_OK;
+}
+
 #define PURPLE_IMPL_GETBOOL(aName, aFlag)                               \
   NS_IMETHODIMP purpleMessage::Get##aName(PRBool *a##aName)             \
   {                                                                     \
