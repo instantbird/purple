@@ -65,7 +65,7 @@ REQUIRES	= \
 
 ifneq (,$(filter-out WINNT WINCE Darwin,$(OS_ARCH)))
 LOCAL_INCLUDES	= $(GLIB_CFLAGS)
-EXTRA_LIBS	= $(GLIB_LIBS) -lgmodule-2.0 -L$(DIST)/lib -lpurple -lz -lxml2
+EXTRA_LIBS	= $(GLIB_LIBS) -lgmodule-2.0 $(DIST)/lib/libpurple.so -lz -lxml2
 else
 EXTRA_LIBS	= -L$(DIST)/lib -lpurple -lz -lxml2 -lglib
 REQUIRES	+= \
