@@ -38,7 +38,12 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= purple/$(PROTOCOL)
 LIBRARY_NAME	= $(PROTOCOL)
+ifneq (,$(filter $(PROTOCOL),$(STATIC_PRPLS)))
+FORCE_STATIC_LIB= 1
+LIB_IS_C_ONLY   = 1
+else
 FORCE_SHARED_LIB= 1
+endif
 IS_COMPONENT	= 1
 VISIBILITY_FLAGS=
 
@@ -49,7 +54,7 @@ REQUIRES	= \
 
 ifneq (,$(filter-out WINNT WINCE Darwin,$(OS_ARCH)))
 LOCAL_INCLUDES	= $(GLIB_CFLAGS)
-EXTRA_LIBS	= $(DIST)/lib/libpurple.so $(GLIB_LIBS) -lgmodule-2.0 -lxml2 -lz
+EXTRA_LIBS	= ../../libpurple.so $(GLIB_LIBS) -lgmodule-2.0 -lxml2 -lz
 else
 EXTRA_LIBS	= -L../.. -lpurple -L$(DIST)/lib -lglib -lxml2 -lz
 REQUIRES	+= \
@@ -72,3 +77,9 @@ endif
 
 PURPLE_VERSION	= $(PURPLE_MAJOR_VERSION).$(PURPLE_MINOR_VERSION).$(PURPLE_MICRO_VERSION)
 DEFINES		+= -DPACKAGE=\"$(PROTOCOL)\" -DVERSION=\"$(PURPLE_VERSION)\" -DDISPLAY_VERSION=\"$(PURPLE_VERSION)\"
+
+ifneq (,$(filter $(PROTOCOL),$(STATIC_PRPLS)))
+DEFINES += -DPURPLE_STATIC_PRPL
+endif
+
+GLOBAL_DEPS += $(srcdir)/../prpl.mk $(srcdir)/../prpl-rules.mk

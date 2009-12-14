@@ -45,7 +45,6 @@ purple/libraries/glib/gnulib/Makefile
 purple/libraries/glib/gobject/Makefile
 purple/libpurple/Makefile
 purple/libpurple/win32/Makefile
-purple/libpurple/protocols/Makefile
 purple/libpurple/protocols/irc/Makefile
 purple/libpurple/protocols/simple/Makefile
 purple/libpurple/protocols/qq/Makefile

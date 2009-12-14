@@ -147,4 +147,4 @@ init_plugin(PurplePlugin *plugin)
 	purple_init_icq_plugin();
 }
 
-PURPLE_INIT_PLUGIN(aim, init_plugin, info)
+PURPLE_INIT_PLUGIN(oscar, init_plugin, info)

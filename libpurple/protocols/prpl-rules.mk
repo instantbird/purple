@@ -34,14 +34,21 @@
 #
 # ***** END LICENSE BLOCK *****
 
-
+ifeq (,$(filter $(PROTOCOL),$(STATIC_PRPLS)))
 CPPSRCS		= \
 		xpcomModule.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS += $(XPCOM_GLUE_LDOPTS) $(MOZ_COMPONENT_NSPR_LIBS)
+else
+ifeq ($(OS_ARCH),Darwin)
+OBJS		:= $(strip $(addprefix $(PROTOCOL)_,$(CSRCS:.c=.$(OBJ_SUFFIX))))
+endif
+endif
 
 include $(topsrcdir)/config/rules.mk
+
+ifeq (,$(filter $(PROTOCOL),$(STATIC_PRPLS)))
 _RC_STRING += -SRCDIR .
 
 xpcomModule.cpp: $(srcdir)/../xpcomModule.cpp.in xpcomCid.h
@@ -57,3 +64,9 @@ module.ver: $(srcdir)/../module.ver.in $(DEPTH)/config/autoconf.mk
 	sed 's/@PURPLE_MAJOR_VERSION@/$(PURPLE_MAJOR_VERSION)/;s/@PURPLE_MINOR_VERSION@/$(PURPLE_MINOR_VERSION)/;s/@PURPLE_MICRO_VERSION@/$(PURPLE_MICRO_VERSION)/' $< > $@
 
 GARBAGE += xpcomModule.cpp module.ver xpcomCid.h
+else
+$(PROTOCOL)_%.$(OBJ_SUFFIX): %.c $(GLOBAL_DEPS)
+	$(REPORT_BUILD)
+	@$(MAKE_DEPS_AUTO_CC)
+	$(ELOG) $(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $(_VPATH_SRCS)
+endif
