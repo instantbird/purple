@@ -42,8 +42,6 @@ PROTOCOL	= gg
 
 include $(srcdir)/../prpl.mk
 
-DIRS		= lib
-
 LOCAL_INCLUDES	+= -I$(srcdir)/lib
 
 CSRCS		= \
@@ -64,3 +62,6 @@ CSRCS		= \
 
 
 include $(srcdir)/../prpl-rules.mk
+
+export::
+	mkdir -p lib

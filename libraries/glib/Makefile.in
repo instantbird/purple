@@ -60,14 +60,7 @@ endif
 
 DEFINES		+= -DGOBJECT_COMPILATION
 
-DIRS		= \
-		libcharset \
-		gobject \
-		$(NULL)
-
-ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
-DIRS		+= gnulib
-endif
+DIRS		= gobject
 
 EXPORTS		= \
 		gunicodeprivate.h \
@@ -242,6 +235,11 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
+export::
+	mkdir -p libcharset
+ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
+	mkdir -p gnulib
+endif
 
 # libs:: $(SHARED_LIBRARY)
 # ifneq (,$(filter OS2 WINNT WINCE,$(OS_ARCH)))

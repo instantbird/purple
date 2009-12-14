@@ -121,10 +121,6 @@ SHARED_LIBRARY_LIBS += $(STATIC_PRPL_LIBS)
 DEFINES += -DSTATIC_PROTO_INIT='extern void static_proto_init(void);'
 endif
 
-ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
-DIRS		= win32
-endif
-
 PURPLE_VERSION	= $(PURPLE_MAJOR_VERSION).$(PURPLE_MINOR_VERSION).$(PURPLE_MICRO_VERSION)
 DEFINES		+= -DPACKAGE=\"purple\" -DVERSION=\"$(PURPLE_VERSION)\"
 
@@ -255,6 +251,11 @@ CSRCS		+= \
 endif
 
 include $(topsrcdir)/config/rules.mk
+
+ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
+export::
+	mkdir -p win32
+endif
 
 ifneq (,$(STATIC_PRPLS))
 $(STATIC_PRPL_LIBS):: $(STATIC_PROTO_libs)
