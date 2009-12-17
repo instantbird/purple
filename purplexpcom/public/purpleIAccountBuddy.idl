@@ -55,7 +55,7 @@ interface purpleIAccountBuddy: nsISupports {
   readonly attribute AUTF8String loggedIn;
   readonly attribute AUTF8String buddyIconFilename;
 
-  // enumerator of purpleTooltipInfo components
+  // enumerator of purpleITooltipInfo components
   nsISimpleEnumerator getTooltipInfo();
 
   purpleIConversation createConversation();
@@ -64,4 +64,8 @@ interface purpleIAccountBuddy: nsISupports {
   readonly attribute boolean idle;
   readonly attribute boolean mobile;
   readonly attribute AUTF8String status;
+
+  // enumerator of purpleILog
+  // Warning: this will leak if not fully enumerated
+  nsISimpleEnumerator getLogs();
 };

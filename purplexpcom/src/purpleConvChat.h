@@ -83,6 +83,9 @@ public:
   NS_SCRIPTABLE NS_IMETHOD SetBaseURI(nsIDOMDocument *aDocument, nsIURI *aURI) {
     return purpleConversation::SetBaseURI(aDocument, aURI);
   }
+  NS_SCRIPTABLE NS_IMETHOD GetLogs(nsISimpleEnumerator **aResult) {
+    return purpleConversation::GetLogs(aResult);
+  }
 
   purpleConvChat();
 

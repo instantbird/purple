@@ -131,7 +131,7 @@ PurpleLog *purple_log_new(PurpleLogType type, const char *name, PurpleAccount *a
 void purple_log_free(PurpleLog *log)
 {
 	g_return_if_fail(log);
-	if (log->logger && log->logger->finalize)
+	if (txt_logger && html_logger && log->logger && log->logger->finalize)
 		log->logger->finalize(log);
 	g_free(log->name);
 

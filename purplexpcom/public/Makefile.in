@@ -50,6 +50,7 @@ XPIDLSRCS	= \
 		purpleIBuddy.idl \
 		purpleIConversation.idl \
 		purpleICoreService.idl \
+		purpleILog.idl \
 		purpleIMessage.idl \
 		purpleIPlugin.idl \
 		purpleIPref.idl \

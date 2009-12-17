@@ -41,6 +41,7 @@
 #include "purpleGetText.h"
 #include "purpleGListEnumerator.h"
 #include "purpleTooltipInfo.h"
+#include "purpleLog.h"
 
 #include <nsServiceManagerUtils.h>
 #include <nsIClassInfoImpl.h>
@@ -330,5 +331,21 @@ NS_IMETHODIMP purpleAccountBuddy::GetStatus(nsACString &aStatus)
   else
     aStatus = "";
 
+  return NS_OK;
+}
+
+/* nsISimpleEnumerator getLogs (); */
+NS_IMETHODIMP purpleAccountBuddy::GetLogs(nsISimpleEnumerator **aResult)
+{
+  NS_ENSURE_TRUE(mBuddy, NS_ERROR_NOT_INITIALIZED);
+
+  GList *logs = purple_log_get_logs(PURPLE_LOG_IM,
+                                    purple_buddy_get_name(mBuddy),
+                                    mBuddy->account);
+  purpleGListEnumerator *enumerator = new purpleGListEnumerator();
+  enumerator->Init(logs,
+                   purpleTypeToInterface<purpleLog, purpleILog, PurpleLog>,
+                   (void (*)(void*))g_list_free, logs);
+  NS_ADDREF(*aResult = enumerator);
   return NS_OK;
 }
