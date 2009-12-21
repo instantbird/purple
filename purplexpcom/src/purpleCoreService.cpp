@@ -802,6 +802,38 @@ nsresult purpleCoreService::GetTagFromPurpleBuddy(PurpleBuddy *aBuddy,
   return storeTag(groupName, group, aResult);
 }
 
+/* void getTags ([optional] out unsigned long tagCount,
+                 [array, retval, size_is (tagCount)] out purpleITag tags); */
+NS_IMETHODIMP purpleCoreService::GetTags(PRUint32 *tagCount,
+                                         purpleITag ***tags)
+{
+  purpleStorage *storageInstance = purpleStorage::GetInstance();
+  NS_ENSURE_TRUE(storageInstance, NS_ERROR_OUT_OF_MEMORY);
+
+  mozIStorageConnection *DBConn = storageInstance->GetConnection();
+  nsCOMPtr<mozIStorageStatement> statement;
+  nsresult rv = DBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT id FROM tags"),
+    getter_AddRefs(statement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMArray<purpleITag> array;
+  PRBool hasMoreData;
+  while (NS_SUCCEEDED(statement->ExecuteStep(&hasMoreData)) && hasMoreData) {
+    purpleITag *tag;
+    rv = GetTagById(statement->AsInt32(0), &tag);
+    if (NS_SUCCEEDED(rv))
+      array.AppendObject(tag);
+  }
+
+  *tags = (purpleITag **)nsMemory::Alloc(array.Count() * sizeof(purpleITag *));
+  PRInt32 i;
+  for (i = 0; i < array.Count(); ++i)
+    (*tags)[i] = array[i];
+  *tagCount = i;
+  return NS_OK;
+}
+
 /* nsISimpleEnumerator getConversations (); */
 NS_IMETHODIMP purpleCoreService::GetConversations(nsISimpleEnumerator **aResult)
 {

@@ -66,6 +66,8 @@ interface purpleICoreService: nsISupports {
 
   purpleITag createTag(in AUTF8String aName);
   purpleITag getTagById(in long aId);
+  void getTags([optional] out unsigned long tagCount,
+               [retval, array, size_is(tagCount)] out purpleITag tags);
 
   nsISimpleEnumerator getConversations();
   purpleIConversation getConversationById(in unsigned long aId);
