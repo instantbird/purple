@@ -81,6 +81,8 @@ private:
   nsresult InitAccounts();
   nsresult UpdateAccountList();
   nsresult InitBuddyList();
+  nsresult storeTag(nsCString &aGroupName, PurpleGroup *aGroup,
+                    purpleTag **aResult);
 #ifdef MOZ_CRASHREPORTER
   nsresult GetLastCrashTime(PRInt32 *aLastCrashTime);
 #endif
