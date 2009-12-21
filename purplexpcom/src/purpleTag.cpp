@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "purpleTag.h"
+#include "purpleBuddy.h"
 #include "nsStringAPI.h"
 #include <nsIClassInfoImpl.h>
 #include <nsMemory.h>
@@ -91,5 +92,39 @@ NS_IMETHODIMP purpleTag::GetVisible(PRBool *aVisible)
 {
   *aVisible = mGroup != NULL;
 
+  return NS_OK;
+}
+
+/* void getBuddies ([optional] out unsigned long buddyCount,
+                    [array, retval, size_is (buddyCount)] out purpleIBuddy buddies); */
+NS_IMETHODIMP purpleTag::GetBuddies(PRUint32 *buddyCount,
+				    purpleIBuddy ***buddies)
+{
+  NS_ENSURE_TRUE(mGroup, NS_ERROR_NOT_INITIALIZED);
+
+  PRUint32 count = 0;
+  PurpleBlistNode *cnode;
+  for (cnode = ((PurpleBlistNode *)mGroup)->child; cnode; cnode = cnode->next)
+    if (PURPLE_BLIST_NODE_IS_CONTACT(cnode) && PURPLE_BLIST_NODE_IS_BUDDY(cnode->child))
+      ++count;
+  *buddies = (purpleIBuddy **)nsMemory::Alloc(count * sizeof(purpleIBuddy *));
+
+  count = 0;
+  for (cnode = ((PurpleBlistNode *)mGroup)->child; cnode; cnode = cnode->next)
+    if (PURPLE_BLIST_NODE_IS_CONTACT(cnode) && PURPLE_BLIST_NODE_IS_BUDDY(cnode->child)) {
+      purpleBuddy *buddy = (purpleBuddy *)purple_blist_node_get_ui_data(cnode->child);
+      for (PRUint32 j = 0; j < count; ++j)
+	if ((*buddies)[j] == buddy) {
+	  buddy = nsnull;
+	  break;
+	}
+      if (!buddy)
+	continue;
+
+      NS_ADDREF(buddy);
+      (*buddies)[count++] = buddy;
+    }
+
+  *buddyCount = count;
   return NS_OK;
 }

@@ -43,9 +43,14 @@
  * structures)
  */
 
+interface purpleIBuddy;
+
 [scriptable, uuid(29225656-fbea-4df2-9d61-0339b1c20c65)]
 interface purpleITag: nsISupports {
   readonly attribute long id;
   readonly attribute AUTF8String name;
   readonly attribute boolean visible;
+
+  void getBuddies([optional] out unsigned long buddyCount,
+		  [retval, array, size_is(buddyCount)] out purpleIBuddy buddies);
 };
