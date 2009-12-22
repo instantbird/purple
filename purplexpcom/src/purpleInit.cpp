@@ -484,6 +484,15 @@ static void buddy_idle(PurpleBuddy *aBuddy, gboolean old_idle, gboolean idle)
   buddy_signals(aBuddy, "buddy-idle");
 }
 
+static void buddy_alias(PurpleBlistNode *aNode, const char *old_alias)
+{
+  // We are only interested by buddy aliases
+  if (!PURPLE_BLIST_NODE_IS_BUDDY(aNode))
+    return;
+
+  buddy_signals((PurpleBuddy *)aNode, "buddy-alias");
+}
+
 void
 connect_to_blist_signals()
 {
@@ -495,6 +504,7 @@ connect_to_blist_signals()
   PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER("buddy-removed", buddy_removed);
   PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER("buddy-status-changed", buddy_away);
   PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER("buddy-idle-changed", buddy_idle);
+  PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER("blist-node-aliased", buddy_alias);
 
   LOG(("Connecting to blist signals"));
 }
@@ -577,6 +587,8 @@ static void conversation_updated(PurpleConversation *aConv, PurpleConvUpdateType
       notify_conv(aConv, nsnull, "update-buddy-status", nsnull);
       break;
 
+    case PURPLE_CONV_UPDATE_TITLE:
+      notify_conv(aConv, nsnull, "update-conv-title", nsnull);
     default:
       ;
   }

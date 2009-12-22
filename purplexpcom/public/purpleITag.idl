@@ -65,6 +65,7 @@ interface purpleITag: nsISupports {
        buddy-deleted (permanently removed from the list)
        buddy-away
        buddy-idle
+       buddy-alias
      aSubject will contain the buddy (purpleIAccountBuddy) */
 
   void notifyObservers(in nsISupports aObj, in string aEvent,
