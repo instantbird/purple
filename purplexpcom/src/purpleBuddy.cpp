@@ -254,10 +254,36 @@ NS_IMETHODIMP purpleBuddy::GetTags(nsISimpleEnumerator **_retval)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* nsISimpleEnumerator getAccounts (); */
-NS_IMETHODIMP purpleBuddy::GetAccounts(nsISimpleEnumerator **_retval)
+/* void getAccounts ([optional] out unsigned long accountCount,
+                     [array, retval, size_is (accountCount)] out purpleIAccount accounts); */
+NS_IMETHODIMP purpleBuddy::GetAccounts(PRUint32 *accountCount,
+                                       purpleIAccount ***accounts)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  *accounts =
+    (purpleIAccount **)nsMemory::Alloc(mBuddies.Count() * sizeof(purpleIAccount *));
+
+  PRInt32 i;
+  for (i = 0; i < mBuddies.Count(); ++i)
+    mBuddies[i]->GetAccount(&(*accounts)[i]);
+  *accountCount = i;
+
+  return NS_OK;
+}
+
+/* void getAccountBuddies ([optional] out unsigned long accountBuddyCount,
+                           [array, retval, size_is (accountBuddyCount)] out purpleIAccountBuddy accountBuddies); */
+NS_IMETHODIMP purpleBuddy::GetAccountBuddies(PRUint32 *accountBuddyCount,
+                                             purpleIAccountBuddy ***accountBuddies)
+{
+  *accountBuddies =
+    (purpleIAccountBuddy **)nsMemory::Alloc(mBuddies.Count() * sizeof(purpleIAccountBuddy *));
+
+  PRInt32 i;
+  for (i = 0; i < mBuddies.Count(); ++i)
+    NS_ADDREF((*accountBuddies)[i] = mBuddies[i]);
+  *accountBuddyCount = i;
+
+  return NS_OK;
 }
 
 /* purpleIConversation createConversation (in unsigned short aAccountIndex); */

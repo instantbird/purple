@@ -71,9 +71,13 @@ interface purpleIBuddy: nsISupports {
   readonly attribute short nbOnline;
   readonly attribute short accountCount;
   purpleIAccount getAccount(in unsigned short aAccountIndex);
+  void getAccounts([optional] out unsigned long accountCount,
+                   [retval, array, size_is(accountCount)] out purpleIAccount accounts);
+  void getAccountBuddies([optional] out unsigned long accountBuddyCount,
+                         [retval, array, size_is(accountBuddyCount)] out purpleIAccountBuddy accountBuddies);
+
   //  readonly attribute purpleIContact contact;
   nsISimpleEnumerator getTags();
-  nsISimpleEnumerator getAccounts();
   purpleIConversation createConversation(in unsigned short aAccountIndex);
   [noscript] purpleIAccountBuddy getAccountBuddyForPurpleBuddy(in PurpleNativeBuddy aBuddy);
 };
