@@ -39,6 +39,7 @@
 # define PURPLE_TAG_H_
 
 #include "purpleITag.h"
+#include "nsCOMArray.h"
 
 #pragma GCC visibility push(default)
 #include <libpurple/account.h>
@@ -70,6 +71,7 @@ protected:
   /* additional members */
   PRUint32 mId;
   PurpleGroup *mGroup;
+  nsCOMArray<nsIObserver> mObservers;
 };
 
 #endif /* !PURPLE_TAG_H _ */

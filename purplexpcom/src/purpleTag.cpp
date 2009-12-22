@@ -41,6 +41,14 @@
 #include <nsIClassInfoImpl.h>
 #include <nsMemory.h>
 
+#ifdef PR_LOGGING
+//
+// NSPR_LOG_MODULES=purpleTag:5
+//
+PRLogModuleInfo *gPurpleTagLog = nsnull;
+#endif
+#define LOG(args) PR_LOG(gPurpleTagLog, PR_LOG_DEBUG, args)
+
 NS_IMPL_ISUPPORTS1_CI(purpleTag, purpleITag)
 
 purpleTag::purpleTag()
@@ -48,6 +56,10 @@ purpleTag::purpleTag()
   mGroup(NULL)
 {
   /* member initializers and constructor code */
+#ifdef PR_LOGGING
+  if (!gPurpleTagLog)
+    gPurpleTagLog = PR_NewLogModule("purpleTag");
+#endif
 }
 
 purpleTag::~purpleTag()
@@ -126,5 +138,42 @@ NS_IMETHODIMP purpleTag::GetBuddies(PRUint32 *buddyCount,
     }
 
   *buddyCount = count;
+  return NS_OK;
+}
+
+/* void addObserver (in nsIObserver aObserver); */
+NS_IMETHODIMP purpleTag::AddObserver(nsIObserver *aObserver)
+{
+  NS_ENSURE_ARG_POINTER(aObserver);
+  NS_ENSURE_TRUE(mObservers.IndexOfObject(aObserver) == -1,
+                 NS_ERROR_ALREADY_INITIALIZED);
+  LOG(("purpleTag::AddObserver (mId = %i, observer = @%x)",
+      mId, aObserver));
+
+  mObservers.AppendObject(aObserver);
+  return NS_OK;
+}
+
+/* void removeObserver (in nsIObserver aObserver); */
+NS_IMETHODIMP purpleTag::RemoveObserver(nsIObserver *aObserver)
+{
+  NS_ENSURE_ARG_POINTER(aObserver);
+
+  LOG(("purpleTag::RemoveObserver (mId = %i, observer = @%x)",
+       mId, aObserver));
+  NS_ENSURE_TRUE(mObservers.RemoveObject(aObserver), NS_ERROR_FAILURE);
+  return NS_OK;
+}
+
+/* void notifyObservers (in nsISupports aObj, in string aEvent, in wstring aData); */
+NS_IMETHODIMP purpleTag::NotifyObservers(nsISupports *aSubject,
+                                         const char *aTopic,
+                                         const PRUnichar *aData)
+{
+  LOG(("purpleTag::NotifyObservers (mId = %i, topic = %s)",
+       mId, aTopic));
+  for (PRInt32 i = 0; i < mObservers.Count(); ++i)
+    mObservers[i]->Observe(aSubject, aTopic, aData);
+
   return NS_OK;
 }

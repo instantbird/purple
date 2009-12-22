@@ -1434,6 +1434,11 @@ NS_IMETHODIMP purpleCoreService::FireBuddyEvent(PurpleBuddy * aBuddy,
   rv = buddy->GetAccountBuddyForPurpleBuddy(aBuddy, getter_AddRefs(pab));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsCOMPtr<purpleITag> tag;
+  rv = pab->GetTag(getter_AddRefs(tag));
+  if (NS_SUCCEEDED(rv))
+    tag->NotifyObservers(pab, aEvent, nsnull);
+
   return NotifyObservers(pab, aEvent);
 }
 

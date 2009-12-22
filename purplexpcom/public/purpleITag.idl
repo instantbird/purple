@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
+#include "nsIObserver.idl"
 
 /*
  * This is a proxy for libpurple PurpleGroup but is also used for tags
@@ -53,4 +54,19 @@ interface purpleITag: nsISupports {
 
   void getBuddies([optional] out unsigned long buddyCount,
 		  [retval, array, size_is(buddyCount)] out purpleIBuddy buddies);
+
+  void addObserver(in nsIObserver aObserver);
+  void removeObserver(in nsIObserver aObserver);
+  /* Observers will receive these notifications:
+       buddy-added
+       buddy-signed-on
+       buddy-signed-off
+       buddy-removed (no longer visible on the buddy list)
+       buddy-deleted (permanently removed from the list)
+       buddy-away
+       buddy-idle
+     aSubject will contain the buddy (purpleIAccountBuddy) */
+
+  void notifyObservers(in nsISupports aObj, in string aEvent,
+                       [optional] in wstring aData);
 };
