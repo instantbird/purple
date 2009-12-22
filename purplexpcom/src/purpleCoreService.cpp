@@ -545,12 +545,10 @@ NS_IMETHODIMP purpleCoreService::Quit()
   UNINIT(Accounts);
   mProtocols.Clear();
   mProxies.Clear();
+  mBuddiesById.Clear();
   mInitialized = PR_FALSE;
   purple_core_quit();
   LOG(("purple_core_quit"));
-  mBuddiesById.Clear(); // FIXME: this can and should be done before
-                        // purple_core_quit() once the blist signal
-                        // handlers are removed properly
   purpleStorage::unInit();
   purpleSocketWatcher::unInit();
   purpleNetworkObserver::unInit();
@@ -1424,6 +1422,9 @@ NS_IMETHODIMP purpleCoreService::FireAccountEvent(PurpleAccount * aAccount,
 NS_IMETHODIMP purpleCoreService::FireBuddyEvent(PurpleBuddy * aBuddy,
                                                 const char *aEvent)
 {
+  if (mQuitting)
+    return NS_OK;
+
   LOG(("Attempting to send %s signal, group = %s, buddy = %s", aEvent,
        purple_group_get_name(purple_buddy_get_group(aBuddy)), aBuddy->name));
   nsCOMPtr<purpleIBuddy> buddy;
