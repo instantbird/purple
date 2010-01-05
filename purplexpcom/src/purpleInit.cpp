@@ -89,8 +89,10 @@
 #include <nsIPromptService.h>
 #include <nsIPrefBranch2.h>
 #include <nsIPrefService.h>
+#include <nsICancelable.h>
 #include <nsIStringBundle.h>
 #include <nsISupportsPrimitives.h>
+#include <nsThreadUtils.h>
 #include <nsIWindowMediator.h>
 #include <nsIXULAppInfo.h>
 #include <nsComponentManagerUtils.h>
@@ -174,12 +176,43 @@ PurpleConnectionUiOps connection_uiops = {
 };
 
 /*** Account uiops ***/
-static void *request_authorize(PurpleAccount *account, const char *remote_user,
-                               const char *id, const char *alias,
-                               const char *message, gboolean on_list,
+class purpleAuthorizationRequest : public nsIRunnable
+{
+  public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIRUNNABLE
+
+    purpleAuthorizationRequest(const char *remote_user,
                                PurpleAccountRequestAuthorizationCb authorize_cb,
                                PurpleAccountRequestAuthorizationCb deny_cb,
-                               void *user_data)
+                               void *user_data);
+    void Cancel() {
+      mAuthorizeCb = NULL;
+      mDenyCb = NULL;
+      mUserData = NULL;
+    }
+
+  private:
+    PurpleAccountRequestAuthorizationCb mAuthorizeCb, mDenyCb;
+    nsString mRemoteUser;
+    void *mUserData;
+};
+
+NS_IMPL_ISUPPORTS1(purpleAuthorizationRequest, nsIRunnable)
+
+purpleAuthorizationRequest::purpleAuthorizationRequest(const char *remote_user,
+                                                       PurpleAccountRequestAuthorizationCb authorize_cb,
+                                                       PurpleAccountRequestAuthorizationCb deny_cb,
+                                                       void *user_data)
+  : mAuthorizeCb(authorize_cb), mDenyCb(deny_cb), mUserData(user_data)
+{
+  nsCString cRemoteUser(remote_user);
+  NS_CStringToUTF16(cRemoteUser, NS_CSTRING_ENCODING_UTF8, mRemoteUser);
+
+  NS_DispatchToMainThread(this);
+}
+
+NS_IMETHODIMP purpleAuthorizationRequest::Run()
 {
   nsresult rv;
   nsCOMPtr<nsIPromptService> promptService =
@@ -210,11 +243,7 @@ static void *request_authorize(PurpleAccount *account, const char *remote_user,
                                        getter_Copies(deny));
   NS_ENSURE_SUCCESS(rv, NULL);
 
-  nsCString cRemoteUser(remote_user);
-  nsString who;
-  NS_CStringToUTF16(cRemoteUser, NS_CSTRING_ENCODING_UTF8, who);
-  const PRUnichar *whoFlat = who.get();
-
+  const PRUnichar *whoFlat = mRemoteUser.get();
   nsString msg;
   rv = stringBundle->FormatStringFromName(NS_LITERAL_STRING("requestAuthorizeText").get(),
                                           &whoFlat, 1, getter_Copies(msg));
@@ -235,14 +264,33 @@ static void *request_authorize(PurpleAccount *account, const char *remote_user,
 
   if (result) {
     // Index 1 means "deny"
-    deny_cb(user_data);
+    if (mDenyCb)
+      mDenyCb(mUserData);
   }
   else {
-    authorize_cb(user_data);
+    if (mAuthorizeCb)
+      mAuthorizeCb(mUserData);
     //FIXME Prompt to add to blist
   }
 
-  return NULL;
+  return NS_OK;
+}
+
+static void *request_authorize(PurpleAccount *account, const char *remote_user,
+                               const char *id, const char *alias,
+                               const char *message, gboolean on_list,
+                               PurpleAccountRequestAuthorizationCb authorize_cb,
+                               PurpleAccountRequestAuthorizationCb deny_cb,
+                               void *user_data)
+{
+  return new purpleAuthorizationRequest(remote_user, authorize_cb, deny_cb, user_data);
+}
+
+static void close_account_request(void *ui_handle)
+{
+  NS_ENSURE_TRUE(ui_handle, );
+
+  ((purpleAuthorizationRequest *)ui_handle)->Cancel();
 }
 
 PurpleAccountUiOps account_uiops = {
@@ -250,7 +298,7 @@ PurpleAccountUiOps account_uiops = {
   NULL, /* status_changed */
   NULL, /* request_add, nearly dead */
   request_authorize,
-  NULL, /* close_account_request --> FIXME */
+  close_account_request,
 
   NULL, NULL, NULL, NULL
 };
