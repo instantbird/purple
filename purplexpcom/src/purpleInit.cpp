@@ -214,6 +214,9 @@ purpleAuthorizationRequest::purpleAuthorizationRequest(const char *remote_user,
 
 NS_IMETHODIMP purpleAuthorizationRequest::Run()
 {
+  if (!mAuthorizeCb && !mDenyCb)
+    return NS_OK;
+
   nsresult rv;
   nsCOMPtr<nsIPromptService> promptService =
     do_GetService("@mozilla.org/embedcomp/prompt-service;1", &rv);
