@@ -1118,7 +1118,8 @@ jabber_register_cb(JabberRegisterCBData *cbdata, PurpleRequestFields *fields)
 
 	if(cbdata->js->registration) {
 		username = g_strdup_printf("%s@%s%s%s", cbdata->js->user->node, cbdata->js->user->domain,
-			cbdata->js->user->resource ? "/" : "", cbdata->js->user->resource);
+			cbdata->js->user->resource ? "/" : "",
+			cbdata->js->user->resource ? cbdata->js->user->resource : "");
 		purple_account_set_username(cbdata->js->gc->account, username);
 		g_free(username);
 	}
