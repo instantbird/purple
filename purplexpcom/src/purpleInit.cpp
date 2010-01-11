@@ -675,7 +675,7 @@ static PurpleDnsQueryUiOps dnsUiOps = {
 };
 
 // Taken from pidgin/gtkconv.c (GPL, ...)
-static PurpleCmdRet say_command_cb(PurpleConversation *conv,
+static PurpleCmdRet raw_command_cb(PurpleConversation *conv,
                                    const char *cmd, char **args,
                                    char **error, void *data)
 {
@@ -1213,17 +1213,17 @@ init_libpurple()
   //  connect_to_blist_signals();
   connect_to_conversations_signals();
 
-  purple_cmd_register("say", "S", PURPLE_CMD_P_DEFAULT,
+  purple_cmd_register("raw", "s", PURPLE_CMD_P_DEFAULT,
                       (PurpleCmdFlag) (PURPLE_CMD_FLAG_CHAT | PURPLE_CMD_FLAG_IM),
-                      NULL, say_command_cb,
-                      "say &lt;message&gt;:  Send a message normally as if you weren't using a command.",
+                      NULL, raw_command_cb,
+                      "raw &lt;message&gt;:  Send a raw message (without escaping or handling of formatting).",
                       NULL);
-  purple_cmd_register("away", "S", PURPLE_CMD_P_HIGH,
+  purple_cmd_register("away", "s", PURPLE_CMD_P_HIGH,
                       (PurpleCmdFlag) (PURPLE_CMD_FLAG_CHAT | PURPLE_CMD_FLAG_IM | PURPLE_CMD_FLAG_ALLOW_WRONG_ARGS),
                       NULL, away_command_cb,
                       "away &lt;message&gt;:  Get Away and use |message| as status message.",
                       NULL);
-  purple_cmd_register("back", "S", PURPLE_CMD_P_HIGH,
+  purple_cmd_register("back", "s", PURPLE_CMD_P_HIGH,
                       (PurpleCmdFlag) (PURPLE_CMD_FLAG_CHAT | PURPLE_CMD_FLAG_IM | PURPLE_CMD_FLAG_ALLOW_WRONG_ARGS),
                       NULL, back_command_cb,
                       "back &lt;message&gt;:  Get Back and use |message| as status message.",

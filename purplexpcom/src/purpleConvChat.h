@@ -77,6 +77,9 @@ public:
     return purpleConversation::RemoveObserver(aObserver);
   }
 
+  NS_SCRIPTABLE NS_IMETHOD DoCommand(const nsACString & aMsg, PRBool *aHandled) {
+    return purpleConversation::DoCommand(aMsg, aHandled);
+  }
   // Keep the SendMsg method here
   NS_SCRIPTABLE NS_IMETHOD SendMsg(const nsACString & aMsg);
 
