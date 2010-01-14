@@ -220,31 +220,31 @@ NS_IMETHODIMP purpleAuthorizationRequest::Run()
   nsresult rv;
   nsCOMPtr<nsIPromptService> promptService =
     do_GetService("@mozilla.org/embedcomp/prompt-service;1", &rv);
-  NS_ENSURE_SUCCESS(rv, NULL);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIStringBundleService> bundleService =
     do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, NULL);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIStringBundle> stringBundle;
   rv = bundleService->CreateBundle("chrome://instantbird/locale/accounts.properties",
                                    getter_AddRefs(stringBundle));
-  NS_ENSURE_SUCCESS(rv, NULL);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsString title;
   rv = stringBundle->GetStringFromName(NS_LITERAL_STRING("requestAuthorizeTitle").get(),
                                        getter_Copies(title));
-  NS_ENSURE_SUCCESS(rv, NULL);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsString allow;
   rv = stringBundle->GetStringFromName(NS_LITERAL_STRING("requestAuthorizeAllow").get(),
                                        getter_Copies(allow));
-  NS_ENSURE_SUCCESS(rv, NULL);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsString deny;
   rv = stringBundle->GetStringFromName(NS_LITERAL_STRING("requestAuthorizeDeny").get(),
                                        getter_Copies(deny));
-  NS_ENSURE_SUCCESS(rv, NULL);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   const PRUnichar *whoFlat = mRemoteUser.get();
   nsString msg;
@@ -252,7 +252,7 @@ NS_IMETHODIMP purpleAuthorizationRequest::Run()
                                           &whoFlat, 1, getter_Copies(msg));
 
   nsCOMPtr<nsIWindowMediator> wm = do_GetService(NS_WINDOWMEDIATOR_CONTRACTID);
-  NS_ENSURE_TRUE(wm, NULL);
+  NS_ENSURE_TRUE(wm, NS_ERROR_FAILURE);
   nsCOMPtr<nsIDOMWindowInternal> window;
   wm->GetMostRecentWindow(NS_LITERAL_STRING("Messenger:blist").get(),
                           getter_AddRefs(window));
@@ -263,7 +263,7 @@ NS_IMETHODIMP purpleAuthorizationRequest::Run()
                    nsIPromptService::BUTTON_TITLE_IS_STRING;
   promptService->ConfirmEx(window, title.get(), msg.get(), flags, allow.get(),
                            deny.get(), nsnull, nsnull, nsnull, &result);
-  NS_ENSURE_SUCCESS(rv, NULL);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (result) {
     // Index 1 means "deny"
