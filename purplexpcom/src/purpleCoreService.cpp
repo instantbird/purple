@@ -416,19 +416,18 @@ nsresult purpleCoreService::InitBuddyList()
       continue;
     }
 
-    // When alias == name, don't set the alias so that when calling
-    // purple_buddy_get_alias this useless alias doesn't override the
-    // server-side alias (needed for MSN that won't send server-side
-    // aliases when syncing the buddy list and will wait until the
-    // buddies are online to send it)
     PurpleAccount *pAccount = account->GetPurpleAccount();
     if (!pAccount) {
       // This can happen if the prpl related to this account is missing
       continue;
     }
     PurpleBuddy *buddy =
-      purple_buddy_new(pAccount, name.get(),
-                       alias.Equals(name) ? NULL : alias.get());
+      purple_buddy_new(pAccount, name.get(), NULL);
+    // Ignore server aliases that are identical to the name.
+    // (We used to mistakenly store the name in the srv_alias column
+    // when there was no alias.)
+    if (!alias.IsEmpty() && !alias.Equals(name))
+      buddy->server_alias = purple_utf8_strip_unprintables(alias.get());
     tag->addBuddy(buddy);
 
     LOG(("Looking for purpleBuddy with id %i in HashTable", id));
