@@ -541,7 +541,13 @@ static void buddy_alias(PurpleBlistNode *aNode, const char *old_alias)
   if (!PURPLE_BLIST_NODE_IS_BUDDY(aNode))
     return;
 
-  buddy_signals((PurpleBuddy *)aNode, "buddy-alias");
+  PurpleBuddy *buddy = (PurpleBuddy *)aNode;
+  buddy_signals(buddy, "buddy-alias");
+
+  purpleBuddy *buddyPtr = (purpleBuddy *)buddy->node.ui_data;
+  if (!buddyPtr)
+    return; // it's fine to ignore these notifications for unknown buddies
+  buddyPtr->UpdateServerAlias(purple_buddy_get_server_alias(buddy));
 }
 
 void

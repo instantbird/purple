@@ -165,6 +165,26 @@ nsresult purpleBuddy::RemoveAccount(PurpleBuddy *aBuddy)
   return NS_ERROR_FAILURE;
 }
 
+nsresult purpleBuddy::UpdateServerAlias(const char *aAlias)
+{
+  PURPLE_ENSURE_INIT(mId);
+
+  purpleStorage *storageInstance = purpleStorage::GetInstance();
+  {
+    mozIStorageStatement *statement = storageInstance->mUpdateBuddyServerAlias;
+    mozStorageStatementScoper scoper(statement);
+    nsresult rv = statement->BindUTF8StringParameter(0, nsDependentCString(aAlias));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = statement->BindInt32Parameter(1, mId);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = statement->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
+}
+
 /* readonly attribute long id; */
 NS_IMETHODIMP purpleBuddy::GetId(PRInt32 *aId)
 {

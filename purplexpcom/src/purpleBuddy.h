@@ -68,6 +68,7 @@ public:
                                  PurpleBuddy *aBuddy,
                                  purpleTag *aTag);
   nsresult RemoveAccount(PurpleBuddy *aBuddy);
+  nsresult UpdateServerAlias(const char *aAlias);
   PRUint32 getId() { return mId; }
 
 private:

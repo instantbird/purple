@@ -146,6 +146,9 @@ nsresult purpleStorage::Init()
   CREATE_STATEMENT(mInsertBuddy,
                    "INSERT INTO buddies (key, name, srv_alias, position) VALUES(?1, ?2, ?3, ?4)");
 
+  CREATE_STATEMENT(mUpdateBuddyServerAlias,
+                   "UPDATE buddies SET srv_alias = ?1 WHERE id = ?2");
+
   CREATE_STATEMENT(mInsertAccountBuddy,
                    "INSERT INTO account_buddy (account_id, buddy_id, tag_id) VALUES(?1, ?2, ?3)");
 
