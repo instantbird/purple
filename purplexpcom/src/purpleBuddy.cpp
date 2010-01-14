@@ -99,7 +99,7 @@ nsresult purpleBuddy::Init(PurpleBuddy *aBuddy)
     nsCString prettyName(purple_buddy_get_name(aBuddy));
     rv = statement->BindUTF8StringParameter(1, prettyName);
     NS_ENSURE_SUCCESS(rv, rv);
-    nsCString alias(purple_buddy_get_alias(aBuddy));
+    nsCString alias(purple_buddy_get_server_alias(aBuddy));
     rv = statement->BindUTF8StringParameter(2, alias);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = statement->BindInt32Parameter(3, 0); // FIXME (0 = not visible);
