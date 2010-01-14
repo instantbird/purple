@@ -639,7 +639,11 @@ static void conversation_updated(PurpleConversation *aConv, PurpleConvUpdateType
       break;
 
     case PURPLE_CONV_UPDATE_TITLE:
-      notify_conv(aConv, nsnull, "update-conv-title", nsnull);
+      // The test prevents a stupid warning caused by libpurple
+      // calling purple_conversation_autoset_title before the
+      // create_conversation uiop.
+      if (aConv && aConv->ui_data)
+        notify_conv(aConv, nsnull, "update-conv-title", nsnull);
     default:
       ;
   }
