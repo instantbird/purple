@@ -377,7 +377,9 @@ nsresult purpleCoreService::InitBuddyList()
   }
 
   rv = DBConn->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT id, name, srv_alias, tag_id, account_id FROM buddies JOIN account_buddy ON buddy_id = id"),
+    "SELECT buddies.id, name, srv_alias, alias, tag_id, account_id FROM buddies"
+    " JOIN account_buddy ON buddy_id = buddies.id"
+    " LEFT JOIN contacts ON contact_id = contacts.id"),
     getter_AddRefs(statement));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -386,11 +388,14 @@ nsresult purpleCoreService::InitBuddyList()
     nsCString name;
     rv = statement->GetUTF8String(1, name);
     NS_ENSURE_SUCCESS(rv, rv);
-    nsCString alias;
-    rv = statement->GetUTF8String(2, alias);
+    nsCString serverAlias;
+    rv = statement->GetUTF8String(2, serverAlias);
     NS_ENSURE_SUCCESS(rv, rv);
-    PRInt32 tagId = statement->AsInt32(3);
-    PRInt32 accountId = statement->AsInt32(4);
+    nsCString alias;
+    rv = statement->GetUTF8String(3, alias);
+    NS_ENSURE_SUCCESS(rv, rv);
+    PRInt32 tagId = statement->AsInt32(4);
+    PRInt32 accountId = statement->AsInt32(5);
     LOG(("pcs::InitBuddyList: reading buddy %s of account %i, group %i",
          name.get(), accountId, tagId));
 
@@ -422,12 +427,13 @@ nsresult purpleCoreService::InitBuddyList()
       continue;
     }
     PurpleBuddy *buddy =
-      purple_buddy_new(pAccount, name.get(), NULL);
+      purple_buddy_new(pAccount, name.get(),
+                       alias.IsEmpty() ? NULL : alias.get());
     // Ignore server aliases that are identical to the name.
     // (We used to mistakenly store the name in the srv_alias column
-    // when there was no alias.)
-    if (!alias.IsEmpty() && !alias.Equals(name))
-      buddy->server_alias = purple_utf8_strip_unprintables(alias.get());
+    // when there was no server alias.)
+    if (!serverAlias.IsEmpty() && !serverAlias.Equals(name))
+      buddy->server_alias = purple_utf8_strip_unprintables(serverAlias.get());
     tag->addBuddy(buddy);
 
     LOG(("Looking for purpleBuddy with id %i in HashTable", id));

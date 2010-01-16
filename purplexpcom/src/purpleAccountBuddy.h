@@ -62,6 +62,7 @@ public:
   void Uninit();
   nsresult Store(PRInt32 aBuddyId);
   PurpleBuddy *GetBuddy() { return mBuddy; }
+  void SetBuddyAlias(const nsCString& aBuddyAlias);
 
 private:
   ~purpleAccountBuddy();

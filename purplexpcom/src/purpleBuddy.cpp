@@ -173,7 +173,11 @@ nsresult purpleBuddy::UpdateServerAlias(const char *aAlias)
   {
     mozIStorageStatement *statement = storageInstance->mUpdateBuddyServerAlias;
     mozStorageStatementScoper scoper(statement);
-    nsresult rv = statement->BindUTF8StringParameter(0, nsDependentCString(aAlias));
+    nsresult rv;
+    if (aAlias)
+      rv = statement->BindUTF8StringParameter(0, nsDependentCString(aAlias));
+    else
+      rv = statement->BindNullParameter(0);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = statement->BindInt32Parameter(1, mId);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -240,7 +244,78 @@ NS_IMETHODIMP purpleBuddy::GetAlias(nsACString& aAlias)
 }
 NS_IMETHODIMP purpleBuddy::SetAlias(const nsACString& aAlias)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  PURPLE_ENSURE_INIT(mId);
+
+  mAlias = aAlias;
+  for (PRInt32 i = 0; i < mBuddies.Count(); ++i)
+    mBuddies[i]->SetBuddyAlias(mAlias);
+
+  /* Save the alias in blist.sqlite */
+  purpleStorage *storageInstance = purpleStorage::GetInstance();
+  NS_ENSURE_TRUE(storageInstance, NS_ERROR_OUT_OF_MEMORY);
+
+  mozIStorageConnection *DBConn = storageInstance->GetConnection();
+  NS_ENSURE_TRUE(DBConn, NS_ERROR_UNEXPECTED);
+
+  /* Get the contact_id if one already exists for this buddy */
+  nsCOMPtr<mozIStorageStatement> statement;
+  nsresult rv = DBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT contact_id FROM buddies WHERE id = ?1"),
+    getter_AddRefs(statement));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = statement->BindInt32Parameter(0, mId);
+  NS_ENSURE_SUCCESS(rv, rv);
+  PRBool contactExists = PR_FALSE;
+  rv = statement->ExecuteStep(&contactExists);
+  NS_ENSURE_SUCCESS(rv, rv);
+  PRInt64 contactId = 0;
+  if (contactExists)
+    contactId = statement->AsInt64(0);
+
+  if (contactId) {
+    /* The contact exists, update the alias */
+    rv = DBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "UPDATE contacts SET alias = ?1 WHERE id = ?2"),
+      getter_AddRefs(statement));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = statement->BindUTF8StringParameter(0, mAlias);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = statement->BindInt64Parameter(1, contactId);
+    NS_ENSURE_SUCCESS(rv, rv);
+    return statement->Execute();
+  }
+
+  /* At this point, we know the contact doesn't exist yet, create it */
+
+  /* This is in 2 steps, so use a transaction */
+  mozStorageTransaction transaction(DBConn, PR_FALSE);
+
+  rv = DBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "INSERT INTO contacts (alias) VALUES(?1)"),
+    getter_AddRefs(statement));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = statement->BindUTF8StringParameter(0, mAlias);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = statement->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  /* Get the id of the new contact */
+  rv = DBConn->GetLastInsertRowID(&contactId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  /* Store the contact_id in the buddies table */
+  rv = DBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "UPDATE buddies SET contact_id = ?1 WHERE id = ?2"),
+    getter_AddRefs(statement));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = statement->BindInt64Parameter(0, contactId);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = statement->BindInt32Parameter(1, mId);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = statement->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return transaction.Commit();
 }
 
 /* readonly attribute short nbOnline; */

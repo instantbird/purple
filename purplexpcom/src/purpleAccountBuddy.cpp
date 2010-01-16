@@ -271,6 +271,10 @@ NS_IMETHODIMP purpleAccountBuddy::GetBuddyAlias(nsACString& aBuddyAlias)
   aBuddyAlias = purple_buddy_get_alias(mBuddy);
   return NS_OK;
 }
+void purpleAccountBuddy::SetBuddyAlias(const nsCString& aBuddyAlias)
+{
+  purple_blist_alias_buddy(mBuddy, aBuddyAlias.get());
+}
 
 /* purpleIConversation createConversation (); */
 NS_IMETHODIMP purpleAccountBuddy::CreateConversation(purpleIConversation **aResult)
