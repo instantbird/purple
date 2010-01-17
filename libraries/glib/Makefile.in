@@ -241,17 +241,6 @@ ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
 	mkdir -p gnulib
 endif
 
-# libs:: $(SHARED_LIBRARY)
-# ifneq (,$(filter OS2 WINNT WINCE,$(OS_ARCH)))
-# 	$(INSTALL) $(IFLAGS2) $(IMPORT_LIBRARY) $(DIST)/lib
-# else
-# 	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DIST)/lib
-# endif
-# 	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(FINAL_TARGET)/libraries
-
-export:: $(EXPORTS) $(PUBLIC)
-	$(INSTALL) $(IFLAGS1) $^
-
 glib.dll: glib.def
 
 glib.def: $(srcdir)/glib.symbols $(srcdir)/gobject.symbols

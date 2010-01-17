@@ -271,17 +271,6 @@ endif
 # the dynamic protocols depend on the final libpurple.so
 $(filter-out $(STATIC_PROTO_libs),$(PARALLEL_DIRS_libs)): $(SHARED_LIBRARY)
 
-# libs:: $(SHARED_LIBRARY)
-# ifneq (,$(filter OS2 WINNT WINCE,$(OS_ARCH)))
-# 	$(INSTALL) $(IFLAGS2) $(IMPORT_LIBRARY) $(DIST)/lib
-# else
-# 	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DIST)/lib
-# endif
-# 	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(FINAL_TARGET)/libraries
-
-export:: $(EXPORTS) $(PUBLIC)
-	$(INSTALL) $(IFLAGS1) $^
-
 purple.def: $(EXPORTS) $(GLOBAL_DEPS)
 	echo EXPORTS > purple.def 
 	(cd $(srcdir); cat $(EXPORTS)) |egrep '^[a-zA-Z].* \*?w?purple_[a-z_0-9]+\(' |sed -e 's/(.*//' -e 's/.* \*\?//' |sort |uniq >> purple.def

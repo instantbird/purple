@@ -111,14 +111,3 @@ CSRCS		+= wincecompat.c
 endif
 
 include $(topsrcdir)/config/rules.mk
-
-# libs:: $(SHARED_LIBRARY)
-# ifneq (,$(filter OS2 WINNT WINCE,$(OS_ARCH)))
-# 	$(INSTALL) $(IFLAGS2) $(IMPORT_LIBRARY) $(DIST)/lib
-# else
-# 	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DIST)/lib
-# endif
-# 	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(FINAL_TARGET)/libraries
-
-export:: $(EXPORTS) $(PUBLIC)
-	$(INSTALL) $(IFLAGS1) $^
