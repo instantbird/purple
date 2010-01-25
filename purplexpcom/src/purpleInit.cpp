@@ -597,33 +597,6 @@ static PurpleBlistUiOps blist_uiops = {
 };
 
 
-static void
-received_im_msg(PurpleAccount *account, char *sender, char *message,
-                PurpleConversation *conv, PurpleMessageFlags flags)
-{
-  LOG(("Received_im_msg"));
-
-  nsCOMPtr<nsIObserverService> os = do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
-  NS_ASSERTION(os, "nsCOMPtr<nsIObserverService> == null");
-
-  if (!conv) {
-    conv = purple_conversation_new(PURPLE_CONV_TYPE_IM, account, sender);
-  }
-  purpleIConversation *prplConv = (purpleIConversation *) conv->ui_data;
-  NS_ASSERTION(prplConv, "received IM for conversation without purpleConversation");
-
-  //FIXME Why is this different on Windows?
-#ifdef XP_WIN
-  os->NotifyObservers(prplConv, "new message", nsnull);
-#else
-  const nsEmbedCString cMsg(message);
-  nsEmbedString        msg;
-
-  NS_CStringToUTF16(cMsg, NS_CSTRING_ENCODING_UTF8, msg);
-  os->NotifyObservers(prplConv, "new message", msg.get());
-#endif
-}
-
 static void update_chat_topic(PurpleConversation *aConv,
                               const char *aWho,
                               const char *aNew)
@@ -658,9 +631,6 @@ static void conversation_updated(PurpleConversation *aConv, PurpleConvUpdateType
 static void connect_to_conversations_signals()
 {
   static int handle;
-  purple_signal_connect(purple_conversations_get_handle(), "received-im-msg", &handle,
-                        PURPLE_CALLBACK(received_im_msg), NULL);
-
   purple_signal_connect(purple_conversations_get_handle(), "chat-topic-changed", &handle,
                         PURPLE_CALLBACK(update_chat_topic), NULL);
 
