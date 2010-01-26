@@ -786,6 +786,19 @@ nsresult purpleCoreService::GetTagFromName(const nsCString& aName,
   return NS_ERROR_FAILURE;
 }
 
+
+/* purpleITag getTagByName (in AUTF8String aName); */
+NS_IMETHODIMP purpleCoreService::GetTagByName(const nsACString & aName,
+                                              purpleITag **aResult)
+{
+  nsresult rv =
+    GetTagFromName(PromiseFlatCString(aName), (purpleTag **)aResult);
+  if (NS_FAILED(rv))
+    *aResult = nsnull;
+
+  return NS_OK;
+}
+
 nsresult purpleCoreService::GetTagFromPurpleBuddy(PurpleBuddy *aBuddy,
                                                   purpleTag **aResult)
 {

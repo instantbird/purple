@@ -66,6 +66,7 @@ interface purpleICoreService: nsISupports {
 
   purpleITag createTag(in AUTF8String aName);
   purpleITag getTagById(in long aId);
+  purpleITag getTagByName(in AUTF8String aName);
   void getTags([optional] out unsigned long tagCount,
                [retval, array, size_is(tagCount)] out purpleITag tags);
 
