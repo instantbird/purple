@@ -790,7 +790,6 @@ nsresult purpleCoreService::GetTagFromPurpleBuddy(PurpleBuddy *aBuddy,
                                                   purpleTag **aResult)
 {
   PurpleGroup *group = purple_buddy_get_group(aBuddy);
-  nsCString groupName(purple_group_get_name(group));
 
   *aResult = (purpleTag *)purple_blist_node_get_ui_data((PurpleBlistNode *)group);
   if (*aResult) {
@@ -798,6 +797,7 @@ nsresult purpleCoreService::GetTagFromPurpleBuddy(PurpleBuddy *aBuddy,
     return NS_OK;
   }
 
+  nsCString groupName(purple_group_get_name(group));
   nsresult rv = GetTagFromName(groupName, aResult);
   if (NS_SUCCEEDED(rv))
     return rv;

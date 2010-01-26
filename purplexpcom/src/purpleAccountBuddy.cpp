@@ -82,7 +82,10 @@ void purpleAccountBuddy::Init(purpleIAccount *aAccount,
 {
   mAccount = aAccount;
   mBuddy = aBuddy;
-  mTag = aTag;
+  // aTag is unused because we don't cache the tag here any more, we
+  // use the ui data of the libpurple buddy list node instead.
+  // ToDo for 0.3: see if we should remove the 'tag' parameters in most
+  // 'AddAccount' methods.
 }
 
 void purpleAccountBuddy::Uninit()
@@ -100,8 +103,12 @@ nsresult purpleAccountBuddy::Store(PRInt32 aBuddyId)
   PRInt32 count = PR_sscanf(key.get(), ACCOUNT_KEY "%u", &accountId);
   NS_ENSURE_TRUE(count == 1, NS_ERROR_UNEXPECTED);
 
+  nsCOMPtr<purpleITag> tag;
+  rv = GetTag(getter_AddRefs(tag));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   PRInt32 groupId;
-  rv = mTag->GetId(&groupId);
+  rv = tag->GetId(&groupId);
   NS_ENSURE_SUCCESS(rv, rv);
 
   purpleStorage *storageInstance = purpleStorage::GetInstance();
@@ -139,13 +146,79 @@ NS_IMETHODIMP purpleAccountBuddy::GetAccount(purpleIAccount * *aAccount)
   return NS_OK;
 }
 
-/* readonly attribute purpleITag tag; */
+/* attribute purpleITag tag; */
 NS_IMETHODIMP purpleAccountBuddy::GetTag(purpleITag * *aTag)
 {
-  NS_ENSURE_TRUE(mTag, NS_ERROR_NOT_INITIALIZED);
+  NS_ENSURE_TRUE(mBuddy, NS_ERROR_NOT_INITIALIZED);
 
-  NS_ADDREF(*aTag = mTag);
+  PurpleGroup *group = purple_buddy_get_group(mBuddy);
+  purpleTag *tag =
+    (purpleTag *)purple_blist_node_get_ui_data((PurpleBlistNode *)group);
+  NS_ENSURE_TRUE(tag, NS_ERROR_NOT_INITIALIZED);
+
+  NS_ADDREF(*aTag = tag);
   return NS_OK;
+}
+NS_IMETHODIMP purpleAccountBuddy::SetTag(purpleITag * aTag)
+{
+  NS_ENSURE_ARG_POINTER(aTag);
+  NS_ENSURE_TRUE(mBuddy, NS_ERROR_NOT_INITIALIZED);
+
+  static_cast<purpleTag *>(aTag)->addBuddy(mBuddy);
+
+  // Now collect the data we need to make the SQL UPDATE query
+  // First, the tag id
+  nsCOMPtr<purpleITag> tag;
+  nsresult rv = GetTag(getter_AddRefs(tag));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 tagId;
+  rv = tag->GetId(&tagId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Then the account id
+  nsCString key;
+  rv = mAccount->GetId(key);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 accountId;
+  PRInt32 count = PR_sscanf(key.get(), ACCOUNT_KEY "%u", &accountId);
+  NS_ENSURE_TRUE(count == 1, NS_ERROR_UNEXPECTED);
+
+  // And finally the buddy id
+  nsCOMPtr<purpleICoreService> pcs =
+    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(pcs, NS_ERROR_UNEXPECTED);
+
+  nsCOMPtr<purpleIBuddy> buddy;
+  rv = pcs->GetBuddyByPurpleBuddy(mBuddy, getter_AddRefs(buddy));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 buddyId;
+  rv = buddy->GetId(&buddyId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Get the mozStorage stuff
+  purpleStorage *storageInstance = purpleStorage::GetInstance();
+  NS_ENSURE_TRUE(storageInstance, NS_ERROR_OUT_OF_MEMORY);
+
+  mozIStorageConnection *DBConn = storageInstance->GetConnection();
+  NS_ENSURE_TRUE(DBConn, NS_ERROR_UNEXPECTED);
+
+  // Finally, do our query!
+  nsCOMPtr<mozIStorageStatement> statement;
+  rv = DBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "UPDATE account_buddy SET tag_id = ?1 "
+    "WHERE account_id = ?2 AND buddy_id = ?3"),
+    getter_AddRefs(statement));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = statement->BindInt32Parameter(0, tagId);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = statement->BindInt64Parameter(1, accountId);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = statement->BindInt64Parameter(2, buddyId);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return statement->Execute();
 }
 
 /* readonly attribute AUTF8String buddyName; */

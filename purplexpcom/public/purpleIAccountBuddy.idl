@@ -49,7 +49,7 @@
 interface purpleIAccountBuddy: nsISupports {
   readonly attribute purpleIBuddy buddy;
   readonly attribute purpleIAccount account;
-  readonly attribute purpleITag tag;
+           attribute purpleITag tag;
   readonly attribute AUTF8String buddyName;
   readonly attribute AUTF8String buddyAlias;
   readonly attribute AUTF8String loggedIn;
