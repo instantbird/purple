@@ -1179,11 +1179,6 @@ init_libpurple()
   NS_ASSERTION(purpleCoreInit, "purple_core_init failed!!!");
   NS_ENSURE_TRUE(purpleCoreInit, NS_ERROR_FAILURE);
 
-  /* Enable all logs by default. */
-  purple_prefs_set_bool("/purple/logging/log_ims", TRUE);
-  purple_prefs_set_bool("/purple/logging/log_chats", TRUE);
-  purple_prefs_set_bool("/purple/logging/log_system", TRUE);
-
   /* Now, to connect the account(s), create a status and activate it. */
   PurpleSavedStatus *status = purple_savedstatus_new(NULL, PURPLE_STATUS_AVAILABLE);
   purple_savedstatus_activate(status);
