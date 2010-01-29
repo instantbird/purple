@@ -59,6 +59,11 @@ interface purpleIAccountBuddy: nsISupports {
   nsISimpleEnumerator getTooltipInfo();
 
   purpleIConversation createConversation();
+
+  // True if the buddy is online or if the account supports sending
+  // offline messages.
+  readonly attribute boolean canSendMessage;
+
   readonly attribute boolean online;
   readonly attribute boolean available;
   readonly attribute boolean idle;

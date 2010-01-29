@@ -359,12 +359,26 @@ NS_IMETHODIMP purpleAccountBuddy::CreateConversation(purpleIConversation **aResu
   return mAccount->CreateConversation(buddyName, aResult);
 }
 
+/* readonly attribute boolean canSendMessage; */
+NS_IMETHODIMP purpleAccountBuddy::GetCanSendMessage(PRBool *aCanSendMessage)
+{
+  NS_ENSURE_TRUE(mBuddy, NS_ERROR_NOT_INITIALIZED);
+
+  *aCanSendMessage =
+    purple_presence_is_online(purple_buddy_get_presence(mBuddy)) ||
+    purple_account_supports_offline_message(purple_buddy_get_account(mBuddy),
+                                            mBuddy);
+  return NS_OK;
+}
+
 #define PURPLE_PRESENCE_GET_BOOL_IMPL(aName, aFctName)                  \
   NS_IMETHODIMP purpleAccountBuddy::Get##aName(PRBool *a##aName)        \
   {                                                                     \
-    NS_ENSURE_TRUE(mBuddy, NS_ERROR_NOT_INITIALIZED);                   \
+    NS_ENSURE_TRUE(mAccount && mBuddy, NS_ERROR_NOT_INITIALIZED);       \
                                                                         \
-    *a##aName = purple_presence_is_##aFctName(purple_buddy_get_presence(mBuddy)); \
+    *a##aName =                                                         \
+      purple_account_is_connected(purple_buddy_get_account(mBuddy)) &&  \
+      purple_presence_is_##aFctName(purple_buddy_get_presence(mBuddy)); \
     return NS_OK;                                                       \
   }
 
