@@ -42,7 +42,7 @@ CPPSRCS		= \
 EXTRA_DSO_LDOPTS += $(XPCOM_GLUE_LDOPTS) $(MOZ_COMPONENT_NSPR_LIBS)
 else
 ifeq ($(OS_ARCH),Darwin)
-OBJS		:= $(strip $(addprefix $(PROTOCOL)_,$(CSRCS:.c=.$(OBJ_SUFFIX))))
+OBJS		:= $(shell echo $(strip $(addprefix $(PROTOCOL)_,$(CSRCS:.c=.$(OBJ_SUFFIX)))) | sed 's@$(PROTOCOL)_\([^ ]*\)/\([^ ]*\)\.$(OBJ_SUFFIX)@\1/$(PROTOCOL)_\2.$(OBJ_SUFFIX)@g')
 endif
 endif
 
