@@ -54,6 +54,8 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_PURPLEICONVIM
 
+  NS_SCRIPTABLE NS_IMETHOD GetIsChat(PRBool *aIsChat);
+
   // Forward most methods to purpleConversation
   NS_SCRIPTABLE NS_IMETHOD GetAccount(purpleIAccount * *aAccount) {
     return purpleConversation::GetAccount(aAccount);

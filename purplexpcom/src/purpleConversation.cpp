@@ -79,6 +79,12 @@ purpleConversation::~purpleConversation()
   LOG(("destructing conversation @%x with id %i", this, mId));
 }
 
+/* readonly attribute boolean isChat; */
+NS_IMETHODIMP purpleConversation::GetIsChat(PRBool *aIsChat)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 void purpleConversation::SetConv(PurpleConversation *aConv)
 {
   mConv = aConv;

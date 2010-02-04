@@ -80,6 +80,13 @@ purpleConvIM::~purpleConvIM()
   LOG(("destructing IM conversation with id %i", mId));
 }
 
+/* readonly attribute boolean isChat; */
+NS_IMETHODIMP purpleConvIM::GetIsChat(PRBool *aIsChat)
+{
+  *aIsChat = PR_FALSE;
+  return NS_OK;
+}
+
 /* void sendMsg (in AUTF8String aMsg); */
 NS_IMETHODIMP purpleConvIM::SendMsg(const nsACString& aMsg)
 {

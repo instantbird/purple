@@ -79,6 +79,13 @@ purpleConvChat::~purpleConvChat()
   LOG(("destructing chat conversation with id %i", mId));
 }
 
+/* readonly attribute boolean isChat; */
+NS_IMETHODIMP purpleConvChat::GetIsChat(PRBool *aIsChat)
+{
+  *aIsChat = PR_TRUE;
+  return NS_OK;
+}
+
 /* void sendMsg (in AUTF8String aMsg); */
 NS_IMETHODIMP purpleConvChat::SendMsg(const nsACString& aMsg)
 {
