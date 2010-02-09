@@ -42,6 +42,7 @@
 #include <nsComponentManagerUtils.h>
 #include <nsIClassInfoImpl.h>
 #include <nsMemory.h>
+#include <mozIStoragePendingStatement.h>
 
 NS_IMPL_ISUPPORTS1_CI(purpleBuddy, purpleIBuddy)
 
@@ -182,7 +183,8 @@ nsresult purpleBuddy::UpdateServerAlias(const char *aAlias)
     rv = statement->BindInt32Parameter(1, mId);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = statement->Execute();
+    nsCOMPtr<mozIStoragePendingStatement> pendingStatement;
+    rv = statement->ExecuteAsync(nsnull, getter_AddRefs(pendingStatement));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
