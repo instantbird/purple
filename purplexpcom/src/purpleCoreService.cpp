@@ -182,6 +182,12 @@ NS_IMETHODIMP purpleCoreService::Init()
   /* Check if we should disable auto-login */
   InitAutoLoginStatus();
 
+  /* If we are not offline, set the initial status to available */
+  if (mAutoLoginStatus != AUTOLOGIN_START_OFFLINE) {
+    nsresult rv = SetStatus(PURPLE_STATUS_AVAILABLE, EmptyCString());
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   /* Connect accounts that should be connected at startup */
   if (mAutoLoginStatus == AUTOLOGIN_ENABLED)
     ProcessAutoLogin();
@@ -1244,6 +1250,17 @@ NS_IMETHODIMP purpleCoreService::ProcessAutoLogin()
   NS_ENSURE_TRUE(!NS_IsOffline(), NS_ERROR_FAILURE);
 #endif
 
+  // See if we need to remove an "offline" libpurple status.
+  if (mAutoLoginStatus == AUTOLOGIN_START_OFFLINE) {
+    PRInt16 currentStatus;
+    nsresult rv = GetCurrentStatusType(&currentStatus);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (currentStatus == STATUS_OFFLINE) {
+      nsresult rv = SetStatus(PURPLE_STATUS_AVAILABLE, EmptyCString());
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+
   for (PRInt32 i = 0; i < mAccounts.Count(); ++i)
     mAccounts[i]->checkAutoLogin();
 
@@ -1471,38 +1488,79 @@ NS_IMETHODIMP purpleCoreService::GetStorageConnection(mozIStorageConnection * *a
   return NS_OK;
 }
 
+/* readonly attribute AUTF8String currentStatusMessage; */
+NS_IMETHODIMP purpleCoreService::GetCurrentStatusMessage(nsACString & aCurrentStatusMessage)
+{
+  aCurrentStatusMessage =
+    purple_savedstatus_get_message(purple_savedstatus_get_current());
+  return NS_OK;
+}
+
+/* readonly attribute short currentStatusType; */
+NS_IMETHODIMP purpleCoreService::GetCurrentStatusType(PRInt16 *aCurrentStatus)
+{
+  if (purple_savedstatus_is_idleaway()) {
+    *aCurrentStatus = STATUS_IDLE;
+    return NS_OK;
+  }
+
+  PurpleSavedStatus *status = purple_savedstatus_get_current();
+  NS_ASSERTION(status, "purple_savedstatus_get_current should never return NULL");
+
+  PurpleStatusPrimitive type = purple_savedstatus_get_type(status);
+  switch (type) {
+    case PURPLE_STATUS_OFFLINE:
+      *aCurrentStatus = STATUS_OFFLINE;
+      break;
+    case PURPLE_STATUS_UNAVAILABLE:
+      *aCurrentStatus = STATUS_UNAVAILABLE;
+      break;
+    case PURPLE_STATUS_AVAILABLE:
+      *aCurrentStatus = STATUS_AVAILABLE;
+      break;
+    //FIXME more types?
+    default:
+      return NS_ERROR_UNEXPECTED;
+  }
+  return NS_OK;
+}
+
 nsresult purpleCoreService::SetStatus(PurpleStatusPrimitive aStatus,
                                       const nsACString &aMessage)
 {
   PurpleSavedStatus *status = purple_savedstatus_get_default();
   NS_ENSURE_ARG_POINTER(status);
 
-  purple_savedstatus_set_type(status, aStatus);
+  if (aStatus != PURPLE_STATUS_UNSET)
+    purple_savedstatus_set_type(status, aStatus);
   purple_savedstatus_set_message(status, PromiseFlatCString(aMessage).get());
   purple_savedstatus_activate(status);
+
+  nsString message;
+  NS_CStringToUTF16(aMessage, NS_CSTRING_ENCODING_UTF8, message);
+  return NotifyObservers(static_cast<purpleICoreService *>(this),
+                         "status-changed", message.get());
   return NS_OK;
 }
 
-/* void away (in string aMessage); */
-NS_IMETHODIMP purpleCoreService::Away(const nsACString &aMessage)
+/* void setStatus (in short aStatus, in AUTF8String aMessage); */
+NS_IMETHODIMP purpleCoreService::SetStatus(PRInt16 aStatus, const nsACString & aMessage)
 {
-  nsresult rv = SetStatus(PURPLE_STATUS_AWAY, aMessage);
-  NS_ENSURE_SUCCESS(rv, rv);
+  PurpleStatusPrimitive status;
+#define MAP_PURPLE_STATUS(aStatus)                \
+    case STATUS_##aStatus:                        \
+      status = PURPLE_STATUS_##aStatus;           \
+      break
 
-  nsString message;
-  NS_CStringToUTF16(aMessage, NS_CSTRING_ENCODING_UTF8, message);
-  return NotifyObservers(static_cast<purpleICoreService *>(this),
-                         "status-away", message.get());
-}
+  switch (aStatus) {
+    MAP_PURPLE_STATUS(OFFLINE);
+    MAP_PURPLE_STATUS(UNAVAILABLE);
+    MAP_PURPLE_STATUS(AVAILABLE);
+    MAP_PURPLE_STATUS(UNSET);
 
-/* void back (in string aMessage); */
-NS_IMETHODIMP purpleCoreService::Back(const nsACString &aMessage)
-{
-  nsresult rv = SetStatus(PURPLE_STATUS_AVAILABLE, aMessage);
-  NS_ENSURE_SUCCESS(rv, rv);
+    default:
+      return NS_ERROR_INVALID_ARG;
+  }
 
-  nsString message;
-  NS_CStringToUTF16(aMessage, NS_CSTRING_ENCODING_UTF8, message);
-  return NotifyObservers(static_cast<purpleICoreService *>(this),
-                         "status-back", message.get());
+  return SetStatus(status, aMessage);
 }

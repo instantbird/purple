@@ -156,6 +156,16 @@ interface purpleICoreService: nsISupports {
   // FIXME: this should really go in a purpleStorage service
   readonly attribute mozIStorageConnection storageConnection;
 
-  void away(in AUTF8String aMessage);
-  void back(in AUTF8String aMessage);
+  const short STATUS_UNSET = 0;
+  const short STATUS_OFFLINE = 1;
+  const short STATUS_MOBILE = 2;
+  const short STATUS_IDLE = 3;
+  const short STATUS_UNAVAILABLE = 4;
+  const short STATUS_AVAILABLE = 5;
+
+  readonly attribute AUTF8String currentStatusMessage;
+  readonly attribute short currentStatusType;
+
+  // only works with STATUS_OFFLINE, STATUS_UNAVAILABLE and STATUS_AVAILABLE
+  void setStatus(in short aStatus, in AUTF8String aMessage);
 };

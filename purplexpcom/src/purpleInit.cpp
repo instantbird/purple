@@ -676,7 +676,7 @@ static PurpleCmdRet away_command_cb(PurpleConversation *conv,
 
   nsCOMPtr<purpleICoreService> pcs =
     do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-  pcs->Away(message);
+  pcs->SetStatus(purpleICoreService::STATUS_UNAVAILABLE, message);
 
   return PURPLE_CMD_RET_OK;
 }
@@ -688,7 +688,7 @@ static PurpleCmdRet back_command_cb(PurpleConversation *conv,
 
   nsCOMPtr<purpleICoreService> pcs =
     do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-  pcs->Back(message);
+  pcs->SetStatus(purpleICoreService::STATUS_AVAILABLE, message);
 
   return PURPLE_CMD_RET_OK;
 }
@@ -1179,8 +1179,8 @@ init_libpurple()
   NS_ASSERTION(purpleCoreInit, "purple_core_init failed!!!");
   NS_ENSURE_TRUE(purpleCoreInit, NS_ERROR_FAILURE);
 
-  /* Now, to connect the account(s), create a status and activate it. */
-  PurpleSavedStatus *status = purple_savedstatus_new(NULL, PURPLE_STATUS_AVAILABLE);
+  /* Initialize libpurple offline, purpleCoreService will connect later. */
+  PurpleSavedStatus *status = purple_savedstatus_new(NULL, PURPLE_STATUS_OFFLINE);
   purple_savedstatus_activate(status);
 
   connect_to_connections_signals();
