@@ -138,6 +138,7 @@ const guint glib_binary_age = GLIB_BINARY_AGE;
 
 static HMODULE glib_dll = NULL;
 
+#if 0
 BOOL WINAPI
 DllMain (HINSTANCE hinstDLL,
 	 DWORD     fdwReason,
@@ -148,6 +149,7 @@ DllMain (HINSTANCE hinstDLL,
 
   return TRUE;
 }
+#endif
 
 gchar *
 _glib_get_installation_directory (void)

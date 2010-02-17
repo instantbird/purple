@@ -56,24 +56,19 @@ ifneq (,$(filter-out WINNT WINCE Darwin,$(OS_ARCH)))
 LOCAL_INCLUDES	= $(GLIB_CFLAGS)
 EXTRA_LIBS	= ../../libpurple.so $(GLIB_LIBS) -lgmodule-2.0 -lxml2 -lz
 else
-EXTRA_LIBS	= -L../.. -lpurple -L$(DIST)/lib -lglib -lxml2 -lz
+EXTRA_LIBS	= -L../.. -lpurple -L$(DIST)/lib -lz
 REQUIRES	+= \
 		glib \
 		$(NULL)
 endif
 
 ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
-EXTRA_LIBS	= \
-		../../purple.lib \
-		$(DIST)/lib/glib.lib \
-		$(DIST)/lib/xml2.lib \
-		$(NULL)
-endif
+EXTRA_LIBS	= ../../purple.lib
 
 ifeq ($(OS_ARCH),WINCE)
 EXTRA_LIBS	+= ws2.lib
 endif
-
+endif
 
 PURPLE_VERSION	= $(PURPLE_MAJOR_VERSION).$(PURPLE_MINOR_VERSION).$(PURPLE_MICRO_VERSION)
 DEFINES		+= -DPACKAGE=\"$(PROTOCOL)\" -DVERSION=\"$(PURPLE_VERSION)\" -DDISPLAY_VERSION=\"$(PURPLE_VERSION)\"

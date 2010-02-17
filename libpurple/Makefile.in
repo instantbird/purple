@@ -65,12 +65,12 @@ endif
 
 ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 EXTRA_LIBS	= \
-		$(DIST)/lib/glib.lib \
-		$(DIST)/lib/xml2.lib \
 		$(DIST)/lib/nss3.lib \
 		$(DIST)/lib/nspr4.lib \
 		$(DIST)/lib/ssl3.lib \
 		$(NULL)
+SHARED_LIBRARY_LIBS += $(foreach lib,glib xml2,../libraries/$(lib)/$(LIB_PREFIX)$(lib).$(LIB_SUFFIX))
+DEFINES += -DGLIB_STATIC_COMPILATION
 
 ifeq ($(OS_ARCH),WINNT)
 EXTRA_LIBS	+= ws2_32.lib
@@ -83,7 +83,8 @@ DSO_LDOPTS	+= -DEF:purple.def
 else
 ifeq ($(OS_ARCH),Darwin)
 # Mac
-EXTRA_LIBS	= -L$(DIST)/lib -lglib -lxml2 -lz
+EXTRA_LIBS	= -liconv -lz
+SHARED_LIBRARY_LIBS += $(foreach lib,glib xml2,../libraries/$(lib)/$(LIB_PREFIX)$(lib).$(LIB_SUFFIX))
 else
 # Other Unix
 EXTRA_LIBS	= $(GLIB_LIBS) -lgmodule-2.0 -lxml2 -lz
@@ -272,7 +273,7 @@ endif
 $(filter-out $(STATIC_PROTO_libs),$(PARALLEL_DIRS_libs)): $(SHARED_LIBRARY)
 
 purple.def: $(EXPORTS) $(GLOBAL_DEPS)
-	echo EXPORTS > purple.def 
+	cat ../libraries/glib/glib.def > purple.def
 	(cd $(srcdir); cat $(EXPORTS)) |egrep '^[a-zA-Z].* \*?w?purple_[a-z_0-9]+\(' |sed -e 's/(.*//' -e 's/.* \*\?//' |sort |uniq >> purple.def
 	(cd $(srcdir); cat $(EXPORTS)) |egrep '^w?purple_[a-z_0-9]+ ?\(' |sed -e 's/(.*//' |sort |uniq >> purple.def
 	cat $(srcdir)/server.h |egrep '^[a-zA-Z].* \*?serv_[a-z_0-9]+\(' |sed -e 's/(.*//' -e 's/.* \*\?//' |sort |uniq >> purple.def

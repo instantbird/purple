@@ -43,7 +43,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= libxml
 LIBRARY_NAME	= xml2
-FORCE_SHARED_LIB= 1
+FORCE_STATIC_LIB= 1
 LIB_IS_C_ONLY	= 1
 # NO_DIST_INSTALL	= 1
 
