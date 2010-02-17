@@ -128,6 +128,28 @@ NS_IMETHODIMP purpleCoreService::Observe(nsISupports *aSubject,
     return NS_OK;
   }
 
+  if (!strcmp(NS_IOSERVICE_GOING_OFFLINE_TOPIC, aTopic)) {
+    purple_savedstatus_set_offline(TRUE);
+    return NotifyObservers(static_cast<purpleICoreService *>(this),
+                           "status-changed");
+  }
+
+  if (!strcmp(NS_IOSERVICE_OFFLINE_STATUS_TOPIC, aTopic)) {
+    if (nsDependentString(aData).EqualsLiteral(NS_IOSERVICE_ONLINE) &&
+        purple_savedstatus_is_offline()) {
+      purple_savedstatus_set_offline(FALSE);
+      // Get the "new" current status message for the notification...
+      const char *message =
+        purple_savedstatus_get_message(purple_savedstatus_get_current());
+      nsString wideMessage;
+      NS_CStringToUTF16(nsDependentCString(message), NS_CSTRING_ENCODING_UTF8,
+                        wideMessage);
+      return NotifyObservers(static_cast<purpleICoreService *>(this),
+                             "status-changed", wideMessage.get());
+    }
+    return NS_OK;
+  }
+
   return NS_ERROR_UNEXPECTED;
 }
 
@@ -184,9 +206,15 @@ NS_IMETHODIMP purpleCoreService::Init()
 
   /* If we are not offline, set the initial status to available */
   if (mAutoLoginStatus != AUTOLOGIN_START_OFFLINE) {
-    nsresult rv = SetStatus(PURPLE_STATUS_AVAILABLE, EmptyCString());
+    nsCOMPtr<nsIIOService> IOService = do_GetIOService(&rv);
     NS_ENSURE_SUCCESS(rv, rv);
+    PRBool offline = PR_TRUE;
+    IOService->GetOffline(&offline);
+    if (!offline)
+      purple_savedstatus_set_offline(FALSE);
   }
+  os->AddObserver(this, NS_IOSERVICE_GOING_OFFLINE_TOPIC, PR_FALSE);
+  os->AddObserver(this, NS_IOSERVICE_OFFLINE_STATUS_TOPIC, PR_FALSE);
 
   /* Connect accounts that should be connected at startup */
   if (mAutoLoginStatus == AUTOLOGIN_ENABLED)
@@ -538,6 +566,12 @@ NS_IMETHODIMP purpleCoreService::Quit()
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = os->RemoveObserver(this, QUIT_APPLICATION_GRANTED_NOTIFICATION);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = os->AddObserver(this, NS_IOSERVICE_GOING_OFFLINE_TOPIC, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = os->AddObserver(this, NS_IOSERVICE_OFFLINE_STATUS_TOPIC, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mPrefBranch2->RemoveObserver(PREF_MESSENGER_ACCOUNTS, this);
@@ -1540,7 +1574,6 @@ nsresult purpleCoreService::SetStatus(PurpleStatusPrimitive aStatus,
   NS_CStringToUTF16(aMessage, NS_CSTRING_ENCODING_UTF8, message);
   return NotifyObservers(static_cast<purpleICoreService *>(this),
                          "status-changed", message.get());
-  return NS_OK;
 }
 
 /* void setStatus (in short aStatus, in AUTF8String aMessage); */

@@ -1179,10 +1179,6 @@ init_libpurple()
   NS_ASSERTION(purpleCoreInit, "purple_core_init failed!!!");
   NS_ENSURE_TRUE(purpleCoreInit, NS_ERROR_FAILURE);
 
-  /* Initialize libpurple offline, purpleCoreService will connect later. */
-  PurpleSavedStatus *status = purple_savedstatus_new(NULL, PURPLE_STATUS_OFFLINE);
-  purple_savedstatus_activate(status);
-
   connect_to_connections_signals();
   connect_to_accounts_signals();
   //  connect_to_blist_signals();
