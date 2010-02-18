@@ -1563,7 +1563,7 @@ nsresult purpleCoreService::SetStatus(PurpleStatusPrimitive aStatus,
                                       const nsACString &aMessage)
 {
   PurpleSavedStatus *status = purple_savedstatus_get_default();
-  NS_ENSURE_ARG_POINTER(status);
+  NS_ENSURE_TRUE(status, NS_ERROR_NOT_INITIALIZED);
 
   if (aStatus != PURPLE_STATUS_UNSET)
     purple_savedstatus_set_type(status, aStatus);
