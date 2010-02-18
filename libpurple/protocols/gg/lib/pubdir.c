@@ -19,6 +19,8 @@
  *  USA.
  */
 
+#include "libgadu.h"
+
 #include <ctype.h>
 #include <errno.h>
 #include <stdarg.h>
@@ -28,8 +30,6 @@
 #ifndef _WIN32
 #include <unistd.h>
 #endif
-
-#include "libgadu.h"
 
 /*
  * gg_register3()

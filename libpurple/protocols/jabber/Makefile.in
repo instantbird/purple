@@ -50,6 +50,9 @@ endif
 
 CSRCS		= \
 		auth.c \
+		auth_digest_md5.c \
+		auth_plain.c \
+		auth_scram.c \
 		buddy.c \
 		bosh.c \
 		chat.c \
