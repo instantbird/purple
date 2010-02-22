@@ -1552,6 +1552,9 @@ NS_IMETHODIMP purpleCoreService::GetCurrentStatusType(PRInt16 *aCurrentStatus)
     case PURPLE_STATUS_AVAILABLE:
       *aCurrentStatus = STATUS_AVAILABLE;
       break;
+    case PURPLE_STATUS_AWAY:
+      *aCurrentStatus = STATUS_AWAY;
+      break;
     //FIXME more types?
     default:
       return NS_ERROR_UNEXPECTED;
@@ -1589,6 +1592,7 @@ NS_IMETHODIMP purpleCoreService::SetStatus(PRInt16 aStatus, const nsACString & a
     MAP_PURPLE_STATUS(OFFLINE);
     MAP_PURPLE_STATUS(UNAVAILABLE);
     MAP_PURPLE_STATUS(AVAILABLE);
+    MAP_PURPLE_STATUS(AWAY);
     MAP_PURPLE_STATUS(UNSET);
 
     default:

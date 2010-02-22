@@ -676,7 +676,7 @@ static PurpleCmdRet away_command_cb(PurpleConversation *conv,
 
   nsCOMPtr<purpleICoreService> pcs =
     do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-  pcs->SetStatus(purpleICoreService::STATUS_UNAVAILABLE, message);
+  pcs->SetStatus(purpleICoreService::STATUS_AWAY, message);
 
   return PURPLE_CMD_RET_OK;
 }
