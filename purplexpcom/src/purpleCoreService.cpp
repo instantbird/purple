@@ -1541,24 +1541,23 @@ NS_IMETHODIMP purpleCoreService::GetCurrentStatusType(PRInt16 *aCurrentStatus)
   PurpleSavedStatus *status = purple_savedstatus_get_current();
   NS_ASSERTION(status, "purple_savedstatus_get_current should never return NULL");
 
+#define MAP_PURPLE_STATUS(aStatus)                       \
+  case PURPLE_STATUS_##aStatus:                          \
+    *aCurrentStatus = STATUS_##aStatus;                  \
+    break
+
   PurpleStatusPrimitive type = purple_savedstatus_get_type(status);
   switch (type) {
-    case PURPLE_STATUS_OFFLINE:
-      *aCurrentStatus = STATUS_OFFLINE;
-      break;
-    case PURPLE_STATUS_UNAVAILABLE:
-      *aCurrentStatus = STATUS_UNAVAILABLE;
-      break;
-    case PURPLE_STATUS_AVAILABLE:
-      *aCurrentStatus = STATUS_AVAILABLE;
-      break;
-    case PURPLE_STATUS_AWAY:
-      *aCurrentStatus = STATUS_AWAY;
-      break;
+    MAP_PURPLE_STATUS(OFFLINE);
+    MAP_PURPLE_STATUS(UNAVAILABLE);
+    MAP_PURPLE_STATUS(AVAILABLE);
+    MAP_PURPLE_STATUS(AWAY);
+    MAP_PURPLE_STATUS(INVISIBLE);
     //FIXME more types?
     default:
       return NS_ERROR_UNEXPECTED;
   }
+#undef MAP_PURPLE_STATUS
   return NS_OK;
 }
 
@@ -1594,10 +1593,12 @@ NS_IMETHODIMP purpleCoreService::SetStatus(PRInt16 aStatus, const nsACString & a
     MAP_PURPLE_STATUS(AVAILABLE);
     MAP_PURPLE_STATUS(AWAY);
     MAP_PURPLE_STATUS(UNSET);
+    MAP_PURPLE_STATUS(INVISIBLE);
 
     default:
       return NS_ERROR_INVALID_ARG;
   }
+#undef MAP_PURPLE_STATUS
 
   return SetStatus(status, aMessage);
 }
