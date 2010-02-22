@@ -667,32 +667,24 @@ static PurpleCmdRet raw_command_cb(PurpleConversation *conv,
   return PURPLE_CMD_RET_OK;
 }
 
+#define IMPL_STATUS_COMMAND(aName, aStatus)                             \
+  static PurpleCmdRet aName##_command_cb(PurpleConversation *conv,      \
+                                         const char *cmd, char **args,  \
+                                         char **error, void *data)      \
+  {                                                                     \
+    nsCString message(args[0]);                                         \
+                                                                        \
+    nsCOMPtr<purpleICoreService> pcs =                                  \
+      do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);                    \
+    pcs->SetStatus(purpleICoreService::STATUS_##aStatus, message);      \
+                                                                        \
+    return PURPLE_CMD_RET_OK;                                           \
+  }
 
-static PurpleCmdRet away_command_cb(PurpleConversation *conv,
-                                    const char *cmd, char **args,
-                                    char **error, void *data)
-{
-  nsCString message(args[0]);
-
-  nsCOMPtr<purpleICoreService> pcs =
-    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-  pcs->SetStatus(purpleICoreService::STATUS_AWAY, message);
-
-  return PURPLE_CMD_RET_OK;
-}
-static PurpleCmdRet back_command_cb(PurpleConversation *conv,
-                                    const char *cmd, char **args,
-                                    char **error, void *data)
-{
-  nsCString message(args[0]);
-
-  nsCOMPtr<purpleICoreService> pcs =
-    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-  pcs->SetStatus(purpleICoreService::STATUS_AVAILABLE, message);
-
-  return PURPLE_CMD_RET_OK;
-}
-
+IMPL_STATUS_COMMAND(back, AVAILABLE)
+IMPL_STATUS_COMMAND(away, AWAY)
+IMPL_STATUS_COMMAND(busy, UNAVAILABLE)
+IMPL_STATUS_COMMAND(offline, OFFLINE)
 
 // Idle ui ops
 static time_t idle_time()
@@ -1189,16 +1181,22 @@ init_libpurple()
                       NULL, raw_command_cb,
                       "raw &lt;message&gt;:  Send a raw message (without escaping or handling of formatting).",
                       NULL);
-  purple_cmd_register("away", "s", PURPLE_CMD_P_HIGH,
-                      (PurpleCmdFlag) (PURPLE_CMD_FLAG_CHAT | PURPLE_CMD_FLAG_IM | PURPLE_CMD_FLAG_ALLOW_WRONG_ARGS),
-                      NULL, away_command_cb,
-                      "away &lt;message&gt;:  Get Away and use |message| as status message.",
-                      NULL);
-  purple_cmd_register("back", "s", PURPLE_CMD_P_HIGH,
-                      (PurpleCmdFlag) (PURPLE_CMD_FLAG_CHAT | PURPLE_CMD_FLAG_IM | PURPLE_CMD_FLAG_ALLOW_WRONG_ARGS),
-                      NULL, back_command_cb,
-                      "back &lt;message&gt;:  Get Back and use |message| as status message.",
-                      NULL);
+
+#define REGISTER_STATUS_COMMAND(aName, aCallback, aDescription) \
+  purple_cmd_register(#aName, "s", PURPLE_CMD_P_HIGH,\
+                      (PurpleCmdFlag) (PURPLE_CMD_FLAG_CHAT | PURPLE_CMD_FLAG_IM | PURPLE_CMD_FLAG_ALLOW_WRONG_ARGS),\
+                      NULL, aCallback, aDescription, NULL)
+
+  REGISTER_STATUS_COMMAND(back, back_command_cb,
+                          "back &lt;message&gt;:  Set the status to Available and use |message| as status message.");
+  REGISTER_STATUS_COMMAND(away, away_command_cb,
+                          "away &lt;message&gt;:  Set the status to Away and use |message| as status message.");
+  REGISTER_STATUS_COMMAND(busy, busy_command_cb,
+                          "busy &lt;message&gt;:  Set the status to Busy and use |message| as status message.");
+  REGISTER_STATUS_COMMAND(dnd, busy_command_cb,
+                          "dnd &lt;message&gt;:  Set the status to Busy and use |message| as status message.");
+  REGISTER_STATUS_COMMAND(offline, offline_command_cb,
+                          "offline:  Set the status to Offline.");
 
   /* Create the purple buddylist. */
   purple_set_blist(purple_blist_new());
