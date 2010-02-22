@@ -21,7 +21,9 @@
  *
  */
 
+#ifndef PURPLE_STATIC_PRPL
 #define PURPLE_STATIC_PRPL
+#endif
 #include "internal.h"
 
 #include <account.h>

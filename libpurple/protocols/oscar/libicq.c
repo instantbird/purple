@@ -24,8 +24,9 @@
  * which contains all the shared implementation code with libaim
  */
 
-
+#ifndef PURPLE_STATIC_PRPL
 #define PURPLE_STATIC_PRPL
+#endif
 #include "oscarcommon.h"
 
 static GHashTable *
