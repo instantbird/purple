@@ -120,7 +120,9 @@ NS_IMETHODIMP purpleCoreService::Observe(nsISupports *aSubject,
                                          const char *aTopic,
                                          const PRUnichar *aData)
 {
-  if(!strcmp(QUIT_APPLICATION_GRANTED_NOTIFICATION, aTopic))
+  NS_ASSERTION(mInitialized, "Observing notification after uninitialization");
+
+  if (!strcmp(QUIT_APPLICATION_GRANTED_NOTIFICATION, aTopic))
     return Quit();
 
   if (!strcmp(NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, aTopic)) {
@@ -568,10 +570,10 @@ NS_IMETHODIMP purpleCoreService::Quit()
   rv = os->RemoveObserver(this, QUIT_APPLICATION_GRANTED_NOTIFICATION);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = os->AddObserver(this, NS_IOSERVICE_GOING_OFFLINE_TOPIC, PR_FALSE);
+  rv = os->RemoveObserver(this, NS_IOSERVICE_GOING_OFFLINE_TOPIC);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = os->AddObserver(this, NS_IOSERVICE_OFFLINE_STATUS_TOPIC, PR_FALSE);
+  rv = os->RemoveObserver(this, NS_IOSERVICE_OFFLINE_STATUS_TOPIC);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mPrefBranch2->RemoveObserver(PREF_MESSENGER_ACCOUNTS, this);
