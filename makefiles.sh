@@ -37,7 +37,7 @@
 add_makefiles "
 purple/Makefile
 purple/locales/Makefile
-purple/libraries/libxml2/Makefile
+purple/libraries/xml2/Makefile
 purple/libraries/glib/Makefile
 purple/libraries/glib/gobject/Makefile
 purple/libpurple/Makefile
