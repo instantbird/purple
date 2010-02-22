@@ -84,11 +84,13 @@ void purple_debug_with_location(PurpleDebugLevel level, const char *category,
 				const char *file, int line,
 				const char *function, const char *format, ...);
 
+#ifndef _MSC_VER
 /* The use of __VA_ARGS__ will cause gcc to annoyingly output this warning:
  *  warning: anonymous variadic macros were introduced in C99
  * Tell it to shut up...
  */
 #pragma GCC system_header
+#endif
 
 /**
  * Outputs debug information.
