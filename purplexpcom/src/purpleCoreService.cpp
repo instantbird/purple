@@ -82,6 +82,7 @@ static PRLogModuleInfo *gPurpleCoreServiceLog = nsnull;
 
 #define PREF_STARTUP_ACTION     "messenger.startup.action"
 #define PREF_MESSENGER_ACCOUNTS "messenger.accounts"
+#define PREF_REPORT_IDLE        "messenger.status.reportIdle"
 
 #define QUIT_APPLICATION_GRANTED_NOTIFICATION "quit-application-granted"
 
@@ -126,8 +127,23 @@ NS_IMETHODIMP purpleCoreService::Observe(nsISupports *aSubject,
     return Quit();
 
   if (!strcmp(NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, aTopic)) {
-    UpdateAccountList();
-    return NS_OK;
+    if (NS_LITERAL_STRING(PREF_MESSENGER_ACCOUNTS).Equals(aData)) {
+      UpdateAccountList();
+      return NS_OK;
+    }
+    else if (NS_LITERAL_STRING(PREF_REPORT_IDLE).Equals(aData)) {
+      PRBool reportIdle;
+      nsresult rv = mPrefBranch2->GetBoolPref(PREF_REPORT_IDLE, &reportIdle);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (reportIdle && !mIdleObserver)
+        return addIdleObserver();
+      else if (!reportIdle && mIdleObserver)
+        return removeIdleObserver();
+
+      return NS_OK;
+    }
+    return NS_ERROR_UNEXPECTED;
   }
 
   if (!strcmp(NS_IOSERVICE_GOING_OFFLINE_TOPIC, aTopic)) {
@@ -221,6 +237,17 @@ NS_IMETHODIMP purpleCoreService::Init()
   /* Connect accounts that should be connected at startup */
   if (mAutoLoginStatus == AUTOLOGIN_ENABLED)
     ProcessAutoLogin();
+
+  /* Initialize idle stuff */
+  PRBool reportIdle;
+  rv = mPrefBranch2->GetBoolPref(PREF_REPORT_IDLE, &reportIdle);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (reportIdle) {
+    rv = addIdleObserver();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  mPrefBranch2->AddObserver(PREF_REPORT_IDLE, this, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   /* Observe for changes in the order of accounts */
   rv = mPrefBranch2->AddObserver(PREF_MESSENGER_ACCOUNTS, this, PR_FALSE);
@@ -578,6 +605,14 @@ NS_IMETHODIMP purpleCoreService::Quit()
 
   rv = mPrefBranch2->RemoveObserver(PREF_MESSENGER_ACCOUNTS, this);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mPrefBranch2->RemoveObserver(PREF_REPORT_IDLE, this);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (mIdleObserver) {
+    rv = removeIdleObserver();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   os->NotifyObservers(static_cast<purpleICoreService *>(this),
                       "purple-quit", nsnull);
@@ -1603,4 +1638,21 @@ NS_IMETHODIMP purpleCoreService::SetStatus(PRInt16 aStatus, const nsACString & a
 #undef MAP_PURPLE_STATUS
 
   return SetStatus(status, aMessage);
+}
+
+nsresult purpleCoreService::addIdleObserver()
+{
+  NS_ENSURE_TRUE(!mIdleObserver, NS_ERROR_ALREADY_INITIALIZED);
+
+  mIdleObserver = new purpleIdleObserver();
+  return NS_OK;
+}
+
+nsresult purpleCoreService::removeIdleObserver()
+{
+  NS_ENSURE_TRUE(mIdleObserver, NS_ERROR_NOT_INITIALIZED);
+
+  mIdleObserver->unInit();
+  mIdleObserver = nsnull;
+  return NS_OK;
 }

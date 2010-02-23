@@ -168,7 +168,9 @@ interface purpleICoreService: nsISupports {
   readonly attribute AUTF8String currentStatusMessage;
   readonly attribute short currentStatusType;
 
-  // only works with STATUS_OFFLINE, STATUS_UNAVAILABLE, STATUS_AWAY,
-  // STATUS_AVAILABLE and STATUS_INVISIBLE.
+  // Only works with STATUS_OFFLINE, STATUS_UNAVAILABLE, STATUS_AWAY,
+  // STATUS_AVAILABLE and STATUS_INVISIBLE.  When called with the
+  // status type STATUS_UNSET, only the status message will be
+  // changed.
   void setStatus(in short aStatus, in AUTF8String aMessage);
 };

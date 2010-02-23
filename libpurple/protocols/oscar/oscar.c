@@ -1560,7 +1560,7 @@ oscar_login(PurpleAccount *account)
 	od->use_ssl = purple_account_get_bool(account, "use_ssl", OSCAR_DEFAULT_USE_SSL);
 
 	/* Connect to core Purple signals */
-	purple_prefs_connect_callback(gc, "/purple/away/idle_reporting", idle_reporting_pref_cb, gc);
+	purple_prefs_connect_callback(gc, "/messenger/status/reportIdle", idle_reporting_pref_cb, gc);
 	purple_prefs_connect_callback(gc, "/plugins/prpl/oscar/recent_buddies", recent_buddies_pref_cb, gc);
 
 	/*
@@ -5338,8 +5338,7 @@ static int purple_ssi_parselist(OscarData *od, FlapConnection *conn, FlapFrame *
 			const char *idle_reporting_pref;
 			gboolean report_idle;
 
-			idle_reporting_pref = purple_prefs_get_string("/purple/away/idle_reporting");
-			report_idle = strcmp(idle_reporting_pref, "none") != 0;
+			report_idle = purple_prefs_get_bool("/messenger/status/reportIdle");
 
 			if (report_idle)
 				aim_ssi_setpresence(od, tmp | AIM_SSI_PRESENCE_FLAG_SHOWIDLE);

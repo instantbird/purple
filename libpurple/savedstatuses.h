@@ -134,8 +134,10 @@ gboolean purple_savedstatus_is_idleaway(void);
  * @param idleaway TRUE if accounts should be switched to use the
  *                 idle-away saved status.  FALSE if they should
  *                 be switched to use the default status.
+ * @param message The away message to use for the idleaway status if
+ *                the current status has no status message.
  */
-void purple_savedstatus_set_idleaway(gboolean idleaway);
+void purple_savedstatus_set_idleaway(gboolean idleaway, const char *message);
 
 /**
  * Return the type of a given saved status.

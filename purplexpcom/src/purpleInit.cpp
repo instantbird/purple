@@ -48,7 +48,6 @@
 #include <libpurple/eventloop.h>
 #include <libpurple/ft.h>
 #include <libpurple/gettext.h>
-#include <libpurple/idle.h>
 #include <libpurple/log.h>
 #include <libpurple/notify.h>
 #include <libpurple/prefs.h>
@@ -686,29 +685,6 @@ IMPL_STATUS_COMMAND(away, AWAY)
 IMPL_STATUS_COMMAND(busy, UNAVAILABLE)
 IMPL_STATUS_COMMAND(offline, OFFLINE)
 
-// Idle ui ops
-static time_t idle_time()
-{
-  nsCOMPtr<nsIIdleService> idleService =
-    do_GetService("@mozilla.org/widget/idleservice;1");
-  NS_ENSURE_TRUE(idleService, 0);
-
-  PRUint32 idleTime;
-  nsresult rv = idleService->GetIdleTime(&idleTime);
-  NS_ENSURE_SUCCESS(rv, 0);
-
-  LOG(("IdleTime is %u seconds\n", idleTime / 1000));
-  return idleTime / 1000;
-}
-
-static PurpleIdleUiOps idle_uiops =
-{
-  idle_time,
-
-  /* padding */
-  NULL, NULL, NULL, NULL
-};
-
 // GetText ui ops
 PurpleGetTextUiOps gettext_uiops = {
   purpleGetText::GetText,
@@ -1153,7 +1129,6 @@ init_libpurple()
   purple_connections_set_ui_ops(&connection_uiops);
   purple_accounts_set_ui_ops(&account_uiops);
   purple_blist_set_ui_ops(&blist_uiops);
-  purple_idle_set_ui_ops(&idle_uiops);
   purple_debug_set_ui_ops(&debugconsoleuiops);
   purple_dnsquery_set_ui_ops(&dnsUiOps);
 

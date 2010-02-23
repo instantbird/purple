@@ -39,6 +39,7 @@
 #include "purpleProxy.h"
 #include "purpleProxyInfo.h"
 #include "purpleAccount.h"
+#include "purpleIdle.h"
 #include "purpleICoreService.h"
 #include "purpleConversation.h"
 #include<nsIMutableArray.h>
@@ -93,6 +94,8 @@ private:
   inline void UnInitProtocols();
   nsresult GetAccountById(PRUint32 aAccountId, purpleAccount **aResult);
   nsresult SetStatus(PurpleStatusPrimitive aStatus, const nsACString &aMessage);
+  nsresult addIdleObserver();
+  nsresult removeIdleObserver();
 
 protected:
   PRBool mInitialized;
@@ -105,6 +108,7 @@ protected:
   nsInterfaceHashtable<nsUint32HashKey, purpleBuddy> mBuddiesById;
   nsInterfaceHashtable<nsUint32HashKey, purpleTag> mTagById;
   nsCOMPtr<purpleIProxyInfo> mGlobalProxy;
+  nsCOMPtr<purpleIdleObserver> mIdleObserver;
 };
 
 #define PURPLE_CORE_SERVICE_CID \

@@ -319,9 +319,6 @@ purple_prefs_init(void)
 
 	/* Away */
 	purple_prefs_add_none("/purple/away");
-	purple_prefs_add_string("/purple/away/idle_reporting", "system");
-	purple_prefs_add_bool("/purple/away/away_when_idle", TRUE);
-	purple_prefs_add_int("/purple/away/mins_before_away", 5);
 	purple_prefs_add_string("/purple/away/auto_reply", "awayidle");
 
 	/* Buddies */

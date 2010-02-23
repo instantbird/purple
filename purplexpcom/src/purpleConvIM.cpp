@@ -40,6 +40,7 @@
 #include "purpleCoreService.h"
 
 #include <nsCOMPtr.h>
+#include <nsIObserverService.h>
 #include <nsServiceManagerUtils.h>
 #include <nsStringAPI.h>
 #include <nsXPCOM.h>
@@ -95,6 +96,15 @@ NS_IMETHODIMP purpleConvIM::SendMsg(const nsACString& aMsg)
   PromiseFlatCString flatMsg(aMsg);
   purple_conv_im_send(mConv->u.im, flatMsg.get());
   LOG(("IM message sent: %s", flatMsg.get()));
+
+  nsresult rv;
+  nsCOMPtr<nsIObserverService> os =
+    do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = os->NotifyObservers(static_cast<purpleIConvIM *>(this), "im-sent",
+                           NS_ConvertUTF8toUTF16(aMsg).get());
+  NS_ENSURE_SUCCESS(rv, rv);
+
   mSentTyping = PR_FALSE;
   return NS_OK;
 }

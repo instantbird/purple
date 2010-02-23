@@ -129,7 +129,7 @@ purple_savedstatus_is_idleaway()
 }
 
 void
-purple_savedstatus_set_idleaway(gboolean idleaway)
+purple_savedstatus_set_idleaway(gboolean idleaway, const char *message)
 {
 	GList *accounts, *node;
 	PurpleSavedStatus *old, *saved_status;
@@ -139,13 +139,23 @@ purple_savedstatus_set_idleaway(gboolean idleaway)
 		return;
 
 	old = purple_savedstatus_get_current();
-	saved_status = idleaway ? purple_savedstatus_get_idleaway()
-			: purple_savedstatus_get_default();
 	is_idleaway = idleaway;
 
-	if (idleaway && (purple_savedstatus_get_type(old) != PURPLE_STATUS_AVAILABLE))
+	if (idleaway && (purple_savedstatus_get_type(old) == PURPLE_STATUS_AWAY))
 		/* Our global status is already "away," so don't change anything */
 		return;
+
+	if (idleaway) {
+		saved_status = purple_savedstatus_get_idleaway();
+		/* Use the message provided as parameter only if the
+		   current status has no status message. */
+		const char *new_message = purple_savedstatus_get_message(old);
+		if (new_message == NULL)
+			new_message = message;
+		purple_savedstatus_set_message(saved_status, new_message);
+	}
+	else
+		saved_status = purple_savedstatus_get_default();
 
 	accounts = purple_accounts_get_all_active();
 	for (node = accounts; node != NULL; node = node->next)
@@ -214,7 +224,7 @@ purple_savedstatus_activate(PurpleSavedStatus *saved_status)
 	g_list_free(accounts);
 
 	if (purple_savedstatus_is_idleaway()) {
-		purple_savedstatus_set_idleaway(FALSE);
+		purple_savedstatus_set_idleaway(FALSE, NULL);
 	}
 }
 

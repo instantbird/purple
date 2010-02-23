@@ -91,6 +91,7 @@ CPPSRCS		= \
 		purpleDebug.cpp \
 		purpleDNS.cpp \
 		purpleInit.cpp \
+		purpleIdle.cpp \
 		purpleGetText.cpp \
 		purpleGListEnumerator.cpp \
 		purpleLog.cpp \
