@@ -146,10 +146,12 @@ purple_savedstatus_set_idleaway(gboolean idleaway, const char *message)
 		return;
 
 	if (idleaway) {
+		const char *new_message;
+
 		saved_status = purple_savedstatus_get_idleaway();
 		/* Use the message provided as parameter only if the
 		   current status has no status message. */
-		const char *new_message = purple_savedstatus_get_message(old);
+		new_message = purple_savedstatus_get_message(old);
 		if (new_message == NULL)
 			new_message = message;
 		purple_savedstatus_set_message(saved_status, new_message);
