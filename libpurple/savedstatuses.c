@@ -90,12 +90,18 @@ purple_savedstatus_set_message(PurpleSavedStatus *status, const char *message)
 PurpleSavedStatus *
 purple_savedstatus_get_current(void)
 {
+	PurpleSavedStatus *default_status;
+
 	if (purple_savedstatus_is_offline())
 		return purple_savedstatus_get_offline();
-	if (purple_savedstatus_is_idleaway())
+
+	/* Return the idle_away status only if the current status is not offline. */
+	default_status = purple_savedstatus_get_default();
+	if (purple_savedstatus_is_idleaway() &&
+	    purple_savedstatus_get_type(default_status) != PURPLE_STATUS_OFFLINE)
 		return purple_savedstatus_get_idleaway();
-	else
-		return purple_savedstatus_get_default();
+
+	return default_status;
 }
 
 PurpleSavedStatus *

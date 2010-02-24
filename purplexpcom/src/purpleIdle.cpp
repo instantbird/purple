@@ -195,6 +195,12 @@ purpleIdleObserver::CheckIdle()
   }
 
   if (changedStatus) {
+    // Don't dispatch a status-changed notification about an idleaway
+    // change if we are offline.
+    PurpleSavedStatus *currentStatus = purple_savedstatus_get_current();
+    if (purple_savedstatus_get_type(currentStatus) == PURPLE_STATUS_OFFLINE)
+      return;
+
     nsCOMPtr<nsIObserverService> observerService =
       do_GetService("@mozilla.org/observer-service;1");
     NS_ENSURE_TRUE(observerService, );
@@ -205,8 +211,7 @@ purpleIdleObserver::CheckIdle()
     NS_ENSURE_TRUE(pcs, );
 
     // Get the "new" current status message for the notification...
-    const char *message =
-      purple_savedstatus_get_message(purple_savedstatus_get_current());
+    const char *message = purple_savedstatus_get_message(currentStatus);
     nsString wideMessage;
     NS_CStringToUTF16(nsDependentCString(message), NS_CSTRING_ENCODING_UTF8,
                       wideMessage);

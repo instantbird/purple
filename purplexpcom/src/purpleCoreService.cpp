@@ -1570,20 +1570,19 @@ NS_IMETHODIMP purpleCoreService::GetCurrentStatusMessage(nsACString & aCurrentSt
 /* readonly attribute short currentStatusType; */
 NS_IMETHODIMP purpleCoreService::GetCurrentStatusType(PRInt16 *aCurrentStatus)
 {
-  if (purple_savedstatus_is_idleaway()) {
+  PurpleSavedStatus *status = purple_savedstatus_get_current();
+  NS_ASSERTION(status, "purple_savedstatus_get_current should never return NULL");
+  PurpleStatusPrimitive type = purple_savedstatus_get_type(status);
+  if (purple_savedstatus_is_idleaway() && type != PURPLE_STATUS_OFFLINE) {
     *aCurrentStatus = STATUS_IDLE;
     return NS_OK;
   }
-
-  PurpleSavedStatus *status = purple_savedstatus_get_current();
-  NS_ASSERTION(status, "purple_savedstatus_get_current should never return NULL");
 
 #define MAP_PURPLE_STATUS(aStatus)                       \
   case PURPLE_STATUS_##aStatus:                          \
     *aCurrentStatus = STATUS_##aStatus;                  \
     break
 
-  PurpleStatusPrimitive type = purple_savedstatus_get_type(status);
   switch (type) {
     MAP_PURPLE_STATUS(OFFLINE);
     MAP_PURPLE_STATUS(UNAVAILABLE);
