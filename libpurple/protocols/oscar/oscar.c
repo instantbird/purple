@@ -1428,15 +1428,13 @@ idle_reporting_pref_cb(const char *name, PurplePrefType type,
 {
 	PurpleConnection *gc;
 	OscarData *od;
-	gboolean report_idle;
 	guint32 presence;
 
 	gc = data;
 	od = purple_connection_get_protocol_data(gc);
-	report_idle = strcmp((const char *)value, "none") != 0;
 	presence = aim_ssi_getpresence(od->ssi.local);
 
-	if (report_idle)
+	if (value)
 		aim_ssi_setpresence(od, presence | AIM_SSI_PRESENCE_FLAG_SHOWIDLE);
 	else
 		aim_ssi_setpresence(od, presence & ~AIM_SSI_PRESENCE_FLAG_SHOWIDLE);
