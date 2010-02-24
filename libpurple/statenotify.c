@@ -95,11 +95,11 @@ buddy_signoff_cb(PurpleBuddy *buddy, void *data)
 }
 
 static void
-account_signed_off_cb(PurpleConnection *gc, gpointer event)
+account_signing_off_cb(PurpleConnection *gc, gpointer event)
 {
 	GList *iter;
 
-	if (!gc || !gc->account)
+	if (!gc || !gc->account || purple_connection_get_state(gc) == PURPLE_CONNECTING)
 		return;
 
 	for (iter = purple_get_conversations(); iter; iter = iter->next)
@@ -152,8 +152,8 @@ plugin_load(PurplePlugin *plugin)
 	purple_signal_connect(blist_handle, "buddy-signed-off", plugin,
 	                    PURPLE_CALLBACK(buddy_signoff_cb), NULL);
 
-	purple_signal_connect(purple_connections_get_handle(), "signed-off", plugin,
-	                      G_CALLBACK(account_signed_off_cb), NULL);
+	purple_signal_connect(purple_connections_get_handle(), "signing-off", plugin,
+	                      G_CALLBACK(account_signing_off_cb), NULL);
 
 	return TRUE;
 }
