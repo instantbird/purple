@@ -523,6 +523,18 @@ static void buddy_removed(PurpleBuddy *buddy, void *null)
   pcs->PurpleBuddyRemoved(buddy);
 }
 
+static void buddy_removed_from_group(PurpleBuddy *buddy, void *null)
+{
+  // This is the buddy-removed-from-group purple signal (added for
+  // Instantbird).
+  // It is fired when a buddy is removed permanenty from a group but
+  // not from the buddy list. (ie when the buddy has been moved)
+
+  nsCOMPtr<purpleICoreService> pcs =
+    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
+  pcs->FireBuddyEvent(buddy, "buddy-removed-from-group");
+}
+
 static void buddy_away(PurpleBuddy *aBuddy,
                        PurpleStatus *old_status, PurpleStatus *status)
 {
@@ -558,6 +570,7 @@ connect_to_blist_signals()
   PURPLE_CONNECT_BUDDY_SIGNAL("buddy-signed-on");
   PURPLE_CONNECT_BUDDY_SIGNAL("buddy-signed-off");
   PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER("buddy-removed", buddy_removed);
+  PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER("buddy-removed-from-group", buddy_removed_from_group);
   PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER("buddy-status-changed", buddy_away);
   PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER("buddy-idle-changed", buddy_idle);
   PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER("blist-node-aliased", buddy_alias);
