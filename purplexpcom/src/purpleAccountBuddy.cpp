@@ -127,6 +127,45 @@ nsresult purpleAccountBuddy::Store(PRInt32 aBuddyId)
   return statement->Execute();
 }
 
+nsresult purpleAccountBuddy::UnStore(PRInt32 aBuddyId)
+{
+  nsCString key;
+  nsresult rv = mAccount->GetId(key);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 accountId;
+  PRInt32 count = PR_sscanf(key.get(), ACCOUNT_KEY "%u", &accountId);
+  NS_ENSURE_TRUE(count == 1, NS_ERROR_UNEXPECTED);
+
+  nsCOMPtr<purpleITag> tag;
+  rv = GetTag(getter_AddRefs(tag));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 groupId;
+  rv = tag->GetId(&groupId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  purpleStorage *storageInstance = purpleStorage::GetInstance();
+  mozIStorageConnection *DBConn = storageInstance->GetConnection();
+  nsCOMPtr<mozIStorageStatement> statement;
+  rv = DBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "DELETE FROM account_buddy WHERE account_id = ?1 AND buddy_id = ?2 AND tag_id = ?3"),
+    getter_AddRefs(statement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = statement->BindInt32Parameter(0, accountId);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = statement->BindInt32Parameter(1, aBuddyId);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = statement->BindInt32Parameter(2, groupId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  LOG(("purpleAccountBuddy::UnStore(buddyId = %i, groupId = %i)",
+       aBuddyId, groupId));
+
+  return statement->Execute();
+}
+
 /* readonly attribute purpleIBuddy buddy; */
 NS_IMETHODIMP purpleAccountBuddy::GetBuddy(purpleIBuddy * *aBuddy)
 {
@@ -439,5 +478,16 @@ NS_IMETHODIMP purpleAccountBuddy::GetLogs(nsISimpleEnumerator **aResult)
                    purpleTypeToInterface<purpleLog, purpleILog, PurpleLog>,
                    (void (*)(void*))g_list_free, logs);
   NS_ADDREF(*aResult = enumerator);
+  return NS_OK;
+}
+
+/* void remove (); */
+NS_IMETHODIMP purpleAccountBuddy::Remove()
+{
+  NS_ENSURE_TRUE(mBuddy, NS_ERROR_NOT_INITIALIZED);
+
+  purple_account_remove_buddy(mBuddy->account, mBuddy,
+                              purple_buddy_get_group(mBuddy));
+  purple_blist_remove_buddy(mBuddy);
   return NS_OK;
 }

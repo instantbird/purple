@@ -35,6 +35,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef PURPLE_CORE_SERVICE_H_
+#define PURPLE_CORE_SERVICE_H_
+
 #include "purpleProtocol.h"
 #include "purpleProxy.h"
 #include "purpleProxyInfo.h"
@@ -122,3 +125,5 @@ protected:
 
 #define NATIVE_PCS(aPcs) \
   static_cast<purpleCoreService *>(aPcs.get())
+
+#endif /* !PURPLE_CORE_SERVICE_H_ */

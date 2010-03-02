@@ -61,6 +61,8 @@ public:
 
   purpleBuddy();
   nsresult Init(PurpleBuddy *aBuddy);
+  void UnInit() { mId = 0; }
+  nsresult UnStore();
   nsresult load(PurpleBuddy *aBuddy, purpleIAccount *aAccount,
                 PRUint32 aId, purpleTag *aTag);
   nsresult AddAccount(PurpleBuddy *aBuddy);
@@ -68,11 +70,13 @@ public:
                                  PurpleBuddy *aBuddy,
                                  purpleTag *aTag);
   nsresult RemoveAccount(PurpleBuddy *aBuddy);
+  PRInt32 GetAccountCount() { return mBuddies.Count(); }
   nsresult UpdateServerAlias(const char *aAlias);
   PRUint32 getId() { return mId; }
 
 private:
   ~purpleBuddy();
+  nsresult GetContactId(PRInt64 *aContactId);
 
 protected:
   /* additional members */

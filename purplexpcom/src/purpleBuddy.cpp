@@ -55,9 +55,9 @@ static PRLogModuleInfo *gPurpleBuddyLog = nsnull;
 #define LOG(args) PR_LOG(gPurpleBuddyLog, PR_LOG_DEBUG, args)
 
 purpleBuddy::purpleBuddy()
+  : mId(0)
 {
   /* member initializers and constructor code */
-  mId = 0;
 #ifdef PR_LOGGING
   if (!gPurpleBuddyLog)
     gPurpleBuddyLog = PR_NewLogModule("purpleBuddy");
@@ -124,6 +124,61 @@ nsresult purpleBuddy::Init(PurpleBuddy *aBuddy)
   return AddAccount(aBuddy);
 }
 
+nsresult purpleBuddy::UnStore()
+{
+  PURPLE_ENSURE_INIT(mId);
+
+  LOG(("purpleBuddy::UnStore(mId = %i)", mId));
+
+  purpleStorage *storageInstance = purpleStorage::GetInstance();
+  mozIStorageConnection *DBConn = storageInstance->GetConnection();
+
+  /* Get the contact_id if one exists for this buddy */
+  PRInt64 contactId;
+  nsresult rv = GetContactId(&contactId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (contactId) {
+    nsCOMPtr<mozIStorageStatement> statement;
+    rv = DBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT COUNT(*) from buddies WHERE contact_id = ?1"),
+      getter_AddRefs(statement));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = statement->BindInt32Parameter(0, contactId);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRBool ok = PR_FALSE;
+    rv = statement->ExecuteStep(&ok);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (ok && statement->AsInt32(0) == 1) {
+      // The contact is not associated to any other buddy, remove it.
+      nsresult rv = DBConn->CreateStatement(NS_LITERAL_CSTRING(
+        "DELETE FROM contacts WHERE id = ?1"),
+        getter_AddRefs(statement));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = statement->BindInt32Parameter(0, contactId);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = statement->Execute();
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+
+  nsCOMPtr<mozIStorageStatement> statement;
+  rv = DBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "DELETE FROM buddies WHERE id = ?1"),
+    getter_AddRefs(statement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = statement->BindInt32Parameter(0, mId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return statement->Execute();
+}
+
 purpleAccountBuddy *purpleBuddy::AddAccount(purpleIAccount *aAccount,
                                             PurpleBuddy *aBuddy,
                                             purpleTag *aTag)
@@ -157,6 +212,7 @@ nsresult purpleBuddy::RemoveAccount(PurpleBuddy *aBuddy)
 
   for (PRInt32 i = 0; i < mBuddies.Count(); ++i) {
     if (mBuddies[i]->GetBuddy() == aBuddy) {
+      mBuddies[i]->UnStore(mId);
       mBuddies[i]->Uninit();
       mBuddies.RemoveObjectAt(i);
       return NS_OK;
@@ -232,6 +288,28 @@ NS_IMETHODIMP purpleBuddy::GetTooltipInfo(nsISimpleEnumerator** aTooltipInfo)
   return mBuddies[0]->GetTooltipInfo(aTooltipInfo);
 }
 
+nsresult purpleBuddy::GetContactId(PRInt64 *aContactId)
+{
+  purpleStorage *storageInstance = purpleStorage::GetInstance();
+  NS_ENSURE_TRUE(storageInstance, NS_ERROR_OUT_OF_MEMORY);
+
+  mozIStorageStatement *statement = storageInstance->mGetContactIdForBuddy;
+  mozStorageStatementScoper scoper(statement);
+
+  nsresult rv = statement->BindInt32Parameter(0, mId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool contactExists = PR_FALSE;
+  rv = statement->ExecuteStep(&contactExists);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aContactId = 0;
+  if (contactExists)
+    *aContactId = statement->AsInt64(0);
+
+  return NS_OK;
+}
+
 /* attribute AUTF8String alias; */
 NS_IMETHODIMP purpleBuddy::GetAlias(nsACString& aAlias)
 {
@@ -260,22 +338,13 @@ NS_IMETHODIMP purpleBuddy::SetAlias(const nsACString& aAlias)
   NS_ENSURE_TRUE(DBConn, NS_ERROR_UNEXPECTED);
 
   /* Get the contact_id if one already exists for this buddy */
-  nsCOMPtr<mozIStorageStatement> statement;
-  nsresult rv = DBConn->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT contact_id FROM buddies WHERE id = ?1"),
-    getter_AddRefs(statement));
+  PRInt64 contactId;
+  nsresult rv = GetContactId(&contactId);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = statement->BindInt32Parameter(0, mId);
-  NS_ENSURE_SUCCESS(rv, rv);
-  PRBool contactExists = PR_FALSE;
-  rv = statement->ExecuteStep(&contactExists);
-  NS_ENSURE_SUCCESS(rv, rv);
-  PRInt64 contactId = 0;
-  if (contactExists)
-    contactId = statement->AsInt64(0);
 
   if (contactId) {
     /* The contact exists, update the alias */
+    nsCOMPtr<mozIStorageStatement> statement;
     rv = DBConn->CreateStatement(NS_LITERAL_CSTRING(
       "UPDATE contacts SET alias = ?1 WHERE id = ?2"),
       getter_AddRefs(statement));
@@ -292,6 +361,7 @@ NS_IMETHODIMP purpleBuddy::SetAlias(const nsACString& aAlias)
   /* This is in 2 steps, so use a transaction */
   mozStorageTransaction transaction(DBConn, PR_FALSE);
 
+  nsCOMPtr<mozIStorageStatement> statement;
   rv = DBConn->CreateStatement(NS_LITERAL_CSTRING(
     "INSERT INTO contacts (alias) VALUES(?1)"),
     getter_AddRefs(statement));

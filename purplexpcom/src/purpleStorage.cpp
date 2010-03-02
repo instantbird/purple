@@ -152,6 +152,9 @@ nsresult purpleStorage::Init()
   CREATE_STATEMENT(mInsertAccountBuddy,
                    "INSERT INTO account_buddy (account_id, buddy_id, tag_id) VALUES(?1, ?2, ?3)");
 
+  CREATE_STATEMENT(mGetContactIdForBuddy,
+                   "SELECT contact_id FROM buddies WHERE id = ?1");
+
   CREATE_STATEMENT(mLastId, "SELECT last_insert_rowid()");
 
   return NS_OK;

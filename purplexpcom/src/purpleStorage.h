@@ -56,6 +56,7 @@ class purpleStorage
   nsCOMPtr<mozIStorageStatement> mInsertBuddy;
   nsCOMPtr<mozIStorageStatement> mUpdateBuddyServerAlias;
   nsCOMPtr<mozIStorageStatement> mInsertAccountBuddy;
+  nsCOMPtr<mozIStorageStatement> mGetContactIdForBuddy;
   nsCOMPtr<mozIStorageStatement> mLastId;
 
  private:

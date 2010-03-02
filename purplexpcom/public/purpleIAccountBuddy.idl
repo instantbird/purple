@@ -73,4 +73,7 @@ interface purpleIAccountBuddy: nsISupports {
   // enumerator of purpleILog
   // Warning: this will leak if not fully enumerated
   nsISimpleEnumerator getLogs();
+
+  // remove the buddy from the buddy list.
+  void remove();
 };

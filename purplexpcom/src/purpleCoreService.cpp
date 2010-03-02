@@ -750,10 +750,26 @@ NS_IMETHODIMP purpleCoreService::AddBuddy(purpleIAccount *aAccount,
 /* [noscript] void purpleBuddyRemoved (in PurpleNativeBuddy aBuddy); */
 NS_IMETHODIMP purpleCoreService::PurpleBuddyRemoved(PurpleBuddy *aBuddy)
 {
+  if (mQuitting)
+    return NS_OK;
+
   purpleBuddy *buddy = (purpleBuddy *)aBuddy->node.ui_data;
   NS_ENSURE_TRUE(buddy, NS_ERROR_FAILURE);
 
-  return buddy->RemoveAccount(aBuddy);
+  nsresult rv = buddy->RemoveAccount(aBuddy);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!buddy->GetAccountCount()) {
+    // If we removed the last account, we need to remove the whole purpleBuddy
+    rv = buddy->UnStore();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRUint32 id = buddy->getId();
+    buddy->UnInit();
+    mBuddiesById.Remove(id);
+  }
+
+  return NS_OK;
 }
 
 nsresult purpleCoreService::storeTag(nsCString &aGroupName, PurpleGroup *aGroup,

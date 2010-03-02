@@ -61,6 +61,7 @@ public:
   void Init(purpleIAccount *aAccount, PurpleBuddy *aBuddy, purpleTag *aTag);
   void Uninit();
   nsresult Store(PRInt32 aBuddyId);
+  nsresult UnStore(PRInt32 aBuddyId);
   PurpleBuddy *GetBuddy() { return mBuddy; }
   void SetBuddyAlias(const nsCString& aBuddyAlias);
 
