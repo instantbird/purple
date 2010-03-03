@@ -1621,7 +1621,8 @@ nsresult purpleCoreService::SetStatus(PurpleStatusPrimitive aStatus,
 
   if (aStatus != PURPLE_STATUS_UNSET)
     purple_savedstatus_set_type(status, aStatus);
-  purple_savedstatus_set_message(status, PromiseFlatCString(aMessage).get());
+  if (aStatus != PURPLE_STATUS_OFFLINE)
+    purple_savedstatus_set_message(status, PromiseFlatCString(aMessage).get());
   purple_savedstatus_activate(status);
 
   nsString message;
