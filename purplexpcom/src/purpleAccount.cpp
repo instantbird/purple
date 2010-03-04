@@ -366,6 +366,7 @@ nsresult purpleAccount::create(const nsACString& aName, purpleIProtocol *aPrpl,
   mProxy->SetType(purpleIProxyInfo::useGlobal);
 
   SetFirstConnectionState(FIRST_CONNECTION_SET);
+  mConnectionErrorReason = (PurpleConnectionError)ERROR_MISSING_PASSWORD;
   return NS_OK;
 }
 
@@ -481,6 +482,17 @@ nsresult purpleAccount::load(const nsCString& aKey)
     LOG(("password Set\n"));
   }
 
+  if (pass.IsEmpty()) {
+    PRBool noPassword = PR_TRUE;
+    PRBool passwordOptional = PR_TRUE;
+    if (NS_SUCCEEDED(mProtocol->GetNoPassword(&noPassword)) &&
+        NS_SUCCEEDED(mProtocol->GetPasswordOptional(&passwordOptional)) &&
+        !noPassword && !passwordOptional) {
+      mConnectionErrorReason = (PurpleConnectionError)ERROR_MISSING_PASSWORD;
+      LOG(("missing password\n"));
+    }
+  }
+
   /* Load the rememberPassword pref */
   PRBool rememberPass;
   rv = mPrefBranch->GetBoolPref(PREF_REMEMBER_PASSWORD, &rememberPass);
@@ -583,9 +595,10 @@ nsresult purpleAccount::checkAutoLogin()
 {
   PURPLE_ENSURE_INIT(INIT_CONDITION);
 
-  /* If we don't have a valid protocol, we can't autologin so don't
-     bother checking the value of the pref */
-  if (!mHasValidProtocol)
+  /* If we don't have a valid protocol or the passwordi is missing,
+     we can't autologin so don't bother checking the value of the pref */
+  if (!mHasValidProtocol ||
+      mConnectionErrorReason == (PurpleConnectionError)ERROR_MISSING_PASSWORD)
     return NS_OK;
 
   /* We don't want to connect an already connecting account. */
@@ -1067,7 +1080,19 @@ NS_IMETHODIMP purpleAccount::SetPassword(const nsACString& aPassword)
     purple_account_set_password(mAccount, pass);
   SetStringPref(PREF_PASSWORD, pass);
 
-  return NS_OK;
+  if (mHasValidProtocol && aPassword.IsEmpty()) {
+    PRBool noPassword = PR_TRUE;
+    PRBool passwordOptional = PR_TRUE;
+    if (NS_SUCCEEDED(mProtocol->GetNoPassword(&noPassword)) &&
+        NS_SUCCEEDED(mProtocol->GetPasswordOptional(&passwordOptional)) &&
+        !noPassword && !passwordOptional)
+      mConnectionErrorReason = (PurpleConnectionError)ERROR_MISSING_PASSWORD;
+  }
+  else if (mConnectionErrorReason == (PurpleConnectionError)ERROR_MISSING_PASSWORD &&
+           !aPassword.IsEmpty())
+    mConnectionErrorReason = (PurpleConnectionError)NO_ERROR;
+
+  return sendUpdateNotification();
 }
 
 /* attribute boolean rememberPassword; */

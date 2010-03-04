@@ -172,6 +172,7 @@ interface purpleIAccount: nsISupports {
   // codes added in libpurple later
   const short ERROR_UNKNOWN_PRPL = 42;
   const short ERROR_CRASHED = 43;
+  const short ERROR_MISSING_PASSWORD = 44;
 
   /* A message describing the connection error */
   readonly attribute AUTF8String connectionErrorMessage;
