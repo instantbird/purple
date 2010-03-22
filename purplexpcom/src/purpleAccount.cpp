@@ -366,7 +366,7 @@ nsresult purpleAccount::create(const nsACString& aName, purpleIProtocol *aPrpl,
   mProxy->SetType(purpleIProxyInfo::useGlobal);
 
   SetFirstConnectionState(FIRST_CONNECTION_SET);
-  mConnectionErrorReason = (PurpleConnectionError)ERROR_MISSING_PASSWORD;
+  SetMissingPasswordIfRequired();
   return NS_OK;
 }
 
@@ -482,16 +482,8 @@ nsresult purpleAccount::load(const nsCString& aKey)
     LOG(("password Set\n"));
   }
 
-  if (pass.IsEmpty()) {
-    PRBool noPassword = PR_TRUE;
-    PRBool passwordOptional = PR_TRUE;
-    if (NS_SUCCEEDED(mProtocol->GetNoPassword(&noPassword)) &&
-        NS_SUCCEEDED(mProtocol->GetPasswordOptional(&passwordOptional)) &&
-        !noPassword && !passwordOptional) {
-      mConnectionErrorReason = (PurpleConnectionError)ERROR_MISSING_PASSWORD;
-      LOG(("missing password\n"));
-    }
-  }
+  if (pass.IsEmpty())
+    SetMissingPasswordIfRequired();
 
   /* Load the rememberPassword pref */
   PRBool rememberPass;
@@ -1070,6 +1062,23 @@ NS_IMETHODIMP purpleAccount::GetPassword(nsACString& aPassword)
   aPassword = purple_account_get_password(mAccount);
   return NS_OK;
 }
+
+void purpleAccount::SetMissingPasswordIfRequired()
+{
+  NS_ASSERTION(mHasValidProtocol && mProtocol,
+               "SetMissingPasswordIfRequired without a valid protocol!");
+  NS_ENSURE_TRUE(mHasValidProtocol && mProtocol, );
+
+  PRBool noPassword = PR_TRUE;
+  PRBool passwordOptional = PR_TRUE;
+  if (NS_SUCCEEDED(mProtocol->GetNoPassword(&noPassword)) &&
+      NS_SUCCEEDED(mProtocol->GetPasswordOptional(&passwordOptional)) &&
+      !noPassword && !passwordOptional) {
+    mConnectionErrorReason = (PurpleConnectionError)ERROR_MISSING_PASSWORD;
+    LOG(("missing password\n"));
+  }
+}
+
 NS_IMETHODIMP purpleAccount::SetPassword(const nsACString& aPassword)
 {
   PURPLE_ENSURE_INIT(INIT_CONDITION);
@@ -1080,14 +1089,8 @@ NS_IMETHODIMP purpleAccount::SetPassword(const nsACString& aPassword)
     purple_account_set_password(mAccount, pass);
   SetStringPref(PREF_PASSWORD, pass);
 
-  if (mHasValidProtocol && aPassword.IsEmpty()) {
-    PRBool noPassword = PR_TRUE;
-    PRBool passwordOptional = PR_TRUE;
-    if (NS_SUCCEEDED(mProtocol->GetNoPassword(&noPassword)) &&
-        NS_SUCCEEDED(mProtocol->GetPasswordOptional(&passwordOptional)) &&
-        !noPassword && !passwordOptional)
-      mConnectionErrorReason = (PurpleConnectionError)ERROR_MISSING_PASSWORD;
-  }
+  if (mHasValidProtocol && aPassword.IsEmpty())
+    SetMissingPasswordIfRequired();
   else if (mConnectionErrorReason == (PurpleConnectionError)ERROR_MISSING_PASSWORD &&
            !aPassword.IsEmpty())
     mConnectionErrorReason = (PurpleConnectionError)NO_ERROR;

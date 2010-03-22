@@ -97,6 +97,7 @@ private:
   inline void GetIntPref(const char *aName);
   inline void GetCharPref(const char *aName);
   inline void CheckAndSetFirstConnectionState(const PRInt16 aState);
+  inline void SetMissingPasswordIfRequired();
 
 protected:
   /* additional members */
