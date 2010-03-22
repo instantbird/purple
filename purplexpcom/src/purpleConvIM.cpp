@@ -148,6 +148,9 @@ NS_IMETHODIMP purpleConvIM::SendTyping(PRUint32 aLength)
 {
   NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
 
+  if (!purple_prefs_get_bool("/purple/conversations/im/send_typing"))
+    return NS_OK;
+
   PurpleConvIm *im = PURPLE_CONV_IM(mConv);
   NS_ENSURE_TRUE(im, NS_ERROR_UNEXPECTED);
 
