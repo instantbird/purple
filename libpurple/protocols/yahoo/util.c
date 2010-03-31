@@ -463,11 +463,13 @@ static void yahoo_codes_to_html_add_tag(xmlnode **cur, const char *tag, gboolean
 			 */
 			int size, htmlsize;
 			gchar tmp[11];
+			gchar *tmp2 = g_strdup_printf("font-size: %spt", fontsize);
 			size = strtol(fontsize, NULL, 10);
 			htmlsize = point_to_html(size);
 			sprintf(tmp, "%u", htmlsize);
 			xmlnode_set_attrib(*cur, "size", tmp);
-			xmlnode_set_attrib(*cur, "absz", fontsize);
+			xmlnode_set_attrib(*cur, "style", tmp2);
+			g_free(tmp2);
 #endif /* !USE_CSS_FORMATTING */
 			g_free(fontsize);
 		}
