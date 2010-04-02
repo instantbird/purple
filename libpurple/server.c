@@ -126,7 +126,6 @@ int serv_send_im(PurpleConnection *gc, const char *name, const char *message,
 	PurplePlugin *prpl = NULL;
 	PurplePluginProtocolInfo *prpl_info = NULL;
 	int val = -EINVAL;
-	const gchar *auto_reply_pref = NULL;
 
 	g_return_val_if_fail(gc != NULL, val);
 
@@ -148,10 +147,9 @@ int serv_send_im(PurpleConnection *gc, const char *name, const char *message,
 	 * XXX - If "only auto-reply when away & idle" is set, then shouldn't
 	 * this only reset lar->sent if we're away AND idle?
 	 */
-	auto_reply_pref = purple_prefs_get_string("/purple/away/auto_reply");
 	if((gc->flags & PURPLE_CONNECTION_AUTO_RESP) &&
 			!purple_presence_is_available(presence) &&
-			!purple_strequal(auto_reply_pref, "never")) {
+			!purple_strequal(purple_prefs_get_string("/purple/away/auto_reply"), "never")) {
 
 		struct last_auto_response *lar;
 		lar = get_last_auto_response(gc, name);
@@ -637,8 +635,6 @@ void serv_got_im(PurpleConnection *gc, const char *who, const char *msg,
 		const char *away_msg = NULL;
 		gboolean mobile = FALSE;
 
-		auto_reply_pref = purple_prefs_get_string("/purple/away/auto_reply");
-
 		presence = purple_account_get_presence(account);
 		status = purple_presence_get_active_status(presence);
 		status_type = purple_status_get_type(status);
@@ -647,7 +643,7 @@ void serv_got_im(PurpleConnection *gc, const char *who, const char *msg,
 		if ((primitive == PURPLE_STATUS_AVAILABLE) ||
 			(primitive == PURPLE_STATUS_INVISIBLE) ||
 			mobile ||
-		    purple_strequal(auto_reply_pref, "never") ||
+		    purple_strequal((auto_reply_pref = purple_prefs_get_string("/purple/away/auto_reply")), "never") ||
 		    (!purple_presence_is_idle(presence) && purple_strequal(auto_reply_pref, "awayidle")))
 		{
 			g_free(name);
