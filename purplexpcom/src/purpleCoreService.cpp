@@ -1531,19 +1531,6 @@ NS_IMETHODIMP purpleCoreService::NotifyObservers(nsISupports *aObj,
   return os->NotifyObservers(aObj, aEvent, aData);
 }
 
-/* [noscript] void fireAccountEvent (in purpleNativeAccount aAccount, in string event); */
-NS_IMETHODIMP purpleCoreService::FireAccountEvent(PurpleAccount * aAccount,
-                                                  const char *aEvent)
-{
-  NS_ENSURE_ARG_POINTER(aAccount);
-  LOG(("FireAccountEvent: event: %s, account name: %s", aEvent, aAccount->username));
-
-  purpleAccount *account = (purpleAccount *)aAccount->ui_data;
-  NS_ENSURE_TRUE(account, NS_ERROR_FAILURE);
-
-  return NotifyObservers(account, aEvent);
-}
-
 /* [noscript] void fireBuddyEvent (in purpleNativeBuddy aBuddy, in string event); */
 NS_IMETHODIMP purpleCoreService::FireBuddyEvent(PurpleBuddy * aBuddy,
                                                 const char *aEvent)

@@ -125,8 +125,6 @@ interface purpleICoreService: nsISupports {
   void notifyObservers(in nsISupports aObj, in string aEvent,
                        [optional] in wstring aData);
 
-  [noscript] void fireAccountEvent(in PurpleNativeAccount aAccount,
-                                   in string aEvent);
   /* account related event fired:
       - account-added: a new account has been created
       - account-removed: the account has been deleted

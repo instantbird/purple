@@ -449,16 +449,19 @@ static PurpleConversationUiOps conversation_uiops =
   NULL, NULL, NULL, NULL
 };
 
-static void account_signals(PurpleAccount *account, const char *signal)
+static void account_signals(PurpleAccount *aAccount, const char *signal)
 {
   LOG(("%s: %s (%s)\n", signal,
-       account->username, account->protocol_id));
+       aAccount->username, aAccount->protocol_id));
+
+  purpleAccount *account = (purpleAccount *)aAccount->ui_data;
+  NS_ENSURE_TRUE(account, );
 
   nsCOMPtr<purpleICoreService> pcs =
     do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(pcs, );
 
-  pcs->FireAccountEvent(account, signal);
+  pcs->NotifyObservers(account, signal, nsnull);
 }
 
 static void connection_signals(PurpleConnection *gc, const char *signal)
