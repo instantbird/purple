@@ -542,7 +542,7 @@ void purpleCoreService::InitProtocols()
   NS_ENSURE_TRUE(catMgr, );
 
   nsCOMPtr<nsISimpleEnumerator> catEntries;
-  nsresult rv = catMgr->EnumerateCategory(PURPLE_OVERRIDE_PROTOCOL_CATEGORY,
+  nsresult rv = catMgr->EnumerateCategory(JS_PROTOCOL_PLUGIN_CATEGORY,
                                           getter_AddRefs(catEntries));
   NS_ENSURE_SUCCESS(rv, );
 
@@ -560,7 +560,7 @@ void purpleCoreService::InitProtocols()
     NS_ENSURE_SUCCESS(rv, );
 
     nsCString contractId;
-    rv = catMgr->GetCategoryEntry(PURPLE_OVERRIDE_PROTOCOL_CATEGORY,
+    rv = catMgr->GetCategoryEntry(JS_PROTOCOL_PLUGIN_CATEGORY,
                                   entryName.get(), getter_Copies(contractId));
     NS_ENSURE_SUCCESS(rv, );
 
