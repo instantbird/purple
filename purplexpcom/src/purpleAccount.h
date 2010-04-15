@@ -67,15 +67,9 @@ public:
   NS_DECL_PURPLEIACCOUNT
 
   purpleAccount();
-  const nsCString& GetKey() { return mKey; }
-  PRUint32 GetId() { return mId; }
   PurpleAccount *GetPurpleAccount() { return mAccount; }
-  nsresult create(const nsACString& name, purpleIProtocol *prpl,
-                  const nsCString& aKey);
-  nsresult load(const nsCString& aKey);
-  nsresult checkAutoLogin();
-  nsresult remove();
-  void UnInit();
+
+  // The next 3 methods are called from purpleInit with a cast of ui_data.
   void SetConnectionStateMsg(const char *aConnectionStateMsg);
   void SetDisconnectReason(PurpleConnectionError reason, const char *text);
   // Called when an account successfully connected, to reset values
@@ -84,7 +78,7 @@ public:
 
 private:
   ~purpleAccount();
-  inline nsresult SetId(const nsCString& aId);
+  inline nsresult SetId(const nsACString& aId);
   nsresult sendUpdateNotification();
   inline nsresult GetPrefBranch();
   nsresult ensureStored(const nsCString& aName, const nsCString& aPrpl);

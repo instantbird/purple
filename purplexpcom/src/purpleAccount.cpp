@@ -251,11 +251,12 @@ purpleAccount::~purpleAccount()
     UnInit();
 }
 
-void purpleAccount::UnInit()
+/* void UnInit (); */
+NS_IMETHODIMP purpleAccount::UnInit()
 {
   NS_PRECONDITION(INIT_CONDITION,
                   "Uninitializing uninitialized purpleAccount\n");
-  NS_ENSURE_TRUE(INIT_CONDITION,);
+  NS_ENSURE_TRUE(INIT_CONDITION, NS_ERROR_NOT_INITIALIZED);
 
 #ifdef DEBUG
   nsCString protoId;
@@ -293,6 +294,8 @@ void purpleAccount::UnInit()
     purple_accounts_delete(mAccount);
     mAccount = NULL;
   }
+
+  return NS_OK;
 }
 
 #define PURPLE_IMPL_GETPREF(prettyType, purpleType, PRType)             \
@@ -317,8 +320,11 @@ inline void purpleAccount::GetCharPref(const char *aName)
 PURPLE_IMPL_GETPREF(Bool, bool, PRBool)
 PURPLE_IMPL_GETPREF(Int, int, PRInt32)
 
-nsresult purpleAccount::create(const nsACString& aName, purpleIProtocol *aPrpl,
-                               const nsCString& aKey)
+/* void create (in AUTF8String aName, in purpleIProtocol aProtocol,
+                in AUTF8String aKey); */
+NS_IMETHODIMP purpleAccount::Create(const nsACString & aName,
+                                    purpleIProtocol *aPrpl,
+                                    const nsACString & aKey)
 {
   NS_ENSURE_ARG_POINTER(aPrpl);
   NS_ENSURE_TRUE(!aName.IsEmpty(), NS_ERROR_UNEXPECTED);
@@ -370,11 +376,12 @@ nsresult purpleAccount::create(const nsACString& aName, purpleIProtocol *aPrpl,
   return NS_OK;
 }
 
-nsresult purpleAccount::load(const nsCString& aKey)
+/* void load (in AUTF8String aKey); */
+NS_IMETHODIMP purpleAccount::Load(const nsACString & aKey)
 {
-  LOG(("loading account : %s\n", aKey.get()));
   nsresult rv = SetId(aKey);
   NS_ENSURE_SUCCESS(rv, rv);
+  LOG(("loading account : %s\n", mKey.get()));
 
   rv = GetPrefBranch();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -583,7 +590,8 @@ inline void purpleAccount::CheckAndSetFirstConnectionState(const PRInt16 aState)
   NS_ENSURE_SUCCESS(rv, );
 }
 
-nsresult purpleAccount::checkAutoLogin()
+/* void checkAutoLogin (); */
+NS_IMETHODIMP purpleAccount::CheckAutoLogin()
 {
   PURPLE_ENSURE_INIT(INIT_CONDITION);
 
@@ -715,7 +723,8 @@ nsresult purpleAccount::unstoreAccount()
   return rv;
 }
 
-nsresult purpleAccount::remove()
+/* void remove (); */
+NS_IMETHODIMP purpleAccount::Remove()
 {
   nsresult rv = GetPrefBranch();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -925,13 +934,22 @@ NS_IMETHODIMP purpleAccount::GetId(nsACString& aId)
   return NS_OK;
 }
 
+/* readonly attribute PRUint32 numericId; */
+NS_IMETHODIMP purpleAccount::GetNumericId(PRUint32 *aNumericId)
+{
+  NS_ENSURE_TRUE(mId, NS_ERROR_NOT_INITIALIZED);
+
+  *aNumericId = mId;
+  return NS_OK;
+}
+
 /* private */
-inline nsresult purpleAccount::SetId(const nsCString& aId)
+inline nsresult purpleAccount::SetId(const nsACString& aId)
 {
   /* Save the id of the account */
-  mKey.Assign(aId);
+  mKey = aId;
 
-  PRInt32 count = PR_sscanf(aId.get(), ACCOUNT_KEY "%u", &mId);
+  PRInt32 count = PR_sscanf(mKey.get(), ACCOUNT_KEY "%u", &mId);
   NS_ENSURE_TRUE(count == 1, NS_ERROR_FAILURE);
 
   return NS_OK;

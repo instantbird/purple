@@ -1202,7 +1202,8 @@ NS_IMETHODIMP purpleCoreService::GetAccountById(const nsACString& aAccountId, pu
   PURPLE_ENSURE_INIT(mInitialized);
 
   for (PRInt32 i = mAccounts.Count() - 1; i >= 0; --i) {
-    if (mAccounts[i]->GetKey().Equals(aAccountId)) {
+    nsCString id;
+    if (NS_SUCCEEDED(mAccounts[i]->GetId(id)) && id.Equals(aAccountId)) {
       NS_ADDREF(*aResult = mAccounts[i]);
       return NS_OK;
     }
@@ -1217,7 +1218,8 @@ nsresult purpleCoreService::GetAccountById(PRUint32 aAccountId, purpleAccount **
   PURPLE_ENSURE_INIT(mInitialized);
 
   for (PRInt32 i = mAccounts.Count() - 1; i >= 0; --i) {
-    if (mAccounts[i]->GetId() == aAccountId) {
+    PRUint32 id;
+    if (NS_SUCCEEDED(mAccounts[i]->GetNumericId(&id)) && id == aAccountId) {
       NS_ADDREF(*aResult = mAccounts[i]);
       return NS_OK;
     }
@@ -1259,7 +1261,7 @@ nsresult purpleCoreService::InitAccounts()
 
     /* create the purpleAccount object */
     account = do_CreateInstance(PURPLE_ACCOUNT_CONTRACTID);
-    rv = account->load(key);
+    rv = account->Load(key);
     if (NS_FAILED(rv)) {
       continue;
     }
@@ -1299,7 +1301,8 @@ nsresult purpleCoreService::UpdateAccountList()
     }
 
     for (PRInt32 j = i; j < accountCount; ++j) {
-      if (mAccounts[j]->GetKey().Equals(key)) {
+      nsCString id;
+      if (NS_SUCCEEDED(mAccounts[j]->GetId(id)) && id.Equals(key)) {
         if (i < j) {
           account = mAccounts[j];
           mAccounts.RemoveObject(account);
@@ -1349,7 +1352,7 @@ NS_IMETHODIMP purpleCoreService::ProcessAutoLogin()
   }
 
   for (PRInt32 i = 0; i < mAccounts.Count(); ++i)
-    mAccounts[i]->checkAutoLogin();
+    mAccounts[i]->CheckAutoLogin();
 
   // Make sure autologin is now enabled, so that we don't display a
   // message stating that it is disabled and asking the user if it
@@ -1396,9 +1399,9 @@ NS_IMETHODIMP purpleCoreService::CreateAccount(const nsACString &aName,
     key.AppendInt(i);
     found = PR_FALSE;
     for (PRInt32 j = mAccounts.Count() - 1; j >= 0; --j) {
-      if ((found = mAccounts[j]->GetKey().Equals(key))) {
+      nsCString id;
+      if ((found = (NS_SUCCEEDED(mAccounts[j]->GetId(id)) && id.Equals(key))))
         break;
-      }
     }
     if (!found) {
       /* We have found a key that isn't used in the pref, double check
@@ -1432,7 +1435,7 @@ NS_IMETHODIMP purpleCoreService::CreateAccount(const nsACString &aName,
 
   /* Actually create the new account */
   nsCOMPtr<purpleAccount> account = do_CreateInstance(PURPLE_ACCOUNT_CONTRACTID);
-  rv = account->create(aName, proto, key);
+  rv = account->Create(aName, proto, key);
   NS_ENSURE_SUCCESS(rv, rv);
 
   /* Save the account list pref */
@@ -1463,11 +1466,12 @@ NS_IMETHODIMP purpleCoreService::DeleteAccount(const nsACString& aAccountId)
   /* delete the account */
   PRInt32 i;
   for (i = mAccounts.Count() - 1; i >= 0; --i) {
-    if (mAccounts[i]->GetKey().Equals(aAccountId)) {
+    nsCString id;
+    if (NS_SUCCEEDED(mAccounts[i]->GetId(id)) && id.Equals(aAccountId)) {
       /* Notify observers */
       NotifyObservers(mAccounts[i], "account-removed");
       /* Remove the pref of the account, and remove it from libpurple */
-      mAccounts[i]->remove();
+      mAccounts[i]->Remove();
       /* Remove it from our local array */
       mAccounts.RemoveObjectAt(i);
       break;

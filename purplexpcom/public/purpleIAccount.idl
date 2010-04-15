@@ -74,6 +74,26 @@ interface purpleIChatRoomField: nsISupports {
  */
 [scriptable, uuid(3c01ec75-6504-40df-af18-b8dc402c75a6)]
 interface purpleIAccount: nsISupports {
+
+  /* Create a new account using aName as username, aProtocol as the
+     associated protocol plugin and aKey as the identifier to store
+     the account in the preferences. */
+  void create(in AUTF8String aName, in purpleIProtocol aPrpl,
+              in AUTF8String aKey);
+  /* Load an account from the preferences. */
+  void load(in AUTF8String aKey);
+
+  /* Check if autologin is enabled for this account, connect it now. */
+  void checkAutoLogin();
+
+  /* Delete the account (from the preferences, mozStorage, libpurple and purplexpcom). */
+  void remove();
+
+  /* Uninitialize the purpleIAccount instance. This is typically done
+     automatically at shutdown (by purpleCoreService) or as part of
+     the 'remove' method. */
+  void UnInit();
+
   void connect();
   void disconnect();
 
@@ -94,6 +114,7 @@ interface purpleIAccount: nsISupports {
 
   readonly attribute AUTF8String name;
   readonly attribute AUTF8String id;
+  readonly attribute PRUint32 numericId;
   readonly attribute purpleIProtocol protocol;
 
   attribute boolean autoLogin;
