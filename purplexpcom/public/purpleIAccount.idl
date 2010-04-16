@@ -78,14 +78,6 @@ interface purpleIChatRoomField: nsISupports {
 [scriptable, uuid(3c01ec75-6504-40df-af18-b8dc402c75a6)]
 interface purpleIAccount: nsISupports {
 
-  /* Create a new account using aName as username, aProtocol as the
-     associated protocol plugin and aKey as the identifier to store
-     the account in the preferences. */
-  void create(in AUTF8String aName, in purpleIProtocol aPrpl,
-              in AUTF8String aKey);
-  /* Load an account from the preferences. */
-  void load(in AUTF8String aKey);
-
   /* Check if autologin is enabled for this account, connect it now. */
   void checkAutoLogin();
 

@@ -39,7 +39,6 @@
 #include "purpleClassInfo.h"
 #include "purpleCoreService.h"
 #include "purpleGListEnumerator.h"
-#include "purpleUnknownProtocol.h"
 #include "purpleStorage.h"
 #include <nsIObserverService.h>
 #include <nsIPrefService.h>
@@ -320,11 +319,9 @@ inline void purpleAccount::GetCharPref(const char *aName)
 PURPLE_IMPL_GETPREF(Bool, bool, PRBool)
 PURPLE_IMPL_GETPREF(Int, int, PRInt32)
 
-/* void create (in AUTF8String aName, in purpleIProtocol aProtocol,
-                in AUTF8String aKey); */
-NS_IMETHODIMP purpleAccount::Create(const nsACString & aName,
-                                    purpleIProtocol *aPrpl,
-                                    const nsACString & aKey)
+nsresult purpleAccount::Create(const nsACString & aName,
+                               purpleIProtocol *aPrpl,
+                               const nsACString & aKey)
 {
   NS_ENSURE_ARG_POINTER(aPrpl);
   NS_ENSURE_TRUE(!aName.IsEmpty(), NS_ERROR_UNEXPECTED);
@@ -377,8 +374,12 @@ NS_IMETHODIMP purpleAccount::Create(const nsACString & aName,
 }
 
 /* void load (in AUTF8String aKey); */
-NS_IMETHODIMP purpleAccount::Load(const nsACString & aKey)
+nsresult purpleAccount::Load(const nsACString & aKey,
+                             purpleIProtocol *aPrpl,
+                             PRBool aIsValidProtocol)
 {
+  NS_ENSURE_TRUE(aPrpl, NS_ERROR_INVALID_ARG);
+
   nsresult rv = SetId(aKey);
   NS_ENSURE_SUCCESS(rv, rv);
   LOG(("loading account : %s\n", mKey.get()));
@@ -404,10 +405,9 @@ NS_IMETHODIMP purpleAccount::Load(const nsACString & aKey)
   NS_ENSURE_SUCCESS(rv, rv);
 
   /* Init the mProtocol member */
-  nsCOMPtr<purpleICoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-  rv = pcs->GetProtocolById(prpl, getter_AddRefs(mProtocol));
-  if (NS_SUCCEEDED(rv) && mProtocol) {
-    mHasValidProtocol = PR_TRUE;
+  mProtocol = aPrpl;
+  mHasValidProtocol = aIsValidProtocol;
+  if (aIsValidProtocol) {
     rv = mProtocol->CreatePurpleAccount(name, this, &mAccount);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -422,11 +422,6 @@ NS_IMETHODIMP purpleAccount::Load(const nsACString & aKey)
   }
   else {
     mConnectionErrorReason = (PurpleConnectionError) ERROR_UNKNOWN_PRPL;
-    nsCOMPtr<purpleUnknownProtocol> unknown =
-      do_CreateInstance(PURPLE_UNKNOWN_PROTOCOL_CONTRACTID);
-    NS_ENSURE_TRUE(unknown, NS_ERROR_OUT_OF_MEMORY);
-    unknown->Init(prpl);
-    mProtocol = unknown;
   }
 
   /* Load the alias if any */
@@ -443,6 +438,7 @@ NS_IMETHODIMP purpleAccount::Load(const nsACString & aKey)
   /* Init mProxy */
   if (NS_SUCCEEDED(rv) &&
       StringBeginsWith(proxyKey, NS_LITERAL_CSTRING(PROXY_KEY))) {
+    nsCOMPtr<purpleICoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
     nsCOMPtr<nsISimpleEnumerator> proxies;
     rv = pcs->GetProxies(getter_AddRefs(proxies));
     PRBool hasNext;

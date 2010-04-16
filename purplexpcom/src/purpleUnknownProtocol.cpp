@@ -36,7 +36,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "purpleUnknownProtocol.h"
+#include "purpleAccount.h"
 #include <nsArrayEnumerator.h>
+#include <nsComponentManagerUtils.h>
 #include <nsMemory.h>
 #include <nsIClassInfoImpl.h>
 
@@ -155,6 +157,29 @@ PURPLE_IMPL_GETBOOLOPT(SlashCommandsNative, SLASH_COMMANDS_NATIVE)
 
 /* [noscript] PurpleNativePluginProtocolInfo getInfo (); */
 NS_IMETHODIMP purpleUnknownProtocol::GetInfo(PurplePluginProtocolInfo * *aPrplInfo)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* purpleIAccount loadAccount (in AUTF8String aKey); */
+NS_IMETHODIMP purpleUnknownProtocol::LoadAccount(const nsACString & aKey,
+                                                 purpleIAccount **aResult)
+{
+  nsCOMPtr<purpleAccount> account =
+    do_CreateInstance(PURPLE_ACCOUNT_CONTRACTID);
+  NS_ENSURE_TRUE(account, NS_ERROR_OUT_OF_MEMORY);
+
+  nsresult rv = account->Load(aKey, this, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_ADDREF(*aResult = account);
+  return NS_OK;
+}
+
+/* purpleIAccount createAccount (in AUTF8String aName, in AUTF8String aKey); */
+NS_IMETHODIMP purpleUnknownProtocol::CreateAccount(const nsACString & aName,
+                                                   const nsACString & aKey,
+                                                   purpleIAccount **aResult)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

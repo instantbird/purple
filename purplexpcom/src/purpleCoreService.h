@@ -41,7 +41,7 @@
 #include "purpleProtocol.h"
 #include "purpleProxy.h"
 #include "purpleProxyInfo.h"
-#include "purpleAccount.h"
+#include "purpleIAccount.h"
 #include "purpleIdle.h"
 #include "purpleICoreService.h"
 #include "purpleConversation.h"
@@ -82,6 +82,7 @@ private:
   ~purpleCoreService();
   void InitProtocols();
   nsresult InitProxies();
+  nsresult LoadAccount(nsCString &key, purpleIAccount **aResult);
   nsresult InitAccounts();
   nsresult UpdateAccountList();
   nsresult InitBuddyList();

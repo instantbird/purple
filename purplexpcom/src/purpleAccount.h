@@ -69,6 +69,16 @@ public:
   purpleAccount();
   PurpleAccount *GetPurpleAccount() { return mAccount; }
 
+  // load an account from the preferences.
+  nsresult Load(const nsACString & aKey, purpleIProtocol *aPrpl,
+                PRBool aIsValidProtocol = PR_TRUE);
+
+  // Create a new account using aName as username, aProtocol as the
+  // associated protocol plugin and aKey as the identifier to store
+  //  the account in the preferences.
+  nsresult Create(const nsACString & aName, purpleIProtocol *aPrpl,
+                  const nsACString & aKey);
+
   // The next 3 methods are called from purpleInit with a cast of ui_data.
   void SetConnectionStateMsg(const char *aConnectionStateMsg);
   void SetDisconnectReason(PurpleConnectionError reason, const char *text);

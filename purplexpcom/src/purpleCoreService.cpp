@@ -42,6 +42,7 @@
 #include "purpleStorage.h"
 #include "purpleSockets.h"
 #include "purpleTimer.h"
+#include "purpleUnknownProtocol.h"
 
 #pragma GCC visibility push(default)
 #include <libpurple/core.h>
@@ -1208,6 +1209,32 @@ NS_IMETHODIMP purpleCoreService::GetAccounts(nsISimpleEnumerator **aResult)
   return NS_NewArrayEnumerator(aResult, mAccounts);
 }
 
+nsresult purpleCoreService::LoadAccount(nsCString &key, purpleIAccount **aResult)
+{
+  NS_ENSURE_TRUE(!key.IsEmpty(), NS_ERROR_INVALID_ARG);
+
+  nsCString prefName("messenger.account.");
+  prefName.Append(key);
+  prefName.Append(".prpl");
+
+  nsCString prpl;
+  nsresult rv = mPrefService->GetCharPref(prefName.get(), getter_Copies(prpl));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<purpleIProtocol> proto;
+  rv = GetProtocolById(prpl, getter_AddRefs(proto));
+  if (NS_FAILED(rv) || !proto) {
+      // If it failed, the protocol is unknown, which is handled later.
+    nsCOMPtr<purpleUnknownProtocol> unknown =
+      do_CreateInstance(PURPLE_UNKNOWN_PROTOCOL_CONTRACTID);
+    NS_ENSURE_TRUE(unknown, NS_ERROR_OUT_OF_MEMORY);
+    unknown->Init(prpl);
+    proto = unknown;
+  }
+
+  return proto->LoadAccount(key, aResult);
+}
+
 nsresult purpleCoreService::InitAccounts()
 {
   /* Get the list of accounts */
@@ -1218,7 +1245,6 @@ nsresult purpleCoreService::InitAccounts()
 
   LOG(("InitAccounts list = %s", accountList.get()));
 
-  nsCOMPtr<purpleIAccount> account;
   char *newStr = accountList.BeginWriting();
   nsCAutoString key;
   for (char *token = NS_strtok(",", &newStr);
@@ -1227,19 +1253,12 @@ nsresult purpleCoreService::InitAccounts()
     key = token;
     key.StripWhitespace();
 
-    if (key.IsEmpty()) {
-      continue;
+    nsCOMPtr<purpleIAccount> account;
+    rv = LoadAccount(key, getter_AddRefs(account));
+    if (NS_SUCCEEDED(rv)) {
+      /* Keep it in the local account list */
+      mAccounts.AppendObject(account);
     }
-
-    /* create the purpleAccount object */
-    account = do_CreateInstance(PURPLE_ACCOUNT_CONTRACTID);
-    rv = account->Load(key);
-    if (NS_FAILED(rv)) {
-      continue;
-    }
-
-    /* Keep it the local account list */
-    mAccounts.AppendObject(account);
   }
 
   return NS_OK;
@@ -1406,8 +1425,8 @@ NS_IMETHODIMP purpleCoreService::CreateAccount(const nsACString &aName,
   NS_ENSURE_TRUE(proto, NS_ERROR_FAILURE);
 
   /* Actually create the new account */
-  nsCOMPtr<purpleIAccount> account = do_CreateInstance(PURPLE_ACCOUNT_CONTRACTID);
-  rv = account->Create(aName, proto, key);
+  nsCOMPtr<purpleIAccount> account;
+  rv = proto->CreateAccount(aName, key, getter_AddRefs(account));
   NS_ENSURE_SUCCESS(rv, rv);
 
   /* Save the account list pref */
