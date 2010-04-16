@@ -71,11 +71,9 @@ purpleBuddy::~purpleBuddy()
   LOG(("Destructing purpleBuddy @%x", this));
 }
 
-nsresult purpleBuddy::load(PurpleBuddy *aBuddy, purpleIAccount *aAccount,
-                           PRUint32 aId, purpleTag *aTag)
+nsresult purpleBuddy::load(PRUint32 aId)
 {
   mId = aId;
-  AddAccount(aAccount, aBuddy, aTag);
   return NS_OK;
 }
 

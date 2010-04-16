@@ -472,7 +472,7 @@ nsresult purpleCoreService::InitBuddyList()
 #endif
       continue;
     }
-    nsCOMPtr<purpleAccount> account;
+    nsCOMPtr<purpleIAccount> account;
     rv = GetAccountById(accountId, getter_AddRefs(account));
     if (NS_FAILED(rv)) {
       // Should never happen. Corrupted blist.sqlite ?
@@ -484,36 +484,24 @@ nsresult purpleCoreService::InitBuddyList()
       continue;
     }
 
-    PurpleAccount *pAccount = account->GetPurpleAccount();
-    if (!pAccount) {
-      // This can happen if the prpl related to this account is missing
-      continue;
-    }
-    PurpleBuddy *buddy =
-      purple_buddy_new(pAccount, name.get(),
-                       alias.IsEmpty() ? NULL : alias.get());
-    // Ignore server aliases that are identical to the name.
-    // (We used to mistakenly store the name in the srv_alias column
-    // when there was no server alias.)
-    if (!serverAlias.IsEmpty() && !serverAlias.Equals(name))
-      buddy->server_alias = purple_utf8_strip_unprintables(serverAlias.get());
-    tag->addBuddy(buddy);
-
     LOG(("Looking for purpleBuddy with id %i in HashTable", id));
     nsCOMPtr<purpleBuddy> purpleBuddy;
     if (!mBuddiesById.Get(id, getter_AddRefs(purpleBuddy))) {
       purpleBuddy = do_CreateInstance(PURPLE_BUDDY_CONTRACTID, &rv);
       if (NS_FAILED(rv))
         continue;
-      purpleBuddy->load(buddy, account, id, tag);
+      purpleBuddy->load(id);
       mBuddiesById.Put(id, purpleBuddy);
       LOG(("purpleBuddy added in HashTable with Id %i", id));
     }
     else {
-      LOG(("Found purpleBuddy with id %i in HashTable, adding account", id));
-      purpleBuddy->AddAccount(account, buddy, tag);
+      LOG(("Found purpleBuddy with id %i in HashTable", id));
     }
-    buddy->node.ui_data = purpleBuddy;
+
+    rv = account->LoadBuddy(purpleBuddy, name, alias, serverAlias, tag);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Failed to Load Buddy");
+    }
   }
 
   connect_to_blist_signals();
@@ -1197,7 +1185,7 @@ NS_IMETHODIMP purpleCoreService::GetAccountById(const nsACString& aAccountId, pu
   return NS_OK; // we don't want to throw an exception if called from JS
 }
 
-nsresult purpleCoreService::GetAccountById(PRUint32 aAccountId, purpleAccount **aResult)
+nsresult purpleCoreService::GetAccountById(PRUint32 aAccountId, purpleIAccount **aResult)
 {
   PURPLE_ENSURE_INIT(mInitialized);
 
@@ -1230,7 +1218,7 @@ nsresult purpleCoreService::InitAccounts()
 
   LOG(("InitAccounts list = %s", accountList.get()));
 
-  nsCOMPtr<purpleAccount> account;
+  nsCOMPtr<purpleIAccount> account;
   char *newStr = accountList.BeginWriting();
   nsCAutoString key;
   for (char *token = NS_strtok(",", &newStr);
@@ -1269,7 +1257,7 @@ nsresult purpleCoreService::UpdateAccountList()
 
   LOG(("UpdateAccountList list = %s", accountList.get()));
 
-  nsCOMPtr<purpleAccount> account;
+  nsCOMPtr<purpleIAccount> account;
   char *newStr = accountList.BeginWriting();
   nsCAutoString key;
   PRInt32 i = 0;
@@ -1418,7 +1406,7 @@ NS_IMETHODIMP purpleCoreService::CreateAccount(const nsACString &aName,
   NS_ENSURE_TRUE(proto, NS_ERROR_FAILURE);
 
   /* Actually create the new account */
-  nsCOMPtr<purpleAccount> account = do_CreateInstance(PURPLE_ACCOUNT_CONTRACTID);
+  nsCOMPtr<purpleIAccount> account = do_CreateInstance(PURPLE_ACCOUNT_CONTRACTID);
   rv = account->Create(aName, proto, key);
   NS_ENSURE_SUCCESS(rv, rv);
 

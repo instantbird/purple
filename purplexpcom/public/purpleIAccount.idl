@@ -41,6 +41,7 @@
 #include "purpleIProxy.idl"
 
 interface purpleITag;
+interface purpleIBuddy;
 
 /*
  * Used to join chat rooms.
@@ -105,7 +106,13 @@ interface purpleIAccount: nsISupports {
 
   purpleIConversation createConversation(in AUTF8String aName);
 
+  // Used when the user wants to add a buddy to the buddy list
   void addBuddy(in purpleITag aTag, in AUTF8String aName);
+
+  // Used while loading the buddy list at startup.
+  void LoadBuddy(in purpleIBuddy aBuddy, in AUTF8String aName,
+                 in AUTF8String aAlias, in AUTF8String aServerAlias,
+                 in purpleITag aTag);
 
   readonly attribute boolean canJoinChat;
   nsISimpleEnumerator getChatRoomFields();

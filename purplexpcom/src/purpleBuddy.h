@@ -63,8 +63,7 @@ public:
   nsresult Init(PurpleBuddy *aBuddy);
   void UnInit() { mId = 0; }
   nsresult UnStore();
-  nsresult load(PurpleBuddy *aBuddy, purpleIAccount *aAccount,
-                PRUint32 aId, purpleTag *aTag);
+  nsresult load(PRUint32 aId);
   nsresult AddAccount(PurpleBuddy *aBuddy);
   purpleAccountBuddy *AddAccount(purpleIAccount *aAccount,
                                  PurpleBuddy *aBuddy,

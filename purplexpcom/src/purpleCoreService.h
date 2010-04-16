@@ -95,7 +95,7 @@ private:
   nsCOMPtr<nsIPrefBranch2> mPrefBranch2;
   inline void UnInitAccounts();
   inline void UnInitProtocols();
-  nsresult GetAccountById(PRUint32 aAccountId, purpleAccount **aResult);
+  nsresult GetAccountById(PRUint32 aAccountId, purpleIAccount **aResult);
   nsresult SetStatus(PurpleStatusPrimitive aStatus, const nsACString &aMessage);
   nsresult addIdleObserver();
   nsresult removeIdleObserver();
@@ -106,7 +106,7 @@ protected:
   PRInt16 mAutoLoginStatus;
   nsCOMArray<purpleIProtocol> mProtocols;
   nsCOMArray<purpleProxy> mProxies;
-  nsCOMArray<purpleAccount> mAccounts;
+  nsCOMArray<purpleIAccount> mAccounts;
   nsCOMArray<purpleConversation> mConversations;
   nsInterfaceHashtable<nsUint32HashKey, purpleBuddy> mBuddiesById;
   nsInterfaceHashtable<nsUint32HashKey, purpleTag> mTagById;

@@ -842,6 +842,36 @@ NS_IMETHODIMP purpleAccount::AddBuddy(purpleITag *aTag,
   return NS_OK;
 }
 
+/* void LoadBuddy (in purpleIBuddy aBuddy, in AUTF8String aName,
+                   in AUTF8String aAlias, in AUTF8String aServerAlias,
+                   in purpleITag aTag); */
+NS_IMETHODIMP purpleAccount::LoadBuddy(purpleIBuddy *aBuddy,
+                                       const nsACString & aName,
+                                       const nsACString & aAlias,
+                                       const nsACString & aServerAlias,
+                                       purpleITag *aTag)
+{
+  PURPLE_ENSURE_INIT(mProtocol && mAccount);
+
+  purpleTag *tag = static_cast<purpleTag *>(aTag);
+  PurpleBuddy *buddy =
+    purple_buddy_new(mAccount, PromiseFlatCString(aName).get(),
+                     aAlias.IsEmpty() ? NULL : PromiseFlatCString(aAlias).get());
+
+  // Ignore server aliases that are identical to the name.
+  // (We used to mistakenly store the name in the srv_alias column
+  // when there was no server alias.)
+  if (!aServerAlias.IsEmpty() && !aServerAlias.Equals(aName)) {
+    buddy->server_alias =
+      purple_utf8_strip_unprintables(PromiseFlatCString(aServerAlias).get());
+  }
+  tag->addBuddy(buddy);
+
+  static_cast<purpleBuddy *>(aBuddy)->AddAccount(this, buddy, tag);
+  buddy->node.ui_data = aBuddy;
+  return NS_OK;
+}
+
 /* nsISimpleEnumerator getChatRoomFields (); */
 NS_IMETHODIMP purpleAccount::GetChatRoomFields(nsISimpleEnumerator **aResult)
 {
