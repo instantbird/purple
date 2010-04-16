@@ -40,6 +40,8 @@
 #include "purpleIConversation.idl"
 #include "purpleIProxy.idl"
 
+interface purpleITag;
+
 /*
  * Used to join chat rooms.
  */
@@ -102,6 +104,8 @@ interface purpleIAccount: nsISupports {
   void cancelReconnection();
 
   purpleIConversation createConversation(in AUTF8String aName);
+
+  void addBuddy(in purpleITag aTag, in AUTF8String aName);
 
   readonly attribute boolean canJoinChat;
   nsISimpleEnumerator getChatRoomFields();

@@ -827,6 +827,21 @@ NS_IMETHODIMP purpleAccount::CreateConversation(const nsACString& aName,
   return NS_OK;
 }
 
+/* void addBuddy (in purpleITag aTag, in AUTF8String aName); */
+NS_IMETHODIMP purpleAccount::AddBuddy(purpleITag *aTag,
+                                      const nsACString& aName)
+{
+  PURPLE_ENSURE_INIT(mProtocol && mAccount);
+  NS_ENSURE_ARG_POINTER(aTag);
+  NS_ENSURE_ARG(!aName.IsEmpty());
+
+  purpleTag *tag = static_cast<purpleTag *>(aTag);
+  PurpleBuddy *buddy = purple_buddy_new(mAccount, PromiseFlatCString(aName).get(), NULL);
+  tag->addBuddy(buddy);
+  purple_account_add_buddy(mAccount, buddy);
+  return NS_OK;
+}
+
 /* nsISimpleEnumerator getChatRoomFields (); */
 NS_IMETHODIMP purpleAccount::GetChatRoomFields(nsISimpleEnumerator **aResult)
 {

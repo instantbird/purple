@@ -61,7 +61,6 @@ interface purpleICoreService: nsISupports {
 
   purpleIBuddy getBuddyById(in long aId);
   [noscript] purpleIBuddy getBuddyByPurpleBuddy(in PurpleNativeBuddy aBuddy);
-  void addBuddy(in purpleIAccount aAccount, in purpleITag aTag, in AUTF8String aName);
   [noscript] void purpleBuddyRemoved(in PurpleNativeBuddy aBuddy);
 
   purpleITag createTag(in AUTF8String aName);

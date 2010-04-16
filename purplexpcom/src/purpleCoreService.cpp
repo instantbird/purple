@@ -731,22 +731,6 @@ NS_IMETHODIMP purpleCoreService::GetBuddyByPurpleBuddy(PurpleBuddy * aBuddy,
   return NS_OK;
 }
 
-/* void addBuddy (in purpleIAccount aAccount, in purpleITag aTag, in AUTF8String aName); */
-NS_IMETHODIMP purpleCoreService::AddBuddy(purpleIAccount *aAccount,
-                                          purpleITag *aTag, const nsACString& aName)
-{
-  NS_ENSURE_ARG_POINTER(aAccount);
-  NS_ENSURE_ARG_POINTER(aTag);
-  NS_ENSURE_ARG(!aName.IsEmpty());
-
-  purpleTag *tag = static_cast<purpleTag *>(aTag);
-  PurpleAccount *account = static_cast<purpleAccount *>(aAccount)->GetPurpleAccount();
-  PurpleBuddy *buddy = purple_buddy_new(account, PromiseFlatCString(aName).get(), NULL);
-  tag->addBuddy(buddy);
-  purple_account_add_buddy(account, buddy);
-  return NS_OK;
-}
-
 /* [noscript] void purpleBuddyRemoved (in PurpleNativeBuddy aBuddy); */
 NS_IMETHODIMP purpleCoreService::PurpleBuddyRemoved(PurpleBuddy *aBuddy)
 {
