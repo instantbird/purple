@@ -102,7 +102,7 @@ interface purpleIAccount: nsISupports {
   void addBuddy(in purpleITag aTag, in AUTF8String aName);
 
   // Used while loading the buddy list at startup.
-  void LoadBuddy(in purpleIBuddy aBuddy, in AUTF8String aName,
+  void loadBuddy(in purpleIBuddy aBuddy, in AUTF8String aName,
                  in AUTF8String aAlias, in AUTF8String aServerAlias,
                  in purpleITag aTag);
 
