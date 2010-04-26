@@ -518,7 +518,7 @@ const char *purple_conversation_get_name(const PurpleConversation *conv);
  * @param conv The conversation.
  * @param log  @c TRUE if logging should be enabled, or @c FALSE otherwise.
  */
-void purple_conversation_set_logging(PurpleConversation *conv, gboolean log);
+/* void purple_conversation_set_logging(PurpleConversation *conv, gboolean log); */
 
 /**
  * Returns whether or not logging is enabled for this conversation.
@@ -527,7 +527,7 @@ void purple_conversation_set_logging(PurpleConversation *conv, gboolean log);
  *
  * @return @c TRUE if logging is enabled, or @c FALSE otherwise.
  */
-gboolean purple_conversation_is_logging(const PurpleConversation *conv);
+/* gboolean purple_conversation_is_logging(const PurpleConversation *conv); */
 
 /**
  * Closes any open logs for this conversation.
@@ -538,7 +538,7 @@ gboolean purple_conversation_is_logging(const PurpleConversation *conv);
  *
  * @param conv The conversation.
  */
-void purple_conversation_close_logs(PurpleConversation *conv);
+/* void purple_conversation_close_logs(PurpleConversation *conv); */
 
 /**
  * Returns the specified conversation's IM-specific data.

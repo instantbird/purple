@@ -88,6 +88,16 @@ NS_IMETHODIMP purpleConvIM::GetIsChat(PRBool *aIsChat)
   return NS_OK;
 }
 
+/* readonly attribute AUTF8String normalizedName; */
+NS_IMETHODIMP purpleConvIM::GetNormalizedName(nsACString& aNormalizedName)
+{
+  NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
+
+  aNormalizedName = purple_normalize(purple_conversation_get_account(mConv),
+                                     purple_conversation_get_name(mConv));
+  return NS_OK;
+}
+
 /* void sendMsg (in AUTF8String aMsg); */
 NS_IMETHODIMP purpleConvIM::SendMsg(const nsACString& aMsg)
 {

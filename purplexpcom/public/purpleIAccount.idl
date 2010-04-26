@@ -116,6 +116,7 @@ interface purpleIAccount: nsISupports {
   void joinChat(in purpleIChatRoomFieldValues aComponents);
 
   readonly attribute AUTF8String name;
+  readonly attribute AUTF8String normalizedName;
   readonly attribute AUTF8String id;
   readonly attribute PRUint32 numericId;
   readonly attribute purpleIProtocol protocol;

@@ -960,6 +960,7 @@ void purpleCoreService::RemoveConversation(PurpleConversation *aConv)
     return;
   }
 
+  NotifyObservers(conv, "conversation-closed");
   conv->UnInit();
   mConversations.RemoveObject(conv);
   LOG(("purpleCoreSevice::RemoveConversation: Done"));

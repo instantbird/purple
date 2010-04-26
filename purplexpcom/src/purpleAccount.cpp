@@ -966,6 +966,16 @@ NS_IMETHODIMP purpleAccount::GetName(nsACString& aName)
   return NS_OK;
 }
 
+/* readonly attribute AUTF8String normalizedName; */
+NS_IMETHODIMP purpleAccount::GetNormalizedName(nsACString& aNormalizedName)
+{
+  NS_ENSURE_TRUE(mAccount, NS_ERROR_NOT_INITIALIZED);
+
+  aNormalizedName = purple_normalize(mAccount,
+                                     purple_account_get_username(mAccount));
+  return NS_OK;
+}
+
 /* readonly attribute AUTF8String id; */
 NS_IMETHODIMP purpleAccount::GetId(nsACString& aId)
 {

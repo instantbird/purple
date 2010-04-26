@@ -350,6 +350,7 @@ purple_connection_set_state(PurpleConnection *gc, PurpleConnectionState state)
 		/* Set the time the account came online */
 		purple_presence_set_login_time(presence, time(NULL));
 
+#if 0
 		if (purple_prefs_get_bool("/purple/logging/log_system"))
 		{
 			PurpleLog *log = purple_account_get_log(account, TRUE);
@@ -365,6 +366,7 @@ purple_connection_set_state(PurpleConnection *gc, PurpleConnectionState state)
 				g_free(msg);
 			}
 		}
+#endif
 
 		if (ops != NULL && ops->connected != NULL)
 			ops->connected(gc);
@@ -380,6 +382,7 @@ purple_connection_set_state(PurpleConnection *gc, PurpleConnectionState state)
 	else if (gc->state == PURPLE_DISCONNECTED) {
 		PurpleAccount *account = purple_connection_get_account(gc);
 
+#if 0
 		if (purple_prefs_get_bool("/purple/logging/log_system"))
 		{
 			PurpleLog *log = purple_account_get_log(account, FALSE);
@@ -396,6 +399,7 @@ purple_connection_set_state(PurpleConnection *gc, PurpleConnectionState state)
 		}
 
 		purple_account_destroy_log(account);
+#endif
 
 		if (ops != NULL && ops->disconnected != NULL)
 			ops->disconnected(gc);

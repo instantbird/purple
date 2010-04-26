@@ -605,6 +605,7 @@ static void
 notify_buddy_status_update(PurpleBuddy *buddy, PurplePresence *presence,
 		PurpleStatus *old_status, PurpleStatus *new_status)
 {
+#if 0
 	if (purple_prefs_get_bool("/purple/logging/log_system"))
 	{
 		time_t current_time = time(NULL);
@@ -650,6 +651,7 @@ notify_buddy_status_update(PurpleBuddy *buddy, PurplePresence *presence,
 		g_free(tmp);
 		g_free(logtmp);
 	}
+#endif
 }
 
 static void
@@ -1251,6 +1253,7 @@ update_buddy_idle(PurpleBuddy *buddy, PurplePresence *presence,
 	PurpleBlistUiOps *ops = purple_blist_get_ui_ops();
 	PurpleAccount *account = purple_buddy_get_account(buddy);
 
+#if 0
 	if (!old_idle && idle)
 	{
 		if (purple_prefs_get_bool("/purple/logging/log_system"))
@@ -1291,6 +1294,7 @@ update_buddy_idle(PurpleBuddy *buddy, PurplePresence *presence,
 			}
 		}
 	}
+#endif
 
 	if (old_idle != idle)
 		purple_signal_emit(purple_blist_get_handle(), "buddy-idle-changed", buddy,
@@ -1337,6 +1341,7 @@ purple_presence_set_idle(PurplePresence *presence, gboolean idle, time_t idle_ti
 
 		account = purple_presence_get_account(presence);
 
+#if 0
 		if (purple_prefs_get_bool("/purple/logging/log_system"))
 		{
 			PurpleLog *log = purple_account_get_log(account, FALSE);
@@ -1358,6 +1363,7 @@ purple_presence_set_idle(PurplePresence *presence, gboolean idle, time_t idle_ti
 				g_free(msg);
 			}
 		}
+#endif
 
 		gc = purple_account_get_connection(account);
 

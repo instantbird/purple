@@ -343,7 +343,7 @@ static void destroy_conv(PurpleConversation *aConv)
 }
 
 static void notify_conv(PurpleConversation *aConv, nsISupports *aSubject,
-                        const char *aTopic, const PRUnichar *aData)
+                        const char *aTopic, const PRUnichar *aData = nsnull)
 {
   NS_ENSURE_TRUE(aConv,);
 
@@ -369,7 +369,7 @@ static void write_conv(PurpleConversation *conv, const char *who,
     do_GetService(PURPLE_CORE_SERVICE_CONTRACTID, &rv);
   pcs->NotifyObservers(msg, "new-text", nsnull);
 
-  notify_conv(conv, msg, "new-text", nsnull);
+  notify_conv(conv, msg, "new-text");
 }
 
 static void conv_add_chat_users(PurpleConversation *conv,
@@ -386,7 +386,7 @@ static void conv_add_chat_users(PurpleConversation *conv,
   }
   nsCOMPtr<nsISimpleEnumerator> enumerator;
   NS_NewArrayEnumerator(getter_AddRefs(enumerator), cBuddiesArray);
-  notify_conv(conv, enumerator, "chat-buddy-add", nsnull);
+  notify_conv(conv, enumerator, "chat-buddy-add");
 }
 
 static void conv_remove_chat_users(PurpleConversation *conv,
@@ -402,7 +402,7 @@ static void conv_remove_chat_users(PurpleConversation *conv,
   }
   nsCOMPtr<nsISimpleEnumerator> enumerator;
   NS_NewArrayEnumerator(getter_AddRefs(enumerator), stringsArray);
-  notify_conv(conv, enumerator, "chat-buddy-remove", nsnull);
+  notify_conv(conv, enumerator, "chat-buddy-remove");
 }
 
 static void conv_update_chat_usr(PurpleConversation *conv, const char *user,
@@ -616,20 +616,20 @@ static void update_chat_topic(PurpleConversation *aConv,
                               const char *aWho,
                               const char *aNew)
 {
-  notify_conv(aConv, nsnull, "chat-update-topic", nsnull);
+  notify_conv(aConv, nsnull, "chat-update-topic");
 }
 
 static void conversation_updated(PurpleConversation *aConv, PurpleConvUpdateType aType)
 {
   switch (aType) {
     case PURPLE_CONV_UPDATE_TYPING:
-      notify_conv(aConv, nsnull, "update-typing", nsnull);
+      notify_conv(aConv, nsnull, "update-typing");
       break;
 
     case PURPLE_CONV_UPDATE_AWAY:
     case PURPLE_CONV_ACCOUNT_ONLINE:
     case PURPLE_CONV_ACCOUNT_OFFLINE:
-      notify_conv(aConv, nsnull, "update-buddy-status", nsnull);
+      notify_conv(aConv, nsnull, "update-buddy-status");
       break;
 
     case PURPLE_CONV_UPDATE_TITLE:
@@ -637,7 +637,20 @@ static void conversation_updated(PurpleConversation *aConv, PurpleConvUpdateType
       // calling purple_conversation_autoset_title before the
       // create_conversation uiop.
       if (aConv && aConv->ui_data)
-        notify_conv(aConv, nsnull, "update-conv-title", nsnull);
+        notify_conv(aConv, nsnull, "update-conv-title");
+
+    case PURPLE_CONV_UPDATE_CHATLEFT:
+      {
+        nsCOMPtr<purpleConversation> conversation =
+          static_cast<purpleConversation *>(aConv->ui_data);
+        nsCOMPtr<purpleICoreService> pcs =
+          do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
+        if (conversation && pcs)
+          pcs->NotifyObservers(conversation, "conversation-left-chat", nsnull);
+      }
+      notify_conv(aConv, nsnull, "update-conv-chatleft");
+      break;
+
     default:
       ;
   }

@@ -1052,8 +1052,10 @@ purple_account_destroy(PurpleAccount *account)
 
 	purple_presence_destroy(account->presence);
 
+#if 0
 	if(account->system_log)
 		purple_log_free(account->system_log);
+#endif
 
 	while (account->deny) {
 		g_free(account->deny->data);
@@ -2282,6 +2284,7 @@ purple_account_get_ui_bool(const PurpleAccount *account, const char *ui,
 	return setting->value.boolean;
 }
 
+#if 0
 PurpleLog *
 purple_account_get_log(PurpleAccount *account, gboolean create)
 {
@@ -2312,6 +2315,7 @@ purple_account_destroy_log(PurpleAccount *account)
 		account->system_log = NULL;
 	}
 }
+#endif
 
 void
 purple_account_add_buddy(PurpleAccount *account, PurpleBuddy *buddy)

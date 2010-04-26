@@ -263,6 +263,14 @@ NS_IMETHODIMP purpleBuddy::GetName(nsACString& aName)
 }
 
 /* readonly attribute AUTF8String name; */
+NS_IMETHODIMP purpleBuddy::GetNormalizedName(nsACString& aNormalizedName)
+{
+  PURPLE_ENSURE_INIT(mId);
+
+  return mBuddies[0]->GetNormalizedName(aNormalizedName);
+}
+
+/* readonly attribute AUTF8String name; */
 NS_IMETHODIMP purpleBuddy::GetLoggedIn(nsACString& aLoggedIn)
 {
   PURPLE_ENSURE_INIT(mId);

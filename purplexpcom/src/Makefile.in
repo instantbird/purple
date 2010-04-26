@@ -94,7 +94,6 @@ CPPSRCS		= \
 		purpleIdle.cpp \
 		purpleGetText.cpp \
 		purpleGListEnumerator.cpp \
-		purpleLog.cpp \
 		purpleMessage.cpp \
 		purpleModule.cpp \
 		purpleNetwork.cpp \

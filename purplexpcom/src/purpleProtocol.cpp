@@ -144,6 +144,16 @@ NS_IMETHODIMP purpleProtocol::GetId(nsACString& aId)
   return NS_OK;
 }
 
+/* readonly attribute AUTF8String normalizedName; */
+NS_IMETHODIMP purpleProtocol::GetNormalizedName(nsACString& aNormalizedName)
+{
+  NS_ENSURE_TRUE(mInfo, NS_ERROR_NOT_INITIALIZED);
+
+  aNormalizedName =
+    ((PurplePluginProtocolInfo *)mInfo->extra_info)->list_icon(NULL, NULL);
+  return NS_OK;
+}
+
 /* readonly attribute AUTF8String iconBaseURI; */
 NS_IMETHODIMP purpleProtocol::GetIconBaseURI(nsACString& aIconBaseURI)
 {

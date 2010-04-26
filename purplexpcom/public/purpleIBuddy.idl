@@ -61,6 +61,7 @@ interface purpleIAccountBuddy;
 interface purpleIBuddy: nsISupports {
   readonly attribute long id;
   readonly attribute AUTF8String name;
+  readonly attribute AUTF8String normalizedName;
   readonly attribute AUTF8String loggedIn;
   readonly attribute AUTF8String buddyIconFilename;
 

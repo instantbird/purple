@@ -86,6 +86,13 @@ NS_IMETHODIMP purpleUnknownProtocol::GetId(nsACString& aId)
   return NS_OK;
 }
 
+/* readonly attribute AUTF8String normalizedName; */
+NS_IMETHODIMP purpleUnknownProtocol::GetNormalizedName(nsACString& aNormalizedName)
+{
+  aNormalizedName = EmptyCString();
+  return NS_OK;
+}
+
 /* readonly attribute AUTF8String iconBaseURI; */
 NS_IMETHODIMP purpleUnknownProtocol::GetIconBaseURI(nsACString& aIconBaseURI)
 {
