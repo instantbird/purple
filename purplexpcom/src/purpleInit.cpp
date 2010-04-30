@@ -1018,6 +1018,7 @@ static void ui_quit()
 {
   if (ui_info) {
     g_hash_table_destroy(ui_info);
+    ui_info = NULL;
     delete ui_name;
     delete ui_version;
   }
