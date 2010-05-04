@@ -2747,12 +2747,16 @@ purple_auth_sendrequest(PurpleConnection *gc, const char *name)
 	data->gc = gc;
 	data->name = g_strdup(name);
 
+#if 0
 	purple_request_input(data->gc, NULL, _("Authorization Request Message:"),
 					   NULL, _("Please authorize me!"), TRUE, FALSE, NULL,
 					   _("_OK"), G_CALLBACK(purple_auth_request),
 					   _("_Cancel"), G_CALLBACK(oscar_free_name_data),
 					   purple_connection_get_account(gc), name, NULL,
 					   data);
+#else
+	purple_auth_request(data, NULL);
+#endif
 }
 
 static void
@@ -2795,12 +2799,16 @@ static void
 purple_auth_dontgrant_msgprompt(gpointer cbdata)
 {
 	struct name_data *data = cbdata;
+#if 0
 	purple_request_input(data->gc, NULL, _("Authorization Denied Message:"),
 					   NULL, _("No reason given."), TRUE, FALSE, NULL,
 					   _("_OK"), G_CALLBACK(purple_auth_dontgrant),
 					   _("_Cancel"), G_CALLBACK(oscar_free_name_data),
 					   purple_connection_get_account(data->gc), data->name, NULL,
 					   data);
+#else
+	purple_auth_dontgrant(data, NULL);
+#endif
 }
 
 /* When someone sends you buddies */
