@@ -95,6 +95,7 @@ endif
 EXTRA_LIBS	+= $(NSS_LIBS) $(NSPR_LIBS)
 endif
 
+ifndef PURPLE_PLUGINS
 PROTOCOLS	= \
 		irc \
 		jabber \
@@ -120,6 +121,10 @@ ifneq (,$(STATIC_PRPLS))
 STATIC_PRPL_LIBS = $(foreach proto,$(STATIC_PRPLS),protocols/$(proto)/$(LIB_PREFIX)$(proto).$(LIB_SUFFIX))
 SHARED_LIBRARY_LIBS += $(STATIC_PRPL_LIBS)
 DEFINES += -DSTATIC_PROTO_INIT='extern void static_proto_init(void);'
+endif
+else
+libdir = /usr/lib
+DEFINES		+= -DPURPLE_PLUGINS -DLIBDIR=\"$(libdir)/purple-$(PURPLE_MAJOR_VERSION)/\"
 endif
 
 PURPLE_VERSION	= $(PURPLE_MAJOR_VERSION).$(PURPLE_MINOR_VERSION).$(PURPLE_MICRO_VERSION)
@@ -239,9 +244,11 @@ CSRCS		= \
 		ssl-nss.c \
 		$(NULL)
 
+ifndef PURPLE_PLUGINS
 ifneq (,$(STATIC_PRPLS))
 CSRCS		+= static_proto_init.c
 GARBAGE		+= static_proto_init.c
+endif
 endif
 
 ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))

@@ -72,6 +72,8 @@ static void *unload_cb_data = NULL;
 
 #ifdef PURPLE_PLUGINS
 
+#define RUNNING_ON_VALGRIND 0
+
 static gboolean
 has_file_extension(const char *filename, const char *ext)
 {
@@ -286,10 +288,12 @@ purple_plugin_probe(const char *filename)
 				purple_debug_error("plugins", "%s is not loadable: %s\n",
 						 plugin->path, plugin->error);
 			}
+#if 0
 #if GLIB_CHECK_VERSION(2,3,3)
 			plugin->handle = g_module_open(filename, G_MODULE_BIND_LAZY | G_MODULE_BIND_LOCAL);
 #else
 			plugin->handle = g_module_open(filename, G_MODULE_BIND_LAZY);
+#endif
 #endif
 
 			if (plugin->handle == NULL)

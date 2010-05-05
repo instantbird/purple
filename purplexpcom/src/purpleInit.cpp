@@ -112,6 +112,41 @@ static PRLogModuleInfo *gPurpleInitLog = nsnull;
 #endif
 #define LOG(args) PR_LOG(gPurpleInitLog, PR_LOG_DEBUG, args)
 
+#if defined(PURPLE_PLUGINS) && defined(XP_UNIX) && !defined(XP_MACOSX)
+#include <nsILocalFile.h>
+
+static nsresult open_libpurple(void)
+{
+  nsCOMPtr<nsIFile> folder;
+  nsresult rv = NS_GetSpecialDirectory("resource:app",
+                                       getter_AddRefs(folder));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsILocalFile> libpurple = do_QueryInterface(folder);
+  NS_ENSURE_TRUE(libpurple, rv);
+
+  rv = libpurple->AppendNative(NS_LITERAL_CSTRING("libpurple.so"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCString pathName;
+  libpurple->GetNativePath(pathName);
+
+  PRLibSpec libSpec;
+  libSpec.type = PR_LibSpec_Pathname;
+  libSpec.value.pathname = pathName.get();
+
+  // We will leak the result...
+  PRLibrary *lib =
+    PR_LoadLibraryWithFlags(libSpec, PR_LD_NOW | PR_LD_GLOBAL);
+  NS_ENSURE_TRUE(lib, NS_ERROR_FAILURE);
+
+  return NS_OK;
+}
+#else
+#define open_libpurple()
+#endif
+
+
 static PurpleEventLoopUiOps eventloops =
 {
   purpleTimer::AddTimeout, /* hack to prevent from writting .xml files to disk */
@@ -1111,6 +1146,10 @@ static PurpleCoreUiOps core_uiops =
 nsresult
 init_libpurple()
 {
+  /* Attempt to put libpurple symbols in the global namespace, and
+     ignore failures... */
+  open_libpurple();
+
   /* First initialize the translation stuff, it can probably be
      needed early be potential error messages */
   purple_gettext_set_ui_ops(&gettext_uiops);

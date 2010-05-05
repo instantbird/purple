@@ -2623,7 +2623,7 @@ purple_markup_get_tag_name(const char *tag)
 /**************************************************************************
  * Path/Filename Functions
  **************************************************************************/
-#if 0
+#ifdef PURPLE_PLUGINS
 const char *
 purple_home_dir(void)
 {
