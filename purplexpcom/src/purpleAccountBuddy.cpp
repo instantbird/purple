@@ -94,13 +94,9 @@ void purpleAccountBuddy::Uninit()
 
 nsresult purpleAccountBuddy::Store(PRInt32 aBuddyId)
 {
-  nsCString key;
-  nsresult rv = mAccount->GetId(key);
+  PRUint32 accountId;
+  nsresult rv = mAccount->GetNumericId(&accountId);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  PRInt32 accountId;
-  PRInt32 count = PR_sscanf(key.get(), ACCOUNT_KEY "%u", &accountId);
-  NS_ENSURE_TRUE(count == 1, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<purpleITag> tag;
   rv = GetTag(getter_AddRefs(tag));
@@ -128,13 +124,9 @@ nsresult purpleAccountBuddy::Store(PRInt32 aBuddyId)
 
 nsresult purpleAccountBuddy::UnStore(PRInt32 aBuddyId)
 {
-  nsCString key;
-  nsresult rv = mAccount->GetId(key);
+  PRUint32 accountId;
+  nsresult rv = mAccount->GetNumericId(&accountId);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  PRInt32 accountId;
-  PRInt32 count = PR_sscanf(key.get(), ACCOUNT_KEY "%u", &accountId);
-  NS_ENSURE_TRUE(count == 1, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<purpleITag> tag;
   rv = GetTag(getter_AddRefs(tag));
@@ -215,13 +207,9 @@ NS_IMETHODIMP purpleAccountBuddy::SetTag(purpleITag * aTag)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Then the account id
-  nsCString key;
-  rv = mAccount->GetId(key);
+  PRUint32 accountId;
+  rv = mAccount->GetNumericId(&accountId);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  PRInt32 accountId;
-  PRInt32 count = PR_sscanf(key.get(), ACCOUNT_KEY "%u", &accountId);
-  NS_ENSURE_TRUE(count == 1, NS_ERROR_UNEXPECTED);
 
   // And finally the buddy id
   nsCOMPtr<purpleICoreService> pcs =
