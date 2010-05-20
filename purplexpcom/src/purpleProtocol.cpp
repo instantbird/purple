@@ -295,8 +295,7 @@ NS_IMETHODIMP purpleProtocol::GetInfo(PurplePluginProtocolInfo * *aPrplInfo)
 NS_IMETHODIMP purpleProtocol::LoadAccount(const nsACString & aKey,
                                           purpleIAccount **aResult)
 {
-  nsCOMPtr<purpleAccount> account =
-    do_CreateInstance(PURPLE_ACCOUNT_CONTRACTID);
+  purpleAccount *account = new purpleAccount();
   NS_ENSURE_TRUE(account, NS_ERROR_OUT_OF_MEMORY);
 
   nsresult rv = account->Load(aKey, this);
@@ -311,8 +310,7 @@ NS_IMETHODIMP purpleProtocol::CreateAccount(const nsACString & aName,
                                             const nsACString & aKey,
                                             purpleIAccount **aResult)
 {
-  nsCOMPtr<purpleAccount> account =
-    do_CreateInstance(PURPLE_ACCOUNT_CONTRACTID);
+  purpleAccount *account = new purpleAccount();
   NS_ENSURE_TRUE(account, NS_ERROR_OUT_OF_MEMORY);
 
   nsresult rv = account->Create(aName, this, aKey);

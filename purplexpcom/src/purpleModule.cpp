@@ -46,7 +46,7 @@
 #include "purpleOverrideProtocol.h"
 #include "purpleProtocol.h"
 #include "purpleUnknownProtocol.h"
-#include "purpleAccount.h"
+#include "purpleAccountBase.h"
 #include "purpleBuddy.h"
 #include "purpleTag.h"
 #include "purpleAccountBuddy.h"
@@ -62,7 +62,7 @@
   NS_DECL_CLASSINFO(_class)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleContentPolicy)
-NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleAccount)
+NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleAccountBase)
 NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleAccountBuddy)
 NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleBuddy)
 NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleConvChat)
@@ -124,12 +124,12 @@ static NS_METHOD UnregisterPurpleContentPolicy(nsIComponentManager *aCompMgr,
     NS_CI_INTERFACE_GETTER_NAME(purple##_class),        \
     nsnull,                                             \
     &NS_CLASSINFO_NAME(purple##_class),                 \
-    0                                                   \
+    nsIClassInfo::EAGER_CLASSINFO                       \
   }
 
 static nsModuleComponentInfo components[] =
 {
-  PURPLE_MODULE_CI(Account, ACCOUNT, "account"),
+  PURPLE_MODULE_CI(AccountBase, ACCOUNT, "account"),
   PURPLE_MODULE_CI(AccountBuddy, ACCOUNTBUDDY, "account buddy"),
   PURPLE_MODULE_CI(Buddy, BUDDY, "buddy"),
   PURPLE_MODULE_CI(ConvChat, CONV_CHAT, "chat conversation"),

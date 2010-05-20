@@ -38,33 +38,48 @@
 #ifndef PURPLE_ACCOUNT_H_
 # define PURPLE_ACCOUNT_H_
 
-#include "purpleIAccount.h"
-#include "purpleProtocol.h"
-#include "nsCOMPtr.h"
-#include<nsIPrefBranch.h>
-#include<nsITimer.h>
-#include<nsStringAPI.h>
-#include<prtime.h>
+#include "purpleAccountBase.h"
 
 #define UI_ID                  "instantbird"
 
-// e450cf22-b98a-4095-b480-e57caf58a2eb
-#define PURPLE_ACCOUNT_CID \
-{ 0xe450cf22, 0xb98a, 0x4095, \
-  { 0xb4, 0x80, 0xe5, 0x7c, 0xaf, 0x58, 0xa2, 0xeb } \
- }
-
-#define PURPLE_ACCOUNT_CONTRACTID \
-    "@instantbird.org/purple/account;1"
-
-#define ACCOUNT_KEY "account"
-#define PREF_AUTOLOGIN_PENDING  "messenger.accounts.autoLoginPending"
-
-class purpleAccount : public purpleIAccount
+class purpleAccount : public purpleAccountBase
 {
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_PURPLEIACCOUNT
+  //  NS_DECL_PURPLEIACCOUNT
+  NS_SCRIPTABLE NS_IMETHOD UnInit(void);
+  NS_SCRIPTABLE NS_IMETHOD Connect(void);
+  NS_SCRIPTABLE NS_IMETHOD Disconnect(void);
+  NS_SCRIPTABLE NS_IMETHOD CreateConversation(const nsACString & aName, purpleIConversation **_retval NS_OUTPARAM);
+  NS_SCRIPTABLE NS_IMETHOD AddBuddy(purpleITag *aTag, const nsACString & aName);
+  NS_SCRIPTABLE NS_IMETHOD LoadBuddy(purpleIBuddy *aBuddy, const nsACString & aName, const nsACString & aAlias, const nsACString & aServerAlias, purpleITag *aTag);
+  NS_SCRIPTABLE NS_IMETHOD GetCanJoinChat(PRBool *aCanJoinChat);
+  NS_SCRIPTABLE NS_IMETHOD GetChatRoomFields(nsISimpleEnumerator **_retval NS_OUTPARAM);
+  NS_SCRIPTABLE NS_IMETHOD GetChatRoomDefaultFieldValues(const nsACString & aDefaultChatName, purpleIChatRoomFieldValues **_retval NS_OUTPARAM);
+  NS_SCRIPTABLE NS_IMETHOD JoinChat(purpleIChatRoomFieldValues *aComponents);
+  NS_SCRIPTABLE NS_IMETHOD GetNormalizedName(nsACString & aNormalizedName);
+  NS_SCRIPTABLE NS_IMETHOD GetPassword(nsACString & aPassword);
+  NS_SCRIPTABLE NS_IMETHOD SetPassword(const nsACString & aPassword);
+  NS_SCRIPTABLE NS_IMETHOD GetRememberPassword(PRBool *aRememberPassword);
+  NS_SCRIPTABLE NS_IMETHOD SetRememberPassword(PRBool aRememberPassword);
+  NS_SCRIPTABLE NS_IMETHOD GetAlias(nsACString & aAlias);
+  NS_SCRIPTABLE NS_IMETHOD SetAlias(const nsACString & aAlias);
+  NS_SCRIPTABLE NS_IMETHOD GetProxyInfo(purpleIProxyInfo * *aProxyInfo);
+  NS_SCRIPTABLE NS_IMETHOD SetProxyInfo(purpleIProxyInfo * aProxyInfo);
+  NS_SCRIPTABLE NS_IMETHOD SetBool(const char *aName, PRBool aVal);
+  NS_SCRIPTABLE NS_IMETHOD SetInt(const char *aName, PRInt32 aVal);
+  NS_SCRIPTABLE NS_IMETHOD SetString(const char *aName, const char *aVal);
+  NS_SCRIPTABLE NS_IMETHOD GetHTMLEnabled(PRBool *aHTMLEnabled);
+  NS_SCRIPTABLE NS_IMETHOD GetNoBackgroundColors(PRBool *aNoBackgroundColors);
+  NS_SCRIPTABLE NS_IMETHOD GetAutoResponses(PRBool *aAutoResponses);
+  NS_SCRIPTABLE NS_IMETHOD GetSingleFormatting(PRBool *aSingleFormatting);
+  NS_SCRIPTABLE NS_IMETHOD GetNoNewlines(PRBool *aNoNewlines);
+  NS_SCRIPTABLE NS_IMETHOD GetNoFontSizes(PRBool *aNoFontSizes);
+  NS_SCRIPTABLE NS_IMETHOD GetNoUrlDesc(PRBool *aNoUrlDesc);
+  NS_SCRIPTABLE NS_IMETHOD GetNoImages(PRBool *aNoImages);
+
+  // From purpleIAccountBase
+  NS_SCRIPTABLE NS_IMETHOD Disconnecting(PRInt16 aConnectionErrorReason,
+                                         const nsACString & aConnectionErrorMessage);
 
   purpleAccount();
   PurpleAccount *GetPurpleAccount() { return mAccount; }
@@ -79,65 +94,19 @@ public:
   nsresult Create(const nsACString & aName, purpleIProtocol *aPrpl,
                   const nsACString & aKey);
 
-  // The next 3 methods are called from purpleInit with a cast of ui_data.
-  void SetConnectionStateMsg(const char *aConnectionStateMsg);
-  void SetDisconnectReason(PurpleConnectionError reason, const char *text);
-  // Called when an account successfully connected, to reset values
-  // related to connection error and auto-reconnect.
-  void Connected();
-
 private:
   ~purpleAccount();
-  inline nsresult SetId(const nsACString& aId);
-  nsresult sendUpdateNotification();
-  inline nsresult GetPrefBranch();
-  nsresult ensureStored(const nsCString& aName, const nsCString& aPrpl);
-  nsresult storeAccount(PRUint32 aKey, const nsCString& aName, const nsCString& aPrpl);
-  nsresult unstoreAccount();
   nsresult SetBoolPref(const char *aName, PRBool aValue);
   nsresult SetIntPref(const char *aName, PRInt32 aValue);
   nsresult SetStringPref(const char *aName, const char *aValue);
   inline void GetBoolPref(const char *aName);
   inline void GetIntPref(const char *aName);
   inline void GetCharPref(const char *aName);
-  inline void CheckAndSetFirstConnectionState(const PRInt16 aState);
-  inline void SetMissingPasswordIfRequired();
 
 protected:
   /* additional members */
   PurpleAccount *mAccount;
-  nsCString mKey;
-  PRUint32 mId;
-  PRBool mHasValidProtocol;
-  nsCOMPtr<purpleIProtocol> mProtocol;
   nsCOMPtr<purpleIProxyInfo> mProxy;
-  nsCOMPtr<nsIPrefBranch> mPrefBranch;
-  nsCOMPtr<nsIPrefBranch> mPrefOptBranch;
-
-  nsCString mConnectionStateMsg;
-  nsCString mConnectionErrorMessage;
-  PurpleConnectionError mConnectionErrorReason;
-
-  /* Automatic reconnection stuff */
-  nsCOMPtr<nsITimer> mTimer;
-  static void reconnectTimerCallback(nsITimer *aTimer, void *aClosure);
-  PRUint16 mReconnectAttempts;
-  PRTime mTimeOfNextReconnect;
-  PRTime mTimeOfLastConnect;
-
-  /* Timer to save preferences */
-  static void savePrefsNow(nsITimer *aTimer, void *aClosure);
-  void initSavePrefsTimer();
-  static nsCOMPtr<nsITimer> sSavePrefsTimer;
-
-  /* Startup crash prevention stuff */
-  void startAutoLogin();
-  void finishedAutoLogin();
-
-  // Is the current account connecting with autologin
-  PRBool mAutoLoginPending;
-  // How many accounts are currently connecting with autologin
-  static PRUint32 sAutoLoginsPending;
 };
 
 #endif /* !PURPLE_ACCOUNT_H_ */

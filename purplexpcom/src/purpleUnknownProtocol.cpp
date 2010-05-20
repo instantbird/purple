@@ -172,8 +172,7 @@ NS_IMETHODIMP purpleUnknownProtocol::GetInfo(PurplePluginProtocolInfo * *aPrplIn
 NS_IMETHODIMP purpleUnknownProtocol::LoadAccount(const nsACString & aKey,
                                                  purpleIAccount **aResult)
 {
-  nsCOMPtr<purpleAccount> account =
-    do_CreateInstance(PURPLE_ACCOUNT_CONTRACTID);
+  purpleAccount *account = new purpleAccount();
   NS_ENSURE_TRUE(account, NS_ERROR_OUT_OF_MEMORY);
 
   nsresult rv = account->Load(aKey, this, PR_FALSE);

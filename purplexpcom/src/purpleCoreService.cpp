@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "purpleCoreService.h"
+#include "purpleAccount.h"
 #include "purpleDNS.h"
 #include "purpleGetText.h"
 #include "purpleNetwork.h"

@@ -174,6 +174,9 @@ interface purpleIAccount: nsISupports {
   /* Time stamp of the last connection (value not reliable if not connected) */
   readonly attribute PRInt64 timeOfLastConnect;
 
+  /* Possible connection errors.
+     ERROR_NETWORK_ERROR and ERROR_ENCRYPTION_ERROR are not fatal and
+     will enable the automatic reconnection feature. */
   const short NO_ERROR = -1;
   const short ERROR_NETWORK_ERROR = 0;
   const short ERROR_INVALID_USERNAME = 1;
@@ -203,20 +206,18 @@ interface purpleIAccount: nsISupports {
   readonly attribute AUTF8String connectionErrorMessage;
 
   /* Info about the connection state and flags */
+  const short STATE_DISCONNECTED = 0;
+  const short STATE_CONNECTED = 1;
+  const short STATE_CONNECTING = 2;
+  const short STATE_DISCONNECTING = 3;
 
-  /* From PurpleAccount */
-  readonly attribute boolean disconnecting;
+  readonly attribute short connectionState;
 
-  /* From PurpleConnectionState */
-
-  //   PURPLE_DISCONNECTED     Disconnected.
+  /* The following 4 properties use the above connectionState value. */
   readonly attribute boolean disconnected;
-
-  //   PURPLE_CONNECTED        Connected.
   readonly attribute boolean connected;
-
-  //   PURPLE_CONNECTING       Connecting.
   readonly attribute boolean connecting;
+  readonly attribute boolean disconnecting;
 
   /* From PurpleConnectionFlags */
 
@@ -251,4 +252,43 @@ interface purpleIAccount: nsISupports {
   //   PURPLE_CONNECTION_NO_IMAGES
   //    Connection does not support sending of images.
   readonly attribute boolean noImages;
+};
+
+/*
+ * This interface is implemented by the base class common to all
+ * implementations or purpleIAccount. It should only be used by the
+ * purpleIAccount implementations, not by the UI.
+ */
+[scriptable, uuid(dd237827-709b-4370-8dc9-584fc5fc1a71)]
+interface purpleIAccountBase: nsISupports {
+  attribute purpleIAccount concreteAccount;
+
+  // load an account from the preferences.
+  void load(in AUTF8String aKey, in purpleIProtocol aPrpl,
+            in PRBool aIsValidProtocol);
+
+  // Create a new account using aName as username, aProtocol as the
+  // associated protocol plugin and aKey as the identifier to store
+  //  the account in the preferences.
+  void create(in AUTF8String aName, in purpleIProtocol aPrpl,
+              in AUTF8String aKey);
+
+  /* Call this for each connection step. */
+  void connecting([optional] in AUTF8String aConnectionStateMessage);
+
+  /* Call this once the account is connected. */
+  void connected();
+
+  /* Call this when the account is about to be disconnected.
+   *
+   * If the disconnection was not caused by an error on the
+   * account, aConnectionErrorReason should be NO_ERROR.
+   */
+  void disconnecting(in short aConnectionErrorReason,
+                     [optional] in AUTF8String aConnectionErrorMessage);
+
+  /* Call this when the account is disconnected.
+   * If the disconnection was caused an error which wasn't fatal,
+   * the auto-reconnect timer will be started automatically. */
+  void disconnected();
 };

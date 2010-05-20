@@ -126,45 +126,53 @@ static PurpleEventLoopUiOps eventloops =
 /*** End of the eventloop functions. ***/
 
 /*** Connection uiops ***/
+#define IMPL_GET_ACCOUNT_FROM_UI_DATA(aVar)                     \
+  purpleAccount *account = (purpleAccount *)aVar->ui_data;      \
+  NS_ENSURE_TRUE(account,)
+
 #define IMPL_GET_ACCOUNT                                        \
   PurpleAccount *pAccount = purple_connection_get_account(gc);  \
   NS_ENSURE_TRUE(pAccount,);                                    \
-  purpleAccount *account = (purpleAccount *)pAccount->ui_data;  \
-  NS_ENSURE_TRUE(account,)
+  IMPL_GET_ACCOUNT_FROM_UI_DATA(pAccount)
 
+static void connecting(PurpleAccount *aAccount)
+{
+  IMPL_GET_ACCOUNT_FROM_UI_DATA(aAccount);
+  account->Connecting(EmptyCString());
+}
 static void connect_progress(PurpleConnection *gc, const char *text,
                              size_t step, size_t step_count)
 {
   IMPL_GET_ACCOUNT;
-  account->SetConnectionStateMsg(text);
-
-  nsCOMPtr<purpleICoreService> pcs =
-    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-  pcs->NotifyObservers(account, "account-connect-progress", nsnull);
+  account->Connecting(nsDependentCString(text));
 }
-
 static void connected(PurpleConnection *gc)
 {
   IMPL_GET_ACCOUNT;
   account->Connected();
 }
-
+static void disconnected(PurpleConnection *gc)
+{
+  IMPL_GET_ACCOUNT;
+  account->Disconnected();
+}
+static void disconnecting(PurpleConnection *gc)
+{
+  IMPL_GET_ACCOUNT;
+  account->Disconnecting(purpleIAccount::NO_ERROR, EmptyCString());
+}
 static void report_disconnect_reason(PurpleConnection *gc,
                                      PurpleConnectionError reason,
                                      const char *text)
 {
   IMPL_GET_ACCOUNT;
-  account->SetDisconnectReason(reason, text);
-
-  nsCOMPtr<purpleICoreService> pcs =
-    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-  pcs->NotifyObservers(account, "account-connect-error", nsnull);
+  account->Disconnecting(reason, nsDependentCString(text));
 }
 
 PurpleConnectionUiOps connection_uiops = {
   connect_progress,
   connected,
-  NULL, /* disconnected */
+  disconnected,
   NULL, /* notice = dead code ? */
   NULL, /* report_disconnect: deprecated in favour of report_disconnect_reason */
   NULL, /* network_connected */
@@ -173,6 +181,23 @@ PurpleConnectionUiOps connection_uiops = {
 
   NULL, NULL, NULL
 };
+
+static void connect_to_connections_signals()
+{
+  int handle;
+  void *instance = purple_connections_get_handle();
+  purple_signal_connect(instance, "signing-off", &handle,
+                        PURPLE_CALLBACK(disconnecting), NULL);
+}
+
+static void connect_to_accounts_signals()
+{
+  int handle;
+  void *instance = purple_accounts_get_handle();
+  purple_signal_connect(instance, "account-connecting", &handle,
+                        PURPLE_CALLBACK(connecting), NULL);
+}
+
 
 /*** Account uiops ***/
 class purpleAuthorizationRequest : public nsIRunnable
@@ -448,55 +473,6 @@ static PurpleConversationUiOps conversation_uiops =
 
   NULL, NULL, NULL, NULL
 };
-
-static void account_signals(PurpleAccount *aAccount, const char *signal)
-{
-  LOG(("%s: %s (%s)\n", signal,
-       aAccount->username, aAccount->protocol_id));
-
-  purpleAccount *account = (purpleAccount *)aAccount->ui_data;
-  NS_ENSURE_TRUE(account, );
-
-  nsCOMPtr<purpleICoreService> pcs =
-    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(pcs, );
-
-  pcs->NotifyObservers(account, signal, nsnull);
-}
-
-static void connection_signals(PurpleConnection *gc, const char *signal)
-{
-  account_signals(purple_connection_get_account(gc), signal);
-}
-
-#define PURPLE_CONNECT_CONNECTION_SIGNAL(aSignal, aName)        \
-  purple_signal_connect(instance, aSignal, &handle,             \
-                        PURPLE_CALLBACK(connection_signals),    \
-                        (void *)aName)
-
-static void
-connect_to_connections_signals()
-{
-  int handle;
-  void *instance = purple_connections_get_handle();
-  PURPLE_CONNECT_CONNECTION_SIGNAL("signed-on", "account-connected");
-  PURPLE_CONNECT_CONNECTION_SIGNAL("signing-on", "account-signing-on");
-  PURPLE_CONNECT_CONNECTION_SIGNAL("signed-off", "account-disconnected");
-  PURPLE_CONNECT_CONNECTION_SIGNAL("signing-off", "account-disconnecting");
-  LOG(("Connecting to connections signals"));
-}
-
-static void
-connect_to_accounts_signals()
-{
-  int handle;
-  void *instance = purple_accounts_get_handle();
-  purple_signal_connect(instance, "account-connecting", &handle,
-                        PURPLE_CALLBACK(account_signals),
-                        (void *)"account-connecting");
-
-  LOG(("Connecting to accounts signals"));
-}
 
 static void buddy_signals(PurpleBuddy *aBuddy, const char *aSignal)
 {

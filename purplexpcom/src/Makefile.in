@@ -80,6 +80,7 @@ endif
 
 CPPSRCS		= \
 		purpleAccount.cpp \
+		purpleAccountBase.cpp \
 		purpleAccountBuddy.cpp \
 		purpleBuddy.cpp \
 		purpleConversation.cpp \
@@ -116,6 +117,9 @@ OS_LIBS		+= -framework Carbon
 endif
 
 EXTRA_COMPONENTS = gtalkOverrideProtocol.js facebookOverrideProtocol.js
+ifdef DEBUG
+EXTRA_COMPONENTS += jsTestProtocol.js
+endif
 
 EXTRA_DSO_LDOPTS += $(XPCOM_GLUE_LDOPTS) $(MOZ_COMPONENT_NSPR_LIBS)
 

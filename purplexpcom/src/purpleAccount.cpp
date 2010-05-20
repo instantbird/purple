@@ -48,8 +48,6 @@
 #include <nsNetUtil.h>
 #include <prprf.h>
 
-NS_IMPL_ISUPPORTS1_CI(purpleAccount, purpleIAccount)
-
 #define PREF_PREFIX             "messenger.account."
 #define PREF_OPTIONS            "options."
 #define PREF_PRPL               "prpl"
@@ -60,10 +58,6 @@ NS_IMPL_ISUPPORTS1_CI(purpleAccount, purpleIAccount)
 #define PREF_FIRST_CONNECTION_STATE "firstConnectionState"
 #define PREF_PASSWORD           "password"
 #define PREF_REMEMBER_PASSWORD  "rememberPassword"
-
-#define AUTO_SAVE_PREFS_TIMER   5000
-
-#define TIME_BEFORE_CONSIDERING_CONNECTION_AS_SUCCESSFUL 10
 
 #define INIT_CONDITION          (mProtocol && (!mHasValidProtocol || mAccount))
 
@@ -222,17 +216,8 @@ purpleChatRoomFieldValues::GetHashTable(GHashTable * *aHashTable)
   return NS_OK;
 }
 
-nsCOMPtr<nsITimer> purpleAccount::sSavePrefsTimer;
-PRUint32 purpleAccount::sAutoLoginsPending = 0;
-
 purpleAccount::purpleAccount()
-  : mAccount(NULL),
-    mHasValidProtocol(PR_FALSE),
-    mConnectionErrorReason((PurpleConnectionError)NO_ERROR),
-    mReconnectAttempts(0),
-    mTimeOfNextReconnect(0),
-    mTimeOfLastConnect(0),
-    mAutoLoginPending(PR_FALSE)
+  : mAccount(NULL)
 {
   /* member initializers and constructor code */
 #ifdef PR_LOGGING
@@ -267,22 +252,6 @@ NS_IMETHODIMP purpleAccount::UnInit()
        NS_SUCCEEDED(rv) ? protoId.get() : "mProtocol = NULL"));
 #endif
 
-  if (mTimer) {
-    mTimer->Cancel();
-    mTimer = nsnull;
-  }
-
-  // remove any pending autologin preference used for crash detection
-  if (mAutoLoginPending)
-    finishedAutoLogin();
-
-  // If the first connection was pending on quit, we set it back to "set"
-  CheckAndSetFirstConnectionState(FIRST_CONNECTION_SET);
-
-  // and make sure we cleanup the save pref timer
-  if (sSavePrefsTimer)
-    savePrefsNow(nsnull, nsnull);
-
   if (mAccount) {
     // disconnect before removing the ui_data pointer so that
     // account-disconnected signals can be sent
@@ -293,6 +262,7 @@ NS_IMETHODIMP purpleAccount::UnInit()
     purple_accounts_delete(mAccount);
     mAccount = NULL;
   }
+  purpleAccountBase::UnInit();
 
   return NS_OK;
 }
@@ -347,6 +317,7 @@ nsresult purpleAccount::Create(const nsACString & aName,
   rv = SetId(aKey);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  mName = aName;
   mProtocol = aPrpl;
   mHasValidProtocol = PR_TRUE;
 
@@ -388,11 +359,10 @@ nsresult purpleAccount::Load(const nsACString & aKey,
   NS_ENSURE_SUCCESS(rv, rv);
 
   /* Get the name */
-  nsCString name;
-  rv = mPrefBranch->GetCharPref(PREF_NAME, getter_Copies(name));
+  rv = mPrefBranch->GetCharPref(PREF_NAME, getter_Copies(mName));
   NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(!name.IsEmpty(), NS_ERROR_UNEXPECTED);
-  LOG(("name = %s\n", name.get()));
+  NS_ENSURE_TRUE(!mName.IsEmpty(), NS_ERROR_UNEXPECTED);
+  LOG(("name = %s\n", mName.get()));
 
   /* Get the prpl */
   nsCString prpl;
@@ -401,14 +371,14 @@ nsresult purpleAccount::Load(const nsACString & aKey,
   NS_ENSURE_TRUE(!prpl.IsEmpty(), NS_ERROR_UNEXPECTED);
   LOG(("prpl = %s\n", prpl.get()));
 
-  rv = ensureStored(name, prpl);
+  rv = ensureStored(mName, prpl);
   NS_ENSURE_SUCCESS(rv, rv);
 
   /* Init the mProtocol member */
   mProtocol = aPrpl;
   mHasValidProtocol = aIsValidProtocol;
   if (aIsValidProtocol) {
-    rv = mProtocol->CreatePurpleAccount(name, this, &mAccount);
+    rv = mProtocol->CreatePurpleAccount(mName, this, &mAccount);
     NS_ENSURE_SUCCESS(rv, rv);
 
     /* We previously crashed while connecting an account individually. */
@@ -527,226 +497,6 @@ nsresult purpleAccount::Load(const nsACString & aKey,
   return NS_OK;
 }
 
-void purpleAccount::startAutoLogin()
-{
-  NS_ENSURE_TRUE(!mAutoLoginPending, );
-  LOG(("purpleAccount::startAutoLogin"));
-  mAutoLoginPending = PR_TRUE;
-
-  if (!sAutoLoginsPending++) {
-    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    NS_ENSURE_TRUE(prefs, );
-
-    PRTime now = PR_Now() / PR_USEC_PER_SEC;
-    nsresult rv = prefs->SetIntPref(PREF_AUTOLOGIN_PENDING, (PRInt32)now);
-    NS_ENSURE_SUCCESS(rv, );
-
-    LOG(("Added autoLoginPending pref, with value %i", now));
-    savePrefsNow(nsnull, nsnull);
-  }
-}
-
-void purpleAccount::finishedAutoLogin()
-{
-  if (!mAutoLoginPending) {
-    LOG(("purpleAccount::finishedAutoLogin mAutoLoginPending wasn't set"));
-    return;
-  }
-
-  LOG(("finishedAutoLogin"));
-  mAutoLoginPending = PR_FALSE;
-
-  if (!--sAutoLoginsPending) {
-    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    NS_ENSURE_TRUE(prefs, );
-    nsresult rv = prefs->DeleteBranch(PREF_AUTOLOGIN_PENDING);
-    NS_ENSURE_SUCCESS(rv, );
-
-    initSavePrefsTimer();
-  }
-}
-
-/* Function called to change the state of firstConnectionState
-   Called on connecting, disconnecting, crashed, Uninit or connected to set or reset
-   the value of firstConnectionState.
-   For example, this function prevents from setting firstConnectionState to
-   FIRST_CONNECTION_PENDING while connecting and the account is already reliable. */
-inline void purpleAccount::CheckAndSetFirstConnectionState(const PRInt16 aState)
-{
-  PRInt16 currentState;
-  if (NS_FAILED(GetFirstConnectionState(&currentState)) ||
-      currentState == FIRST_CONNECTION_NONE || currentState == aState ||
-      (currentState == FIRST_CONNECTION_CRASHED && aState == FIRST_CONNECTION_SET))
-    return;
-
-  LOG(("purpleAccount::CheckAndSetFirstConnectionState"));
-  LOG(("\tOld State: %d\tAsked State: %d", currentState, aState));
-
-  nsresult rv = SetFirstConnectionState(aState);
-  NS_ENSURE_SUCCESS(rv, );
-}
-
-/* void checkAutoLogin (); */
-NS_IMETHODIMP purpleAccount::CheckAutoLogin()
-{
-  PURPLE_ENSURE_INIT(INIT_CONDITION);
-
-  /* If we don't have a valid protocol or the passwordi is missing,
-     we can't autologin so don't bother checking the value of the pref */
-  if (!mHasValidProtocol ||
-      mConnectionErrorReason == (PurpleConnectionError)ERROR_MISSING_PASSWORD)
-    return NS_OK;
-
-  /* We don't want to connect an already connecting account. */
-  if (mAccount->gc && mAccount->gc->state == PURPLE_CONNECTING)
-    return NS_OK;
-
-  PRInt16 currentState;
-  if (NS_SUCCEEDED(GetFirstConnectionState(&currentState)) &&
-      currentState == FIRST_CONNECTION_CRASHED)
-    return NS_OK;
-
-  /* Check if we should connect the account automatically */
-  PRBool autoLogin;
-  nsresult rv = GetPrefBranch();
-  if (NS_SUCCEEDED(rv))
-    rv = mPrefBranch->GetBoolPref(PREF_AUTOLOGIN, &autoLogin);
-  if (NS_FAILED(rv) || autoLogin) {
-    LOG(("autologin\n"));
-    startAutoLogin();
-    rv = Connect();
-#ifdef DEBUG
-    if (NS_FAILED(rv))
-      finishedAutoLogin();
-#endif
-  }
-
-  mPrefBranch = nsnull;
-  return NS_OK;
-}
-
-nsresult purpleAccount::ensureStored(const nsCString& aName, const nsCString& aPrpl)
-{
-  purpleStorage *storageInstance = purpleStorage::GetInstance();
-  NS_ENSURE_TRUE(storageInstance, NS_ERROR_OUT_OF_MEMORY);
-
-  LOG(("Checking that the account with the id %u in mozStorage has the name %s and the prpl %s\n",
-       mId, aName.get(), aPrpl.get()));
-  mozIStorageStatement *statement = storageInstance->mEnsureAccountStoredStatement;
-  mozStorageStatementScoper scoper(statement);
-  nsresult rv = statement->BindInt32Parameter(0, mId);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRBool hasMoreData;
-  while (NS_SUCCEEDED(statement->ExecuteStep(&hasMoreData)) && hasMoreData) {
-    nsCString name;
-    rv = statement->GetUTF8String(0, name);
-    NS_ENSURE_SUCCESS(rv, rv);
-    nsCString prpl;
-    rv = statement->GetUTF8String(1, prpl);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    LOG(("Account at the id %u in mozStorage has the name %s and the prpl %s\n",
-         mId, name.get(), prpl.get()));
-    NS_ENSURE_TRUE(name.Equals(aName) && prpl.Equals(aPrpl), NS_ERROR_FAILURE);
-
-    LOG(("Checking account (%u, %s, %s) OK\n", mId, name.get(), prpl.get()));
-    return NS_OK;
-  }
-
-  LOG(("account (%u, %s, %s) not found in mozStorage, attempting to store it\n",
-       mId, aName.get(), aPrpl.get()));
-
-  return storeAccount(mId, aName, aPrpl);
-}
-
-nsresult purpleAccount::storeAccount(PRUint32 aKey, const nsCString& aName, const nsCString& aPrpl)
-{
-  LOG(("Adding account %u (%s, %s) in mozStorage\n", aKey, aName.get(), aPrpl.get()));
-  purpleStorage *storageInstance = purpleStorage::GetInstance();
-  NS_ENSURE_TRUE(storageInstance, NS_ERROR_OUT_OF_MEMORY);
-
-  mozIStorageConnection *DBConn = storageInstance->GetConnection();
-  nsCOMPtr<mozIStorageStatement> statement;
-  nsresult rv = DBConn->CreateStatement(NS_LITERAL_CSTRING(
-    "INSERT INTO accounts (id, name, prpl) VALUES(?1, ?2, ?3)"),
-    getter_AddRefs(statement));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  statement->BindInt32Parameter(0, aKey);
-  statement->BindUTF8StringParameter(1, aName);
-  statement->BindUTF8StringParameter(2, aPrpl);
-
-  rv = statement->Execute();
-  NS_ASSERTION(NS_SUCCEEDED(rv), "adding account failed");
-  return rv;
-}
-
-nsresult purpleAccount::unstoreAccount()
-{
-  LOG(("Removing account %u from mozStorage\n", mId));
-  purpleStorage *storageInstance = purpleStorage::GetInstance();
-  NS_ENSURE_TRUE(storageInstance, NS_ERROR_OUT_OF_MEMORY);
-
-  mozIStorageConnection *DBConn = storageInstance->GetConnection();
-  nsCOMPtr<mozIStorageStatement> statement;
-  nsresult rv = DBConn->CreateStatement(NS_LITERAL_CSTRING(
-    "DELETE FROM accounts WHERE id = ?1"),
-    getter_AddRefs(statement));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = statement->BindInt32Parameter(0, mId);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = statement->Execute();
-  NS_ASSERTION(NS_SUCCEEDED(rv), "removing account failed");
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // removing the account from the accounts table is not enought,
-  // we need to remove all the associated account_buddy entries too
-  LOG(("Removing account_buddy entries of account %u from mozStorage\n", mId));
-  rv = DBConn->CreateStatement(NS_LITERAL_CSTRING(
-    "DELETE FROM account_buddy WHERE account_id = ?1"),
-    getter_AddRefs(statement));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = statement->BindInt32Parameter(0, mId);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = statement->Execute();
-  NS_ASSERTION(NS_SUCCEEDED(rv), "removing account_buddy failed");
-
-  return rv;
-}
-
-/* void remove (); */
-NS_IMETHODIMP purpleAccount::Remove()
-{
-  nsresult rv = GetPrefBranch();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-#ifdef DEBUG
-  nsCString protoId;
-  rv = NS_ERROR_FAILURE;
-  if (mProtocol)
-    rv = mProtocol->GetId(protoId);
-  LOG(("Deleting purpleAccount %s (%s)\n",
-       mAccount ? purple_account_get_username(mAccount) : "(mAccount = NULL)",
-       NS_SUCCEEDED(rv) ? protoId.get() : "mProtocol = NULL"));
-#endif
-
-  /* Remove data from the pref branch */
-  rv = mPrefBranch->DeleteBranch("");
-  NS_ENSURE_SUCCESS(rv, rv); // FIXME Should we really return here?
-
-  /* Remove the data from the accounts table in mozStorage */
-  unstoreAccount();
-
-  /* Remove the account from libpurple */
-  UnInit();
-  return NS_OK;
-}
-
 /* void connect (); */
 NS_IMETHODIMP purpleAccount::Connect()
 {
@@ -757,23 +507,6 @@ NS_IMETHODIMP purpleAccount::Connect()
 #endif
     NS_ENSURE_TRUE(!NS_IsOffline(), NS_ERROR_FAILURE);
 
-  if (mConnectionErrorReason != (PurpleConnectionError) NO_ERROR) {
-    /* The account is offline because of an error, clear the error */
-    LOG(("Reconnecting account and clearing the error"));
-    mConnectionErrorReason = (PurpleConnectionError) NO_ERROR;
-    mConnectionErrorMessage.Truncate();
-
-    if (mTimeOfNextReconnect - PR_Now() > PRTime(PR_USEC_PER_SEC)) {
-      LOG(("mReconnectAttempts := 0 because: mTimeOfNextReconnect - PR_Now() = %li > PR_USEC_PER_SEC",
-           mTimeOfNextReconnect - PR_Now()));
-      // This is a manual reconnection, reset the auto-reconnect stuff
-      mTimeOfLastConnect = 0;
-      CancelReconnection();
-    }
-  }
-
-  // Sets the firstConnectionState pref as pending if needed.
-  CheckAndSetFirstConnectionState(FIRST_CONNECTION_PENDING);
   /* enabling an account in libpurple connects it automatically */
   purple_account_set_enabled(mAccount, UI_ID, TRUE);
   // purple_account_connect(mAccount);
@@ -789,19 +522,6 @@ NS_IMETHODIMP purpleAccount::Disconnect()
 
   purple_account_set_enabled(mAccount, UI_ID, FALSE);
 
-  return NS_OK;
-}
-
-/* void cancelReconnection(); */
-NS_IMETHODIMP purpleAccount::CancelReconnection()
-{
-  if (mTimer) {
-    mTimer->Cancel();
-    mTimer = nsnull;
-  }
-
-  mReconnectAttempts = 0;
-  mTimeOfNextReconnect = 0;
   return NS_OK;
 }
 
@@ -943,29 +663,6 @@ NS_IMETHODIMP purpleAccount::JoinChat(purpleIChatRoomFieldValues *aComponents)
   return NS_OK;
 }
 
-/* readonly attribute AUTF8String name; */
-NS_IMETHODIMP purpleAccount::GetName(nsACString& aName)
-{
-  PURPLE_ENSURE_INIT(INIT_CONDITION);
-
-  if (NS_UNLIKELY(!mAccount)) {
-    // Get the account name from the preferences
-    nsresult rv = GetPrefBranch();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCString name;
-    rv = mPrefBranch->GetCharPref(PREF_NAME, getter_Copies(name));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    NS_ENSURE_TRUE(!name.IsEmpty(), NS_ERROR_UNEXPECTED);
-    aName = name;
-    return NS_OK;
-  }
-
-  aName = purple_account_get_username(mAccount);
-  return NS_OK;
-}
-
 /* readonly attribute AUTF8String normalizedName; */
 NS_IMETHODIMP purpleAccount::GetNormalizedName(nsACString& aNormalizedName)
 {
@@ -976,195 +673,28 @@ NS_IMETHODIMP purpleAccount::GetNormalizedName(nsACString& aNormalizedName)
   return NS_OK;
 }
 
-/* readonly attribute AUTF8String id; */
-NS_IMETHODIMP purpleAccount::GetId(nsACString& aId)
-{
-  NS_ENSURE_TRUE(!mKey.IsEmpty(), NS_ERROR_NOT_INITIALIZED);
-
-  aId = mKey;
-  return NS_OK;
-}
-
-/* readonly attribute PRUint32 numericId; */
-NS_IMETHODIMP purpleAccount::GetNumericId(PRUint32 *aNumericId)
-{
-  NS_ENSURE_TRUE(mId, NS_ERROR_NOT_INITIALIZED);
-
-  *aNumericId = mId;
-  return NS_OK;
-}
-
-/* private */
-inline nsresult purpleAccount::SetId(const nsACString& aId)
-{
-  /* Save the id of the account */
-  mKey = aId;
-
-  PRInt32 count = PR_sscanf(mKey.get(), ACCOUNT_KEY "%u", &mId);
-  NS_ENSURE_TRUE(count == 1, NS_ERROR_FAILURE);
-
-  return NS_OK;
-}
-
-nsresult purpleAccount::sendUpdateNotification()
-{
-  nsCOMPtr<nsIObserverService> os =
-    do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
-  return os->NotifyObservers(this, "account-updated", nsnull);
-}
-
-inline nsresult purpleAccount::GetPrefBranch()
-{
-  /* if we already have the pref branch, return early */
-  if (mPrefBranch) {
-    return NS_OK;
-  }
-
-  /* create the string for the root of the pref branch */
-  nsCString root(PREF_PREFIX);
-  root.Append(mKey);
-  root.Append('.');
-
-  /* get the branch */
-  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  nsresult rv = prefs->GetBranch(root.get(), getter_AddRefs(mPrefBranch));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  /* get the options pref branch */
-  root.Append(PREF_OPTIONS);
-  return prefs->GetBranch(root.get(), getter_AddRefs(mPrefOptBranch));
-}
-
-/* readonly attribute purpleIProtocol protocol; */
-NS_IMETHODIMP purpleAccount::GetProtocol(purpleIProtocol * *aProtocol)
-{
-  PURPLE_ENSURE_INIT(mProtocol);
-
-  NS_ADDREF(*aProtocol = mProtocol);
-  return NS_OK;
-}
-
-/* attribute boolean autoLogin; */
-NS_IMETHODIMP purpleAccount::GetAutoLogin(PRBool *aAutoLogin)
-{
-  PURPLE_ENSURE_INIT(!mKey.IsEmpty());
-
-  nsresult rv = GetPrefBranch();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mPrefBranch->GetBoolPref(PREF_AUTOLOGIN, aAutoLogin);
-  /* If the pref isn't set, assume we want to sign-on at startup */
-  if (NS_FAILED(rv)) {
-    *aAutoLogin = PR_TRUE;
-  }
-
-  return NS_OK;
-}
-NS_IMETHODIMP purpleAccount::SetAutoLogin(PRBool aAutoLogin)
-{
-  PURPLE_ENSURE_INIT(mProtocol);
-
-  nsresult rv = SetBoolPref(PREF_AUTOLOGIN, aAutoLogin);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  initSavePrefsTimer();
-  return sendUpdateNotification();
-}
-
-/* attribute short firstConnectionState; */
-NS_IMETHODIMP purpleAccount::GetFirstConnectionState(PRInt16 *aState)
-{
-  PURPLE_ENSURE_INIT(!mKey.IsEmpty());
-
-  nsresult rv = GetPrefBranch();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRInt32 prefState;
-  rv = mPrefBranch->GetIntPref(PREF_FIRST_CONNECTION_STATE, &prefState);
-
-  /* If the pref does not exist, this is not the first connection. */
-  if (NS_FAILED(rv))
-    prefState = FIRST_CONNECTION_NONE;
-
-  // GetIntPref takes a *PRInt32 as second argument and aState is *PRInt16
-  *aState = static_cast<PRInt16>(prefState);
-  return NS_OK;
-}
-NS_IMETHODIMP purpleAccount::SetFirstConnectionState(PRInt16 aState)
-{
-  PURPLE_ENSURE_INIT(mProtocol);
-
-  nsresult rv = GetPrefBranch();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (aState != FIRST_CONNECTION_NONE)
-    rv = mPrefBranch->SetIntPref(PREF_FIRST_CONNECTION_STATE, aState);
-  else
-    rv = mPrefBranch->DeleteBranch(PREF_FIRST_CONNECTION_STATE);
-
-  // We want to save this pref immediately when trying to connect.
-  if (aState == FIRST_CONNECTION_PENDING)
-    savePrefsNow(nsnull, nsnull);
-  else
-    initSavePrefsTimer();
-  return NS_OK;
-}
-
 /* attribute AUTF8String password; */
 NS_IMETHODIMP purpleAccount::GetPassword(nsACString& aPassword)
 {
   PURPLE_ENSURE_INIT(INIT_CONDITION);
 
   if (NS_UNLIKELY(!mAccount)) {
-    // Get the password from the preferences
-    nsresult rv = GetPrefBranch();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCString password;
-    rv = mPrefBranch->GetCharPref(PREF_PASSWORD, getter_Copies(password));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    aPassword = password;
-    return NS_OK;
+    // Will get the password from the preferences
+    return purpleAccountBase::GetPassword(aPassword);
   }
 
   aPassword = purple_account_get_password(mAccount);
   return NS_OK;
 }
 
-void purpleAccount::SetMissingPasswordIfRequired()
-{
-  NS_ASSERTION(mHasValidProtocol && mProtocol,
-               "SetMissingPasswordIfRequired without a valid protocol!");
-  NS_ENSURE_TRUE(mHasValidProtocol && mProtocol, );
-
-  PRBool noPassword = PR_TRUE;
-  PRBool passwordOptional = PR_TRUE;
-  if (NS_SUCCEEDED(mProtocol->GetNoPassword(&noPassword)) &&
-      NS_SUCCEEDED(mProtocol->GetPasswordOptional(&passwordOptional)) &&
-      !noPassword && !passwordOptional) {
-    mConnectionErrorReason = (PurpleConnectionError)ERROR_MISSING_PASSWORD;
-    LOG(("missing password\n"));
-  }
-}
-
 NS_IMETHODIMP purpleAccount::SetPassword(const nsACString& aPassword)
 {
   PURPLE_ENSURE_INIT(INIT_CONDITION);
 
-  PromiseFlatCString flatPassword(aPassword);
-  const char *pass = flatPassword.get();
   if (mAccount)
-    purple_account_set_password(mAccount, pass);
-  SetStringPref(PREF_PASSWORD, pass);
+    purple_account_set_password(mAccount, PromiseFlatCString(aPassword).get());
 
-  if (mHasValidProtocol && aPassword.IsEmpty())
-    SetMissingPasswordIfRequired();
-  else if (mConnectionErrorReason == (PurpleConnectionError)ERROR_MISSING_PASSWORD &&
-           !aPassword.IsEmpty())
-    mConnectionErrorReason = (PurpleConnectionError)NO_ERROR;
-
-  return sendUpdateNotification();
+  return purpleAccountBase::SetPassword(aPassword);
 }
 
 /* attribute boolean rememberPassword; */
@@ -1192,13 +722,7 @@ NS_IMETHODIMP purpleAccount::GetAlias(nsACString& aAlias)
 
   if (NS_UNLIKELY(!mAccount)) {
     // Get the alias from the preferences
-    nsresult rv = GetPrefBranch();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCString alias;
-    rv = mPrefBranch->GetCharPref(PREF_ALIAS, getter_Copies(alias));
-    aAlias = NS_SUCCEEDED(rv) ? alias : EmptyCString();
-    return NS_OK;
+    return purpleAccountBase::GetAlias(aAlias);
   }
 
   aAlias = purple_account_get_alias(mAccount);
@@ -1208,22 +732,14 @@ NS_IMETHODIMP purpleAccount::SetAlias(const nsACString& aAlias)
 {
   PURPLE_ENSURE_INIT(INIT_CONDITION);
 
-  if (!aAlias.IsEmpty()) {
-    PromiseFlatCString flatCString(aAlias);
-    if (mAccount)
-      purple_account_set_alias(mAccount, flatCString.get());
-    SetStringPref(PREF_ALIAS, flatCString.get());
-  }
-  else {
-    if (mAccount)
+  if (mAccount) {
+    if (!aAlias.IsEmpty())
+      purple_account_set_alias(mAccount, PromiseFlatCString(aAlias).get());
+    else
       purple_account_set_alias(mAccount, NULL);
-    nsresult rv = GetPrefBranch();
-    if(NS_SUCCEEDED(rv)) {
-      mPrefBranch->DeleteBranch(PREF_ALIAS);
-    }
   }
 
-  return sendUpdateNotification();
+  return purpleAccountBase::SetAlias(aAlias);
 }
 
 /* attribute purpleIProxyInfo proxyInfo; */
@@ -1272,7 +788,7 @@ NS_IMETHODIMP purpleAccount::SetProxyInfo(purpleIProxyInfo * aProxyInfo)
     nsresult rv = GetPrefBranch();                                      \
     NS_ENSURE_SUCCESS(rv, rv);                                          \
                                                                         \
-    return mPrefOptBranch->Set##prefType##Pref(aName, aVal);            \
+    return purpleAccountBase::Set##prettyType(aName, aVal);             \
   }
 
 /* void setBool (in string aName, in boolean aVal); */
@@ -1281,43 +797,6 @@ PURPLE_IMPL_SET(Bool, bool, PRBool, Bool)
 PURPLE_IMPL_SET(Int, int, PRInt32, Int)
 /* void setString (in string aName, in string aVal); */
 PURPLE_IMPL_SET(String, string, const char *, Char)
-
-void purpleAccount::initSavePrefsTimer()
-{
-  if (sSavePrefsTimer) {
-    LOG(("purpleAccount::initSavePrefsTimer already initialized"));
-    return;
-  }
-  sSavePrefsTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
-  sSavePrefsTimer->InitWithFuncCallback(savePrefsNow, nsnull,
-                                        AUTO_SAVE_PREFS_TIMER,
-                                        nsITimer::TYPE_ONE_SHOT);
-  LOG(("purpleAccount::initSavePrefsTimer initialized"));
-}
-
-void purpleAccount::savePrefsNow(nsITimer *aTimer, void *aClosure)
-{
-  LOG(("purpleAccount::savePrefsNow()"));
-
-  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  if (prefs)
-    prefs->SavePrefFile(nsnull);
-
-  if (sSavePrefsTimer) {
-    sSavePrefsTimer->Cancel();
-    sSavePrefsTimer = nsnull;
-  }
-}
-
-/* void savePrefs (); */
-NS_IMETHODIMP purpleAccount::Save()
-{
-  NS_ENSURE_TRUE(mPrefBranch, NS_ERROR_UNEXPECTED);
-
-  savePrefsNow(nsnull, nsnull);
-  mPrefBranch = nsnull;
-  return NS_OK;
-}
 
 #define PURPLE_IMPL_SETPREF(prettyType, prefType, PRType)               \
   nsresult purpleAccount::Set##prettyType##Pref(const char *aName,      \
@@ -1340,31 +819,16 @@ PURPLE_IMPL_SETPREF(Int, Int, PRInt32)
 // nsresult purpleAccount::SetStringPref(const char *aName, const char *aValue)
 PURPLE_IMPL_SETPREF(String, Char, const char *)
 
-
-/* attribute string connectionStateMsg; */
-NS_IMETHODIMP purpleAccount::GetConnectionStateMsg(nsACString &aConnectionStateMsg)
+/* void disconnecting ([optional] in short aConnectionErrorReason,
+                      [optional] in AUTF8String aConnectionErrorMessage); */
+NS_IMETHODIMP purpleAccount::Disconnecting(PRInt16 aConnectionErrorReason,
+                                           const nsACString & aConnectionErrorMessage)
 {
-  aConnectionStateMsg = mConnectionStateMsg;
-  return NS_OK;
-}
-
-void purpleAccount::SetConnectionStateMsg(const char *aConnectionStateMsg)
-{
-  mConnectionStateMsg = aConnectionStateMsg;
-  mConnectionErrorReason = (PurpleConnectionError) NO_ERROR;
-  mConnectionErrorMessage.Truncate();
-}
-
-void purpleAccount::SetDisconnectReason(PurpleConnectionError reason,
-                                        const char *text)
-
-{
-  mConnectionErrorReason = reason;
-  mConnectionErrorMessage = text;
-  mConnectionStateMsg.Truncate();
-
-  finishedAutoLogin();
-  CheckAndSetFirstConnectionState(FIRST_CONNECTION_SET);
+  // When an account is disconnected because of an error, we get
+  // called from the libpurple report_disconnect_reason uiop and from
+  // the signing-off signal handler.
+  if (mConnectionState == STATE_DISCONNECTING)
+    return NS_OK;
 
   /* Disable the account, otherwise libpurple will attempt to reconnect it
      when the status changes (including when idleness changes)
@@ -1389,138 +853,9 @@ void purpleAccount::SetDisconnectReason(PurpleConnectionError reason,
   purple_account_set_enabled(mAccount, UI_ID, FALSE);
   purple_account_set_connection(mAccount, gc);
 
-  if (purple_connection_error_is_fatal(reason))
-    return;
-
-  // Start the auto-reconnect process
-  if (!mTimer)
-    mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
-
-  nsCString timers;
-  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(prefs, );
-  nsresult rv = prefs->GetCharPref("messenger.accounts.reconnectTimer",
-                                   getter_Copies(timers));
-  NS_ENSURE_SUCCESS(rv, );
-
-  /* If the last successful connection is older than 10 seconds, reset the
-     number of reconnection attemps. */
-  if (mTimeOfLastConnect && mTimeOfLastConnect +
-      TIME_BEFORE_CONSIDERING_CONNECTION_AS_SUCCESSFUL * PR_USEC_PER_SEC < PR_Now()) {
-    mReconnectAttempts = 0;
-    mTimeOfLastConnect = 0;
-  }
-
-  char *newStr = timers.BeginWriting();
-  nsCAutoString time;
-  PRUint32 i = 0;
-  for (char *token = NS_strtok(",", &newStr);
-       i <= mReconnectAttempts && token;
-       ++i, token = NS_strtok(",", &newStr)) {
-    time = token;
-    time.StripWhitespace();
-  }
-
-  LOG(("time: %s, attempt %i", time.get(), mReconnectAttempts + 1));
-  PRInt32 timer = strtol(time.get(), NULL, 10);
-  if (timer <= 0) {
-    LOG(("No auto-reconnect"));
-    return;
-  }
-  ++mReconnectAttempts;
-  mTimeOfNextReconnect = PR_Now() + timer * PR_USEC_PER_SEC;
-  mTimer->InitWithFuncCallback(reconnectTimerCallback, this,
-                               timer * PR_MSEC_PER_SEC,
-                               nsITimer::TYPE_ONE_SHOT);
-  LOG(("timer initialized with %i s", timer));
+  return purpleAccountBase::Disconnecting(aConnectionErrorReason,
+                                          aConnectionErrorMessage);
 }
-
-void purpleAccount::Connected()
-{
-  finishedAutoLogin();
-  mTimeOfLastConnect = PR_Now();
-  CheckAndSetFirstConnectionState(FIRST_CONNECTION_NONE);
-
-  // FIXME: this is probably obsolete
-  /* Remove the current connection state message so that the UI
-     doesn't interpret it as an error / the cause of the disconnection
-     We used to get a bogus error message when the user disconnected
-     manually an account while it was connecting (see bug 88) */
-  SetConnectionStateMsg("");
-}
-
-void purpleAccount::reconnectTimerCallback(nsITimer *aTimer, void *aClosure)
-{
-  LOG(("running reconnectTimerCallback"));
-  static_cast<purpleAccount *>(aClosure)->Connect();
-}
-
-/* readonly attribute short connectionErrorReason; */
-NS_IMETHODIMP purpleAccount::GetConnectionErrorReason(PRInt16 *aConnectionErrorReason)
-{
-  *aConnectionErrorReason = mConnectionErrorReason;
-  return NS_OK;
-}
-
-/* readonly attribute AUTF8String connectionErrorMessage; */
-NS_IMETHODIMP purpleAccount::GetConnectionErrorMessage(nsACString & aConnectionErrorMessage)
-{
-  aConnectionErrorMessage = mConnectionErrorMessage;
-  return NS_OK;
-}
-
-/* readonly attribute PRUint16 reconnectAttempt; */
-NS_IMETHODIMP purpleAccount::GetReconnectAttempt(PRUint16 *aReconnectAttempt)
-{
-  *aReconnectAttempt = mReconnectAttempts;
-  return NS_OK;
-}
-
-/* readonly attribute PRInt64 timeOfNextReconnect; */
-NS_IMETHODIMP purpleAccount::GetTimeOfNextReconnect(PRInt64 *aTimeOfNextReconnect)
-{
-  *aTimeOfNextReconnect = mTimeOfNextReconnect / 1000;
-  return NS_OK;
-}
-
-/* readonly attribute PRInt64 timeOfLastConnect; */
-NS_IMETHODIMP purpleAccount::GetTimeOfLastConnect(PRInt64 *aTimeOfLastConnect)
-{
-  *aTimeOfLastConnect = mTimeOfLastConnect / 1000;
-  return NS_OK;
-}
-
-#define PURPLE_IMPL_GETBOOL(aName, aDefault, aVal)              \
-  NS_IMETHODIMP purpleAccount::Get##aName(PRBool *a##aName)     \
-  {                                                             \
-    PURPLE_ENSURE_INIT(mProtocol);                              \
-                                                                \
-    if (!mHasValidProtocol) {                                   \
-      *a##aName = aDefault;                                     \
-      return NS_OK;                                             \
-    }                                                           \
-                                                                \
-    PURPLE_ENSURE_INIT(mAccount);                               \
-                                                                \
-    *a##aName = aVal;                                           \
-    return NS_OK;                                               \
-  }
-
-
-/* readonly attribute boolean disconnecting; */
-PURPLE_IMPL_GETBOOL(Disconnecting, PR_FALSE, mAccount->disconnecting)
-
-/* readonly attribute boolean disconnected; */
-PURPLE_IMPL_GETBOOL(Disconnected, PR_TRUE,
-                    !mAccount->gc || mAccount->gc->state == PURPLE_DISCONNECTED)
-
-/* readonly attribute boolean connected; */
-PURPLE_IMPL_GETBOOL(Connected, PR_FALSE,
-                    mAccount->gc && mAccount->gc->state == PURPLE_CONNECTED)
-
-/* readonly attribute boolean connecting; */
-PURPLE_IMPL_GETBOOL(Connecting, PR_FALSE,
-                    mAccount->gc && mAccount->gc->state == PURPLE_CONNECTING)
 
 /* Get flag from PurpleConnection->flags */
 #define PURPLE_IMPL_GETFLAG(aName, aFlag)                                 \
