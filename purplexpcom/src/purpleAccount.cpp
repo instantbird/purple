@@ -225,6 +225,7 @@ purpleAccount::purpleAccount()
     gPurpleAccountLog = PR_NewLogModule("purpleAccount");
 #endif
   LOG(("Creating purpleAccount @%x\n", this));
+  mConcreteAccount = this;
 }
 
 purpleAccount::~purpleAccount()
