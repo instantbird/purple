@@ -117,9 +117,13 @@ OS_LIBS		+= -framework Carbon
 endif
 
 EXTRA_COMPONENTS = gtalkOverrideProtocol.js facebookOverrideProtocol.js
-ifdef DEBUG
+ifdef MOZ_DEBUG
 EXTRA_COMPONENTS += jsTestProtocol.js
 endif
+
+EXTRA_JS_MODULES = \
+	jsProtoHelper.jsm \
+	$(NULL)
 
 EXTRA_DSO_LDOPTS += $(XPCOM_GLUE_LDOPTS) $(MOZ_COMPONENT_NSPR_LIBS)
 
