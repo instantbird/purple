@@ -78,21 +78,17 @@ public:
   NS_SCRIPTABLE NS_IMETHOD GetNoImages(PRBool *aNoImages);
 
   // From purpleIAccountBase
+  NS_SCRIPTABLE NS_IMETHOD Load(const nsACString & aKey,
+                                purpleIProtocol *aPrpl,
+                                PRBool aIsValidProtocol);
+  NS_SCRIPTABLE NS_IMETHOD Create(const nsACString & aName,
+                                  purpleIProtocol *aPrpl,
+                                  const nsACString & aKey);
   NS_SCRIPTABLE NS_IMETHOD Disconnecting(PRInt16 aConnectionErrorReason,
                                          const nsACString & aConnectionErrorMessage);
 
   purpleAccount();
   PurpleAccount *GetPurpleAccount() { return mAccount; }
-
-  // load an account from the preferences.
-  nsresult Load(const nsACString & aKey, purpleIProtocol *aPrpl,
-                PRBool aIsValidProtocol = PR_TRUE);
-
-  // Create a new account using aName as username, aProtocol as the
-  // associated protocol plugin and aKey as the identifier to store
-  //  the account in the preferences.
-  nsresult Create(const nsACString & aName, purpleIProtocol *aPrpl,
-                  const nsACString & aKey);
 
 private:
   ~purpleAccount();

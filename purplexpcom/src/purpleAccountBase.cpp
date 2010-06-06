@@ -576,7 +576,7 @@ NS_IMETHODIMP purpleAccountBase::GetNumericId(PRUint32 *aNumericId)
   return NS_OK;
 }
 
-inline nsresult purpleAccountBase::SetId(const nsACString& aId)
+nsresult purpleAccountBase::SetId(const nsACString& aId)
 {
   /* Save the id of the account */
   mKey = aId;
@@ -599,7 +599,7 @@ nsresult purpleAccountBase::sendUpdateNotification()
   return sendNotification("account-updated");
 }
 
-inline nsresult purpleAccountBase::GetPrefBranch()
+nsresult purpleAccountBase::GetPrefBranch()
 {
   /* if we already have the pref branch, return early */
   if (mPrefBranch) {

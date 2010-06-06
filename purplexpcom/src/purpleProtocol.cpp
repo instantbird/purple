@@ -298,7 +298,7 @@ NS_IMETHODIMP purpleProtocol::LoadAccount(const nsACString & aKey,
   purpleAccount *account = new purpleAccount();
   NS_ENSURE_TRUE(account, NS_ERROR_OUT_OF_MEMORY);
 
-  nsresult rv = account->Load(aKey, this);
+  nsresult rv = account->Load(aKey, this, PR_TRUE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   NS_ADDREF(*aResult = account);
