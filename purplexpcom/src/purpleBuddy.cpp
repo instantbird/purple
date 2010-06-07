@@ -396,12 +396,6 @@ NS_IMETHODIMP purpleBuddy::SetAlias(const nsACString& aAlias)
   return transaction.Commit();
 }
 
-/* readonly attribute short nbOnline; */
-NS_IMETHODIMP purpleBuddy::GetNbOnline(PRInt16 *aNbOnline)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 /* readonly attribute short accountCount; */
 NS_IMETHODIMP purpleBuddy::GetAccountCount(PRInt16 *aAccountCount)
 {
@@ -419,12 +413,6 @@ NS_IMETHODIMP purpleBuddy::GetAccount(PRUint16 aAccountIndex,
   NS_ENSURE_TRUE(aAccountIndex < mBuddies.Count(), NS_ERROR_FAILURE);
 
   return mBuddies[aAccountIndex]->GetAccount(aResult);
-}
-
-/* nsISimpleEnumerator getTags (); */
-NS_IMETHODIMP purpleBuddy::GetTags(nsISimpleEnumerator **_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* void getAccounts ([optional] out unsigned long accountCount,
