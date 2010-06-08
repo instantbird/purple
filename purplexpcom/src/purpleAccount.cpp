@@ -585,7 +585,6 @@ NS_IMETHODIMP purpleAccount::LoadBuddy(purpleIBuddy *aBuddy,
   tag->addBuddy(buddy);
 
   static_cast<purpleBuddy *>(aBuddy)->AddAccount(this, buddy, tag);
-  buddy->node.ui_data = aBuddy;
   return NS_OK;
 }
 

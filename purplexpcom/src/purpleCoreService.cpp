@@ -437,7 +437,6 @@ nsresult purpleCoreService::InitBuddyList()
     purpleTag *tag = new purpleTag();
     tag->Init(id, group);
     mTagById.Put(id, tag);
-    purple_blist_node_set_ui_data((PurpleBlistNode *)group, tag);
     purple_blist_add_group(group, NULL);
   }
 
@@ -654,26 +653,11 @@ NS_IMETHODIMP purpleCoreService::GetBuddyById(PRInt32 aId,
   return NS_OK;
 }
 
-/* [noscript] purpleIBuddy getBuddyByPurpleBuddy (in PurpleNativeBuddy aBuddy); */
-NS_IMETHODIMP purpleCoreService::GetBuddyByPurpleBuddy(PurpleBuddy * aBuddy,
-                                                       purpleIBuddy **aResult)
+/* [noscript] void purpleBuddyAdded (in PurpleNativeBuddy aBuddy); */
+NS_IMETHODIMP purpleCoreService::PurpleBuddyAdded(PurpleBuddy *aBuddy)
 {
-  LOG(("pcs::GetBuddyByPurpleBuddy(buddy = %s, group = %s)", aBuddy->name,
-       purple_group_get_name(purple_buddy_get_group(aBuddy))));
-
-  /* First, check the ui_data pointer, if it is not NULL then just
-   * return the associated purpleBuddy.
-   */
-  purpleBuddy *buddyPtr = (purpleBuddy *)aBuddy->node.ui_data;
-  if (buddyPtr) {
-    NS_ADDREF(*aResult = buddyPtr);
-    LOG(("purpleBuddy found in ui_data"));
-    return NS_OK;
-  }
-
-  /* If we can't find it with the ui_data pointer, try to get the Id
-   * from mozStorage. If we find it, append the new PurpleBuddy to it,
-   * and add the new PurpleBuddy pointer to the hash.
+  /* Try to get the Id from mozStorage. If we find it, append the new
+   * PurpleBuddy to it, and add the new PurpleBuddy pointer to the hash.
    */
   purpleStorage *storageInstance = purpleStorage::GetInstance();
   mozIStorageStatement *statement = storageInstance->mGetBuddyIdFromNameAndPrpl;
@@ -693,31 +677,30 @@ NS_IMETHODIMP purpleCoreService::GetBuddyByPurpleBuddy(PurpleBuddy * aBuddy,
   NS_ENSURE_SUCCESS(rv, rv);
   if (found) {
     PRInt32 id = statement->AsInt32(0);
-    rv = GetBuddyById(id, aResult);
+    purpleIBuddy *pBuddy;
+    rv = GetBuddyById(id, &pBuddy);
     /* If we fail here, it's probably because the mozStorage entry
        we found is some junk that should have been removed when an
        account or a buddy has been deleted, in this case, do as if we
        didn't find it in the database */
     if (NS_SUCCEEDED(rv)) {
-      purpleBuddy *buddy = static_cast<purpleBuddy *>(*aResult);
-      aBuddy->node.ui_data = buddy;
-      return buddy->AddAccount(aBuddy);
+      purpleBuddy *buddy = static_cast<purpleBuddy *>(pBuddy);
+      rv = buddy->AddAccount(aBuddy);
+      NS_RELEASE(pBuddy);
+      return rv;
     }
     NS_WARNING("Let's ignore the dummy mozStorage entry we found!");
   }
 
-  /* At this point, if we still haven't found it, this is a NEW
-   * buddy. Create a new purpleBuddy instance, initialize it, store it
-   * in mozStorage and add it in the two hashes.
+  /* At this point, this is a NEW buddy. Create a new purpleBuddy
+   * instance, initialize it, store it in mozStorage and add it in the
+   * hash.
    */
   nsCOMPtr<purpleBuddy> buddy = do_CreateInstance(PURPLE_BUDDY_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   buddy->Init(aBuddy);
-  aBuddy->node.ui_data = buddy;
   LOG(("purpleBuddy added in HashTable with Id %i", buddy->getId()));
   mBuddiesById.Put(buddy->getId(), buddy);
-
-  NS_ADDREF(*aResult = buddy);
   return NS_OK;
 }
 
@@ -727,7 +710,7 @@ NS_IMETHODIMP purpleCoreService::PurpleBuddyRemoved(PurpleBuddy *aBuddy)
   if (mQuitting)
     return NS_OK;
 
-  purpleBuddy *buddy = (purpleBuddy *)aBuddy->node.ui_data;
+  purpleBuddy *buddy = purpleBuddy::fromPurpleBuddy(aBuddy);
   NS_ENSURE_TRUE(buddy, NS_ERROR_FAILURE);
 
   nsresult rv = buddy->RemoveAccount(aBuddy);
@@ -770,7 +753,6 @@ nsresult purpleCoreService::storeTag(nsCString &aGroupName, PurpleGroup *aGroup,
   purpleTag *tag = new purpleTag();
   tag->Init(id, group);
   mTagById.Put(id, tag);
-  purple_blist_node_set_ui_data((PurpleBlistNode *)group, tag);
   if (!aGroup)
     purple_blist_add_group(group, NULL);
 
@@ -870,8 +852,7 @@ nsresult purpleCoreService::GetTagFromPurpleBuddy(PurpleBuddy *aBuddy,
                                                   purpleTag **aResult)
 {
   PurpleGroup *group = purple_buddy_get_group(aBuddy);
-
-  *aResult = (purpleTag *)purple_blist_node_get_ui_data((PurpleBlistNode *)group);
+  *aResult = purpleTag::fromPurpleGroup(group);
   if (*aResult) {
     NS_ADDREF(*aResult);
     return NS_OK;
@@ -1522,31 +1503,6 @@ NS_IMETHODIMP purpleCoreService::NotifyObservers(nsISupports *aObj,
 
   LOG(("Notifying observers of %s", aEvent));
   return os->NotifyObservers(aObj, aEvent, aData);
-}
-
-/* [noscript] void fireBuddyEvent (in purpleNativeBuddy aBuddy, in string event); */
-NS_IMETHODIMP purpleCoreService::FireBuddyEvent(PurpleBuddy * aBuddy,
-                                                const char *aEvent)
-{
-  if (mQuitting)
-    return NS_OK;
-
-  LOG(("Attempting to send %s signal, group = %s, buddy = %s", aEvent,
-       purple_group_get_name(purple_buddy_get_group(aBuddy)), aBuddy->name));
-  nsCOMPtr<purpleIBuddy> buddy;
-  nsresult rv = this->GetBuddyByPurpleBuddy(aBuddy, getter_AddRefs(buddy));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<purpleIAccountBuddy> pab;
-  rv = buddy->GetAccountBuddyForPurpleBuddy(aBuddy, getter_AddRefs(pab));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<purpleITag> tag;
-  rv = pab->GetTag(getter_AddRefs(tag));
-  if (NS_SUCCEEDED(rv))
-    tag->NotifyObservers(pab, aEvent, nsnull);
-
-  return NotifyObservers(pab, aEvent);
 }
 
 /* readonly attribute mozIStorageConnection storageConnection; */

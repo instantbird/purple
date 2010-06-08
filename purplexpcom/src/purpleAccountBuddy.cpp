@@ -81,6 +81,7 @@ void purpleAccountBuddy::Init(purpleIAccount *aAccount,
 {
   mAccount = aAccount;
   mBuddy = aBuddy;
+  purple_blist_node_set_ui_data(PURPLE_BLIST_NODE(aBuddy), this);
   // aTag is unused because we don't cache the tag here any more, we
   // use the ui data of the libpurple buddy list node instead.
   // ToDo for 0.3: see if we should remove the 'tag' parameters in most
@@ -89,6 +90,7 @@ void purpleAccountBuddy::Init(purpleIAccount *aAccount,
 
 void purpleAccountBuddy::Uninit()
 {
+  purple_blist_node_set_ui_data(PURPLE_BLIST_NODE(mBuddy), nsnull);
   mBuddy = NULL;
 }
 
@@ -162,9 +164,11 @@ NS_IMETHODIMP purpleAccountBuddy::GetBuddy(purpleIBuddy * *aBuddy)
 {
   NS_ENSURE_TRUE(mBuddy, NS_ERROR_NOT_INITIALIZED);
 
-  nsCOMPtr<purpleICoreService> pcs =
-    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-  return pcs->GetBuddyByPurpleBuddy(mBuddy, aBuddy);
+  purpleIBuddy *buddy = purpleBuddy::fromPurpleBuddy(mBuddy);
+  NS_ENSURE_TRUE(buddy, NS_ERROR_NOT_INITIALIZED);
+
+  NS_ADDREF(*aBuddy = buddy);
+  return NS_OK;
 }
 
 /* readonly attribute purpleIAccount account; */
@@ -181,9 +185,7 @@ NS_IMETHODIMP purpleAccountBuddy::GetTag(purpleITag * *aTag)
 {
   NS_ENSURE_TRUE(mBuddy, NS_ERROR_NOT_INITIALIZED);
 
-  PurpleGroup *group = purple_buddy_get_group(mBuddy);
-  purpleTag *tag =
-    (purpleTag *)purple_blist_node_get_ui_data((PurpleBlistNode *)group);
+  purpleITag *tag = purpleTag::fromPurpleGroup(purple_buddy_get_group(mBuddy));
   NS_ENSURE_TRUE(tag, NS_ERROR_NOT_INITIALIZED);
 
   NS_ADDREF(*aTag = tag);
@@ -217,7 +219,7 @@ NS_IMETHODIMP purpleAccountBuddy::SetTag(purpleITag * aTag)
   NS_ENSURE_TRUE(pcs, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<purpleIBuddy> buddy;
-  rv = pcs->GetBuddyByPurpleBuddy(mBuddy, getter_AddRefs(buddy));
+  rv = GetBuddy(getter_AddRefs(buddy));
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRInt32 buddyId;

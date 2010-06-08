@@ -132,13 +132,12 @@ NS_IMETHODIMP purpleConvIM::GetBuddy(purpleIAccountBuddy * *aBuddy)
     return NS_OK;
   }
 
-  nsCOMPtr<purpleIBuddy> pBuddy;
-  nsCOMPtr<purpleICoreService> pcs =
-    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-  nsresult rv = pcs->GetBuddyByPurpleBuddy(buddy, getter_AddRefs(pBuddy));
-  NS_ENSURE_SUCCESS(rv, rv);
+  purpleIAccountBuddy *pab =
+    static_cast<purpleIAccountBuddy *>(GET_NODE_UI_DATA(buddy));
+  NS_ENSURE_TRUE(pab, NS_ERROR_NOT_INITIALIZED);
 
-  return pBuddy->GetAccountBuddyForPurpleBuddy(buddy, aBuddy);
+  NS_ADDREF(*aBuddy = pab);
+  return NS_OK;
 }
 
 /* readonly attribute short typingState; */

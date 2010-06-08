@@ -476,9 +476,26 @@ static PurpleConversationUiOps conversation_uiops =
 
 static void buddy_signals(PurpleBuddy *aBuddy, const char *aSignal)
 {
-  nsCOMPtr<purpleICoreService> pcs =
-    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-  pcs->FireBuddyEvent(aBuddy, aSignal);
+  // FIXME when this was handled by purpleCoreService, signals sent
+  // while mQuitting was true were ignored.
+
+  LOG(("Attempting to send %s signal, group = %s, buddy = %s", aSignal,
+       purple_group_get_name(purple_buddy_get_group(aBuddy)), aBuddy->name));
+
+  nsCOMPtr<purpleIAccountBuddy> pab =
+    purpleAccountBuddy::fromPurpleBuddy(aBuddy);
+  NS_ENSURE_TRUE(pab, );
+
+  // FIXME: all this should be moved inside purpleAccountBuddy / purpleTag
+  nsCOMPtr<purpleITag> tag;
+  nsresult rv = pab->GetTag(getter_AddRefs(tag));
+  if (NS_SUCCEEDED(rv))
+    tag->NotifyObservers(pab, aSignal, nsnull);
+
+  nsCOMPtr<nsIObserverService> os =
+    do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, );
+  os->NotifyObservers(pab, aSignal, nsnull);
 }
 
 #define PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER(aSignal, aHandler)  \
@@ -489,6 +506,22 @@ static void buddy_signals(PurpleBuddy *aBuddy, const char *aSignal)
 #define PURPLE_CONNECT_BUDDY_SIGNAL(aSignal)                    \
   PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER(aSignal, buddy_signals)
 
+static void buddy_added(PurpleBuddy *buddy, void *null)
+{
+  // This is the buddy-added purple signal. It is fired when a buddy
+  // is added to the list or to a group.
+
+  // FIXME what should we do if the buddy is moved to a new group. Is
+  // ui_data already set in this case?
+
+  // let pcs create the purpleBuddy first
+  nsCOMPtr<purpleICoreService> pcs =
+    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
+  pcs->PurpleBuddyAdded(buddy);
+
+  buddy_signals(buddy, "buddy-added");
+}
+
 static void buddy_removed(PurpleBuddy *buddy, void *null)
 {
   // This is the buddy-removed purple signal. It is fired when a buddy
@@ -496,22 +529,11 @@ static void buddy_removed(PurpleBuddy *buddy, void *null)
   // request the deletion of a buddy in her list)
 
   // send the signal first, before actually removing the buddy
+  buddy_signals(buddy, "buddy-deleted");
+
   nsCOMPtr<purpleICoreService> pcs =
     do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-  pcs->FireBuddyEvent(buddy, "buddy-deleted");
   pcs->PurpleBuddyRemoved(buddy);
-}
-
-static void buddy_removed_from_group(PurpleBuddy *buddy, void *null)
-{
-  // This is the buddy-removed-from-group purple signal (added for
-  // Instantbird).
-  // It is fired when a buddy is removed permanenty from a group but
-  // not from the buddy list. (ie when the buddy has been moved)
-
-  nsCOMPtr<purpleICoreService> pcs =
-    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-  pcs->FireBuddyEvent(buddy, "buddy-removed-from-group");
 }
 
 static void buddy_away(PurpleBuddy *aBuddy,
@@ -534,7 +556,7 @@ static void buddy_alias(PurpleBlistNode *aNode, const char *old_alias)
   PurpleBuddy *buddy = (PurpleBuddy *)aNode;
   buddy_signals(buddy, "buddy-alias");
 
-  purpleBuddy *buddyPtr = (purpleBuddy *)buddy->node.ui_data;
+  purpleBuddy *buddyPtr = purpleBuddy::fromPurpleBuddy(buddy);
   if (!buddyPtr)
     return; // it's fine to ignore these notifications for unknown buddies
   buddyPtr->UpdateServerAlias(purple_buddy_get_server_alias(buddy));
@@ -545,11 +567,15 @@ connect_to_blist_signals()
 {
   int handle;
   void *instance = purple_blist_get_handle();
-  PURPLE_CONNECT_BUDDY_SIGNAL("buddy-added");
   PURPLE_CONNECT_BUDDY_SIGNAL("buddy-signed-on");
   PURPLE_CONNECT_BUDDY_SIGNAL("buddy-signed-off");
+  PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER("buddy-added", buddy_added);
   PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER("buddy-removed", buddy_removed);
-  PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER("buddy-removed-from-group", buddy_removed_from_group);
+  // This buddy-removed-from-group purple signal was added for
+  // Instantbird.  It is fired when a buddy is removed permanenty from
+  // a group but not from the buddy list. (ie when the buddy has been
+  // moved)
+  PURPLE_CONNECT_BUDDY_SIGNAL("buddy-removed-from-group");
   PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER("buddy-status-changed", buddy_away);
   PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER("buddy-idle-changed", buddy_idle);
   PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER("blist-node-aliased", buddy_alias);

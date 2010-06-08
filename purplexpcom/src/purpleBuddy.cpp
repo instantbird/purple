@@ -183,6 +183,8 @@ purpleAccountBuddy *purpleBuddy::AddAccount(purpleIAccount *aAccount,
 {
   nsCOMPtr<purpleAccountBuddy> pab = do_CreateInstance(PURPLE_ACCOUNTBUDDY_CONTRACTID);
   pab->Init(aAccount, aBuddy, aTag);
+  PurpleContact *contact = purple_buddy_get_contact(aBuddy);
+  purple_blist_node_set_ui_data(PURPLE_BLIST_NODE(contact), this);
   mBuddies.AppendObject(pab);
   return pab;
 }
@@ -456,18 +458,4 @@ NS_IMETHODIMP purpleBuddy::CreateConversation(PRUint16 aAccountIndex,
 
   purpleAccountBuddy *pab = mBuddies[aAccountIndex];
   return pab->CreateConversation(aResult);
-}
-
-/* [noscript] purpleIAccountBuddy getAccountBuddyForPurpleBuddy (in PurpleNativeBuddy aBuddy); */
-NS_IMETHODIMP purpleBuddy::GetAccountBuddyForPurpleBuddy(PurpleBuddy * aBuddy,
-                                                         purpleIAccountBuddy **aResult)
-{
-  for (PRInt32 i = 0; i < mBuddies.Count(); ++i) {
-    if (mBuddies[i]->GetBuddy() == aBuddy) {
-      NS_ADDREF(*aResult = mBuddies[i]);
-      return NS_OK;
-    }
-  }
-
-  return NS_ERROR_FAILURE;
 }

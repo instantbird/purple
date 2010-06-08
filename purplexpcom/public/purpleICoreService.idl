@@ -51,6 +51,7 @@ interface mozIStorageConnection;
 /*
  * This is a proxy to the libpurple core
  */
+[ptr] native PurpleNativeBuddy(PurpleBuddy);
 [ptr] native purpleNativeProtocol(purpleProtocol);
 
 [scriptable, uuid(b82583f1-307b-4034-b5c7-9f727fab7d8c)]
@@ -60,7 +61,7 @@ interface purpleICoreService: nsISupports {
   readonly attribute AUTF8String version;
 
   purpleIBuddy getBuddyById(in long aId);
-  [noscript] purpleIBuddy getBuddyByPurpleBuddy(in PurpleNativeBuddy aBuddy);
+  [noscript] void purpleBuddyAdded(in PurpleNativeBuddy aBuddy);
   [noscript] void purpleBuddyRemoved(in PurpleNativeBuddy aBuddy);
 
   purpleITag createTag(in AUTF8String aName);
@@ -141,8 +142,6 @@ interface purpleICoreService: nsISupports {
       The associated purpleIAccount will be given as a parameter.
   */
 
-  [noscript] void fireBuddyEvent(in PurpleNativeBuddy aBuddy,
-                                 in string aEvent);
   /* buddy related event fired:
       - buddy-added: a new buddy has been added to the buddy list
       - buddy-signed-on: this buddy has just signed on

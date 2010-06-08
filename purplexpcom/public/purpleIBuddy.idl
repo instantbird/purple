@@ -55,8 +55,6 @@ interface purpleIAccountBuddy;
 #pragma GCC visibility pop
 %}
 
-[ptr] native PurpleNativeBuddy(PurpleBuddy);
-
 [scriptable, uuid(1f0ffdac-3523-4e91-9ffe-d0c2fd08cb3d)]
 interface purpleIBuddy: nsISupports {
   readonly attribute long id;
@@ -78,5 +76,4 @@ interface purpleIBuddy: nsISupports {
 
   //  readonly attribute purpleIContact contact;
   purpleIConversation createConversation(in unsigned short aAccountIndex);
-  [noscript] purpleIAccountBuddy getAccountBuddyForPurpleBuddy(in PurpleNativeBuddy aBuddy);
 };
