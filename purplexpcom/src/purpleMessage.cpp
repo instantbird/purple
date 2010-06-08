@@ -130,7 +130,7 @@ NS_IMETHODIMP purpleMessage::GetConversation(purpleIConversation * *aConversatio
 {
   NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
 
-  NS_IF_ADDREF(*aConversation = (purpleIConversation *)mConv->ui_data);
+  NS_IF_ADDREF(*aConversation = purpleConversation::fromPurpleConv(mConv));
   return NS_OK;
 }
 

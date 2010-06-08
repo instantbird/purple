@@ -936,7 +936,7 @@ void purpleCoreService::RemoveConversation(PurpleConversation *aConv)
 {
   LOG(("purpleCoreService::RemoveConversation aConv = @%x",  aConv));
 
-  purpleConversation *conv = (purpleConversation *)aConv->ui_data;
+  purpleConversation *conv = purpleConversation::fromPurpleConv(aConv);
   if (!conv) {
     LOG(("purpleConversation::RemoveConversation already uninitialized"));
     return;

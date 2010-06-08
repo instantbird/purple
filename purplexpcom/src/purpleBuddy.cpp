@@ -191,7 +191,10 @@ purpleAccountBuddy *purpleBuddy::AddAccount(purpleIAccount *aAccount,
 
 nsresult purpleBuddy::AddAccount(PurpleBuddy *aBuddy)
 {
-  purpleAccount *account = (purpleAccount *)aBuddy->account->ui_data;
+  PurpleAccount *pAccount = purple_buddy_get_account(aBuddy);
+  NS_ENSURE_TRUE(pAccount, NS_ERROR_UNEXPECTED);
+
+  purpleAccount *account = purpleAccount::fromPurpleAccount(pAccount);
   NS_ENSURE_TRUE(account, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<purpleICoreService> pcs =

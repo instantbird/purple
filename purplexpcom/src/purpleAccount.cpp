@@ -537,7 +537,7 @@ NS_IMETHODIMP purpleAccount::CreateConversation(const nsACString& aName,
                                  PromiseFlatCString(aName).get());
   NS_ENSURE_TRUE(conv, NS_ERROR_FAILURE);
 
-  purpleIConversation *result = (purpleIConversation *)conv->ui_data;
+  purpleIConversation *result = purpleConversation::fromPurpleConv(conv);
   NS_ENSURE_TRUE(result, NS_ERROR_NOT_INITIALIZED);
   NS_ADDREF(*aResult = result);
 

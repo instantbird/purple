@@ -126,8 +126,8 @@ static PurpleEventLoopUiOps eventloops =
 /*** End of the eventloop functions. ***/
 
 /*** Connection uiops ***/
-#define IMPL_GET_ACCOUNT_FROM_UI_DATA(aVar)                     \
-  purpleAccount *account = (purpleAccount *)aVar->ui_data;      \
+#define IMPL_GET_ACCOUNT_FROM_UI_DATA(aVar)                        \
+  purpleAccount *account = purpleAccount::fromPurpleAccount(aVar); \
   NS_ENSURE_TRUE(account,)
 
 #define IMPL_GET_ACCOUNT                                        \
@@ -372,8 +372,7 @@ static void notify_conv(PurpleConversation *aConv, nsISupports *aSubject,
 {
   NS_ENSURE_TRUE(aConv,);
 
-  nsCOMPtr<purpleConversation> conversation =
-    static_cast<purpleConversation *>(aConv->ui_data);
+  purpleConversation *conversation = purpleConversation::fromPurpleConv(aConv);
   NS_ENSURE_TRUE(conversation,);
 
   conversation->NotifyObservers(aSubject, aTopic, aData);
@@ -635,7 +634,7 @@ static void conversation_updated(PurpleConversation *aConv, PurpleConvUpdateType
       break;
 
     case PURPLE_CONV_UPDATE_TITLE:
-      // The test prevents a stupid warning caused by libpurple
+      // The test prevents a warning caused by libpurple stupidly
       // calling purple_conversation_autoset_title before the
       // create_conversation uiop.
       if (aConv && aConv->ui_data)
@@ -643,8 +642,8 @@ static void conversation_updated(PurpleConversation *aConv, PurpleConvUpdateType
 
     case PURPLE_CONV_UPDATE_CHATLEFT:
       {
-        nsCOMPtr<purpleConversation> conversation =
-          static_cast<purpleConversation *>(aConv->ui_data);
+        purpleConversation *conversation =
+          purpleConversation::fromPurpleConv(aConv);
         nsCOMPtr<purpleICoreService> pcs =
           do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
         if (conversation && pcs)

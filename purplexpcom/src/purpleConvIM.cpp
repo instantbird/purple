@@ -132,8 +132,7 @@ NS_IMETHODIMP purpleConvIM::GetBuddy(purpleIAccountBuddy * *aBuddy)
     return NS_OK;
   }
 
-  purpleIAccountBuddy *pab =
-    static_cast<purpleIAccountBuddy *>(GET_NODE_UI_DATA(buddy));
+  purpleIAccountBuddy *pab = purpleAccountBuddy::fromPurpleBuddy(buddy);
   NS_ENSURE_TRUE(pab, NS_ERROR_NOT_INITIALIZED);
 
   NS_ADDREF(*aBuddy = pab);

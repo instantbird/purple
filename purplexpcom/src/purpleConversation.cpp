@@ -37,7 +37,7 @@
 
 #include "purpleConversation.h"
 #include "purpleGListEnumerator.h"
-#include "purpleIAccount.h"
+#include "purpleAccount.h"
 
 #pragma GCC visibility push(default)
 #include <libpurple/cmds.h>
@@ -108,7 +108,7 @@ NS_IMETHODIMP purpleConversation::GetAccount(purpleIAccount * *aAccount)
   PurpleAccount *account = purple_conversation_get_account(mConv);
   NS_ENSURE_TRUE(account, NS_ERROR_FAILURE);
 
-  NS_IF_ADDREF(*aAccount = (purpleIAccount *)account->ui_data);
+  NS_IF_ADDREF(*aAccount = purpleAccount::fromPurpleAccount(account));
   return NS_OK;
 }
 
