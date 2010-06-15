@@ -82,6 +82,7 @@ CPPSRCS		= \
 		purpleAccount.cpp \
 		purpleAccountBase.cpp \
 		purpleAccountBuddy.cpp \
+		purpleAccountsService.cpp \
 		purpleBuddy.cpp \
 		purpleConversation.cpp \
 		purpleContentPolicy.cpp \

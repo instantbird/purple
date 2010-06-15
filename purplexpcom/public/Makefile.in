@@ -47,6 +47,7 @@ XPIDL_MODULE	= purplexpcom
 XPIDLSRCS	= \
 		purpleIAccount.idl \
 		purpleIAccountBuddy.idl \
+		purpleIAccountsService.idl \
 		purpleIBuddy.idl \
 		purpleIConversation.idl \
 		purpleICoreService.idl \

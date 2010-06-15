@@ -38,6 +38,7 @@
 #ifndef PURPLE_CORE_SERVICE_H_
 #define PURPLE_CORE_SERVICE_H_
 
+#include "purpleAccountsService.h"
 #include "purpleProtocol.h"
 #include "purpleProxy.h"
 #include "purpleProxyInfo.h"
@@ -66,6 +67,8 @@ public:
 
   purpleCoreService();
 
+  NS_FORWARD_SAFE_PURPLEIACCOUNTSSERVICE(mAccountsService);
+
   void AddConversation(purpleConversation* aConv);
   void RemoveConversation(PurpleConversation *aConv);
   nsresult GetTagIdFromName(const nsCString& aName,
@@ -82,9 +85,6 @@ private:
   ~purpleCoreService();
   void InitProtocols();
   nsresult InitProxies();
-  nsresult LoadAccount(nsCString &key, purpleIAccount **aResult);
-  nsresult InitAccounts();
-  nsresult UpdateAccountList();
   nsresult InitBuddyList();
   nsresult storeTag(nsCString &aGroupName, PurpleGroup *aGroup,
                     purpleTag **aResult);
@@ -94,9 +94,6 @@ private:
   void InitAutoLoginStatus();
   nsCOMPtr<nsIPrefBranch> mPrefService;
   nsCOMPtr<nsIPrefBranch2> mPrefBranch2;
-  inline void UnInitAccounts();
-  inline void UnInitProtocols();
-  nsresult GetAccountById(PRUint32 aAccountId, purpleIAccount **aResult);
   nsresult SetStatus(PurpleStatusPrimitive aStatus, const nsACString &aMessage);
   nsresult addIdleObserver();
   nsresult removeIdleObserver();
@@ -107,7 +104,7 @@ protected:
   PRInt16 mAutoLoginStatus;
   nsCOMArray<purpleIProtocol> mProtocols;
   nsCOMArray<purpleProxy> mProxies;
-  nsCOMArray<purpleIAccount> mAccounts;
+  nsCOMPtr<purpleIAccountsService> mAccountsService;
   nsCOMArray<purpleConversation> mConversations;
   nsInterfaceHashtable<nsUint32HashKey, purpleBuddy> mBuddiesById;
   nsInterfaceHashtable<nsUint32HashKey, purpleTag> mTagById;
