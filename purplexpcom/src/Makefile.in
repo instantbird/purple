@@ -99,7 +99,6 @@ CPPSRCS		= \
 		purpleMessage.cpp \
 		purpleModule.cpp \
 		purpleNetwork.cpp \
-		purpleOverrideProtocol.cpp \
 		purplePref.cpp \
 		purpleProtocol.cpp \
 		purpleProxy.cpp \

@@ -177,12 +177,16 @@ nsresult purpleBuddy::UnStore()
   return statement->Execute();
 }
 
-purpleAccountBuddy *purpleBuddy::AddAccount(purpleIAccount *aAccount,
+purpleAccountBuddy *purpleBuddy::AddAccount(purpleAccount *aAccount,
                                             PurpleBuddy *aBuddy,
                                             purpleTag *aTag)
 {
+  nsCOMPtr<purpleIAccount> concreteAccount;
+  nsresult rv = aAccount->GetConcreteAccount(getter_AddRefs(concreteAccount));
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
   nsCOMPtr<purpleAccountBuddy> pab = do_CreateInstance(PURPLE_ACCOUNTBUDDY_CONTRACTID);
-  pab->Init(aAccount, aBuddy, aTag);
+  pab->Init(concreteAccount, aBuddy, aTag);
   PurpleContact *contact = purple_buddy_get_contact(aBuddy);
   purple_blist_node_set_ui_data(PURPLE_BLIST_NODE(contact), this);
   mBuddies.AppendObject(pab);

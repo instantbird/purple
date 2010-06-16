@@ -68,7 +68,7 @@ public:
   nsresult UnStore();
   nsresult load(PRUint32 aId);
   nsresult AddAccount(PurpleBuddy *aBuddy);
-  purpleAccountBuddy *AddAccount(purpleIAccount *aAccount,
+  purpleAccountBuddy *AddAccount(purpleAccount *aAccount,
                                  PurpleBuddy *aBuddy,
                                  purpleTag *aTag);
   nsresult RemoveAccount(PurpleBuddy *aBuddy);

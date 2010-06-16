@@ -43,7 +43,6 @@
 #include "purpleContentPolicy.h"
 #include "purpleConvIM.h"
 #include "purpleConvChat.h"
-#include "purpleOverrideProtocol.h"
 #include "purpleProtocol.h"
 #include "purpleUnknownProtocol.h"
 #include "purpleAccountBase.h"
@@ -69,7 +68,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleConvChat)
 NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleConvIM)
 NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleCoreService)
 NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleMessage)
-NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleOverrideProtocol)
 NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleProtocol)
 NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleProxy)
 NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleProxyInfo)
@@ -136,7 +134,6 @@ static nsModuleComponentInfo components[] =
   PURPLE_MODULE_CI(ConvIM, CONV_IM, "IM conversation"),
   PURPLE_MODULE_CI(CoreService, CORE_SERVICE, "core service"),
   PURPLE_MODULE_CI(Message, MESSAGE, "message"),
-  PURPLE_MODULE_CI(OverrideProtocol, OVERRIDE_PROTOCOL, "override protocol"),
   PURPLE_MODULE_CI(Protocol, PROTOCOL, "protocol"),
   PURPLE_MODULE_CI(Proxy, PROXY, "proxy"),
   PURPLE_MODULE_CI(ProxyInfo, PROXY_INFO, "proxy info"),
