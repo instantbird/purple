@@ -388,16 +388,17 @@ NS_IMETHODIMP purpleAccountsService::CreateAccount(const nsACString &aName,
       NS_ENSURE_SUCCESS(rv, rv);
       rv = statement->Reset();
       NS_ENSURE_SUCCESS(rv, rv);
-      if (found) {
-        /* This should never happen so log a string to the error console */
-        nsCOMPtr<nsIConsoleService> consoleService =
-          do_GetService( "@mozilla.org/consoleservice;1" );
+      if (!found)
+        break; // we are done!
 
-        nsString msg(NS_LITERAL_STRING("No account "));
-        msg.AppendInt(i);
-        msg.Append(NS_LITERAL_STRING(" but there is some data in the buddy list for an account with this number. Your profile may be corrupted."));
-        consoleService->LogStringMessage(msg.get());
-      }
+      /* This should never happen so log a string to the error console */
+      nsCOMPtr<nsIConsoleService> consoleService =
+        do_GetService( "@mozilla.org/consoleservice;1" );
+
+      nsString msg(NS_LITERAL_STRING("No account "));
+      msg.AppendInt(i);
+      msg.Append(NS_LITERAL_STRING(" but there is some data in the buddy list for an account with this number. Your profile may be corrupted."));
+      consoleService->LogStringMessage(msg.get());
     }
   }
 
