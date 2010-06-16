@@ -70,8 +70,6 @@ public:
 protected:
   ~purpleAccountBase();
   nsresult GetPrefBranch();
-  nsresult ensureStored(const nsCString& aName, const nsCString& aPrpl);
-  nsresult storeAccount(PRUint32 aKey, const nsCString& aName, const nsCString& aPrpl);
   nsresult unstoreAccount();
   nsresult SetBoolPref(const char *aName, PRBool aValue);
   nsresult SetIntPref(const char *aName, PRInt32 aValue);

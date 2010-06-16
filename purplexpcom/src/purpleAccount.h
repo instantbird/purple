@@ -78,16 +78,14 @@ public:
   NS_SCRIPTABLE NS_IMETHOD GetNoImages(PRBool *aNoImages);
 
   // From purpleIAccountBase
-  NS_SCRIPTABLE NS_IMETHOD Load(const nsACString & aKey,
-                                purpleIProtocol *aPrpl,
-                                PRBool aIsValidProtocol);
-  NS_SCRIPTABLE NS_IMETHOD Create(const nsACString & aName,
-                                  purpleIProtocol *aPrpl,
-                                  const nsACString & aKey);
+  NS_SCRIPTABLE NS_IMETHOD Init(const nsACString & aKey,
+                                const nsACString & aName,
+                                purpleIProtocol *aPrpl);
+
   NS_SCRIPTABLE NS_IMETHOD Disconnecting(PRInt16 aConnectionErrorReason,
                                          const nsACString & aConnectionErrorMessage);
 
-  purpleAccount();
+  purpleAccount(PRBool aIsValidProtocol = PR_TRUE);
   PurpleAccount *GetPurpleAccount() { return mAccount; }
   static inline purpleAccount *fromPurpleAccount(PurpleAccount *aAccount) {
     return static_cast<purpleAccount *>(aAccount->ui_data);

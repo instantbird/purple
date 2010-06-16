@@ -41,6 +41,7 @@
 #include "purpleIAccountsService.h"
 #include <nsCOMPtr.h>
 #include <nsIPrefBranch2.h>
+#include <nsIPrefService.h>
 #include <nsCOMArray.h>
 
 class purpleAccountsService : public purpleIAccountsService,
@@ -57,13 +58,19 @@ private:
   ~purpleAccountsService();
   nsresult LoadAccount(nsCString &key, purpleIAccount **aResult);
   nsresult UpdateAccountList();
-  nsCOMPtr<nsIPrefBranch> mPrefService;
-  nsCOMPtr<nsIPrefBranch2> mPrefBranch2;
+  nsCOMPtr<nsIPrefService> mPrefService;
+  nsCOMPtr<nsIPrefBranch2> mPrefBranch;
 
 protected:
   PRBool mInitialized;
   nsCOMArray<purpleIAccount> mAccounts;
 
+  nsresult ensureStored(PRUint32 aId,
+                        const nsCString& aName,
+                        const nsCString& aPrpl);
+  nsresult storeAccount(PRUint32 aId,
+                        const nsCString& aName,
+                        const nsCString& aPrpl);
   nsresult NotifyObservers(nsISupports *aObj,
                            const char *aEvent,
                            const PRUnichar *aData = nsnull);

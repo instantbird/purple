@@ -291,29 +291,15 @@ NS_IMETHODIMP purpleProtocol::GetInfo(PurplePluginProtocolInfo * *aPrplInfo)
   return NS_OK;
 }
 
-/* purpleIAccount loadAccount (in AUTF8String aKey); */
-NS_IMETHODIMP purpleProtocol::LoadAccount(const nsACString & aKey,
-                                          purpleIAccount **aResult)
+/* purpleIAccount getAccount (in AUTF8String aName, in AUTF8String aKey); */
+NS_IMETHODIMP purpleProtocol::GetAccount(const nsACString & aKey,
+                                         const nsACString & aName,
+                                         purpleIAccount **aResult)
 {
   purpleAccount *account = new purpleAccount();
   NS_ENSURE_TRUE(account, NS_ERROR_OUT_OF_MEMORY);
 
-  nsresult rv = account->Load(aKey, this, PR_TRUE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  NS_ADDREF(*aResult = account);
-  return NS_OK;
-}
-
-/* purpleIAccount createAccount (in AUTF8String aName, in AUTF8String aKey); */
-NS_IMETHODIMP purpleProtocol::CreateAccount(const nsACString & aName,
-                                            const nsACString & aKey,
-                                            purpleIAccount **aResult)
-{
-  purpleAccount *account = new purpleAccount();
-  NS_ENSURE_TRUE(account, NS_ERROR_OUT_OF_MEMORY);
-
-  nsresult rv = account->Create(aName, this, aKey);
+  nsresult rv = account->Init(aKey, aName, this);
   NS_ENSURE_SUCCESS(rv, rv);
 
   NS_ADDREF(*aResult = account);

@@ -43,6 +43,19 @@
 interface purpleITag;
 interface purpleIBuddy;
 
+%{C++
+#define PREF_ACCOUNT_PREFIX     "messenger.account."
+#define PREF_OPTIONS            "options."
+#define PREF_PRPL               "prpl"
+#define PREF_NAME               "name"
+#define PREF_ALIAS              "alias"
+#define PREF_PROXY              "proxy"
+#define PREF_AUTOLOGIN          "autoLogin"
+#define PREF_FIRST_CONNECTION_STATE "firstConnectionState"
+#define PREF_PASSWORD           "password"
+#define PREF_REMEMBER_PASSWORD  "rememberPassword"
+%}
+
 /*
  * Used to join chat rooms.
  */
@@ -263,15 +276,8 @@ interface purpleIAccount: nsISupports {
 interface purpleIAccountBase: nsISupports {
   attribute purpleIAccount concreteAccount;
 
-  // load an account from the preferences.
-  void load(in AUTF8String aKey, in purpleIProtocol aPrpl,
-            in PRBool aIsValidProtocol);
-
-  // Create a new account using aName as username, aProtocol as the
-  // associated protocol plugin and aKey as the identifier to store
-  //  the account in the preferences.
-  void create(in AUTF8String aName, in purpleIProtocol aPrpl,
-              in AUTF8String aKey);
+  void init(in AUTF8String aKey, in AUTF8String aName,
+            in purpleIProtocol aPrpl);
 
   /* Call this for each connection step. */
   void connecting([optional] in AUTF8String aConnectionStateMessage);

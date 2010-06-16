@@ -216,7 +216,7 @@ purpleChatRoomFieldValues::GetHashTable(GHashTable * *aHashTable)
   return NS_OK;
 }
 
-purpleAccount::purpleAccount()
+purpleAccount::purpleAccount(PRBool aIsValidProtocol)
   : mAccount(NULL)
 {
   /* member initializers and constructor code */
@@ -226,6 +226,7 @@ purpleAccount::purpleAccount()
 #endif
   LOG(("Creating purpleAccount @%x\n", this));
   mConcreteAccount = this;
+  mHasValidProtocol = aIsValidProtocol;
 }
 
 purpleAccount::~purpleAccount()
@@ -290,109 +291,16 @@ inline void purpleAccount::GetCharPref(const char *aName)
 PURPLE_IMPL_GETPREF(Bool, bool, PRBool)
 PURPLE_IMPL_GETPREF(Int, int, PRInt32)
 
-nsresult purpleAccount::Create(const nsACString & aName,
-                               purpleIProtocol *aPrpl,
-                               const nsACString & aKey)
+/* void init (in AUTF8String aKey, in AUTF8String aName); */
+nsresult purpleAccount::Init(const nsACString & aKey,
+                             const nsACString & aName,
+                             purpleIProtocol *aPrpl)
 {
-  NS_ENSURE_ARG_POINTER(aPrpl);
-  NS_ENSURE_TRUE(!aName.IsEmpty(), NS_ERROR_UNEXPECTED);
+  nsresult rv = purpleAccountBase::Init(aKey, aName, aPrpl);
 
-  nsCString prpl;
-  nsresult rv = aPrpl->GetId(prpl);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRBool alreadyExists = PR_FALSE;
-  rv = aPrpl->AccountExists(aName, &alreadyExists);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (alreadyExists) {
-    // adding a duplicate account would confuse libpurple
-    // XXX: Should this test be in purpleProtocol::CreatePurpleAccount?
-    NS_WARNING("Attempted to create a duplicate account!");
-    return NS_ERROR_ALREADY_INITIALIZED;
-  }
-
-  rv = aPrpl->CreatePurpleAccount(aName, this, &mAccount);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = SetId(aKey);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mName = aName;
-  mProtocol = aPrpl;
-  mHasValidProtocol = PR_TRUE;
-
-  rv = GetPrefBranch();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PromiseFlatCString flatName(aName);
-  mPrefBranch->SetCharPref(PREF_NAME, flatName.get());
-  mPrefBranch->SetCharPref(PREF_PRPL, prpl.get());
-
-  rv = storeAccount(mId, flatName, prpl);
-  if (NS_FAILED(rv)) {
-    mPrefBranch->DeleteBranch("");
-    return rv;
-  }
-
-  mProxy = do_CreateInstance(PURPLE_PROXY_INFO_CONTRACTID);
-  NS_ENSURE_TRUE(mProxy, NS_ERROR_OUT_OF_MEMORY);
-
-  mProxy->SetType(purpleIProxyInfo::useGlobal);
-
-  SetFirstConnectionState(FIRST_CONNECTION_SET);
-  SetMissingPasswordIfRequired();
-  return NS_OK;
-}
-
-/* void load (in AUTF8String aKey); */
-nsresult purpleAccount::Load(const nsACString & aKey,
-                             purpleIProtocol *aPrpl,
-                             PRBool aIsValidProtocol)
-{
-  NS_ENSURE_TRUE(aPrpl, NS_ERROR_INVALID_ARG);
-
-  nsresult rv = SetId(aKey);
-  NS_ENSURE_SUCCESS(rv, rv);
-  LOG(("loading account : %s\n", mKey.get()));
-
-  rv = GetPrefBranch();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  /* Get the name */
-  rv = mPrefBranch->GetCharPref(PREF_NAME, getter_Copies(mName));
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(!mName.IsEmpty(), NS_ERROR_UNEXPECTED);
-  LOG(("name = %s\n", mName.get()));
-
-  /* Get the prpl */
-  nsCString prpl;
-  rv = mPrefBranch->GetCharPref(PREF_PRPL, getter_Copies(prpl));
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(!prpl.IsEmpty(), NS_ERROR_UNEXPECTED);
-  LOG(("prpl = %s\n", prpl.get()));
-
-  rv = ensureStored(mName, prpl);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  /* Init the mProtocol member */
-  mProtocol = aPrpl;
-  mHasValidProtocol = aIsValidProtocol;
-  if (aIsValidProtocol) {
+  if (mHasValidProtocol) {
     rv = mProtocol->CreatePurpleAccount(mName, this, &mAccount);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    /* We previously crashed while connecting an account individually. */
-    PRInt16 currentState;
-    if (NS_SUCCEEDED(GetFirstConnectionState(&currentState)) &&
-        (currentState == FIRST_CONNECTION_PENDING ||
-         currentState == FIRST_CONNECTION_CRASHED)) {
-      SetFirstConnectionState(FIRST_CONNECTION_CRASHED);
-      mConnectionErrorReason = (PurpleConnectionError) ERROR_CRASHED;
-    }
-  }
-  else {
-    mConnectionErrorReason = (PurpleConnectionError) ERROR_UNKNOWN_PRPL;
   }
 
   /* Load the alias if any */

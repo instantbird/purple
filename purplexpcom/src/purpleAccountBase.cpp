@@ -51,17 +51,6 @@
 NS_IMPL_ISUPPORTS2_CI(purpleAccountBase, purpleIAccount,
                       purpleIAccountBase)
 
-#define PREF_PREFIX             "messenger.account."
-#define PREF_OPTIONS            "options."
-#define PREF_PRPL               "prpl"
-#define PREF_NAME               "name"
-#define PREF_ALIAS              "alias"
-#define PREF_PROXY              "proxy"
-#define PREF_AUTOLOGIN          "autoLogin"
-#define PREF_FIRST_CONNECTION_STATE "firstConnectionState"
-#define PREF_PASSWORD           "password"
-#define PREF_REMEMBER_PASSWORD  "rememberPassword"
-
 #define AUTO_SAVE_PREFS_TIMER   5000
 
 #define TIME_BEFORE_CONSIDERING_CONNECTION_AS_SUCCESSFUL 10
@@ -79,7 +68,7 @@ nsCOMPtr<nsITimer> purpleAccountBase::sSavePrefsTimer;
 PRUint32 purpleAccountBase::sAutoLoginsPending = 0;
 
 purpleAccountBase::purpleAccountBase()
-  : mHasValidProtocol(PR_FALSE),
+  : mHasValidProtocol(PR_TRUE),
     mConnectionState(STATE_DISCONNECTED),
     mConnectionErrorReason((PurpleConnectionError)NO_ERROR),
     mReconnectAttempts(0),
@@ -127,119 +116,42 @@ NS_IMETHODIMP purpleAccountBase::UnInit()
   return NS_OK;
 }
 
-NS_IMETHODIMP purpleAccountBase::Create(const nsACString & aName,
-                                        purpleIProtocol *aPrpl,
-                                        const nsACString & aKey)
+/* void init (in AUTF8String aKey, in AUTF8String aName); */
+nsresult purpleAccountBase::Init(const nsACString & aKey,
+                                 const nsACString & aName,
+                                 purpleIProtocol *aPrpl)
 {
   NS_ENSURE_ARG_POINTER(aPrpl);
-  NS_ENSURE_TRUE(!aName.IsEmpty(), NS_ERROR_UNEXPECTED);
-
-  nsCString prpl;
-  nsresult rv = aPrpl->GetId(prpl);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRBool alreadyExists = PR_FALSE;
-  rv = aPrpl->AccountExists(aName, &alreadyExists);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (alreadyExists) {
-    // adding a duplicate account would confuse libpurple
-    // XXX: Should this test be in purpleProtocol::CreatePurpleAccount?
-    NS_WARNING("Attempted to create a duplicate account!");
-    return NS_ERROR_ALREADY_INITIALIZED;
-  }
-
-  rv = SetId(aKey);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mName = aName;
-  // TODO init 'real' stuff here
-
-  mProtocol = aPrpl;
-  mHasValidProtocol = PR_TRUE;
-
-  rv = GetPrefBranch();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PromiseFlatCString flatName(aName);
-  mPrefBranch->SetCharPref(PREF_NAME, flatName.get());
-  mPrefBranch->SetCharPref(PREF_PRPL, prpl.get());
-
-  rv = storeAccount(mId, flatName, prpl);
-  if (NS_FAILED(rv)) {
-    mPrefBranch->DeleteBranch("");
-    return rv;
-  }
-
-  SetFirstConnectionState(FIRST_CONNECTION_SET);
-  SetMissingPasswordIfRequired();
-  return NS_OK;
-}
-
-/* void load (in AUTF8String aKey); */
-NS_IMETHODIMP purpleAccountBase::Load(const nsACString & aKey,
-                                      purpleIProtocol *aPrpl,
-                                      PRBool aIsValidProtocol)
-{
-  NS_ENSURE_TRUE(aPrpl, NS_ERROR_INVALID_ARG);
 
   nsresult rv = SetId(aKey);
   NS_ENSURE_SUCCESS(rv, rv);
-  LOG(("loading account : %s\n", mKey.get()));
+  mName = aName;
+  mProtocol = aPrpl;
+  LOG(("initializing account : %s (%s)\n", mKey.get(), mName.get()));
 
   rv = GetPrefBranch();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  /* Get the name */
-  rv = mPrefBranch->GetCharPref(PREF_NAME, getter_Copies(mName));
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(!mName.IsEmpty(), NS_ERROR_UNEXPECTED);
-  LOG(("name = %s\n", mName.get()));
-
-  /* Get the prpl */
-  nsCString prpl;
-  rv = mPrefBranch->GetCharPref(PREF_PRPL, getter_Copies(prpl));
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(!prpl.IsEmpty(), NS_ERROR_UNEXPECTED);
-  LOG(("prpl = %s\n", prpl.get()));
-
-  rv = ensureStored(mName, prpl);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  /* Init the mProtocol member */
-  mProtocol = aPrpl;
-  mHasValidProtocol = aIsValidProtocol;
-  if (aIsValidProtocol) {
-    // TODO init 'real' stuff here
-
-    /* We previously crashed while connecting an account individually. */
-    PRInt16 currentState;
-    if (NS_SUCCEEDED(GetFirstConnectionState(&currentState)) &&
-        (currentState == FIRST_CONNECTION_PENDING ||
-         currentState == FIRST_CONNECTION_CRASHED)) {
-      SetFirstConnectionState(FIRST_CONNECTION_CRASHED);
-      mConnectionErrorReason = (PurpleConnectionError) ERROR_CRASHED;
-    }
-  }
-  else {
+  if (!mHasValidProtocol) {
     mConnectionErrorReason = (PurpleConnectionError) ERROR_UNKNOWN_PRPL;
+    return NS_OK;
   }
 
-  /* Load the alias if any */
+  /* We previously crashed while connecting an account individually. */
+  PRInt16 currentState;
+  if (NS_SUCCEEDED(GetFirstConnectionState(&currentState)) &&
+      (currentState == FIRST_CONNECTION_PENDING ||
+       currentState == FIRST_CONNECTION_CRASHED)) {
+    SetFirstConnectionState(FIRST_CONNECTION_CRASHED);
+    mConnectionErrorReason = (PurpleConnectionError) ERROR_CRASHED;
+  }
 
-  if (!mHasValidProtocol)
-    return NS_OK;
-
-  /* Load the password if it was saved */
+  /* Check if a password is required and missing */
   nsCString pass;
   rv = mPrefBranch->GetCharPref(PREF_PASSWORD, getter_Copies(pass));
-  // FIXME store the password somewhere?
   if (pass.IsEmpty())
     SetMissingPasswordIfRequired();
 
-  /* Load the rememberPassword pref */
-
-  /* Load specific options */
   return NS_OK;
 }
 
@@ -340,63 +252,6 @@ NS_IMETHODIMP purpleAccountBase::CheckAutoLogin()
 
   mPrefBranch = nsnull;
   return NS_OK;
-}
-
-nsresult purpleAccountBase::ensureStored(const nsCString& aName, const nsCString& aPrpl)
-{
-  purpleStorage *storageInstance = purpleStorage::GetInstance();
-  NS_ENSURE_TRUE(storageInstance, NS_ERROR_OUT_OF_MEMORY);
-
-  LOG(("Checking that the account with the id %u in mozStorage has the name %s and the prpl %s\n",
-       mId, aName.get(), aPrpl.get()));
-  mozIStorageStatement *statement = storageInstance->mEnsureAccountStoredStatement;
-  mozStorageStatementScoper scoper(statement);
-  nsresult rv = statement->BindInt32Parameter(0, mId);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRBool hasMoreData;
-  while (NS_SUCCEEDED(statement->ExecuteStep(&hasMoreData)) && hasMoreData) {
-    nsCString name;
-    rv = statement->GetUTF8String(0, name);
-    NS_ENSURE_SUCCESS(rv, rv);
-    nsCString prpl;
-    rv = statement->GetUTF8String(1, prpl);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    LOG(("Account at the id %u in mozStorage has the name %s and the prpl %s\n",
-         mId, name.get(), prpl.get()));
-    NS_ENSURE_TRUE(name.Equals(aName) && prpl.Equals(aPrpl), NS_ERROR_FAILURE);
-
-    LOG(("Checking account (%u, %s, %s) OK\n", mId, name.get(), prpl.get()));
-    return NS_OK;
-  }
-
-  LOG(("account (%u, %s, %s) not found in mozStorage, attempting to store it\n",
-       mId, aName.get(), aPrpl.get()));
-
-  return storeAccount(mId, aName, aPrpl);
-}
-
-nsresult purpleAccountBase::storeAccount(PRUint32 aKey, const nsCString& aName, const nsCString& aPrpl)
-{
-  LOG(("Adding account %u (%s, %s) in mozStorage\n", aKey, aName.get(), aPrpl.get()));
-  purpleStorage *storageInstance = purpleStorage::GetInstance();
-  NS_ENSURE_TRUE(storageInstance, NS_ERROR_OUT_OF_MEMORY);
-
-  mozIStorageConnection *DBConn = storageInstance->GetConnection();
-  nsCOMPtr<mozIStorageStatement> statement;
-  nsresult rv = DBConn->CreateStatement(NS_LITERAL_CSTRING(
-    "INSERT INTO accounts (id, name, prpl) VALUES(?1, ?2, ?3)"),
-    getter_AddRefs(statement));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  statement->BindInt32Parameter(0, aKey);
-  statement->BindUTF8StringParameter(1, aName);
-  statement->BindUTF8StringParameter(2, aPrpl);
-
-  rv = statement->Execute();
-  NS_ASSERTION(NS_SUCCEEDED(rv), "adding account failed");
-  return rv;
 }
 
 nsresult purpleAccountBase::unstoreAccount()
@@ -607,7 +462,7 @@ nsresult purpleAccountBase::GetPrefBranch()
   }
 
   /* create the string for the root of the pref branch */
-  nsCString root(PREF_PREFIX);
+  nsCString root(PREF_ACCOUNT_PREFIX);
   root.Append(mKey);
   root.Append('.');
 

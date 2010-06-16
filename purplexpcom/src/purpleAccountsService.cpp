@@ -45,7 +45,6 @@
 #include <nsComponentManagerUtils.h>
 #include <nsIObserverService.h>
 #include <nsIConsoleService.h>
-#include <nsIPrefService.h>
 #include <nsArrayEnumerator.h>
 
 #ifdef PR_LOGGING
@@ -70,7 +69,7 @@ purpleAccountsService::purpleAccountsService()
     gPurpleAccountsServiceLog = PR_NewLogModule("purpleAccountsService");
 #endif
   mPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  mPrefBranch2 = do_QueryInterface(mPrefService);
+  mPrefBranch = do_QueryInterface(mPrefService);
 }
 
 purpleAccountsService::~purpleAccountsService()
@@ -107,8 +106,8 @@ NS_IMETHODIMP purpleAccountsService::InitAccounts()
 
   /* Get the list of accounts */
   nsCString accountList;
-  nsresult rv = mPrefService->GetCharPref(PREF_MESSENGER_ACCOUNTS,
-                                          getter_Copies(accountList));
+  nsresult rv = mPrefBranch->GetCharPref(PREF_MESSENGER_ACCOUNTS,
+                                         getter_Copies(accountList));
   NS_ENSURE_SUCCESS(rv, rv);
 
   LOG(("InitAccounts list = %s", accountList.get()));
@@ -130,7 +129,7 @@ NS_IMETHODIMP purpleAccountsService::InitAccounts()
   }
 
   /* Observe for changes in the order of accounts */
-  rv = mPrefBranch2->AddObserver(PREF_MESSENGER_ACCOUNTS, this, PR_FALSE);
+  rv = mPrefBranch->AddObserver(PREF_MESSENGER_ACCOUNTS, this, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   LOG(("Accounts service initialized"));
@@ -143,8 +142,8 @@ nsresult purpleAccountsService::UpdateAccountList()
 
   /* Get the list of accounts */
   nsCString accountList;
-  nsresult rv = mPrefService->GetCharPref(PREF_MESSENGER_ACCOUNTS,
-                                          getter_Copies(accountList));
+  nsresult rv = mPrefBranch->GetCharPref(PREF_MESSENGER_ACCOUNTS,
+                                         getter_Copies(accountList));
   NS_ENSURE_SUCCESS(rv, rv);
 
   LOG(("UpdateAccountList list = %s", accountList.get()));
@@ -192,7 +191,7 @@ NS_IMETHODIMP purpleAccountsService::UnInitAccounts()
   }
   mAccounts.Clear();
 
-  nsresult rv = mPrefBranch2->RemoveObserver(PREF_MESSENGER_ACCOUNTS, this);
+  nsresult rv = mPrefBranch->RemoveObserver(PREF_MESSENGER_ACCOUNTS, this);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mInitialized = PR_FALSE;
@@ -239,16 +238,86 @@ NS_IMETHODIMP purpleAccountsService::GetAccounts(nsISimpleEnumerator **aResult)
   return NS_NewArrayEnumerator(aResult, mAccounts);
 }
 
+nsresult purpleAccountsService::ensureStored(PRUint32 aId,
+                                             const nsCString& aName,
+                                             const nsCString& aPrpl)
+{
+  purpleStorage *storageInstance = purpleStorage::GetInstance();
+  NS_ENSURE_TRUE(storageInstance, NS_ERROR_OUT_OF_MEMORY);
+
+  LOG(("Checking that the account with the id %u in mozStorage has the name %s and the prpl %s\n",
+       aId, aName.get(), aPrpl.get()));
+  mozIStorageStatement *statement = storageInstance->mEnsureAccountStoredStatement;
+  mozStorageStatementScoper scoper(statement);
+  nsresult rv = statement->BindInt32Parameter(0, aId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool hasMoreData;
+  while (NS_SUCCEEDED(statement->ExecuteStep(&hasMoreData)) && hasMoreData) {
+    nsCString name;
+    rv = statement->GetUTF8String(0, name);
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCString prpl;
+    rv = statement->GetUTF8String(1, prpl);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    LOG(("Account at the id %u in mozStorage has the name %s and the prpl %s\n",
+         aId, name.get(), prpl.get()));
+    NS_ENSURE_TRUE(name.Equals(aName) && prpl.Equals(aPrpl), NS_ERROR_FAILURE);
+
+    LOG(("Checking account (%u, %s, %s) OK\n", aId, name.get(), prpl.get()));
+    return NS_OK;
+  }
+
+  LOG(("account (%u, %s, %s) not found in mozStorage, attempting to store it\n",
+       aId, aName.get(), aPrpl.get()));
+
+  return storeAccount(aId, aName, aPrpl);
+}
+
+nsresult purpleAccountsService::storeAccount(PRUint32 aId,
+                                             const nsCString& aName,
+                                             const nsCString& aPrpl)
+{
+  LOG(("Adding account %u (%s, %s) in mozStorage\n",
+       aId, aName.get(), aPrpl.get()));
+  purpleStorage *storageInstance = purpleStorage::GetInstance();
+  NS_ENSURE_TRUE(storageInstance, NS_ERROR_OUT_OF_MEMORY);
+
+  mozIStorageConnection *DBConn = storageInstance->GetConnection();
+  nsCOMPtr<mozIStorageStatement> statement;
+  nsresult rv = DBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "INSERT INTO accounts (id, name, prpl) VALUES(?1, ?2, ?3)"),
+    getter_AddRefs(statement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  statement->BindInt32Parameter(0, aId);
+  statement->BindUTF8StringParameter(1, aName);
+  statement->BindUTF8StringParameter(2, aPrpl);
+
+  rv = statement->Execute();
+  NS_ASSERTION(NS_SUCCEEDED(rv), "adding account failed");
+  return rv;
+}
+
 nsresult purpleAccountsService::LoadAccount(nsCString &key, purpleIAccount **aResult)
 {
   NS_ENSURE_TRUE(!key.IsEmpty(), NS_ERROR_INVALID_ARG);
 
-  nsCString prefName("messenger.account.");
-  prefName.Append(key);
-  prefName.Append(".prpl");
+  nsCString prefRoot(PREF_ACCOUNT_PREFIX);
+  prefRoot.Append(key);
+  prefRoot.Append(".");
 
+  nsCString prefName = prefRoot;
+  prefName.Append(PREF_NAME);
+  nsCString name;
+  nsresult rv = mPrefBranch->GetCharPref(prefName.get(), getter_Copies(name));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCString prefPrpl = prefRoot;
+  prefPrpl.Append(PREF_PRPL);
   nsCString prpl;
-  nsresult rv = mPrefService->GetCharPref(prefName.get(), getter_Copies(prpl));
+  rv = mPrefBranch->GetCharPref(prefPrpl.get(), getter_Copies(prpl));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<purpleICoreService> pcs =
@@ -258,7 +327,6 @@ nsresult purpleAccountsService::LoadAccount(nsCString &key, purpleIAccount **aRe
   nsCOMPtr<purpleIProtocol> proto;
   rv = pcs->GetProtocolById(prpl, getter_AddRefs(proto));
   if (NS_FAILED(rv) || !proto) {
-      // If it failed, the protocol is unknown, which is handled later.
     nsCOMPtr<purpleUnknownProtocol> unknown =
       do_CreateInstance(PURPLE_UNKNOWN_PROTOCOL_CONTRACTID);
     NS_ENSURE_TRUE(unknown, NS_ERROR_OUT_OF_MEMORY);
@@ -266,7 +334,14 @@ nsresult purpleAccountsService::LoadAccount(nsCString &key, purpleIAccount **aRe
     proto = unknown;
   }
 
-  return proto->LoadAccount(key, aResult);
+  PRUint32 id;
+  PRInt32 count = PR_sscanf(key.get(), ACCOUNT_KEY "%u", &id);
+  NS_ENSURE_TRUE(count == 1, NS_ERROR_FAILURE);
+
+  rv = ensureStored(id, name, prpl);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return proto->GetAccount(key, name, aResult);
 }
 
 /* purpleIAccount createAccount(in AUTF8String aName, in AUTF8String aPrpl); */
@@ -276,8 +351,8 @@ NS_IMETHODIMP purpleAccountsService::CreateAccount(const nsACString &aName,
 {
   /* Get the list of accounts */
   nsCString accountList;
-  nsresult rv = mPrefService->GetCharPref(PREF_MESSENGER_ACCOUNTS,
-                                          getter_Copies(accountList));
+  nsresult rv = mPrefBranch->GetCharPref(PREF_MESSENGER_ACCOUNTS,
+                                         getter_Copies(accountList));
   NS_ENSURE_SUCCESS(rv, rv);
 
   /* Prepare the statement that will be used to check that the key
@@ -293,16 +368,13 @@ NS_IMETHODIMP purpleAccountsService::CreateAccount(const nsACString &aName,
   NS_ENSURE_SUCCESS(rv, rv);
 
   /* First get a new unique account key */
-  nsCString key;
-  PRInt32 i = 1;
-  PRBool found;
-  do {
-    key = ACCOUNT_KEY;
-    key.AppendInt(i);
+  PRUint32 i;
+  PRBool found = PR_TRUE;
+  for (i = 1; found; ++i) {
     found = PR_FALSE;
     for (PRInt32 j = mAccounts.Count() - 1; j >= 0; --j) {
-      nsCString id;
-      if ((found = (NS_SUCCEEDED(mAccounts[j]->GetId(id)) && id.Equals(key))))
+      PRUint32 id;
+      if ((found = (NS_SUCCEEDED(mAccounts[j]->GetNumericId(&id)) && id == i)))
         break;
     }
     if (!found) {
@@ -326,8 +398,10 @@ NS_IMETHODIMP purpleAccountsService::CreateAccount(const nsACString &aName,
         consoleService->LogStringMessage(msg.get());
       }
     }
-    ++i;
-  } while (found);
+  }
+
+  nsCString key(ACCOUNT_KEY);
+  key.AppendInt(i);
 
   /* Get the prpl */
   nsCOMPtr<purpleICoreService> pcs =
@@ -339,9 +413,42 @@ NS_IMETHODIMP purpleAccountsService::CreateAccount(const nsACString &aName,
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(proto, NS_ERROR_FAILURE);
 
+  /* Avoid creating a duplicate account. */
+  PRBool alreadyExists = PR_FALSE;
+  rv = proto->AccountExists(aName, &alreadyExists);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (alreadyExists) {
+    // adding a duplicate account would confuse libpurple
+    NS_WARNING("Attempted to create a duplicate account!");
+    return NS_ERROR_ALREADY_INITIALIZED;
+  }
+
   /* Actually create the new account */
   nsCOMPtr<purpleIAccount> account;
-  rv = proto->CreateAccount(aName, key, getter_AddRefs(account));
+  rv = proto->GetAccount(key, aName, getter_AddRefs(account));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  /* get the branch */
+  nsCOMPtr<nsIPrefBranch> prefBranch;
+  nsCString branchPath(PREF_ACCOUNT_PREFIX);
+  branchPath.Append(key);
+  branchPath.Append('.');
+  rv = mPrefService->GetBranch(branchPath.get(), getter_AddRefs(prefBranch));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PromiseFlatCString flatName(aName);
+  prefBranch->SetCharPref(PREF_NAME, flatName.get());
+  PromiseFlatCString flatPrpl(aPrpl);
+  prefBranch->SetCharPref(PREF_PRPL, flatPrpl.get());
+
+  rv = storeAccount(i, flatName, flatPrpl);
+  if (NS_FAILED(rv)) {
+    prefBranch->DeleteBranch("");
+    return rv;
+  }
+
+  rv = account->SetFirstConnectionState(purpleIAccount::FIRST_CONNECTION_SET);
   NS_ENSURE_SUCCESS(rv, rv);
 
   /* Save the account list pref */
@@ -351,7 +458,7 @@ NS_IMETHODIMP purpleAccountsService::CreateAccount(const nsACString &aName,
     accountList.Append(',');
     accountList.Append(key);
   }
-  mPrefService->SetCharPref(PREF_MESSENGER_ACCOUNTS, accountList.get());
+  mPrefBranch->SetCharPref(PREF_MESSENGER_ACCOUNTS, accountList.get());
 
   /* Keep it in the local account list */
   mAccounts.AppendObject(account);
@@ -390,8 +497,8 @@ NS_IMETHODIMP purpleAccountsService::DeleteAccount(const nsACString& aAccountId)
 
   /* Get the list of accounts */
   nsCString accountList;
-  nsresult rv = mPrefService->GetCharPref(PREF_MESSENGER_ACCOUNTS,
-                                          getter_Copies(accountList));
+  nsresult rv = mPrefBranch->GetCharPref(PREF_MESSENGER_ACCOUNTS,
+                                         getter_Copies(accountList));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // reconstruct the new account list, re-adding all accounts except
@@ -414,13 +521,12 @@ NS_IMETHODIMP purpleAccountsService::DeleteAccount(const nsACString& aAccountId)
   }
 
   // now write the new account list back to the prefs
-  rv = mPrefService->SetCharPref(PREF_MESSENGER_ACCOUNTS,
-                                 newAccountList.get());
+  rv = mPrefBranch->SetCharPref(PREF_MESSENGER_ACCOUNTS,
+                                newAccountList.get());
   NS_ENSURE_SUCCESS(rv, rv);
 
   // ensure the change is written to the disk now
-  nsCOMPtr<nsIPrefService> prefs = do_QueryInterface(mPrefService);
-  return prefs->SavePrefFile(nsnull);
+  return mPrefService->SavePrefFile(nsnull);
 }
 
 nsresult purpleAccountsService::NotifyObservers(nsISupports *aObj,
