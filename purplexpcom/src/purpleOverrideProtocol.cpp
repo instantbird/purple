@@ -143,5 +143,4 @@ IMPL_FORWARD_GETBOOLOPT(SlashCommandsNative)
     return mBase->aName aParams;                                        \
   }
 
-IMPL_FORWARD_BASE(GetInfo, (PurplePluginProtocolInfo * *_retval), (_retval))
 IMPL_FORWARD_BASE(GetAccount, (const nsACString & aKey, const nsACString & aName, purpleIAccount **aResult), (aKey, aName, aResult))

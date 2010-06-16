@@ -162,12 +162,6 @@ PURPLE_IMPL_GETBOOLOPT(RegisterNoScreenName, REGISTER_NOSCREENNAME)
 /* readonly attribute boolean slashCommandsNative; */
 PURPLE_IMPL_GETBOOLOPT(SlashCommandsNative, SLASH_COMMANDS_NATIVE)
 
-/* [noscript] PurpleNativePluginProtocolInfo getInfo (); */
-NS_IMETHODIMP purpleUnknownProtocol::GetInfo(PurplePluginProtocolInfo * *aPrplInfo)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 /* purpleIAccount getAccount (in AUTF8String aName, in AUTF8String aKey); */
 NS_IMETHODIMP purpleUnknownProtocol::GetAccount(const nsACString & aKey,
                                                 const nsACString & aName,

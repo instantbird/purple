@@ -90,6 +90,7 @@ public:
   static inline purpleAccount *fromPurpleAccount(PurpleAccount *aAccount) {
     return static_cast<purpleAccount *>(aAccount->ui_data);
   }
+  PurplePluginProtocolInfo *GetPrplInfo();
 
 private:
   ~purpleAccount();

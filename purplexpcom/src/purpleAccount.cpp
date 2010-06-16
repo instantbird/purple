@@ -505,6 +505,19 @@ NS_IMETHODIMP purpleAccount::LoadBuddy(purpleIBuddy *aBuddy,
   return NS_OK;
 }
 
+PurplePluginProtocolInfo *purpleAccount::GetPrplInfo()
+{
+  NS_ENSURE_TRUE(mAccount, NULL);
+
+  PurpleConnection *gc = purple_account_get_connection(mAccount);
+  NS_ENSURE_TRUE(gc, NULL);
+
+  PurplePlugin *prpl = purple_connection_get_prpl(gc);
+  NS_ENSURE_TRUE(prpl, NULL);
+
+  return PURPLE_PLUGIN_PROTOCOL_INFO(prpl);
+}
+
 /* nsISimpleEnumerator getChatRoomFields (); */
 NS_IMETHODIMP purpleAccount::GetChatRoomFields(nsISimpleEnumerator **aResult)
 {
@@ -512,9 +525,8 @@ NS_IMETHODIMP purpleAccount::GetChatRoomFields(nsISimpleEnumerator **aResult)
   PurpleConnection *gc = purple_account_get_connection(mAccount);
   NS_ENSURE_TRUE(gc, NS_ERROR_FAILURE);
 
-  PurplePluginProtocolInfo *prplInfo;
-  nsresult rv = mProtocol->GetInfo(&prplInfo);
-  NS_ENSURE_SUCCESS(rv, rv);
+  PurplePluginProtocolInfo *prplInfo = GetPrplInfo();
+  NS_ENSURE_TRUE(prplInfo, NS_ERROR_FAILURE);
 
   purpleGListEnumerator *enumerator = new purpleGListEnumerator();
   enumerator->Init(prplInfo->chat_info(gc),
@@ -531,9 +543,8 @@ NS_IMETHODIMP purpleAccount::GetCanJoinChat(PRBool *aCanJoinChat)
 {
   PURPLE_ENSURE_INIT(mProtocol);
 
-  PurplePluginProtocolInfo *prplInfo;
-  nsresult rv = mProtocol->GetInfo(&prplInfo);
-  NS_ENSURE_SUCCESS(rv, rv);
+  PurplePluginProtocolInfo *prplInfo = GetPrplInfo();
+  NS_ENSURE_TRUE(prplInfo, NS_ERROR_FAILURE);
 
   *aCanJoinChat =
     prplInfo->join_chat && prplInfo->chat_info && prplInfo->chat_info_defaults;
@@ -549,9 +560,8 @@ purpleAccount::GetChatRoomDefaultFieldValues(const nsACString & aDefaultChatName
   PurpleConnection *gc = purple_account_get_connection(mAccount);
   NS_ENSURE_TRUE(gc, NS_ERROR_FAILURE);
 
-  PurplePluginProtocolInfo *prplInfo;
-  nsresult rv = mProtocol->GetInfo(&prplInfo);
-  NS_ENSURE_SUCCESS(rv, rv);
+  PurplePluginProtocolInfo *prplInfo = GetPrplInfo();
+  NS_ENSURE_TRUE(prplInfo, NS_ERROR_FAILURE);
 
   PromiseFlatCString defaultChatName(aDefaultChatName);
   const char *chatName = defaultChatName.get();

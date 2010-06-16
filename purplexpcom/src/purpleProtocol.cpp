@@ -282,15 +282,6 @@ PURPLE_IMPL_GETBOOLOPT(RegisterNoScreenName, REGISTER_NOSCREENNAME)
 /* readonly attribute boolean slashCommandsNative; */
 PURPLE_IMPL_GETBOOLOPT(SlashCommandsNative, SLASH_COMMANDS_NATIVE)
 
-/* [noscript] PurpleNativePluginProtocolInfo getInfo (); */
-NS_IMETHODIMP purpleProtocol::GetInfo(PurplePluginProtocolInfo * *aPrplInfo)
-{
-  NS_ENSURE_TRUE(mInfo, NS_ERROR_NOT_INITIALIZED);
-  *aPrplInfo = (PurplePluginProtocolInfo *)mInfo->extra_info;
-
-  return NS_OK;
-}
-
 /* purpleIAccount getAccount (in AUTF8String aName, in AUTF8String aKey); */
 NS_IMETHODIMP purpleProtocol::GetAccount(const nsACString & aKey,
                                          const nsACString & aName,

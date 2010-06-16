@@ -339,9 +339,11 @@ NS_IMETHODIMP purpleAccountBuddy::GetTooltipInfo(nsISimpleEnumerator** aTooltipI
   nsresult rv = mAccount->GetProtocol(getter_AddRefs(proto));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PurplePluginProtocolInfo *prpl_info;
-  rv = proto->GetInfo(&prpl_info);
-  NS_ENSURE_SUCCESS(rv, rv);
+  purpleAccount *account = purpleAccount::fromPurpleAccount(mBuddy->account);
+  NS_ENSURE_TRUE(account, NS_ERROR_FAILURE);
+
+  PurplePluginProtocolInfo *prpl_info = account->GetPrplInfo();
+  NS_ENSURE_TRUE(prpl_info, NS_ERROR_FAILURE);
 
   if (prpl_info->tooltip_text && mBuddy->account->gc) {
     PurpleNotifyUserInfo *user_info = purple_notify_user_info_new();
