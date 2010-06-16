@@ -303,6 +303,7 @@ nsresult purpleAccountsService::storeAccount(PRUint32 aId,
 nsresult purpleAccountsService::LoadAccount(nsCString &key, purpleIAccount **aResult)
 {
   NS_ENSURE_TRUE(!key.IsEmpty(), NS_ERROR_INVALID_ARG);
+  LOG(("Attempting to load account %s", key.get()));
 
   nsCString prefRoot(PREF_ACCOUNT_PREFIX);
   prefRoot.Append(key);

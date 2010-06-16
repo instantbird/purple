@@ -96,9 +96,12 @@ void purpleAccountBuddy::Uninit()
 
 nsresult purpleAccountBuddy::Store(PRInt32 aBuddyId)
 {
+  NS_ENSURE_TRUE(aBuddyId, NS_ERROR_INVALID_ARG);
+
   PRUint32 accountId;
   nsresult rv = mAccount->GetNumericId(&accountId);
   NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(accountId, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<purpleITag> tag;
   rv = GetTag(getter_AddRefs(tag));
@@ -107,6 +110,7 @@ nsresult purpleAccountBuddy::Store(PRInt32 aBuddyId)
   PRInt32 groupId;
   rv = tag->GetId(&groupId);
   NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(groupId, NS_ERROR_UNEXPECTED);
 
   purpleStorage *storageInstance = purpleStorage::GetInstance();
   mozIStorageStatement *statement = storageInstance->mInsertAccountBuddy;
