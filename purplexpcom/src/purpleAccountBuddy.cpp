@@ -339,17 +339,19 @@ NS_IMETHODIMP purpleAccountBuddy::GetTooltipInfo(nsISimpleEnumerator** aTooltipI
        mBuddy->name, name.get()));
 #endif
 
-  nsCOMPtr<purpleIProtocol> proto;
-  nsresult rv = mAccount->GetProtocol(getter_AddRefs(proto));
-  NS_ENSURE_SUCCESS(rv, rv);
+  *aTooltipInfo = nsnull;
+  PurpleAccount *pAccount = purple_buddy_get_account(mBuddy);
+  PurpleConnection *gc = purple_account_get_connection(pAccount);
+  if (!gc)
+    return NS_OK;
 
-  purpleAccount *account = purpleAccount::fromPurpleAccount(mBuddy->account);
-  NS_ENSURE_TRUE(account, NS_ERROR_FAILURE);
+  purpleAccount *account = purpleAccount::fromPurpleAccount(pAccount);
+  NS_ENSURE_TRUE(account, NS_OK);
 
   PurplePluginProtocolInfo *prpl_info = account->GetPrplInfo();
-  NS_ENSURE_TRUE(prpl_info, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(prpl_info, NS_OK);
 
-  if (prpl_info->tooltip_text && mBuddy->account->gc) {
+  if (prpl_info->tooltip_text) {
     PurpleNotifyUserInfo *user_info = purple_notify_user_info_new();
 
     /* Idle */
@@ -373,10 +375,8 @@ NS_IMETHODIMP purpleAccountBuddy::GetTooltipInfo(nsISimpleEnumerator** aTooltipI
                                            PurpleNotifyUserInfoEntry>,
                      CleanUserInfo, user_info);
     NS_ADDREF(*aTooltipInfo = enumerator);
-    return NS_OK;
   }
 
-  *aTooltipInfo = nsnull;
   return NS_OK;
 }
 
