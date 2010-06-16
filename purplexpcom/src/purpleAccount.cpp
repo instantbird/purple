@@ -299,8 +299,17 @@ nsresult purpleAccount::Init(const nsACString & aKey,
   nsresult rv = purpleAccountBase::Init(aKey, aName, aPrpl);
 
   if (mHasValidProtocol) {
-    rv = mProtocol->CreatePurpleAccount(mName, this, &mAccount);
+    NS_ENSURE_TRUE(!mName.IsEmpty() && mProtocol, NS_ERROR_NOT_INITIALIZED);
+
+    nsCString protoId;
+    nsresult rv = mProtocol->GetId(protoId);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    mAccount = purple_account_new(mName.get(), protoId.get());
+    NS_ENSURE_TRUE(mAccount, NS_ERROR_FAILURE);
+
+    mAccount->ui_data = this;
+    purple_accounts_add(mAccount);
   }
 
   /* Load the alias if any */

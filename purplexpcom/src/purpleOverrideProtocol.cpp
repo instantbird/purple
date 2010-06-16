@@ -145,8 +145,3 @@ IMPL_FORWARD_GETBOOLOPT(SlashCommandsNative)
 
 IMPL_FORWARD_BASE(GetInfo, (PurplePluginProtocolInfo * *_retval), (_retval))
 IMPL_FORWARD_BASE(GetAccount, (const nsACString & aKey, const nsACString & aName, purpleIAccount **aResult), (aKey, aName, aResult))
-IMPL_FORWARD_BASE(CreatePurpleAccount,
-                  (const nsACString & aName,
-                   purpleIAccount *aAccount,
-                   PurpleAccount * *_retval),
-                  (aName, aAccount, _retval))

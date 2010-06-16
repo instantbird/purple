@@ -182,12 +182,3 @@ NS_IMETHODIMP purpleUnknownProtocol::GetAccount(const nsACString & aKey,
   NS_ADDREF(*aResult = account);
   return NS_OK;
 }
-
-/* [noscript] PurpleNativeAccount createPurpleAccount (in AUTF8String aName,
-                                                       in purpleIAccount aAccount); */
-NS_IMETHODIMP purpleUnknownProtocol::CreatePurpleAccount(const nsACString & aName,
-                                                         purpleIAccount *aAccount,
-                                                         PurpleAccount * *aResult)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
