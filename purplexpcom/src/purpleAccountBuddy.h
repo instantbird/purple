@@ -74,6 +74,7 @@ public:
 private:
   ~purpleAccountBuddy();
   static void CleanUserInfo(void *aData);
+  PurplePluginProtocolInfo *GetPrplInfo(PurpleBuddy *aBuddy);
 
 protected:
   /* additional members */

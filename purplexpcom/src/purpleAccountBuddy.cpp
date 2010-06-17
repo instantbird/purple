@@ -326,6 +326,19 @@ void purpleAccountBuddy::CleanUserInfo(void *aData)
     purple_notify_user_info_destroy((PurpleNotifyUserInfo *)aData);
 }
 
+PurplePluginProtocolInfo *purpleAccountBuddy::GetPrplInfo(PurpleBuddy *aBuddy)
+{
+  PurpleAccount *pAccount = purple_buddy_get_account(aBuddy);
+  PurpleConnection *gc = purple_account_get_connection(pAccount);
+  if (!gc)
+    return NULL;
+
+  purpleAccount *account = purpleAccount::fromPurpleAccount(pAccount);
+  NS_ENSURE_TRUE(account, NULL);
+
+  return account->GetPrplInfo();
+}
+
 /*   nsISimpleEnumerator getTooltipInfo(); */
 NS_IMETHODIMP purpleAccountBuddy::GetTooltipInfo(nsISimpleEnumerator** aTooltipInfo)
 {
@@ -340,18 +353,8 @@ NS_IMETHODIMP purpleAccountBuddy::GetTooltipInfo(nsISimpleEnumerator** aTooltipI
 #endif
 
   *aTooltipInfo = nsnull;
-  PurpleAccount *pAccount = purple_buddy_get_account(mBuddy);
-  PurpleConnection *gc = purple_account_get_connection(pAccount);
-  if (!gc)
-    return NS_OK;
-
-  purpleAccount *account = purpleAccount::fromPurpleAccount(pAccount);
-  NS_ENSURE_TRUE(account, NS_OK);
-
-  PurplePluginProtocolInfo *prpl_info = account->GetPrplInfo();
-  NS_ENSURE_TRUE(prpl_info, NS_OK);
-
-  if (prpl_info->tooltip_text) {
+  PurplePluginProtocolInfo *prpl_info = GetPrplInfo(mBuddy);
+  if (prpl_info && prpl_info->tooltip_text) {
     PurpleNotifyUserInfo *user_info = purple_notify_user_info_new();
 
     /* Idle */
@@ -451,21 +454,15 @@ NS_IMETHODIMP purpleAccountBuddy::GetStatus(nsACString &aStatus)
 {
   NS_ENSURE_TRUE(mBuddy, NS_ERROR_NOT_INITIALIZED);
 
-  PurplePlugin *prpl = purple_find_prpl(purple_account_get_protocol_id(mBuddy->account));
-  NS_ENSURE_ARG_POINTER(prpl);
-
-  PurplePluginProtocolInfo *prpl_info = PURPLE_PLUGIN_PROTOCOL_INFO(prpl);
-  NS_ENSURE_ARG_POINTER(prpl_info);
-
-  if (prpl_info->status_text && mBuddy->account->gc) {
+  aStatus.Truncate();
+  PurplePluginProtocolInfo *prpl_info = GetPrplInfo(mBuddy);
+  if (prpl_info && prpl_info->status_text) {
     char *tmp1 = prpl_info->status_text(mBuddy);
     char *tmp2 = purple_unescape_html(tmp1);
     aStatus = tmp2;
     g_free(tmp1);
     g_free(tmp2);
   }
-  else
-    aStatus = "";
 
   return NS_OK;
 }
