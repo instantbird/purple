@@ -46,9 +46,9 @@
 #include <nsIObserverService.h>
 #include <nsIConsoleService.h>
 #include <nsArrayEnumerator.h>
+#include <prprf.h>
 
 #ifdef PR_LOGGING
-#include <prprf.h>
 //
 // NSPR_LOG_MODULES=purpleAccountsService:5
 //
