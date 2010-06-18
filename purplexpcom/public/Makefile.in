@@ -58,6 +58,7 @@ XPIDLSRCS	= \
 		purpleIProxy.idl \
 		purpleISocket.idl \
 		purpleITag.idl \
+		purpleITagsService.idl \
 		purpleITooltipInfo.idl \
 		$(NULL)
 

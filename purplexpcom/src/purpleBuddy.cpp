@@ -38,6 +38,7 @@
 #include "purpleBuddy.h"
 #include "purpleCoreService.h"
 #include "purpleStorage.h"
+#include "purpleTagsService.h"
 #include <nsServiceManagerUtils.h>
 #include <nsComponentManagerUtils.h>
 #include <nsIClassInfoImpl.h>
@@ -201,12 +202,20 @@ nsresult purpleBuddy::AddAccount(PurpleBuddy *aBuddy)
   purpleAccount *account = purpleAccount::fromPurpleAccount(pAccount);
   NS_ENSURE_TRUE(account, NS_ERROR_UNEXPECTED);
 
-  nsCOMPtr<purpleICoreService> pcs =
-    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-  nsCOMPtr<purpleTag> tag;
-  nsresult rv = NATIVE_PCS(pcs)->GetTagFromPurpleBuddy(aBuddy,
-                                                       getter_AddRefs(tag));
-  NS_ENSURE_SUCCESS(rv, rv);
+  PurpleGroup *group = purple_buddy_get_group(aBuddy);
+  purpleTag *tag = purpleTag::fromPurpleGroup(group);
+  if (!tag) {
+    nsCOMPtr<purpleITagsService> pts =
+      do_GetService(PURPLE_TAGS_SERVICE_CONTRACTID);
+    NS_ENSURE_TRUE(pts, NS_ERROR_UNEXPECTED);
+
+    nsCOMPtr<purpleITag> newTag;
+    nsCString groupName(purple_group_get_name(group));
+    nsresult rv = pts->CreateTag(groupName, getter_AddRefs(newTag));
+    NS_ENSURE_SUCCESS(rv, rv);
+    // this is bad because it will be unref'ed before being used.
+    tag = static_cast<purpleTag *>(newTag.get());
+  }
 
   purpleAccountBuddy *pab = AddAccount(account, aBuddy, tag);
   return pab->Store(mId);

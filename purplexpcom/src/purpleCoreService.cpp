@@ -42,6 +42,7 @@
 #include "purpleNetwork.h"
 #include "purpleStorage.h"
 #include "purpleSockets.h"
+#include "purpleTagsService.h"
 #include "purpleTimer.h"
 
 #pragma GCC visibility push(default)
@@ -105,7 +106,6 @@ purpleCoreService::purpleCoreService()
   mPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
   mPrefBranch2 = do_QueryInterface(mPrefService);
   mBuddiesById.Init();
-  mTagById.Init();
 }
 
 purpleCoreService::~purpleCoreService()
@@ -212,6 +212,13 @@ NS_IMETHODIMP purpleCoreService::Init()
   NS_ENSURE_TRUE(mAccountsService, NS_ERROR_OUT_OF_MEMORY);
 
   rv = mAccountsService->InitAccounts();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  /* Load the tags */
+  mTagsService = do_GetService(PURPLE_TAGS_SERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(mTagsService, NS_ERROR_OUT_OF_MEMORY);
+
+  rv = mTagsService->InitTags();
   NS_ENSURE_SUCCESS(rv, rv);
 
   /* Load the buddy list from mozStorage */
@@ -412,33 +419,13 @@ nsresult purpleCoreService::InitBuddyList()
   mozIStorageConnection *DBConn = storageInstance->GetConnection();
   nsCOMPtr<mozIStorageStatement> statement;
   nsresult rv = DBConn->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT id, name FROM tags"),
-    getter_AddRefs(statement));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRBool hasMoreData;
-  while (NS_SUCCEEDED(statement->ExecuteStep(&hasMoreData)) && hasMoreData) {
-    PRInt32 id = statement->AsInt32(0);
-    nsCString name;
-    rv = statement->GetUTF8String(1, name);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    LOG(("pcs::InitBuddyList: reading group %s (id %i)",
-         name.get(), id));
-    PurpleGroup *group = purple_group_new(name.get());
-    purpleTag *tag = new purpleTag();
-    tag->Init(id, group);
-    mTagById.Put(id, tag);
-    purple_blist_add_group(group, NULL);
-  }
-
-  rv = DBConn->CreateStatement(NS_LITERAL_CSTRING(
     "SELECT buddies.id, name, srv_alias, alias, tag_id, account_id FROM buddies"
     " JOIN account_buddy ON buddy_id = buddies.id"
     " LEFT JOIN contacts ON contact_id = contacts.id"),
     getter_AddRefs(statement));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  PRBool hasMoreData;
   while (NS_SUCCEEDED(statement->ExecuteStep(&hasMoreData)) && hasMoreData) {
     PRInt32 id = statement->AsInt32(0);
     nsCString name;
@@ -455,8 +442,8 @@ nsresult purpleCoreService::InitBuddyList()
     LOG(("pcs::InitBuddyList: reading buddy %s of account %i, group %i",
          name.get(), accountId, tagId));
 
-    nsCOMPtr<purpleTag> tag;
-    if (!mTagById.Get(tagId, getter_AddRefs(tag))) {
+    nsCOMPtr<purpleITag> tag;
+    if (NS_FAILED(mTagsService->GetTagById(tagId, getter_AddRefs(tag)))) {
       // Should never happen. Corrupted blist.sqlite ?
 #ifdef PR_LOGGING
       char errorMsg[60];
@@ -601,6 +588,8 @@ NS_IMETHODIMP purpleCoreService::Quit()
   mConversations.Clear();
   mAccountsService->UnInitAccounts();
   mAccountsService = nsnull;
+  mTagsService->UnInitTags();
+  mTagsService = nsnull;
   mProtocols.Clear();
   mProxies.Clear();
   mBuddiesById.Clear();
@@ -713,175 +702,6 @@ NS_IMETHODIMP purpleCoreService::PurpleBuddyRemoved(PurpleBuddy *aBuddy)
     mBuddiesById.Remove(id);
   }
 
-  return NS_OK;
-}
-
-nsresult purpleCoreService::storeTag(nsCString &aGroupName, PurpleGroup *aGroup,
-                                     purpleTag **aResult)
-{
-  purpleStorage *storageInstance = purpleStorage::GetInstance();
-  mozIStorageStatement *statement = storageInstance->mInsertGroup;
-  mozStorageStatementScoper scoper(statement);
-  nsresult rv = statement->BindUTF8StringParameter(0, aGroupName);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = statement->BindInt32Parameter(1, 0); // FIXME (0 = not visible);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = statement->Execute();
-  NS_ENSURE_SUCCESS(rv, rv);
-  LOG(("pcs::storeTag: stored group %s", aGroupName.get()));
-  PRInt32 id;
-  rv = GetTagIdFromName(aGroupName, &id);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PurpleGroup *group = aGroup;
-  if (!aGroup)
-    group = purple_group_new(aGroupName.get());
-  purpleTag *tag = new purpleTag();
-  tag->Init(id, group);
-  mTagById.Put(id, tag);
-  if (!aGroup)
-    purple_blist_add_group(group, NULL);
-
-  NS_ADDREF(*aResult = tag);
-  return NS_OK;
-}
-
-/* purpleITag createTag (in AUTF8String aName); */
-NS_IMETHODIMP purpleCoreService::CreateTag(const nsACString& aName,
-                                           purpleITag **aResult)
-{
-  NS_ENSURE_ARG(!aName.IsEmpty());
-
-  // if the tag already exists, we don't want to create a duplicate
-  nsCString groupName = PromiseFlatCString(aName);
-  nsresult rv = GetTagFromName(groupName, (purpleTag **)aResult);
-  if (NS_SUCCEEDED(rv))
-    return rv;
-
-  return storeTag(groupName, nsnull, (purpleTag **)aResult);
-}
-
-/* purpleITag getTagById (in long aId); */
-NS_IMETHODIMP purpleCoreService::GetTagById(PRInt32 aId, purpleITag **aResult)
-{
-  purpleTag *tag;
-  PRBool found = mTagById.Get(aId, &tag);
-  NS_ENSURE_TRUE(found, NS_ERROR_FAILURE);
-
-  *aResult = tag;
-  return NS_OK;
-}
-
-nsresult purpleCoreService::GetTagIdFromName(const nsCString& aName,
-                                             PRInt32 *aResult)
-{
-  //FIXME The result should be cached.
-  purpleStorage *storageInstance = purpleStorage::GetInstance();
-  NS_ENSURE_TRUE(storageInstance, NS_ERROR_OUT_OF_MEMORY);
-
-  mozIStorageStatement *statement = storageInstance->mGetGroupIdFromName;
-  mozStorageStatementScoper scoper(statement);
-  nsresult rv = statement->BindUTF8StringParameter(0, aName);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRBool hasMoreData;
-  rv = statement->ExecuteStep(&hasMoreData);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!hasMoreData) {
-    /* The query succeeded but there is no data:
-       this means the tag doesn't exist yet in mozStorage,
-       it's not really an error so we don't use NS_ENSURE_TRUE here */
-    return NS_ERROR_FAILURE;
-  }
-
-  *aResult = statement->AsInt32(0);
-  LOG(("pcs::GetTagIdFromName(name = %s), found at id %i", aName.get(), *aResult));
-  return NS_OK;
-}
-
-nsresult purpleCoreService::GetTagFromName(const nsCString& aName,
-                                           purpleTag **aResult)
-{
-  /* First, get the id from mozStorage */
-  PRInt32 id;
-  nsresult rv = GetTagIdFromName(aName, &id);
-
-  if (NS_SUCCEEDED(rv)) {
-    /* We found the id, just get the tag from the hashtable */
-    if (mTagById.Get(id, aResult))
-      return NS_OK;
-
-    /* if the tag isn't in the hashtable, this means we are still
-       loading the buddy list from mozStorage, and this method
-       shouldn't have been called */
-  }
-
-  /* This tag doesn't exist yet */
-  return NS_ERROR_FAILURE;
-}
-
-
-/* purpleITag getTagByName (in AUTF8String aName); */
-NS_IMETHODIMP purpleCoreService::GetTagByName(const nsACString & aName,
-                                              purpleITag **aResult)
-{
-  nsresult rv =
-    GetTagFromName(PromiseFlatCString(aName), (purpleTag **)aResult);
-  if (NS_FAILED(rv))
-    *aResult = nsnull;
-
-  return NS_OK;
-}
-
-nsresult purpleCoreService::GetTagFromPurpleBuddy(PurpleBuddy *aBuddy,
-                                                  purpleTag **aResult)
-{
-  PurpleGroup *group = purple_buddy_get_group(aBuddy);
-  *aResult = purpleTag::fromPurpleGroup(group);
-  if (*aResult) {
-    NS_ADDREF(*aResult);
-    return NS_OK;
-  }
-
-  nsCString groupName(purple_group_get_name(group));
-  nsresult rv = GetTagFromName(groupName, aResult);
-  if (NS_SUCCEEDED(rv))
-    return rv;
-
-  return storeTag(groupName, group, aResult);
-}
-
-/* void getTags ([optional] out unsigned long tagCount,
-                 [array, retval, size_is (tagCount)] out purpleITag tags); */
-NS_IMETHODIMP purpleCoreService::GetTags(PRUint32 *tagCount,
-                                         purpleITag ***tags)
-{
-  purpleStorage *storageInstance = purpleStorage::GetInstance();
-  NS_ENSURE_TRUE(storageInstance, NS_ERROR_OUT_OF_MEMORY);
-
-  mozIStorageConnection *DBConn = storageInstance->GetConnection();
-  nsCOMPtr<mozIStorageStatement> statement;
-  nsresult rv = DBConn->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT id FROM tags"),
-    getter_AddRefs(statement));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMArray<purpleITag> array;
-  PRBool hasMoreData;
-  while (NS_SUCCEEDED(statement->ExecuteStep(&hasMoreData)) && hasMoreData) {
-    purpleITag *tag;
-    rv = GetTagById(statement->AsInt32(0), &tag);
-    if (NS_SUCCEEDED(rv))
-      array.AppendObject(tag);
-  }
-
-  *tags = (purpleITag **)nsMemory::Alloc(array.Count() * sizeof(purpleITag *));
-  PRInt32 i;
-  for (i = 0; i < array.Count(); ++i)
-    (*tags)[i] = array[i];
-  *tagCount = i;
   return NS_OK;
 }
 

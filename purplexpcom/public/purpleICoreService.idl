@@ -39,8 +39,8 @@
 #include "nsISimpleEnumerator.idl"
 #include "purpleIConversation.idl"
 #include "purpleIAccountsService.idl"
+#include "purpleITagsService.idl"
 #include "purpleIBuddy.idl"
-#include "purpleITag.idl"
 #include "purpleIProxy.idl"
 
 //forward declarations
@@ -61,12 +61,6 @@ interface purpleICoreService: purpleIAccountsService {
   purpleIBuddy getBuddyById(in long aId);
   [noscript] void purpleBuddyAdded(in PurpleNativeBuddy aBuddy);
   [noscript] void purpleBuddyRemoved(in PurpleNativeBuddy aBuddy);
-
-  purpleITag createTag(in AUTF8String aName);
-  purpleITag getTagById(in long aId);
-  purpleITag getTagByName(in AUTF8String aName);
-  void getTags([optional] out unsigned long tagCount,
-               [retval, array, size_is(tagCount)] out purpleITag tags);
 
   nsISimpleEnumerator getConversations();
   purpleIConversation getConversationById(in unsigned long aId);

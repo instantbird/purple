@@ -71,12 +71,6 @@ public:
 
   void AddConversation(purpleConversation* aConv);
   void RemoveConversation(PurpleConversation *aConv);
-  nsresult GetTagIdFromName(const nsCString& aName,
-                            PRInt32 *aResult);
-  nsresult GetTagFromName(const nsCString& aName,
-                          purpleTag **aResult);
-  nsresult GetTagFromPurpleBuddy(PurpleBuddy *aBuddy,
-                                 purpleTag **aResult);
   nsresult NotifyObservers(nsISupports *aObj, const char *aEvent) {
     return NotifyObservers(aObj, aEvent, nsnull);
   }
@@ -86,8 +80,6 @@ private:
   void InitProtocols();
   nsresult InitProxies();
   nsresult InitBuddyList();
-  nsresult storeTag(nsCString &aGroupName, PurpleGroup *aGroup,
-                    purpleTag **aResult);
 #ifdef MOZ_CRASHREPORTER
   nsresult GetLastCrashTime(PRInt32 *aLastCrashTime);
 #endif
@@ -105,9 +97,9 @@ protected:
   nsCOMArray<purpleIProtocol> mProtocols;
   nsCOMArray<purpleProxy> mProxies;
   nsCOMPtr<purpleIAccountsService> mAccountsService;
+  nsCOMPtr<purpleITagsService> mTagsService;
   nsCOMArray<purpleConversation> mConversations;
   nsInterfaceHashtable<nsUint32HashKey, purpleBuddy> mBuddiesById;
-  nsInterfaceHashtable<nsUint32HashKey, purpleTag> mTagById;
   nsCOMPtr<purpleIProxyInfo> mGlobalProxy;
   nsCOMPtr<purpleIdleObserver> mIdleObserver;
 };

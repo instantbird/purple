@@ -48,6 +48,7 @@
 #include "purpleAccountBase.h"
 #include "purpleBuddy.h"
 #include "purpleTag.h"
+#include "purpleTagsService.h"
 #include "purpleAccountBuddy.h"
 #include "purpleMessage.h"
 #include "purpleProxy.h"
@@ -72,6 +73,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleProtocol)
 NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleProxy)
 NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleProxyInfo)
 NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleTag)
+NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleTagsService)
 NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleUnknownProtocol)
 #ifdef XP_MACOSX
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDockTile)
@@ -138,6 +140,7 @@ static nsModuleComponentInfo components[] =
   PURPLE_MODULE_CI(Proxy, PROXY, "proxy"),
   PURPLE_MODULE_CI(ProxyInfo, PROXY_INFO, "proxy info"),
   PURPLE_MODULE_CI(Tag, TAG, "tag"),
+  PURPLE_MODULE_CI(TagsService, TAGS_SERVICE, "tags service"),
   PURPLE_MODULE_CI(UnknownProtocol, UNKNOWN_PROTOCOL, "unknown protocol"),
   { "PURPLE conversation content policy",
     PURPLE_CONTENT_POLICY_CID,

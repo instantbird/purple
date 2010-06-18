@@ -106,6 +106,7 @@ CPPSRCS		= \
 		purpleSockets.cpp \
 		purpleStorage.cpp \
 		purpleTag.cpp \
+		purpleTagsService.cpp \
 		purpleTimer.cpp \
 		purpleTooltipInfo.cpp \
 		purpleUnknownProtocol.cpp \
