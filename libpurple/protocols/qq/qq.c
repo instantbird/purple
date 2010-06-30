@@ -569,6 +569,7 @@ static void action_show_account_info(PurplePluginAction *action)
 	qd = (qq_data *) gc->proto_data;
 	info = g_string_new("<html><body>");
 
+#if !defined(_MSC_VER) || defined(_USE_32BIT_TIME_T)
 	tm_local = localtime(&qd->login_time);
 	g_string_append_printf(info, _("<b>Login time</b>: %d-%d-%d, %d:%d:%d<br>\n"),
 			(1900 +tm_local->tm_year), (1 + tm_local->tm_mon), tm_local->tm_mday,
@@ -580,6 +581,7 @@ static void action_show_account_info(PurplePluginAction *action)
 			tm_local->tm_hour, tm_local->tm_min, tm_local->tm_sec);
 
 	g_string_append(info, "<hr>");
+#endif
 
 	g_string_append_printf(info, _("<b>Server</b>: %s<br>\n"), qd->curr_server);
 	g_string_append_printf(info, _("<b>Client Tag</b>: %s<br>\n"), qq_get_ver_desc(qd->client_tag));
@@ -597,12 +599,14 @@ static void action_show_account_info(PurplePluginAction *action)
 	g_string_append(info, "<hr>");
 	g_string_append(info, "<i>Last Login Information</i><br>\n");
 
+#if !defined(_MSC_VER) || defined(_USE_32BIT_TIME_T)
 	for (index = 0; index < sizeof(qd->last_login_time) / sizeof(time_t); index++) {
 		tm_local = localtime(&qd->last_login_time[index]);
 		g_string_append_printf(info, _("<b>Time</b>: %d-%d-%d, %d:%d:%d<br>\n"),
 				(1900 +tm_local->tm_year), (1 + tm_local->tm_mon), tm_local->tm_mday,
 				tm_local->tm_hour, tm_local->tm_min, tm_local->tm_sec);
 	}
+#endif
 	if (qd->last_login_ip.s_addr != 0) {
 		g_string_append_printf(info, _("<b>IP</b>: %s<br>\n"), inet_ntoa(qd->last_login_ip));
 	}

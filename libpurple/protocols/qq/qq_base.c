@@ -94,10 +94,12 @@ static gint8 process_login_ok(PurpleConnection *gc, guint8 *data, gint len)
 	purple_debug_info("QQ", "Local IP: %s, %d\n", inet_ntoa(qd->my_local_ip), qd->my_local_port);
 
 	bytes += qq_getime(&qd->login_time, data + bytes);
+#if !defined(_MSC_VER) || defined(_USE_32BIT_TIME_T)
 	tm_local = localtime(&qd->login_time);
 	purple_debug_info("QQ", "Login time: %d-%d-%d, %d:%d:%d\n",
 			(1900 +tm_local->tm_year), (1 + tm_local->tm_mon), tm_local->tm_mday,
 			tm_local->tm_hour, tm_local->tm_min, tm_local->tm_sec);
+#endif
 	/* skip unknown 2 bytes, 0x(03 0a) */
 	bytes += 2;
 	/* skip unknown 24 bytes, maybe token to access Qun shared files */
@@ -118,24 +120,30 @@ static gint8 process_login_ok(PurpleConnection *gc, guint8 *data, gint len)
 	bytes += 16;
 	/* time */
 	bytes += qq_getime(&qd->last_login_time[0], data + bytes);
+#if !defined(_MSC_VER) || defined(_USE_32BIT_TIME_T)
 	tm_local = localtime(&qd->last_login_time[0]);
 	purple_debug_info("QQ", "Last login time: %d-%d-%d, %d:%d:%d\n",
 			(1900 +tm_local->tm_year), (1 + tm_local->tm_mon), tm_local->tm_mday,
 			tm_local->tm_hour, tm_local->tm_min, tm_local->tm_sec);
+#endif
 	/* unknow time */
 	g_return_val_if_fail(sizeof(qd->last_login_time) / sizeof(time_t) > 1, QQ_LOGIN_REPLY_OK);
 	bytes += qq_getime(&qd->last_login_time[1], data + bytes);
+#if !defined(_MSC_VER) || defined(_USE_32BIT_TIME_T)
 	tm_local = localtime(&qd->last_login_time[1]);
 	purple_debug_info("QQ", "Time: %d-%d-%d, %d:%d:%d\n",
 			(1900 +tm_local->tm_year), (1 + tm_local->tm_mon), tm_local->tm_mday,
 			tm_local->tm_hour, tm_local->tm_min, tm_local->tm_sec);
+#endif
 
 	g_return_val_if_fail(sizeof(qd->last_login_time) / sizeof(time_t) > 2, QQ_LOGIN_REPLY_OK);
 	bytes += qq_getime(&qd->last_login_time[2], data + bytes);
+#if !defined(_MSC_VER) || defined(_USE_32BIT_TIME_T)
 	tm_local = localtime(&qd->last_login_time[2]);
 	purple_debug_info("QQ", "Time: %d-%d-%d, %d:%d:%d\n",
 			(1900 +tm_local->tm_year), (1 + tm_local->tm_mon), tm_local->tm_mday,
 			tm_local->tm_hour, tm_local->tm_min, tm_local->tm_sec);
+#endif
 	/* unknow 9 bytes, 0x(00 0a 00 0a 01 00 00 0e 10) */
 
 	if (len > 148) {
@@ -587,10 +595,12 @@ gboolean qq_process_keep_alive_2008(guint8 *data, gint data_len, PurpleConnectio
 	purple_debug_info("QQ", "keep alive, %s:%d\n",
 		inet_ntoa(qd->my_ip), qd->my_port);
 
+#if !defined(_MSC_VER) || defined(_USE_32BIT_TIME_T)
 	tm_local = localtime(&server_time);
 	purple_debug_info("QQ", "Server time: %d-%d-%d, %d:%d:%d\n",
 			(1900 +tm_local->tm_year), (1 + tm_local->tm_mon), tm_local->tm_mday,
 			tm_local->tm_hour, tm_local->tm_min, tm_local->tm_sec);
+#endif
 	return TRUE;
 }
 
