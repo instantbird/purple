@@ -210,7 +210,6 @@ CSRCS		= \
 		gettext.c \
 		idle.c \
 		imgstore.c \
-		log.c \
 		mime.c \
 		nat-pmp.c \
 		network.c \

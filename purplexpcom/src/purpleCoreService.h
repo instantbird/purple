@@ -38,10 +38,11 @@
 #ifndef PURPLE_CORE_SERVICE_H_
 #define PURPLE_CORE_SERVICE_H_
 
+#include "purpleAccountsService.h"
 #include "purpleProtocol.h"
 #include "purpleProxy.h"
 #include "purpleProxyInfo.h"
-#include "purpleAccount.h"
+#include "purpleIAccount.h"
 #include "purpleIdle.h"
 #include "purpleICoreService.h"
 #include "purpleConversation.h"
@@ -66,14 +67,10 @@ public:
 
   purpleCoreService();
 
+  NS_FORWARD_SAFE_PURPLEIACCOUNTSSERVICE(mAccountsService);
+
   void AddConversation(purpleConversation* aConv);
   void RemoveConversation(PurpleConversation *aConv);
-  nsresult GetTagIdFromName(const nsCString& aName,
-                            PRInt32 *aResult);
-  nsresult GetTagFromName(const nsCString& aName,
-                          purpleTag **aResult);
-  nsresult GetTagFromPurpleBuddy(PurpleBuddy *aBuddy,
-                                 purpleTag **aResult);
   nsresult NotifyObservers(nsISupports *aObj, const char *aEvent) {
     return NotifyObservers(aObj, aEvent, nsnull);
   }
@@ -82,20 +79,13 @@ private:
   ~purpleCoreService();
   void InitProtocols();
   nsresult InitProxies();
-  nsresult InitAccounts();
-  nsresult UpdateAccountList();
   nsresult InitBuddyList();
-  nsresult storeTag(nsCString &aGroupName, PurpleGroup *aGroup,
-                    purpleTag **aResult);
 #ifdef MOZ_CRASHREPORTER
   nsresult GetLastCrashTime(PRInt32 *aLastCrashTime);
 #endif
   void InitAutoLoginStatus();
   nsCOMPtr<nsIPrefBranch> mPrefService;
   nsCOMPtr<nsIPrefBranch2> mPrefBranch2;
-  inline void UnInitAccounts();
-  inline void UnInitProtocols();
-  nsresult GetAccountById(PRUint32 aAccountId, purpleAccount **aResult);
   nsresult SetStatus(PurpleStatusPrimitive aStatus, const nsACString &aMessage);
   nsresult addIdleObserver();
   nsresult removeIdleObserver();
@@ -106,10 +96,10 @@ protected:
   PRInt16 mAutoLoginStatus;
   nsCOMArray<purpleIProtocol> mProtocols;
   nsCOMArray<purpleProxy> mProxies;
-  nsCOMArray<purpleAccount> mAccounts;
+  nsCOMPtr<purpleIAccountsService> mAccountsService;
+  nsCOMPtr<purpleITagsService> mTagsService;
   nsCOMArray<purpleConversation> mConversations;
   nsInterfaceHashtable<nsUint32HashKey, purpleBuddy> mBuddiesById;
-  nsInterfaceHashtable<nsUint32HashKey, purpleTag> mTagById;
   nsCOMPtr<purpleIProxyInfo> mGlobalProxy;
   nsCOMPtr<purpleIdleObserver> mIdleObserver;
 };

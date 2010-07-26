@@ -53,6 +53,9 @@
 #define PURPLE_BUDDY_CONTRACTID                 \
   "@instantbird.org/purple/buddy;1"
 
+#define GET_NODE_UI_DATA(aNode)                                 \
+  purple_blist_node_get_ui_data(PURPLE_BLIST_NODE(aNode))
+
 class purpleBuddy : public purpleIBuddy
 {
 public:
@@ -63,16 +66,21 @@ public:
   nsresult Init(PurpleBuddy *aBuddy);
   void UnInit() { mId = 0; }
   nsresult UnStore();
-  nsresult load(PurpleBuddy *aBuddy, purpleIAccount *aAccount,
-                PRUint32 aId, purpleTag *aTag);
+  nsresult load(PRUint32 aId);
   nsresult AddAccount(PurpleBuddy *aBuddy);
-  purpleAccountBuddy *AddAccount(purpleIAccount *aAccount,
+  purpleAccountBuddy *AddAccount(purpleAccount *aAccount,
                                  PurpleBuddy *aBuddy,
                                  purpleTag *aTag);
   nsresult RemoveAccount(PurpleBuddy *aBuddy);
   PRInt32 GetAccountCount() { return mBuddies.Count(); }
   nsresult UpdateServerAlias(const char *aAlias);
   PRUint32 getId() { return mId; }
+  static inline purpleBuddy *fromPurpleContact(PurpleContact *aContact) {
+    return static_cast<purpleBuddy *>(GET_NODE_UI_DATA(aContact));
+  }
+  static inline purpleBuddy *fromPurpleBuddy(PurpleBuddy *aBuddy) {
+    return fromPurpleContact(purple_buddy_get_contact(aBuddy));
+  }
 
 private:
   ~purpleBuddy();

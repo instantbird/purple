@@ -228,6 +228,7 @@ common_send(PurpleConversation *conv, const char *message, PurpleMessageFlags ms
 	g_free(sent);
 }
 
+#if 0
 static void
 open_log(PurpleConversation *conv)
 {
@@ -235,6 +236,7 @@ open_log(PurpleConversation *conv)
 							   PURPLE_LOG_IM, conv->name, conv->account,
 							   conv, time(NULL), NULL));
 }
+#endif
 
 /* Functions that deal with PurpleConvMessage */
 
@@ -297,8 +299,10 @@ purple_conversation_chat_cleanup_for_rejoin(PurpleConversation *conv)
 
 	account = purple_conversation_get_account(conv);
 
+#if 0
 	purple_conversation_close_logs(conv);
 	open_log(conv);
+#endif
 
 	gc = purple_account_get_connection(account);
 
@@ -388,11 +392,13 @@ purple_conversation_new(PurpleConversationType type, PurpleAccount *account,
 			purple_buddy_icon_unref(icon);
 		}
 
+#if 0
 		if (purple_prefs_get_bool("/purple/logging/log_ims"))
 		{
 			purple_conversation_set_logging(conv, TRUE);
 			open_log(conv);
 		}
+#endif
 	}
 	else if (type == PURPLE_CONV_TYPE_CHAT)
 	{
@@ -410,11 +416,13 @@ purple_conversation_new(PurpleConversationType type, PurpleAccount *account,
 			purple_conv_chat_set_nick(conv->u.chat,
 									purple_account_get_username(account));
 
+#if 0
 		if (purple_prefs_get_bool("/purple/logging/log_chats"))
 		{
 			purple_conversation_set_logging(conv, TRUE);
 			open_log(conv);
 		}
+#endif
 	}
 
 	conversations = g_list_prepend(conversations, conv);
@@ -583,7 +591,9 @@ purple_conversation_destroy(PurpleConversation *conv)
 	if (ops != NULL && ops->destroy_conversation != NULL)
 		ops->destroy_conversation(conv);
 
+#if 0
 	purple_conversation_close_logs(conv);
+#endif
 
 	purple_conversation_clear_message_history(conv);
 
@@ -785,6 +795,7 @@ purple_conversation_get_name(const PurpleConversation *conv)
 	return conv->name;
 }
 
+#if 0
 void
 purple_conversation_set_logging(PurpleConversation *conv, gboolean log)
 {
@@ -814,6 +825,7 @@ purple_conversation_close_logs(PurpleConversation *conv)
 	g_list_free(conv->logs);
 	conv->logs = NULL;
 }
+#endif
 
 PurpleConvIm *
 purple_conversation_get_im_data(const PurpleConversation *conv)
@@ -993,6 +1005,7 @@ purple_conversation_write(PurpleConversation *conv, const char *who,
 		}
 	}
 
+#if 0
 	if (!(flags & PURPLE_MESSAGE_NO_LOG) && purple_conversation_is_logging(conv)) {
 		GList *log;
 
@@ -1005,6 +1018,7 @@ purple_conversation_write(PurpleConversation *conv, const char *who,
 			log = log->next;
 		}
 	}
+#endif
 
 	if (purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_IM) {
 		if ((flags & PURPLE_MESSAGE_RECV) == PURPLE_MESSAGE_RECV) {

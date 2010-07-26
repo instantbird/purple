@@ -44,6 +44,7 @@
 #include <nsIClassInfo.h>
 
 #pragma GCC visibility push(default)
+#include <libpurple/signals.h>
 #include <libpurple/notify.h>
 #pragma GCC visibility pop
 

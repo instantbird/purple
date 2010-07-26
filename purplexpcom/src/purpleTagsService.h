@@ -12,11 +12,11 @@
  * License.
  *
  * The Original Code is the Instantbird messenging client, released
- * 2009.
+ * 2007.
  *
  * The Initial Developer of the Original Code is
  * Florian QUEZE <florian@instantbird.org>.
- * Portions created by the Initial Developer are Copyright (C) 2009
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -35,48 +35,37 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "purpleLog.h"
-#include "purpleClassInfo.h"
-#include <nsStringAPI.h>
+#ifndef PURPLE_TAGS_SERVICE_H_
+# define PURPLE_TAGS_SERVICE_H_
 
-PURPLE_IMPL_ISUPPORTS1_CI(purpleLog, purpleILog)
+#include "purpleITagsService.h"
+#include "purpleITag.h"
+#include <nsInterfaceHashtable.h>
 
-purpleLog::purpleLog()
-  : mLog(nsnull)
+// a1e78de9-8f5a-4abc-ba63-bf6b6589dfd8
+#define PURPLE_TAGS_SERVICE_CID \
+{ 0xa1e78de9, 0x8f5a, 0x4abc, \
+  { 0xba, 0x63, 0xbf, 0x6b, 0x65, 0x89, 0xdf, 0xd8 } \
+ }
+
+#define PURPLE_TAGS_SERVICE_CONTRACTID     "@instantbird.org/purple/tags;1"
+
+class purpleTagsService : public purpleITagsService
 {
-  /* member initializers and constructor code */
-}
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_PURPLEITAGSSERVICE
 
-purpleLog::~purpleLog()
-{
-  /* destructor code */
-  if (mLog)
-    purple_log_free(mLog);
-}
+  purpleTagsService();
 
-void purpleLog::Init(PurpleLog *aLog)
-{
-  NS_ENSURE_TRUE(!mLog, );
-  mLog = aLog;
-}
+private:
+  ~purpleTagsService();
 
-/* readonly attribute AUTF8String path; */
-NS_IMETHODIMP purpleLog::GetPath(nsACString & aPath)
-{
-  NS_ENSURE_TRUE(mLog, NS_ERROR_NOT_INITIALIZED);
+protected:
+  PRBool mInitialized;
+  nsInterfaceHashtable<nsUint32HashKey, purpleITag> mTagById;
+  nsresult GetTagIdFromName(const nsACString& aName,
+                            PRInt32 *aResult);
+};
 
-  PurpleLogCommonLoggerData *data =
-    (PurpleLogCommonLoggerData *)mLog->logger_data;
-  NS_ENSURE_TRUE(data && data->path, NS_ERROR_UNEXPECTED);
-
-  aPath = data->path;
-  return NS_OK;
-}
-
-/* readonly attribute PRTime time; */
-NS_IMETHODIMP purpleLog::GetTime(PRTime *aTime)
-{
-  NS_ENSURE_TRUE(mLog, NS_ERROR_NOT_INITIALIZED);
-  *aTime = mLog->time;
-  return NS_OK;
-}
+#endif /* !PURPLE_TAGS_SERVICE_H_ */

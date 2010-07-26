@@ -37,8 +37,7 @@
 
 #include "purpleConversation.h"
 #include "purpleGListEnumerator.h"
-#include "purpleIAccount.h"
-#include "purpleLog.h"
+#include "purpleAccount.h"
 
 #pragma GCC visibility push(default)
 #include <libpurple/cmds.h>
@@ -106,11 +105,13 @@ NS_IMETHODIMP purpleConversation::GetAccount(purpleIAccount * *aAccount)
 {
   NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
 
-  PurpleAccount *account = purple_conversation_get_account(mConv);
+  PurpleAccount *pAccount = purple_conversation_get_account(mConv);
+  NS_ENSURE_TRUE(pAccount, NS_ERROR_FAILURE);
+
+  purpleAccount *account = purpleAccount::fromPurpleAccount(pAccount);
   NS_ENSURE_TRUE(account, NS_ERROR_FAILURE);
 
-  NS_IF_ADDREF(*aAccount = (purpleIAccount *)account->ui_data);
-  return NS_OK;
+  return account->GetConcreteAccount(aAccount);
 }
 
 /* readonly attribute AUTF8String name; */
@@ -120,6 +121,14 @@ NS_IMETHODIMP purpleConversation::GetName(nsACString& aName)
 
   aName = purple_conversation_get_name(mConv);
   return NS_OK;
+}
+
+/* readonly attribute AUTF8String normalizedName; */
+NS_IMETHODIMP purpleConversation::GetNormalizedName(nsACString& aNormalizedName)
+{
+  NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
+
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* readonly attribute AUTF8String title; */
@@ -268,24 +277,5 @@ NS_IMETHODIMP purpleConversation::SetBaseURI(nsIDOMDocument *aDocument, nsIURI *
   nsresult rv = doc->SetBaseURI(aURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return NS_OK;
-}
-
-/* nsISimpleEnumerator getLogs (); */
-NS_IMETHODIMP purpleConversation::GetLogs(nsISimpleEnumerator **aResult)
-{
-  NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
-
-  PurpleConversationType type = purple_conversation_get_type(mConv);
-  PurpleLogType logType =
-     type == PURPLE_CONV_TYPE_IM ? PURPLE_LOG_IM : PURPLE_LOG_CHAT;
-  GList *logs = purple_log_get_logs(logType,
-                                    purple_conversation_get_name(mConv),
-                                    purple_conversation_get_account(mConv));
-  purpleGListEnumerator *enumerator = new purpleGListEnumerator();
-  enumerator->Init(logs,
-                   purpleTypeToInterface<purpleLog, purpleILog, PurpleLog>,
-                   (void (*)(void*))g_list_free, logs);
-  NS_ADDREF(*aResult = enumerator);
   return NS_OK;
 }

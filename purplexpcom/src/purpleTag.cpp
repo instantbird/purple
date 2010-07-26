@@ -71,6 +71,7 @@ void purpleTag::Init(PRUint32 aId, PurpleGroup *aGroup)
 {
   mId = aId;
   mGroup = aGroup;
+  purple_blist_node_set_ui_data(PURPLE_BLIST_NODE(aGroup), this);
 }
 
 void purpleTag::addBuddy(PurpleBuddy *aBuddy)
@@ -116,15 +117,15 @@ NS_IMETHODIMP purpleTag::GetBuddies(PRUint32 *buddyCount,
 
   PRUint32 count = 0;
   PurpleBlistNode *cnode;
-  for (cnode = ((PurpleBlistNode *)mGroup)->child; cnode; cnode = cnode->next)
+  for (cnode = PURPLE_BLIST_NODE(mGroup)->child; cnode; cnode = cnode->next)
     if (PURPLE_BLIST_NODE_IS_CONTACT(cnode) && PURPLE_BLIST_NODE_IS_BUDDY(cnode->child))
       ++count;
   *buddies = (purpleIBuddy **)nsMemory::Alloc(count * sizeof(purpleIBuddy *));
 
   count = 0;
-  for (cnode = ((PurpleBlistNode *)mGroup)->child; cnode; cnode = cnode->next)
+  for (cnode = PURPLE_BLIST_NODE(mGroup)->child; cnode; cnode = cnode->next)
     if (PURPLE_BLIST_NODE_IS_CONTACT(cnode) && PURPLE_BLIST_NODE_IS_BUDDY(cnode->child)) {
-      purpleBuddy *buddy = (purpleBuddy *)purple_blist_node_get_ui_data(cnode->child);
+      purpleBuddy *buddy = purpleBuddy::fromPurpleContact(PURPLE_CONTACT(cnode));
       for (PRUint32 j = 0; j < count; ++j)
 	if ((*buddies)[j] == buddy) {
 	  buddy = nsnull;

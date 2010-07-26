@@ -38,6 +38,7 @@
 #include "purpleBuddy.h"
 #include "purpleCoreService.h"
 #include "purpleStorage.h"
+#include "purpleTagsService.h"
 #include <nsServiceManagerUtils.h>
 #include <nsComponentManagerUtils.h>
 #include <nsIClassInfoImpl.h>
@@ -71,11 +72,9 @@ purpleBuddy::~purpleBuddy()
   LOG(("Destructing purpleBuddy @%x", this));
 }
 
-nsresult purpleBuddy::load(PurpleBuddy *aBuddy, purpleIAccount *aAccount,
-                           PRUint32 aId, purpleTag *aTag)
+nsresult purpleBuddy::load(PRUint32 aId)
 {
   mId = aId;
-  AddAccount(aAccount, aBuddy, aTag);
   return NS_OK;
 }
 
@@ -179,27 +178,44 @@ nsresult purpleBuddy::UnStore()
   return statement->Execute();
 }
 
-purpleAccountBuddy *purpleBuddy::AddAccount(purpleIAccount *aAccount,
+purpleAccountBuddy *purpleBuddy::AddAccount(purpleAccount *aAccount,
                                             PurpleBuddy *aBuddy,
                                             purpleTag *aTag)
 {
+  nsCOMPtr<purpleIAccount> concreteAccount;
+  nsresult rv = aAccount->GetConcreteAccount(getter_AddRefs(concreteAccount));
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
   nsCOMPtr<purpleAccountBuddy> pab = do_CreateInstance(PURPLE_ACCOUNTBUDDY_CONTRACTID);
-  pab->Init(aAccount, aBuddy, aTag);
+  pab->Init(concreteAccount, aBuddy, aTag);
+  PurpleContact *contact = purple_buddy_get_contact(aBuddy);
+  purple_blist_node_set_ui_data(PURPLE_BLIST_NODE(contact), this);
   mBuddies.AppendObject(pab);
   return pab;
 }
 
 nsresult purpleBuddy::AddAccount(PurpleBuddy *aBuddy)
 {
-  purpleAccount *account = (purpleAccount *)aBuddy->account->ui_data;
+  PurpleAccount *pAccount = purple_buddy_get_account(aBuddy);
+  NS_ENSURE_TRUE(pAccount, NS_ERROR_UNEXPECTED);
+
+  purpleAccount *account = purpleAccount::fromPurpleAccount(pAccount);
   NS_ENSURE_TRUE(account, NS_ERROR_UNEXPECTED);
 
-  nsCOMPtr<purpleICoreService> pcs =
-    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-  nsCOMPtr<purpleTag> tag;
-  nsresult rv = NATIVE_PCS(pcs)->GetTagFromPurpleBuddy(aBuddy,
-                                                       getter_AddRefs(tag));
-  NS_ENSURE_SUCCESS(rv, rv);
+  PurpleGroup *group = purple_buddy_get_group(aBuddy);
+  purpleTag *tag = purpleTag::fromPurpleGroup(group);
+  if (!tag) {
+    nsCOMPtr<purpleITagsService> pts =
+      do_GetService(PURPLE_TAGS_SERVICE_CONTRACTID);
+    NS_ENSURE_TRUE(pts, NS_ERROR_UNEXPECTED);
+
+    nsCOMPtr<purpleITag> newTag;
+    nsCString groupName(purple_group_get_name(group));
+    nsresult rv = pts->CreateTag(groupName, getter_AddRefs(newTag));
+    NS_ENSURE_SUCCESS(rv, rv);
+    // this is bad because it will be unref'ed before being used.
+    tag = static_cast<purpleTag *>(newTag.get());
+  }
 
   purpleAccountBuddy *pab = AddAccount(account, aBuddy, tag);
   return pab->Store(mId);
@@ -262,6 +278,14 @@ NS_IMETHODIMP purpleBuddy::GetName(nsACString& aName)
   PURPLE_ENSURE_INIT(mId);
 
   return mBuddies[0]->GetBuddyName(aName);
+}
+
+/* readonly attribute AUTF8String name; */
+NS_IMETHODIMP purpleBuddy::GetNormalizedName(nsACString& aNormalizedName)
+{
+  PURPLE_ENSURE_INIT(mId);
+
+  return mBuddies[0]->GetNormalizedName(aNormalizedName);
 }
 
 /* readonly attribute AUTF8String name; */
@@ -390,12 +414,6 @@ NS_IMETHODIMP purpleBuddy::SetAlias(const nsACString& aAlias)
   return transaction.Commit();
 }
 
-/* readonly attribute short nbOnline; */
-NS_IMETHODIMP purpleBuddy::GetNbOnline(PRInt16 *aNbOnline)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 /* readonly attribute short accountCount; */
 NS_IMETHODIMP purpleBuddy::GetAccountCount(PRInt16 *aAccountCount)
 {
@@ -413,12 +431,6 @@ NS_IMETHODIMP purpleBuddy::GetAccount(PRUint16 aAccountIndex,
   NS_ENSURE_TRUE(aAccountIndex < mBuddies.Count(), NS_ERROR_FAILURE);
 
   return mBuddies[aAccountIndex]->GetAccount(aResult);
-}
-
-/* nsISimpleEnumerator getTags (); */
-NS_IMETHODIMP purpleBuddy::GetTags(nsISimpleEnumerator **_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* void getAccounts ([optional] out unsigned long accountCount,
@@ -462,18 +474,4 @@ NS_IMETHODIMP purpleBuddy::CreateConversation(PRUint16 aAccountIndex,
 
   purpleAccountBuddy *pab = mBuddies[aAccountIndex];
   return pab->CreateConversation(aResult);
-}
-
-/* [noscript] purpleIAccountBuddy getAccountBuddyForPurpleBuddy (in PurpleNativeBuddy aBuddy); */
-NS_IMETHODIMP purpleBuddy::GetAccountBuddyForPurpleBuddy(PurpleBuddy * aBuddy,
-                                                         purpleIAccountBuddy **aResult)
-{
-  for (PRInt32 i = 0; i < mBuddies.Count(); ++i) {
-    if (mBuddies[i]->GetBuddy() == aBuddy) {
-      NS_ADDREF(*aResult = mBuddies[i]);
-      return NS_OK;
-    }
-  }
-
-  return NS_ERROR_FAILURE;
 }

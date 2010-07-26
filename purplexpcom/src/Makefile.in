@@ -80,7 +80,9 @@ endif
 
 CPPSRCS		= \
 		purpleAccount.cpp \
+		purpleAccountBase.cpp \
 		purpleAccountBuddy.cpp \
+		purpleAccountsService.cpp \
 		purpleBuddy.cpp \
 		purpleConversation.cpp \
 		purpleContentPolicy.cpp \
@@ -94,11 +96,9 @@ CPPSRCS		= \
 		purpleIdle.cpp \
 		purpleGetText.cpp \
 		purpleGListEnumerator.cpp \
-		purpleLog.cpp \
 		purpleMessage.cpp \
 		purpleModule.cpp \
 		purpleNetwork.cpp \
-		purpleOverrideProtocol.cpp \
 		purplePref.cpp \
 		purpleProtocol.cpp \
 		purpleProxy.cpp \
@@ -106,6 +106,7 @@ CPPSRCS		= \
 		purpleSockets.cpp \
 		purpleStorage.cpp \
 		purpleTag.cpp \
+		purpleTagsService.cpp \
 		purpleTimer.cpp \
 		purpleTooltipInfo.cpp \
 		purpleUnknownProtocol.cpp \
@@ -121,6 +122,13 @@ DEFINES 	+= -DPURPLE_PLUGINS
 endif
 
 EXTRA_COMPONENTS = gtalkOverrideProtocol.js facebookOverrideProtocol.js
+ifdef MOZ_DEBUG
+EXTRA_COMPONENTS += jsTestProtocol.js
+endif
+
+EXTRA_JS_MODULES = \
+	jsProtoHelper.jsm \
+	$(NULL)
 
 EXTRA_DSO_LDOPTS += $(XPCOM_GLUE_LDOPTS) $(MOZ_COMPONENT_NSPR_LIBS)
 

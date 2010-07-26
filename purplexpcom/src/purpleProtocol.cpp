@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "purpleProtocol.h"
+#include "purpleAccount.h"
 #include "purplePref.h"
 #include "purpleGListEnumerator.h"
 #include "purpleClassInfo.h"
@@ -140,6 +141,16 @@ NS_IMETHODIMP purpleProtocol::GetId(nsACString& aId)
   NS_ENSURE_TRUE(mInfo, NS_ERROR_NOT_INITIALIZED);
 
   aId = mInfo->id;
+  return NS_OK;
+}
+
+/* readonly attribute AUTF8String normalizedName; */
+NS_IMETHODIMP purpleProtocol::GetNormalizedName(nsACString& aNormalizedName)
+{
+  NS_ENSURE_TRUE(mInfo, NS_ERROR_NOT_INITIALIZED);
+
+  aNormalizedName =
+    ((PurplePluginProtocolInfo *)mInfo->extra_info)->list_icon(NULL, NULL);
   return NS_OK;
 }
 
@@ -271,30 +282,17 @@ PURPLE_IMPL_GETBOOLOPT(RegisterNoScreenName, REGISTER_NOSCREENNAME)
 /* readonly attribute boolean slashCommandsNative; */
 PURPLE_IMPL_GETBOOLOPT(SlashCommandsNative, SLASH_COMMANDS_NATIVE)
 
-/* [noscript] PurpleNativePluginProtocolInfo getInfo (); */
-NS_IMETHODIMP purpleProtocol::GetInfo(PurplePluginProtocolInfo * *aPrplInfo)
+/* purpleIAccount getAccount (in AUTF8String aName, in AUTF8String aKey); */
+NS_IMETHODIMP purpleProtocol::GetAccount(const nsACString & aKey,
+                                         const nsACString & aName,
+                                         purpleIAccount **aResult)
 {
-  NS_ENSURE_TRUE(mInfo, NS_ERROR_NOT_INITIALIZED);
-  *aPrplInfo = (PurplePluginProtocolInfo *)mInfo->extra_info;
+  purpleAccount *account = new purpleAccount();
+  NS_ENSURE_TRUE(account, NS_ERROR_OUT_OF_MEMORY);
 
-  return NS_OK;
-}
+  nsresult rv = account->Init(aKey, aName, this);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-/* [noscript] PurpleNativeAccount createPurpleAccount (in AUTF8String aName,
-                                                       in purpleIAccount aAccount); */
-NS_IMETHODIMP purpleProtocol::CreatePurpleAccount(const nsACString & aName,
-                                                  purpleIAccount *aAccount,
-                                                  PurpleAccount * *aResult)
-{
-  NS_ENSURE_TRUE(mInfo, NS_ERROR_NOT_INITIALIZED);
-
-  PurpleAccount *account =
-    purple_account_new(PromiseFlatCString(aName).get(), mInfo->id);
-  NS_ENSURE_TRUE(account, NS_ERROR_FAILURE);
-
-  account->ui_data = aAccount;
-  purple_accounts_add(account);
-
-  *aResult = account;
+  NS_ADDREF(*aResult = account);
   return NS_OK;
 }

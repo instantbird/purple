@@ -51,6 +51,9 @@
 #define PURPLE_ACCOUNTBUDDY_CONTRACTID          \
   "@instantbird.org/purple/accountbuddy;1"
 
+#define GET_NODE_UI_DATA(aNode)                                 \
+  purple_blist_node_get_ui_data(PURPLE_BLIST_NODE(aNode))
+
 class purpleAccountBuddy : public purpleIAccountBuddy
 {
 public:
@@ -64,10 +67,14 @@ public:
   nsresult UnStore(PRInt32 aBuddyId);
   PurpleBuddy *GetBuddy() { return mBuddy; }
   void SetBuddyAlias(const nsCString& aBuddyAlias);
+  static inline purpleAccountBuddy *fromPurpleBuddy(PurpleBuddy *aBuddy) {
+    return static_cast<purpleAccountBuddy *>(GET_NODE_UI_DATA(aBuddy));
+  }
 
 private:
   ~purpleAccountBuddy();
   static void CleanUserInfo(void *aData);
+  PurplePluginProtocolInfo *GetPrplInfo(PurpleBuddy *aBuddy);
 
 protected:
   /* additional members */

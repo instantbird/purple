@@ -161,45 +161,53 @@ static PurpleEventLoopUiOps eventloops =
 /*** End of the eventloop functions. ***/
 
 /*** Connection uiops ***/
+#define IMPL_GET_ACCOUNT_FROM_UI_DATA(aVar)                        \
+  purpleAccount *account = purpleAccount::fromPurpleAccount(aVar); \
+  NS_ENSURE_TRUE(account,)
+
 #define IMPL_GET_ACCOUNT                                        \
   PurpleAccount *pAccount = purple_connection_get_account(gc);  \
   NS_ENSURE_TRUE(pAccount,);                                    \
-  purpleAccount *account = (purpleAccount *)pAccount->ui_data;  \
-  NS_ENSURE_TRUE(account,)
+  IMPL_GET_ACCOUNT_FROM_UI_DATA(pAccount)
 
+static void connecting(PurpleAccount *aAccount)
+{
+  IMPL_GET_ACCOUNT_FROM_UI_DATA(aAccount);
+  account->Connecting(EmptyCString());
+}
 static void connect_progress(PurpleConnection *gc, const char *text,
                              size_t step, size_t step_count)
 {
   IMPL_GET_ACCOUNT;
-  account->SetConnectionStateMsg(text);
-
-  nsCOMPtr<purpleICoreService> pcs =
-    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-  pcs->NotifyObservers(account, "account-connect-progress", nsnull);
+  account->Connecting(nsDependentCString(text));
 }
-
 static void connected(PurpleConnection *gc)
 {
   IMPL_GET_ACCOUNT;
   account->Connected();
 }
-
+static void disconnected(PurpleConnection *gc)
+{
+  IMPL_GET_ACCOUNT;
+  account->Disconnected();
+}
+static void disconnecting(PurpleConnection *gc)
+{
+  IMPL_GET_ACCOUNT;
+  account->Disconnecting(purpleIAccount::NO_ERROR, EmptyCString());
+}
 static void report_disconnect_reason(PurpleConnection *gc,
                                      PurpleConnectionError reason,
                                      const char *text)
 {
   IMPL_GET_ACCOUNT;
-  account->SetDisconnectReason(reason, text);
-
-  nsCOMPtr<purpleICoreService> pcs =
-    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-  pcs->NotifyObservers(account, "account-connect-error", nsnull);
+  account->Disconnecting(reason, nsDependentCString(text));
 }
 
 PurpleConnectionUiOps connection_uiops = {
   connect_progress,
   connected,
-  NULL, /* disconnected */
+  disconnected,
   NULL, /* notice = dead code ? */
   NULL, /* report_disconnect: deprecated in favour of report_disconnect_reason */
   NULL, /* network_connected */
@@ -208,6 +216,23 @@ PurpleConnectionUiOps connection_uiops = {
 
   NULL, NULL, NULL
 };
+
+static void connect_to_connections_signals()
+{
+  int handle;
+  void *instance = purple_connections_get_handle();
+  purple_signal_connect(instance, "signing-off", &handle,
+                        PURPLE_CALLBACK(disconnecting), NULL);
+}
+
+static void connect_to_accounts_signals()
+{
+  int handle;
+  void *instance = purple_accounts_get_handle();
+  purple_signal_connect(instance, "account-connecting", &handle,
+                        PURPLE_CALLBACK(connecting), NULL);
+}
+
 
 /*** Account uiops ***/
 class purpleAuthorizationRequest : public nsIRunnable
@@ -378,12 +403,11 @@ static void destroy_conv(PurpleConversation *aConv)
 }
 
 static void notify_conv(PurpleConversation *aConv, nsISupports *aSubject,
-                        const char *aTopic, const PRUnichar *aData)
+                        const char *aTopic, const PRUnichar *aData = nsnull)
 {
   NS_ENSURE_TRUE(aConv,);
 
-  nsCOMPtr<purpleConversation> conversation =
-    static_cast<purpleConversation *>(aConv->ui_data);
+  purpleConversation *conversation = purpleConversation::fromPurpleConv(aConv);
   NS_ENSURE_TRUE(conversation,);
 
   conversation->NotifyObservers(aSubject, aTopic, aData);
@@ -404,7 +428,7 @@ static void write_conv(PurpleConversation *conv, const char *who,
     do_GetService(PURPLE_CORE_SERVICE_CONTRACTID, &rv);
   pcs->NotifyObservers(msg, "new-text", nsnull);
 
-  notify_conv(conv, msg, "new-text", nsnull);
+  notify_conv(conv, msg, "new-text");
 }
 
 static void conv_add_chat_users(PurpleConversation *conv,
@@ -421,7 +445,7 @@ static void conv_add_chat_users(PurpleConversation *conv,
   }
   nsCOMPtr<nsISimpleEnumerator> enumerator;
   NS_NewArrayEnumerator(getter_AddRefs(enumerator), cBuddiesArray);
-  notify_conv(conv, enumerator, "chat-buddy-add", nsnull);
+  notify_conv(conv, enumerator, "chat-buddy-add");
 }
 
 static void conv_remove_chat_users(PurpleConversation *conv,
@@ -437,7 +461,7 @@ static void conv_remove_chat_users(PurpleConversation *conv,
   }
   nsCOMPtr<nsISimpleEnumerator> enumerator;
   NS_NewArrayEnumerator(getter_AddRefs(enumerator), stringsArray);
-  notify_conv(conv, enumerator, "chat-buddy-remove", nsnull);
+  notify_conv(conv, enumerator, "chat-buddy-remove");
 }
 
 static void conv_update_chat_usr(PurpleConversation *conv, const char *user,
@@ -484,57 +508,28 @@ static PurpleConversationUiOps conversation_uiops =
   NULL, NULL, NULL, NULL
 };
 
-static void account_signals(PurpleAccount *account, const char *signal)
-{
-  LOG(("%s: %s (%s)\n", signal,
-       account->username, account->protocol_id));
-
-  nsCOMPtr<purpleICoreService> pcs =
-    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(pcs, );
-
-  pcs->FireAccountEvent(account, signal);
-}
-
-static void connection_signals(PurpleConnection *gc, const char *signal)
-{
-  account_signals(purple_connection_get_account(gc), signal);
-}
-
-#define PURPLE_CONNECT_CONNECTION_SIGNAL(aSignal, aName)        \
-  purple_signal_connect(instance, aSignal, &handle,             \
-                        PURPLE_CALLBACK(connection_signals),    \
-                        (void *)aName)
-
-static void
-connect_to_connections_signals()
-{
-  int handle;
-  void *instance = purple_connections_get_handle();
-  PURPLE_CONNECT_CONNECTION_SIGNAL("signed-on", "account-connected");
-  PURPLE_CONNECT_CONNECTION_SIGNAL("signing-on", "account-signing-on");
-  PURPLE_CONNECT_CONNECTION_SIGNAL("signed-off", "account-disconnected");
-  PURPLE_CONNECT_CONNECTION_SIGNAL("signing-off", "account-disconnecting");
-  LOG(("Connecting to connections signals"));
-}
-
-static void
-connect_to_accounts_signals()
-{
-  int handle;
-  void *instance = purple_accounts_get_handle();
-  purple_signal_connect(instance, "account-connecting", &handle,
-                        PURPLE_CALLBACK(account_signals),
-                        (void *)"account-connecting");
-
-  LOG(("Connecting to accounts signals"));
-}
-
 static void buddy_signals(PurpleBuddy *aBuddy, const char *aSignal)
 {
-  nsCOMPtr<purpleICoreService> pcs =
-    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-  pcs->FireBuddyEvent(aBuddy, aSignal);
+  // FIXME when this was handled by purpleCoreService, signals sent
+  // while mQuitting was true were ignored.
+
+  LOG(("Attempting to send %s signal, group = %s, buddy = %s", aSignal,
+       purple_group_get_name(purple_buddy_get_group(aBuddy)), aBuddy->name));
+
+  nsCOMPtr<purpleIAccountBuddy> pab =
+    purpleAccountBuddy::fromPurpleBuddy(aBuddy);
+  NS_ENSURE_TRUE(pab, );
+
+  // FIXME: all this should be moved inside purpleAccountBuddy / purpleTag
+  nsCOMPtr<purpleITag> tag;
+  nsresult rv = pab->GetTag(getter_AddRefs(tag));
+  if (NS_SUCCEEDED(rv))
+    tag->NotifyObservers(pab, aSignal, nsnull);
+
+  nsCOMPtr<nsIObserverService> os =
+    do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, );
+  os->NotifyObservers(pab, aSignal, nsnull);
 }
 
 #define PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER(aSignal, aHandler)  \
@@ -545,6 +540,22 @@ static void buddy_signals(PurpleBuddy *aBuddy, const char *aSignal)
 #define PURPLE_CONNECT_BUDDY_SIGNAL(aSignal)                    \
   PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER(aSignal, buddy_signals)
 
+static void buddy_added(PurpleBuddy *buddy, void *null)
+{
+  // This is the buddy-added purple signal. It is fired when a buddy
+  // is added to the list or to a group.
+
+  // FIXME what should we do if the buddy is moved to a new group. Is
+  // ui_data already set in this case?
+
+  // let pcs create the purpleBuddy first
+  nsCOMPtr<purpleICoreService> pcs =
+    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
+  pcs->PurpleBuddyAdded(buddy);
+
+  buddy_signals(buddy, "buddy-added");
+}
+
 static void buddy_removed(PurpleBuddy *buddy, void *null)
 {
   // This is the buddy-removed purple signal. It is fired when a buddy
@@ -552,22 +563,11 @@ static void buddy_removed(PurpleBuddy *buddy, void *null)
   // request the deletion of a buddy in her list)
 
   // send the signal first, before actually removing the buddy
+  buddy_signals(buddy, "buddy-deleted");
+
   nsCOMPtr<purpleICoreService> pcs =
     do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-  pcs->FireBuddyEvent(buddy, "buddy-deleted");
   pcs->PurpleBuddyRemoved(buddy);
-}
-
-static void buddy_removed_from_group(PurpleBuddy *buddy, void *null)
-{
-  // This is the buddy-removed-from-group purple signal (added for
-  // Instantbird).
-  // It is fired when a buddy is removed permanenty from a group but
-  // not from the buddy list. (ie when the buddy has been moved)
-
-  nsCOMPtr<purpleICoreService> pcs =
-    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-  pcs->FireBuddyEvent(buddy, "buddy-removed-from-group");
 }
 
 static void buddy_away(PurpleBuddy *aBuddy,
@@ -590,7 +590,7 @@ static void buddy_alias(PurpleBlistNode *aNode, const char *old_alias)
   PurpleBuddy *buddy = (PurpleBuddy *)aNode;
   buddy_signals(buddy, "buddy-alias");
 
-  purpleBuddy *buddyPtr = (purpleBuddy *)buddy->node.ui_data;
+  purpleBuddy *buddyPtr = purpleBuddy::fromPurpleBuddy(buddy);
   if (!buddyPtr)
     return; // it's fine to ignore these notifications for unknown buddies
   buddyPtr->UpdateServerAlias(purple_buddy_get_server_alias(buddy));
@@ -601,11 +601,15 @@ connect_to_blist_signals()
 {
   int handle;
   void *instance = purple_blist_get_handle();
-  PURPLE_CONNECT_BUDDY_SIGNAL("buddy-added");
   PURPLE_CONNECT_BUDDY_SIGNAL("buddy-signed-on");
   PURPLE_CONNECT_BUDDY_SIGNAL("buddy-signed-off");
+  PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER("buddy-added", buddy_added);
   PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER("buddy-removed", buddy_removed);
-  PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER("buddy-removed-from-group", buddy_removed_from_group);
+  // This buddy-removed-from-group purple signal was added for
+  // Instantbird.  It is fired when a buddy is removed permanenty from
+  // a group but not from the buddy list. (ie when the buddy has been
+  // moved)
+  PURPLE_CONNECT_BUDDY_SIGNAL("buddy-removed-from-group");
   PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER("buddy-status-changed", buddy_away);
   PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER("buddy-idle-changed", buddy_idle);
   PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER("blist-node-aliased", buddy_alias);
@@ -648,28 +652,41 @@ static void update_chat_topic(PurpleConversation *aConv,
                               const char *aWho,
                               const char *aNew)
 {
-  notify_conv(aConv, nsnull, "chat-update-topic", nsnull);
+  notify_conv(aConv, nsnull, "chat-update-topic");
 }
 
 static void conversation_updated(PurpleConversation *aConv, PurpleConvUpdateType aType)
 {
   switch (aType) {
     case PURPLE_CONV_UPDATE_TYPING:
-      notify_conv(aConv, nsnull, "update-typing", nsnull);
+      notify_conv(aConv, nsnull, "update-typing");
       break;
 
     case PURPLE_CONV_UPDATE_AWAY:
     case PURPLE_CONV_ACCOUNT_ONLINE:
     case PURPLE_CONV_ACCOUNT_OFFLINE:
-      notify_conv(aConv, nsnull, "update-buddy-status", nsnull);
+      notify_conv(aConv, nsnull, "update-buddy-status");
       break;
 
     case PURPLE_CONV_UPDATE_TITLE:
-      // The test prevents a stupid warning caused by libpurple
+      // The test prevents a warning caused by libpurple stupidly
       // calling purple_conversation_autoset_title before the
       // create_conversation uiop.
       if (aConv && aConv->ui_data)
-        notify_conv(aConv, nsnull, "update-conv-title", nsnull);
+        notify_conv(aConv, nsnull, "update-conv-title");
+
+    case PURPLE_CONV_UPDATE_CHATLEFT:
+      {
+        purpleConversation *conversation =
+          purpleConversation::fromPurpleConv(aConv);
+        nsCOMPtr<purpleICoreService> pcs =
+          do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
+        if (conversation && pcs)
+          pcs->NotifyObservers(conversation, "conversation-left-chat", nsnull);
+      }
+      notify_conv(aConv, nsnull, "update-conv-chatleft");
+      break;
+
     default:
       ;
   }

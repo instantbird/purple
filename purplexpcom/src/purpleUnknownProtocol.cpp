@@ -36,7 +36,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "purpleUnknownProtocol.h"
+#include "purpleAccount.h"
 #include <nsArrayEnumerator.h>
+#include <nsComponentManagerUtils.h>
 #include <nsMemory.h>
 #include <nsIClassInfoImpl.h>
 
@@ -81,6 +83,13 @@ NS_IMETHODIMP purpleUnknownProtocol::GetId(nsACString& aId)
   NS_ENSURE_TRUE(!mPrplId.IsEmpty(), NS_ERROR_NOT_INITIALIZED);
 
   aId = mPrplId;
+  return NS_OK;
+}
+
+/* readonly attribute AUTF8String normalizedName; */
+NS_IMETHODIMP purpleUnknownProtocol::GetNormalizedName(nsACString& aNormalizedName)
+{
+  aNormalizedName = EmptyCString();
   return NS_OK;
 }
 
@@ -153,17 +162,17 @@ PURPLE_IMPL_GETBOOLOPT(RegisterNoScreenName, REGISTER_NOSCREENNAME)
 /* readonly attribute boolean slashCommandsNative; */
 PURPLE_IMPL_GETBOOLOPT(SlashCommandsNative, SLASH_COMMANDS_NATIVE)
 
-/* [noscript] PurpleNativePluginProtocolInfo getInfo (); */
-NS_IMETHODIMP purpleUnknownProtocol::GetInfo(PurplePluginProtocolInfo * *aPrplInfo)
+/* purpleIAccount getAccount (in AUTF8String aName, in AUTF8String aKey); */
+NS_IMETHODIMP purpleUnknownProtocol::GetAccount(const nsACString & aKey,
+                                                const nsACString & aName,
+                                                purpleIAccount **aResult)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
+  purpleAccount *account = new purpleAccount(PR_FALSE);
+  NS_ENSURE_TRUE(account, NS_ERROR_OUT_OF_MEMORY);
 
-/* [noscript] PurpleNativeAccount createPurpleAccount (in AUTF8String aName,
-                                                       in purpleIAccount aAccount); */
-NS_IMETHODIMP purpleUnknownProtocol::CreatePurpleAccount(const nsACString & aName,
-                                                         purpleIAccount *aAccount,
-                                                         PurpleAccount * *aResult)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult rv = account->Init(aKey, aName, this);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_ADDREF(*aResult = account);
+  return NS_OK;
 }

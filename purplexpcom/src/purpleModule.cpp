@@ -43,12 +43,12 @@
 #include "purpleContentPolicy.h"
 #include "purpleConvIM.h"
 #include "purpleConvChat.h"
-#include "purpleOverrideProtocol.h"
 #include "purpleProtocol.h"
 #include "purpleUnknownProtocol.h"
-#include "purpleAccount.h"
+#include "purpleAccountBase.h"
 #include "purpleBuddy.h"
 #include "purpleTag.h"
+#include "purpleTagsService.h"
 #include "purpleAccountBuddy.h"
 #include "purpleMessage.h"
 #include "purpleProxy.h"
@@ -62,18 +62,18 @@
   NS_DECL_CLASSINFO(_class)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleContentPolicy)
-NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleAccount)
+NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleAccountBase)
 NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleAccountBuddy)
 NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleBuddy)
 NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleConvChat)
 NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleConvIM)
 NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleCoreService)
 NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleMessage)
-NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleOverrideProtocol)
 NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleProtocol)
 NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleProxy)
 NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleProxyInfo)
 NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleTag)
+NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleTagsService)
 NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleUnknownProtocol)
 #ifdef XP_MACOSX
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDockTile)
@@ -124,23 +124,23 @@ static NS_METHOD UnregisterPurpleContentPolicy(nsIComponentManager *aCompMgr,
     NS_CI_INTERFACE_GETTER_NAME(purple##_class),        \
     nsnull,                                             \
     &NS_CLASSINFO_NAME(purple##_class),                 \
-    0                                                   \
+    nsIClassInfo::EAGER_CLASSINFO                       \
   }
 
 static nsModuleComponentInfo components[] =
 {
-  PURPLE_MODULE_CI(Account, ACCOUNT, "account"),
+  PURPLE_MODULE_CI(AccountBase, ACCOUNT, "account"),
   PURPLE_MODULE_CI(AccountBuddy, ACCOUNTBUDDY, "account buddy"),
   PURPLE_MODULE_CI(Buddy, BUDDY, "buddy"),
   PURPLE_MODULE_CI(ConvChat, CONV_CHAT, "chat conversation"),
   PURPLE_MODULE_CI(ConvIM, CONV_IM, "IM conversation"),
   PURPLE_MODULE_CI(CoreService, CORE_SERVICE, "core service"),
   PURPLE_MODULE_CI(Message, MESSAGE, "message"),
-  PURPLE_MODULE_CI(OverrideProtocol, OVERRIDE_PROTOCOL, "override protocol"),
   PURPLE_MODULE_CI(Protocol, PROTOCOL, "protocol"),
   PURPLE_MODULE_CI(Proxy, PROXY, "proxy"),
   PURPLE_MODULE_CI(ProxyInfo, PROXY_INFO, "proxy info"),
   PURPLE_MODULE_CI(Tag, TAG, "tag"),
+  PURPLE_MODULE_CI(TagsService, TAGS_SERVICE, "tags service"),
   PURPLE_MODULE_CI(UnknownProtocol, UNKNOWN_PROTOCOL, "unknown protocol"),
   { "PURPLE conversation content policy",
     PURPLE_CONTENT_POLICY_CID,

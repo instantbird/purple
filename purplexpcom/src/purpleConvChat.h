@@ -55,6 +55,7 @@ public:
   NS_DECL_PURPLEICONVCHAT
 
   NS_SCRIPTABLE NS_IMETHOD GetIsChat(PRBool *aIsChat);
+  NS_SCRIPTABLE NS_IMETHOD GetNormalizedName(nsACString& aNormalizedName);
 
   // Forward most methods to purpleConversation
   NS_SCRIPTABLE NS_IMETHOD GetAccount(purpleIAccount * *aAccount) {
@@ -87,9 +88,6 @@ public:
 
   NS_SCRIPTABLE NS_IMETHOD SetBaseURI(nsIDOMDocument *aDocument, nsIURI *aURI) {
     return purpleConversation::SetBaseURI(aDocument, aURI);
-  }
-  NS_SCRIPTABLE NS_IMETHOD GetLogs(nsISimpleEnumerator **aResult) {
-    return purpleConversation::GetLogs(aResult);
   }
 
   purpleConvChat();

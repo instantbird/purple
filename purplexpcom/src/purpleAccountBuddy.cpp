@@ -41,7 +41,6 @@
 #include "purpleGetText.h"
 #include "purpleGListEnumerator.h"
 #include "purpleTooltipInfo.h"
-#include "purpleLog.h"
 
 #include <nsServiceManagerUtils.h>
 #include <nsIClassInfoImpl.h>
@@ -82,6 +81,7 @@ void purpleAccountBuddy::Init(purpleIAccount *aAccount,
 {
   mAccount = aAccount;
   mBuddy = aBuddy;
+  purple_blist_node_set_ui_data(PURPLE_BLIST_NODE(aBuddy), this);
   // aTag is unused because we don't cache the tag here any more, we
   // use the ui data of the libpurple buddy list node instead.
   // ToDo for 0.3: see if we should remove the 'tag' parameters in most
@@ -90,18 +90,18 @@ void purpleAccountBuddy::Init(purpleIAccount *aAccount,
 
 void purpleAccountBuddy::Uninit()
 {
+  purple_blist_node_set_ui_data(PURPLE_BLIST_NODE(mBuddy), nsnull);
   mBuddy = NULL;
 }
 
 nsresult purpleAccountBuddy::Store(PRInt32 aBuddyId)
 {
-  nsCString key;
-  nsresult rv = mAccount->GetId(key);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(aBuddyId, NS_ERROR_INVALID_ARG);
 
-  PRInt32 accountId;
-  PRInt32 count = PR_sscanf(key.get(), ACCOUNT_KEY "%u", &accountId);
-  NS_ENSURE_TRUE(count == 1, NS_ERROR_UNEXPECTED);
+  PRUint32 accountId;
+  nsresult rv = mAccount->GetNumericId(&accountId);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(accountId, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<purpleITag> tag;
   rv = GetTag(getter_AddRefs(tag));
@@ -110,6 +110,7 @@ nsresult purpleAccountBuddy::Store(PRInt32 aBuddyId)
   PRInt32 groupId;
   rv = tag->GetId(&groupId);
   NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(groupId, NS_ERROR_UNEXPECTED);
 
   purpleStorage *storageInstance = purpleStorage::GetInstance();
   mozIStorageStatement *statement = storageInstance->mInsertAccountBuddy;
@@ -129,13 +130,9 @@ nsresult purpleAccountBuddy::Store(PRInt32 aBuddyId)
 
 nsresult purpleAccountBuddy::UnStore(PRInt32 aBuddyId)
 {
-  nsCString key;
-  nsresult rv = mAccount->GetId(key);
+  PRUint32 accountId;
+  nsresult rv = mAccount->GetNumericId(&accountId);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  PRInt32 accountId;
-  PRInt32 count = PR_sscanf(key.get(), ACCOUNT_KEY "%u", &accountId);
-  NS_ENSURE_TRUE(count == 1, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<purpleITag> tag;
   rv = GetTag(getter_AddRefs(tag));
@@ -171,9 +168,11 @@ NS_IMETHODIMP purpleAccountBuddy::GetBuddy(purpleIBuddy * *aBuddy)
 {
   NS_ENSURE_TRUE(mBuddy, NS_ERROR_NOT_INITIALIZED);
 
-  nsCOMPtr<purpleICoreService> pcs =
-    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-  return pcs->GetBuddyByPurpleBuddy(mBuddy, aBuddy);
+  purpleIBuddy *buddy = purpleBuddy::fromPurpleBuddy(mBuddy);
+  NS_ENSURE_TRUE(buddy, NS_ERROR_NOT_INITIALIZED);
+
+  NS_ADDREF(*aBuddy = buddy);
+  return NS_OK;
 }
 
 /* readonly attribute purpleIAccount account; */
@@ -190,9 +189,7 @@ NS_IMETHODIMP purpleAccountBuddy::GetTag(purpleITag * *aTag)
 {
   NS_ENSURE_TRUE(mBuddy, NS_ERROR_NOT_INITIALIZED);
 
-  PurpleGroup *group = purple_buddy_get_group(mBuddy);
-  purpleTag *tag =
-    (purpleTag *)purple_blist_node_get_ui_data((PurpleBlistNode *)group);
+  purpleITag *tag = purpleTag::fromPurpleGroup(purple_buddy_get_group(mBuddy));
   NS_ENSURE_TRUE(tag, NS_ERROR_NOT_INITIALIZED);
 
   NS_ADDREF(*aTag = tag);
@@ -216,13 +213,9 @@ NS_IMETHODIMP purpleAccountBuddy::SetTag(purpleITag * aTag)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Then the account id
-  nsCString key;
-  rv = mAccount->GetId(key);
+  PRUint32 accountId;
+  rv = mAccount->GetNumericId(&accountId);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  PRInt32 accountId;
-  PRInt32 count = PR_sscanf(key.get(), ACCOUNT_KEY "%u", &accountId);
-  NS_ENSURE_TRUE(count == 1, NS_ERROR_UNEXPECTED);
 
   // And finally the buddy id
   nsCOMPtr<purpleICoreService> pcs =
@@ -230,7 +223,7 @@ NS_IMETHODIMP purpleAccountBuddy::SetTag(purpleITag * aTag)
   NS_ENSURE_TRUE(pcs, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<purpleIBuddy> buddy;
-  rv = pcs->GetBuddyByPurpleBuddy(mBuddy, getter_AddRefs(buddy));
+  rv = GetBuddy(getter_AddRefs(buddy));
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRInt32 buddyId;
@@ -266,6 +259,16 @@ NS_IMETHODIMP purpleAccountBuddy::GetBuddyName(nsACString& aBuddyName)
   NS_ENSURE_TRUE(mBuddy, NS_ERROR_NOT_INITIALIZED);
 
   aBuddyName = purple_buddy_get_name(mBuddy);
+  return NS_OK;
+}
+
+/* readonly attribute AUTF8String normalizedName; */
+NS_IMETHODIMP purpleAccountBuddy::GetNormalizedName(nsACString& aNormalizedName)
+{
+  NS_ENSURE_TRUE(mBuddy, NS_ERROR_NOT_INITIALIZED);
+
+  aNormalizedName = purple_normalize(purple_buddy_get_account(mBuddy),
+                                     purple_buddy_get_name(mBuddy));
   return NS_OK;
 }
 
@@ -323,6 +326,19 @@ void purpleAccountBuddy::CleanUserInfo(void *aData)
     purple_notify_user_info_destroy((PurpleNotifyUserInfo *)aData);
 }
 
+PurplePluginProtocolInfo *purpleAccountBuddy::GetPrplInfo(PurpleBuddy *aBuddy)
+{
+  PurpleAccount *pAccount = purple_buddy_get_account(aBuddy);
+  PurpleConnection *gc = purple_account_get_connection(pAccount);
+  if (!gc)
+    return NULL;
+
+  purpleAccount *account = purpleAccount::fromPurpleAccount(pAccount);
+  NS_ENSURE_TRUE(account, NULL);
+
+  return account->GetPrplInfo();
+}
+
 /*   nsISimpleEnumerator getTooltipInfo(); */
 NS_IMETHODIMP purpleAccountBuddy::GetTooltipInfo(nsISimpleEnumerator** aTooltipInfo)
 {
@@ -336,15 +352,9 @@ NS_IMETHODIMP purpleAccountBuddy::GetTooltipInfo(nsISimpleEnumerator** aTooltipI
        mBuddy->name, name.get()));
 #endif
 
-  nsCOMPtr<purpleIProtocol> proto;
-  nsresult rv = mAccount->GetProtocol(getter_AddRefs(proto));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PurplePluginProtocolInfo *prpl_info;
-  rv = proto->GetInfo(&prpl_info);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (prpl_info->tooltip_text && mBuddy->account->gc) {
+  *aTooltipInfo = nsnull;
+  PurplePluginProtocolInfo *prpl_info = GetPrplInfo(mBuddy);
+  if (prpl_info && prpl_info->tooltip_text) {
     PurpleNotifyUserInfo *user_info = purple_notify_user_info_new();
 
     /* Idle */
@@ -368,10 +378,8 @@ NS_IMETHODIMP purpleAccountBuddy::GetTooltipInfo(nsISimpleEnumerator** aTooltipI
                                            PurpleNotifyUserInfoEntry>,
                      CleanUserInfo, user_info);
     NS_ADDREF(*aTooltipInfo = enumerator);
-    return NS_OK;
   }
 
-  *aTooltipInfo = nsnull;
   return NS_OK;
 }
 
@@ -446,38 +454,16 @@ NS_IMETHODIMP purpleAccountBuddy::GetStatus(nsACString &aStatus)
 {
   NS_ENSURE_TRUE(mBuddy, NS_ERROR_NOT_INITIALIZED);
 
-  PurplePlugin *prpl = purple_find_prpl(purple_account_get_protocol_id(mBuddy->account));
-  NS_ENSURE_ARG_POINTER(prpl);
-
-  PurplePluginProtocolInfo *prpl_info = PURPLE_PLUGIN_PROTOCOL_INFO(prpl);
-  NS_ENSURE_ARG_POINTER(prpl_info);
-
-  if (prpl_info->status_text && mBuddy->account->gc) {
+  aStatus.Truncate();
+  PurplePluginProtocolInfo *prpl_info = GetPrplInfo(mBuddy);
+  if (prpl_info && prpl_info->status_text) {
     char *tmp1 = prpl_info->status_text(mBuddy);
     char *tmp2 = purple_unescape_html(tmp1);
     aStatus = tmp2;
     g_free(tmp1);
     g_free(tmp2);
   }
-  else
-    aStatus = "";
 
-  return NS_OK;
-}
-
-/* nsISimpleEnumerator getLogs (); */
-NS_IMETHODIMP purpleAccountBuddy::GetLogs(nsISimpleEnumerator **aResult)
-{
-  NS_ENSURE_TRUE(mBuddy, NS_ERROR_NOT_INITIALIZED);
-
-  GList *logs = purple_log_get_logs(PURPLE_LOG_IM,
-                                    purple_buddy_get_name(mBuddy),
-                                    mBuddy->account);
-  purpleGListEnumerator *enumerator = new purpleGListEnumerator();
-  enumerator->Init(logs,
-                   purpleTypeToInterface<purpleLog, purpleILog, PurpleLog>,
-                   (void (*)(void*))g_list_free, logs);
-  NS_ADDREF(*aResult = enumerator);
   return NS_OK;
 }
 

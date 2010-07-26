@@ -12,11 +12,11 @@
  * License.
  *
  * The Original Code is the Instantbird messenging client, released
- * 2009.
+ * 2007.
  *
  * The Initial Developer of the Original Code is
  * Florian QUEZE <florian@instantbird.org>.
- * Portions created by the Initial Developer are Copyright (C) 2009
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -36,9 +36,16 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
+#include "purpleITag.idl"
 
-[scriptable, uuid(19eb2e6c-dd2f-4b50-bf43-b96caf96bb7f)]
-interface purpleILog: nsISupports {
-  readonly attribute AUTF8String path;
-  readonly attribute PRTime time;
+[scriptable, uuid(99595d64-e3f4-4f87-a07b-3556d6157e19)]
+interface purpleITagsService: nsISupports {
+  void InitTags();
+  void unInitTags();
+
+  purpleITag createTag(in AUTF8String aName);
+  purpleITag getTagById(in long aId);
+  purpleITag getTagByName(in AUTF8String aName);
+  void getTags([optional] out unsigned long tagCount,
+               [retval, array, size_is(tagCount)] out purpleITag tags);
 };

@@ -840,14 +840,14 @@ gboolean purple_account_get_ui_bool(const PurpleAccount *account, const char *ui
  *       if the log has already been closed, which not all loggers deal
  *       with appropriately.
  */
-PurpleLog *purple_account_get_log(PurpleAccount *account, gboolean create);
+/* PurpleLog *purple_account_get_log(PurpleAccount *account, gboolean create); */
 
 /**
  * Frees the system log of an account
  *
  * @param account The account.
  */
-void purple_account_destroy_log(PurpleAccount *account);
+/* void purple_account_destroy_log(PurpleAccount *account); */
 
 /**
  * Adds a buddy to the server-side buddy list for the specified account.

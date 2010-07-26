@@ -51,6 +51,7 @@ interface purpleIAccountBuddy: nsISupports {
   readonly attribute purpleIAccount account;
            attribute purpleITag tag;
   readonly attribute AUTF8String buddyName;
+  readonly attribute AUTF8String normalizedName;
   readonly attribute AUTF8String buddyAlias;
   readonly attribute AUTF8String loggedIn;
   readonly attribute AUTF8String buddyIconFilename;
@@ -69,10 +70,6 @@ interface purpleIAccountBuddy: nsISupports {
   readonly attribute boolean idle;
   readonly attribute boolean mobile;
   readonly attribute AUTF8String status;
-
-  // enumerator of purpleILog
-  // Warning: this will leak if not fully enumerated
-  nsISimpleEnumerator getLogs();
 
   // remove the buddy from the buddy list.
   void remove();

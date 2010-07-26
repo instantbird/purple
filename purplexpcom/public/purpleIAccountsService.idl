@@ -12,11 +12,11 @@
  * License.
  *
  * The Original Code is the Instantbird messenging client, released
- * 2009.
+ * 2007.
  *
  * The Initial Developer of the Original Code is
  * Florian QUEZE <florian@instantbird.org>.
- * Portions created by the Initial Developer are Copyright (C) 2009
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -35,36 +35,42 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef PURPLE_OVERRIDE_PROTOCOL_H_
-# define PURPLE_OVERRIDE_PROTOCOL_H_
+#include "nsISupports.idl"
+#include "nsISimpleEnumerator.idl"
+#include "purpleIAccount.idl"
 
-#include "purpleIProtocol.h"
-#include <nsCOMPtr.h>
+[scriptable, uuid(ab29ebe0-004d-4390-adcc-d54445f279c5)]
+interface purpleIAccountsService: nsISupports {
+  void InitAccounts();
+  void unInitAccounts();
 
-// 917833a2-4ce2-4cb4-9b8b-4739af567de3
-#define PURPLE_OVERRIDE_PROTOCOL_CID                             \
-  { 0x917833a2, 0x4ce2, 0x4cb4,                                  \
-      { 0x9b, 0x8b, 0x47, 0x39, 0xaf, 0x56, 0x7d, 0xe3 }         \
-  }
+  purpleIAccount getAccountById(in AUTF8String aAccountId);
 
-#define PURPLE_OVERRIDE_PROTOCOL_CONTRACTID  \
-  "@instantbird.org/purple/overrideprotocol;1"
+  /* will throw NS_ERROR_FAILURE if not found */
+  purpleIAccount getAccountByNumericId(in PRUint32 aAccountId);
 
-class purpleOverrideProtocol : public purpleIOverrideProtocol
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_PURPLEIOVERRIDEPROTOCOL
-  NS_DECL_PURPLEIPROTOCOL
+  nsISimpleEnumerator getAccounts();
 
-  purpleOverrideProtocol();
+  /* will fire the event account-added */
+  purpleIAccount createAccount(in AUTF8String aName, in AUTF8String aPrpl);
 
-private:
-  ~purpleOverrideProtocol();
+  /* will fire the event account-removed */
+  void deleteAccount(in AUTF8String aAccountId);
 
-protected:
-  nsCOMPtr<purpleIProtocol> mBase;
-  nsCOMPtr<purpleIProtocol> mOverride;
+  /* account related event fired:
+      - account-added: a new account has been created
+      - account-removed: the account has been deleted
+      - account-signin-on: a connection is being created for the account
+         This is fired when a connection is created for connecting an account,
+         but is also fired when a connection is created for registering an account.
+      - account-connecting: the account is being connected
+         This is not fired when registering an account
+         This event is fired *after* account-signing-on
+      - account-connected: the account is now connected
+      - account-disconnecting: the account is being disconnected
+      - account-disconnected: the account is now disconnected
+
+      These events can be watched using an nsIObserver.
+      The associated purpleIAccount will be given as a parameter.
+  */
 };
-
-#endif /* !PURPLE_OVERRIDE_PROTOCOL_H_ */

@@ -35,14 +35,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
 #include "nsISupports.idl"
-#include "nsIArray.idl"
 #include "nsISimpleEnumerator.idl"
 #include "purpleIConversation.idl"
-#include "purpleIAccount.idl"
+#include "purpleIAccountsService.idl"
+#include "purpleITagsService.idl"
 #include "purpleIBuddy.idl"
-#include "purpleITag.idl"
 #include "purpleIProxy.idl"
 
 //forward declarations
@@ -51,24 +49,18 @@ interface mozIStorageConnection;
 /*
  * This is a proxy to the libpurple core
  */
+[ptr] native PurpleNativeBuddy(PurpleBuddy);
 [ptr] native purpleNativeProtocol(purpleProtocol);
 
 [scriptable, uuid(b82583f1-307b-4034-b5c7-9f727fab7d8c)]
-interface purpleICoreService: nsISupports {
+interface purpleICoreService: purpleIAccountsService {
   void init();
   void quit();
   readonly attribute AUTF8String version;
 
   purpleIBuddy getBuddyById(in long aId);
-  [noscript] purpleIBuddy getBuddyByPurpleBuddy(in PurpleNativeBuddy aBuddy);
-  void addBuddy(in purpleIAccount aAccount, in purpleITag aTag, in AUTF8String aName);
+  [noscript] void purpleBuddyAdded(in PurpleNativeBuddy aBuddy);
   [noscript] void purpleBuddyRemoved(in PurpleNativeBuddy aBuddy);
-
-  purpleITag createTag(in AUTF8String aName);
-  purpleITag getTagById(in long aId);
-  purpleITag getTagByName(in AUTF8String aName);
-  void getTags([optional] out unsigned long tagCount,
-               [retval, array, size_is(tagCount)] out purpleITag tags);
 
   nsISimpleEnumerator getConversations();
   purpleIConversation getConversationById(in unsigned long aId);
@@ -77,9 +69,6 @@ interface purpleICoreService: nsISupports {
   nsISimpleEnumerator getProtocols();
 
   purpleIProtocol getProtocolById(in AUTF8String aProtocolId);
-
-  /* accounts */
-  purpleIAccount getAccountById(in AUTF8String aAccountId);
 
   /* Create a new proxy and store it in the preferences */
   purpleIProxy createProxy(in short aType, in AUTF8String aHost, in unsigned long aPort,
@@ -92,14 +81,6 @@ interface purpleICoreService: nsISupports {
      don't have specific proxy settings.
   */
   attribute purpleIProxyInfo globalProxy;
-
-  nsISimpleEnumerator getAccounts();
-
-  /* will fire the event account-added */
-  purpleIAccount createAccount(in AUTF8String aName, in AUTF8String aPrpl);
-
-  /* will fire the event account-removed */
-  void deleteAccount(in AUTF8String aAccountId);
 
   /* This attribute is set to AUTOLOGIN_ENABLED by default. It can be set to
      any other value before the initialization of this service to prevent
@@ -125,27 +106,6 @@ interface purpleICoreService: nsISupports {
   void notifyObservers(in nsISupports aObj, in string aEvent,
                        [optional] in wstring aData);
 
-  [noscript] void fireAccountEvent(in PurpleNativeAccount aAccount,
-                                   in string aEvent);
-  /* account related event fired:
-      - account-added: a new account has been created
-      - account-removed: the account has been deleted
-      - account-signin-on: a connection is being created for the account
-         This is fired when a connection is created for connecting an account,
-         but is also fired when a connection is created for registering an account.
-      - account-connecting: the account is being connected
-         This is not fired when registering an account
-         This event is fired *after* account-signing-on
-      - account-connected: the account is now connected
-      - account-disconnecting: the account is being disconnected
-      - account-disconnected: the account is now disconnected
-
-      These events can be watched using an nsIObserver.
-      The associated purpleIAccount will be given as a parameter.
-  */
-
-  [noscript] void fireBuddyEvent(in PurpleNativeBuddy aBuddy,
-                                 in string aEvent);
   /* buddy related event fired:
       - buddy-added: a new buddy has been added to the buddy list
       - buddy-signed-on: this buddy has just signed on

@@ -57,6 +57,9 @@ public:
   void NotifyObservers(nsISupports *aSubject,
                        const char *aTopic,
                        const PRUnichar *aData);
+  static inline purpleConversation *fromPurpleConv(PurpleConversation *aConv) {
+    return static_cast<purpleConversation *>(aConv->ui_data);
+  }
 
 private:
   static PRUint32 sLastId;

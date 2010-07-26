@@ -12,11 +12,11 @@
  * License.
  *
  * The Original Code is the Instantbird messenging client, released
- * 2009.
+ * 2007.
  *
  * The Initial Developer of the Original Code is
  * Florian QUEZE <florian@instantbird.org>.
- * Portions created by the Initial Developer are Copyright (C) 2009
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -35,40 +35,45 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef PURPLE_LOG_H_
-# define PURPLE_LOG_H_
+#ifndef PURPLE_ACCOUNTS_SERVICE_H_
+#define PURPLE_ACCOUNTS_SERVICE_H_
 
-#include "purpleILog.h"
-#include <nsIClassInfo.h>
+#include "purpleIAccountsService.h"
+#include <nsCOMPtr.h>
+#include <nsIPrefBranch2.h>
+#include <nsIPrefService.h>
+#include <nsCOMArray.h>
 
-#pragma GCC visibility push(default)
-#include <libpurple/log.h>
-#pragma GCC visibility pop
-
-// bb4e8cfa-fe9d-4784-af4c-309ac5b468f4
-#define PURPLE_LOG_CID \
-{ 0xbb4e8cfa, 0xfe9d, 0x4784, \
-  { 0xaf, 0x4c, 0x30, 0x9a, 0xc5, 0xb4, 0x68, 0xf4 } \
- }
-
-#define PURPLE_LOG_CONTRACTID     "@instantbird.org/purple/log;1"
-
-class purpleLog : public purpleILog,
-                  public nsIClassInfo
+class purpleAccountsService : public purpleIAccountsService,
+                              public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSICLASSINFO
-  NS_DECL_PURPLEILOG
+  NS_DECL_NSIOBSERVER
+  NS_DECL_PURPLEIACCOUNTSSERVICE
 
-  purpleLog();
-  void Init(PurpleLog *aLog);
+  purpleAccountsService();
 
 private:
-  ~purpleLog();
+  ~purpleAccountsService();
+  nsresult LoadAccount(nsCString &key, purpleIAccount **aResult);
+  nsresult UpdateAccountList();
+  nsCOMPtr<nsIPrefService> mPrefService;
+  nsCOMPtr<nsIPrefBranch2> mPrefBranch;
 
 protected:
-  PurpleLog *mLog;
+  PRBool mInitialized;
+  nsCOMArray<purpleIAccount> mAccounts;
+
+  nsresult ensureStored(PRUint32 aId,
+                        const nsCString& aName,
+                        const nsCString& aPrpl);
+  nsresult storeAccount(PRUint32 aId,
+                        const nsCString& aName,
+                        const nsCString& aPrpl);
+  nsresult NotifyObservers(nsISupports *aObj,
+                           const char *aEvent,
+                           const PRUnichar *aData = nsnull);
 };
 
-#endif /* !PURPLE_LOG_H_ */
+#endif /* !PURPLE_ACCOUNTS_SERVICE_H_ */
