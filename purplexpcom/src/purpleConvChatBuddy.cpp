@@ -36,9 +36,19 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "purpleConvChatBuddy.h"
-#include "purpleClassInfo.h"
+#include <nsIClassInfoImpl.h>
+#include <nsIProgrammingLanguage.h>
+#include <nsMemory.h>
 
-PURPLE_IMPL_ISUPPORTS1_CI(purpleConvChatBuddy, purpleIConvChatBuddy)
+// B1724DEA-3ED4-432A-931C-0014FC1FBA27
+#define PURPLE_CONV_CHAT_BUDDY_CID                            \
+  { 0xB1724DEA, 0x3ED4, 0x432A,                               \
+    { 0x93, 0x1C, 0x00, 0x14, 0xFC, 0x1F, 0xBA, 0x27 }        \
+ }
+
+NS_IMPL_CLASSINFO(purpleConvChatBuddy, NULL, 0, PURPLE_CONV_CHAT_BUDDY_CID)
+NS_IMPL_THREADSAFE_CI(purpleConvChatBuddy)
+NS_IMPL_ISUPPORTS1_CI(purpleConvChatBuddy, purpleIConvChatBuddy)
 
 purpleConvChatBuddy::purpleConvChatBuddy()
   : mFlags(PURPLE_CBFLAGS_NONE)

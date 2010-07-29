@@ -36,8 +36,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "purplePref.h"
-#include "purpleClassInfo.h"
 #include "purpleGListEnumerator.h"
+#include <nsIClassInfoImpl.h>
+#include <nsIProgrammingLanguage.h>
+#include <nsMemory.h>
 #include <nsStringAPI.h>
 
 #pragma GCC visibility push(default)
@@ -77,7 +79,16 @@ protected:
 };
 
 /* Implementation file */
-PURPLE_IMPL_ISUPPORTS1_CI(purpleKeyValuePair, purpleIKeyValuePair)
+
+// 175F24B2-DA42-4F24-80E0-CD3CB334EDED
+#define PURPLE_KEY_VALUE_PAIR_CID                      \
+  { 0x175F24B2, 0xDA42, 0x4F24,                        \
+    { 0x80, 0xE0, 0xCD, 0x3C, 0xB3, 0x34, 0xED, 0xED } \
+  }
+
+NS_IMPL_CLASSINFO(purpleKeyValuePair, NULL, 0, PURPLE_KEY_VALUE_PAIR_CID)
+NS_IMPL_THREADSAFE_CI(purpleKeyValuePair)
+NS_IMPL_ISUPPORTS1_CI(purpleKeyValuePair, purpleIKeyValuePair)
 
 /* readonly attribute AUTF8String name; */
 NS_IMETHODIMP purpleKeyValuePair::GetName(nsACString & aName)
@@ -93,7 +104,9 @@ NS_IMETHODIMP purpleKeyValuePair::GetValue(nsACString & aValue)
   return NS_OK;
 }
 
-PURPLE_IMPL_ISUPPORTS1_CI(purplePref, purpleIPref)
+NS_IMPL_CLASSINFO(purplePref, NULL, 0, PURPLE_PREF_CID)
+NS_IMPL_THREADSAFE_CI(purplePref)
+NS_IMPL_ISUPPORTS1_CI(purplePref, purpleIPref)
 
 purplePref::purplePref()
 {

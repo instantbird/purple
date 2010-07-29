@@ -36,9 +36,19 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "purpleTooltipInfo.h"
-#include "purpleClassInfo.h"
+#include <nsIClassInfoImpl.h>
+#include <nsIProgrammingLanguage.h>
+#include <nsMemory.h>
 
-PURPLE_IMPL_ISUPPORTS1_CI(purpleTooltipInfo, purpleITooltipInfo)
+// 630ABD2A-D50B-4F32-81E7-E7D3981D9296
+#define PURPLE_TOOLTIP_INFO_CID                        \
+  { 0x630ABD2A, 0xD50B, 0x4F32,                        \
+    { 0x81, 0xE7, 0xE7, 0xD3, 0x98, 0x1D, 0x92, 0x96 } \
+  }
+
+NS_IMPL_CLASSINFO(purpleTooltipInfo, NULL, 0, PURPLE_TOOLTIP_INFO_CID)
+NS_IMPL_THREADSAFE_CI(purpleTooltipInfo)
+NS_IMPL_ISUPPORTS1_CI(purpleTooltipInfo, purpleITooltipInfo)
 
 purpleTooltipInfo::purpleTooltipInfo()
 {

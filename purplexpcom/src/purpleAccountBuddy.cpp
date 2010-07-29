@@ -51,6 +51,7 @@
 #include <libpurple/status.h>
 #pragma GCC visibility pop
 
+NS_IMPL_CLASSINFO(purpleAccountBuddy, NULL, 0, PURPLE_ACCOUNTBUDDY_CID)
 NS_IMPL_ISUPPORTS1_CI(purpleAccountBuddy, purpleIAccountBuddy)
 
 #ifdef PR_LOGGING

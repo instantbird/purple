@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIGenericFactory.h"
+#include "mozilla/ModuleUtils.h"
 #include "nsICategoryManager.h"
 #include "nsServiceManagerUtils.h"
 
@@ -76,50 +76,32 @@ NS_IMETHODIMP @PROTOCOL@::RegisterSelf()
 
 NS_IMPL_ISUPPORTS1(@PROTOCOL@, purpleIPlugin)
 
-static NS_METHOD RegisterPurpleProtocol(nsIComponentManager *aCompMgr,
-                                        nsIFile* aPath,
-                                        const char* aRegistryLocation,
-                                        const char* aComponentType,
-                                        const nsModuleComponentInfo* aInfo)
-{
-  nsresult rv;
-  nsCOMPtr<nsICategoryManager> catman =
-    do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return catman->AddCategoryEntry(PURPLE_PROTOCOL_PLUGIN_CATEGORY,
-                                  PURPLE_PROTOCOL_PLUGIN_CONTRACTID,
-                                  PURPLE_PROTOCOL_PLUGIN_ENTRY_VALUE,
-                                  PR_TRUE, PR_TRUE, nsnull);
-}
-
-static NS_METHOD UnregisterPurpleProtocol(nsIComponentManager *aCompMgr,
-                                          nsIFile *aPath,
-                			  const char *registryLocation,
-					  const nsModuleComponentInfo *info)
-{
-  nsresult rv;
-  nsCOMPtr<nsICategoryManager> catman =
-    do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return catman->DeleteCategoryEntry(PURPLE_PROTOCOL_PLUGIN_CATEGORY,
-                                     PURPLE_PROTOCOL_PLUGIN_CONTRACTID,
-                                     PR_TRUE);
-}
-
 NS_GENERIC_FACTORY_CONSTRUCTOR(@PROTOCOL@)
 
-static const nsModuleComponentInfo components[] =
-{
-  {
-    "Purple Protocol Plugin",
-    PRPL_CID,
-    PURPLE_PROTOCOL_PLUGIN_CONTRACTID,
-    @PROTOCOL@Constructor,
-    RegisterPurpleProtocol,
-    UnregisterPurpleProtocol
-  }
+NS_DEFINE_NAMED_CID(PRPL_CID);
+
+static const mozilla::Module::CIDEntry kCIDs[] = {
+  { &kPRPL_CID, false, NULL, @PROTOCOL@Constructor },
+  { NULL }
 };
 
-NS_IMPL_NSGETMODULE(@PROTOCOL@PrplModule, components)
+static const mozilla::Module::ContractIDEntry kContracts[] = {
+  { PURPLE_PROTOCOL_PLUGIN_CONTRACTID, &kPRPL_CID },
+  { NULL }
+};
+
+static const mozilla::Module::CategoryEntry kCategories[] = {
+  { PURPLE_PROTOCOL_PLUGIN_CATEGORY,
+    PURPLE_PROTOCOL_PLUGIN_CONTRACTID,
+    PURPLE_PROTOCOL_PLUGIN_ENTRY_VALUE },
+  { NULL }
+};
+
+static const mozilla::Module kModule = {
+  mozilla::Module::kVersion,
+  kCIDs,
+  kContracts,
+  kCategories
+};
+
+NSMODULE_DEFN(@PROTOCOL@PrplModule) = &kModule;

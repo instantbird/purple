@@ -42,6 +42,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= glib
+EXPORTS_NAMESPACES= glib
 LIBRARY_NAME	= glib
 FORCE_STATIC_LIB= 1
 LIB_IS_C_ONLY	= 1
@@ -62,7 +63,7 @@ DEFINES		+= -DGOBJECT_COMPILATION
 
 DIRS		= gobject
 
-EXPORTS		= \
+EXPORTS_glib	= \
 		gunicodeprivate.h \
 		gunicode.h \
 		gunicomp.h \

@@ -42,6 +42,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= libpurple
+EXPORTS_NAMESPACES= libpurple
 LIBRARY_NAME	= purple
 FORCE_SHARED_LIB= 1
 LIB_IS_C_ONLY	= 1
@@ -49,15 +50,11 @@ LIB_IS_C_ONLY	= 1
 
 VISIBILITY_FLAGS=
 
-REQUIRES	= nss
-
 ifneq (,$(filter-out WINNT WINCE Darwin,$(OS_ARCH)))
 LOCAL_INCLUDES	= $(GLIB_CFLAGS) -I/usr/include/libxml2/ -I/usr/local/include/libxml2/
 else
-REQUIRES	+= \
-		glib \
-		libxml2 \
-		$(NULL)
+LOCAL_INCLUDES  = -I$(DIST)/include/glib
+
 ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 LOCAL_INCLUDES += -I$(srcdir)/win32
 endif
@@ -132,7 +129,7 @@ DEFINES		+= -DPACKAGE=\"purple\" -DVERSION=\"$(PURPLE_VERSION)\"
 
 PREF_JS_EXPORTS = $(srcdir)/purple-prefs.js
 
-EXPORTS		= \
+EXPORTS_libpurple = \
 		account.h \
 		accountopt.h \
 		blist.h \
@@ -185,7 +182,7 @@ EXPORTS		= \
 #		certificate.h
 
 ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
-EXPORTS		+= \
+EXPORTS_libpurple += \
 		win32/win32dep.h \
 		win32/wpurpleerror.h \
 		win32/libc_interface.h \
@@ -278,10 +275,10 @@ endif
 # the dynamic protocols depend on the final libpurple.so
 $(filter-out $(STATIC_PROTO_libs),$(PARALLEL_DIRS_libs)): $(SHARED_LIBRARY)
 
-purple.def: ../libraries/glib/glib.def $(EXPORTS) $(GLOBAL_DEPS)
+purple.def: ../libraries/glib/glib.def $(EXPORTS_libpurple) $(GLOBAL_DEPS)
 	cat ../libraries/glib/glib.def > purple.def
-	(cd $(srcdir); cat $(EXPORTS)) |egrep '^[a-zA-Z].* \*?w?purple_[a-z_0-9]+\(' |sed -e 's/(.*//' -e 's/.* \*\?//' |sort |uniq >> purple.def
-	(cd $(srcdir); cat $(EXPORTS)) |egrep '^w?purple_[a-z_0-9]+ ?\(' |sed -e 's/(.*//' |sort |uniq >> purple.def
+	(cd $(srcdir); cat $(EXPORTS_libpurple)) |egrep '^[a-zA-Z].* \*?w?purple_[a-z_0-9]+\(' |sed -e 's/(.*//' -e 's/.* \*\?//' |sort |uniq >> purple.def
+	(cd $(srcdir); cat $(EXPORTS_libpurple)) |egrep '^w?purple_[a-z_0-9]+ ?\(' |sed -e 's/(.*//' |sort |uniq >> purple.def
 	cat $(srcdir)/server.h |egrep '^[a-zA-Z].* \*?serv_[a-z_0-9]+\(' |sed -e 's/(.*//' -e 's/.* \*\?//' |sort |uniq >> purple.def
 	cat $(srcdir)/signals.h |egrep 'void purple_marshal_[A-Z_]+\(' |sed -e 's/(.*//' -e 's/.* \*\?//' |sort |uniq >> purple.def
 	cat $(srcdir)/xmlnode.h |egrep '^[a-zA-Z].* \*?xmlnode_[a-z_]+\(' |sed -e 's/(.*//' -e 's/.* \*\?//' |sort |uniq >> purple.def

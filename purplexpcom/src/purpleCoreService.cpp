@@ -85,6 +85,8 @@ static PRLogModuleInfo *gPurpleCoreServiceLog = nsnull;
 
 #define QUIT_APPLICATION_GRANTED_NOTIFICATION "quit-application-granted"
 
+NS_IMPL_CLASSINFO(purpleCoreService, NULL, nsIClassInfo::SINGLETON,
+                  PURPLE_CORE_SERVICE_CID)
 NS_IMPL_ISUPPORTS3_CI(purpleCoreService, purpleICoreService,
                       nsIObserver, purpleIAccountsService)
 

@@ -50,6 +50,8 @@ static PRLogModuleInfo *gPurpleTagsServiceLog = nsnull;
 #endif
 #define LOG(args) PR_LOG(gPurpleTagsServiceLog, PR_LOG_DEBUG, args)
 
+NS_IMPL_CLASSINFO(purpleTagsService, NULL, nsIClassInfo::SINGLETON,
+                  PURPLE_TAGS_SERVICE_CID)
 NS_IMPL_ISUPPORTS1_CI(purpleTagsService, purpleITagsService)
 
 purpleTagsService::purpleTagsService()

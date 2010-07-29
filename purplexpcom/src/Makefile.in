@@ -48,30 +48,12 @@ IS_COMPONENT	= 1
 MODULE_NAME	= purplexpcom
 #NO_DIST_INSTALL	= 1
 
-REQUIRES	= \
-		appshell \
-		xpcom \
-		content \
-		dom \
-		necko \
-		intl \
-		layout \
-		storage \
-		widget \
-		xulapp \
-		libpurple \
-		purplexpcom \
-		$(NULL)
-
 ifneq (,$(filter-out WINNT WINCE Darwin,$(OS_ARCH)))
 LOCAL_INCLUDES	= $(GLIB_CFLAGS)
 EXTRA_LIBS	= $(GLIB_LIBS) -lgmodule-2.0 $(DIST)/lib/libpurple.so -lz -lxml2
 else
+LOCAL_INCLUDES  += -I$(DIST)/include/glib
 EXTRA_LIBS	= -L$(DIST)/lib -lpurple -lz
-REQUIRES	+= \
-		glib \
-		libxml2 \
-		$(NULL)
 endif
 
 ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
@@ -121,9 +103,9 @@ ifdef PURPLE_PLUGINS
 DEFINES 	+= -DPURPLE_PLUGINS
 endif
 
-EXTRA_COMPONENTS = gtalkOverrideProtocol.js facebookOverrideProtocol.js
+EXTRA_COMPONENTS = gtalkOverrideProtocol.js facebookOverrideProtocol.js overrideProtocols.manifest
 ifdef MOZ_DEBUG
-EXTRA_COMPONENTS += jsTestProtocol.js
+EXTRA_COMPONENTS += jsTestProtocol.js jsTestProtocol.manifest
 endif
 
 EXTRA_JS_MODULES = \

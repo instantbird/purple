@@ -51,6 +51,7 @@ static PRLogModuleInfo *gPurpleUnknownProtocolLog = nsnull;
 #define LOG(args) PR_LOG(gPurpleUnknownProtocolLog, PR_LOG_DEBUG, args)
 
 /* Implementation file */
+NS_IMPL_CLASSINFO(purpleUnknownProtocol, NULL, 0, PURPLE_UNKNOWN_PROTOCOL_CID)
 NS_IMPL_ISUPPORTS1_CI(purpleUnknownProtocol, purpleIProtocol)
 
 purpleUnknownProtocol::purpleUnknownProtocol()

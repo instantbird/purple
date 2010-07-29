@@ -49,6 +49,7 @@ PRLogModuleInfo *gPurpleTagLog = nsnull;
 #endif
 #define LOG(args) PR_LOG(gPurpleTagLog, PR_LOG_DEBUG, args)
 
+NS_IMPL_CLASSINFO(purpleTag, NULL, 0, PURPLE_TAG_CID)
 NS_IMPL_ISUPPORTS1_CI(purpleTag, purpleITag)
 
 purpleTag::purpleTag()
