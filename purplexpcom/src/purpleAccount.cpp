@@ -48,6 +48,10 @@
 #include <nsNetUtil.h>
 #include <prprf.h>
 
+#pragma GCC visibility push(default)
+#include <libpurple/savedstatuses.h>
+#pragma GCC visibility pop
+
 #define PREF_PREFIX             "messenger.account."
 #define PREF_OPTIONS            "options."
 #define PREF_PRPL               "prpl"
@@ -777,7 +781,8 @@ NS_IMETHODIMP purpleAccount::Disconnecting(PRInt16 aConnectionErrorReason,
    */
   PurpleConnection *gc = purple_account_get_connection(mAccount);
   purple_account_set_connection(mAccount, NULL);
-  purple_account_set_enabled(mAccount, UI_ID, FALSE);
+  if (purple_savedstatus_get_type(purple_savedstatus_get_current()) != PURPLE_STATUS_OFFLINE)
+    purple_account_set_enabled(mAccount, UI_ID, FALSE);
   purple_account_set_connection(mAccount, gc);
 
   return purpleAccountBase::Disconnecting(aConnectionErrorReason,
