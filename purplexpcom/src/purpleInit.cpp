@@ -674,6 +674,7 @@ static void conversation_updated(PurpleConversation *aConv, PurpleConvUpdateType
       // create_conversation uiop.
       if (aConv && aConv->ui_data)
         notify_conv(aConv, nsnull, "update-conv-title");
+      break;
 
     case PURPLE_CONV_UPDATE_CHATLEFT:
       {
