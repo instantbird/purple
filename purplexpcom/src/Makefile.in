@@ -67,7 +67,6 @@ CPPSRCS		= \
 		purpleAccountsService.cpp \
 		purpleBuddy.cpp \
 		purpleConversation.cpp \
-		purpleContentPolicy.cpp \
 		purpleConvIM.cpp \
 		purpleConvChat.cpp \
 		purpleConvChatBuddy.cpp \

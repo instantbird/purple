@@ -40,7 +40,6 @@
 #include "nsIClassInfoImpl.h"
 #include "nsServiceManagerUtils.h"
 #include "purpleCoreService.h"
-#include "purpleContentPolicy.h"
 #include "purpleConvIM.h"
 #include "purpleConvChat.h"
 #include "purpleProtocol.h"
@@ -57,7 +56,6 @@
 # include "nsDockTile.h"
 #endif
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(purpleContentPolicy)
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleAccountBase)
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleAccountBuddy)
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleBuddy)
@@ -78,7 +76,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDockTile)
 NS_DEFINE_NAMED_CID(PURPLE_ACCOUNT_CID);
 NS_DEFINE_NAMED_CID(PURPLE_ACCOUNTBUDDY_CID);
 NS_DEFINE_NAMED_CID(PURPLE_BUDDY_CID);
-NS_DEFINE_NAMED_CID(PURPLE_CONTENT_POLICY_CID);
 NS_DEFINE_NAMED_CID(PURPLE_CONV_CHAT_CID);
 NS_DEFINE_NAMED_CID(PURPLE_CONV_IM_CID);
 NS_DEFINE_NAMED_CID(PURPLE_CORE_SERVICE_CID);
@@ -97,7 +94,6 @@ static const mozilla::Module::CIDEntry kPurpleCIDs[] = {
   { &kPURPLE_ACCOUNT_CID, false, NULL, purpleAccountBaseConstructor },
   { &kPURPLE_ACCOUNTBUDDY_CID, false, NULL, purpleAccountBuddyConstructor },
   { &kPURPLE_BUDDY_CID, false, NULL, purpleBuddyConstructor },
-  { &kPURPLE_CONTENT_POLICY_CID, false, NULL, purpleContentPolicyConstructor },
   { &kPURPLE_CONV_CHAT_CID, false, NULL, purpleConvChatConstructor },
   { &kPURPLE_CONV_IM_CID, false, NULL, purpleConvIMConstructor },
   { &kPURPLE_CORE_SERVICE_CID, true, NULL, purpleCoreServiceConstructor },
@@ -119,7 +115,6 @@ static const mozilla::Module::ContractIDEntry kPurpleContracts[] = {
   { PURPLE_ACCOUNT_CONTRACTID, &kPURPLE_ACCOUNT_CID },
   { PURPLE_ACCOUNTBUDDY_CONTRACTID, &kPURPLE_ACCOUNTBUDDY_CID },
   { PURPLE_BUDDY_CONTRACTID, &kPURPLE_BUDDY_CID },
-  { PURPLE_CONTENT_POLICY_CONTRACTID, &kPURPLE_CONTENT_POLICY_CID },
   { PURPLE_CONV_CHAT_CONTRACTID, &kPURPLE_CONV_CHAT_CID },
   { PURPLE_CONV_IM_CONTRACTID, &kPURPLE_CONV_IM_CID },
   { PURPLE_CORE_SERVICE_CONTRACTID, &kPURPLE_CORE_SERVICE_CID },
@@ -136,17 +131,10 @@ static const mozilla::Module::ContractIDEntry kPurpleContracts[] = {
   { NULL }
 };
 
-static const mozilla::Module::CategoryEntry kPurpleCategories[] = {
-  { NS_CONTENTPOLICY_CATEGORY, PURPLE_CONTENT_POLICY_CONTRACTID,
-    PURPLE_CONTENT_POLICY_CONTRACTID },
-  { NULL }
-};
-
 static const mozilla::Module kPurpleModule = {
   mozilla::Module::kVersion,
   kPurpleCIDs,
-  kPurpleContracts,
-  kPurpleCategories
+  kPurpleContracts
 };
 
 NSMODULE_DEFN(purpleModule) = &kPurpleModule;
