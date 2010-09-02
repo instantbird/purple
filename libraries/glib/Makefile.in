@@ -137,14 +137,14 @@ EXPORTS_glib	= \
 		$(NULL)
 
 ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
-EXPORTS		+= \
+EXPORTS_glib	+= \
 		gwin32.h \
 		dirent-win32.h \
 		$(NULL)
 endif
 
 ifeq ($(OS_ARCH),WINCE)
-EXPORTS		+= \
+EXPORTS_glib	+= \
 		wince.h \
 		wince-stat.h \
 		$(NULL)
