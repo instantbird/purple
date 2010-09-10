@@ -35,12 +35,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIGenericFactory.h"
+#include "mozilla/ModuleUtils.h"
 #include "nsICategoryManager.h"
 #include "nsIClassInfoImpl.h"
 #include "nsServiceManagerUtils.h"
 #include "purpleCoreService.h"
-#include "purpleContentPolicy.h"
 #include "purpleConvIM.h"
 #include "purpleConvChat.h"
 #include "purpleProtocol.h"
@@ -57,106 +56,85 @@
 # include "nsDockTile.h"
 #endif
 
-#define NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(_class) \
-  NS_GENERIC_FACTORY_CONSTRUCTOR(_class)                     \
-  NS_DECL_CLASSINFO(_class)
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(purpleContentPolicy)
-NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleAccountBase)
-NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleAccountBuddy)
-NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleBuddy)
-NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleConvChat)
-NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleConvIM)
-NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleCoreService)
-NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleMessage)
-NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleProtocol)
-NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleProxy)
-NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleProxyInfo)
-NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleTag)
-NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleTagsService)
-NS_GENERIC_FACTORY_CONSTRUCTOR_AND_CLASSINFO(purpleUnknownProtocol)
+NS_GENERIC_FACTORY_CONSTRUCTOR(purpleAccountBase)
+NS_GENERIC_FACTORY_CONSTRUCTOR(purpleAccountBuddy)
+NS_GENERIC_FACTORY_CONSTRUCTOR(purpleBuddy)
+NS_GENERIC_FACTORY_CONSTRUCTOR(purpleConvChat)
+NS_GENERIC_FACTORY_CONSTRUCTOR(purpleConvIM)
+NS_GENERIC_FACTORY_CONSTRUCTOR(purpleCoreService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(purpleMessage)
+NS_GENERIC_FACTORY_CONSTRUCTOR(purpleProtocol)
+NS_GENERIC_FACTORY_CONSTRUCTOR(purpleProxy)
+NS_GENERIC_FACTORY_CONSTRUCTOR(purpleProxyInfo)
+NS_GENERIC_FACTORY_CONSTRUCTOR(purpleTag)
+NS_GENERIC_FACTORY_CONSTRUCTOR(purpleTagsService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(purpleUnknownProtocol)
 #ifdef XP_MACOSX
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDockTile)
 #endif
 
-static NS_METHOD RegisterPurpleContentPolicy(nsIComponentManager *aCompMgr,
-                                             nsIFile* aPath,
-                                             const char* aRegistryLocation,
-                                             const char* aComponentType,
-                                             const nsModuleComponentInfo* aInfo)
-{
-  nsresult rv;
-  nsCOMPtr<nsICategoryManager> catman =
-    do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCString previous;
-  return catman->AddCategoryEntry(NS_CONTENTPOLICY_CATEGORY,
-                                  PURPLE_CONTENT_POLICY_CONTRACTID,
-                                  PURPLE_CONTENT_POLICY_CONTRACTID,
-                                  PR_TRUE, PR_TRUE, getter_Copies(previous));
-}
-
-static NS_METHOD UnregisterPurpleContentPolicy(nsIComponentManager *aCompMgr,
-                                               nsIFile *aPath,
-                                               const char *registryLocation,
-                                               const nsModuleComponentInfo *info)
-{
-  nsresult rv;
-  nsCOMPtr<nsICategoryManager> catman =
-    do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return catman->DeleteCategoryEntry(NS_CONTENTPOLICY_CATEGORY,
-                                     PURPLE_CONTENT_POLICY_CONTRACTID,
-                                     PR_TRUE);
-}
-
-#define PURPLE_MODULE_CI(_class, _macroname, _name)     \
-  {                                                     \
-    "PURPLE "_name,                                     \
-    PURPLE_##_macroname##_CID,                          \
-    PURPLE_##_macroname##_CONTRACTID,                   \
-    purple##_class##Constructor,                        \
-    nsnull,                                             \
-    nsnull,                                             \
-    nsnull,                                             \
-    NS_CI_INTERFACE_GETTER_NAME(purple##_class),        \
-    nsnull,                                             \
-    &NS_CLASSINFO_NAME(purple##_class),                 \
-    nsIClassInfo::EAGER_CLASSINFO                       \
-  }
-
-static nsModuleComponentInfo components[] =
-{
-  PURPLE_MODULE_CI(AccountBase, ACCOUNT, "account"),
-  PURPLE_MODULE_CI(AccountBuddy, ACCOUNTBUDDY, "account buddy"),
-  PURPLE_MODULE_CI(Buddy, BUDDY, "buddy"),
-  PURPLE_MODULE_CI(ConvChat, CONV_CHAT, "chat conversation"),
-  PURPLE_MODULE_CI(ConvIM, CONV_IM, "IM conversation"),
-  PURPLE_MODULE_CI(CoreService, CORE_SERVICE, "core service"),
-  PURPLE_MODULE_CI(Message, MESSAGE, "message"),
-  PURPLE_MODULE_CI(Protocol, PROTOCOL, "protocol"),
-  PURPLE_MODULE_CI(Proxy, PROXY, "proxy"),
-  PURPLE_MODULE_CI(ProxyInfo, PROXY_INFO, "proxy info"),
-  PURPLE_MODULE_CI(Tag, TAG, "tag"),
-  PURPLE_MODULE_CI(TagsService, TAGS_SERVICE, "tags service"),
-  PURPLE_MODULE_CI(UnknownProtocol, UNKNOWN_PROTOCOL, "unknown protocol"),
-  { "PURPLE conversation content policy",
-    PURPLE_CONTENT_POLICY_CID,
-    PURPLE_CONTENT_POLICY_CONTRACTID,
-    purpleContentPolicyConstructor,
-    RegisterPurpleContentPolicy,
-    UnregisterPurpleContentPolicy
-  }
+NS_DEFINE_NAMED_CID(PURPLE_ACCOUNT_CID);
+NS_DEFINE_NAMED_CID(PURPLE_ACCOUNTBUDDY_CID);
+NS_DEFINE_NAMED_CID(PURPLE_BUDDY_CID);
+NS_DEFINE_NAMED_CID(PURPLE_CONV_CHAT_CID);
+NS_DEFINE_NAMED_CID(PURPLE_CONV_IM_CID);
+NS_DEFINE_NAMED_CID(PURPLE_CORE_SERVICE_CID);
+NS_DEFINE_NAMED_CID(PURPLE_MESSAGE_CID);
+NS_DEFINE_NAMED_CID(PURPLE_PROTOCOL_CID);
+NS_DEFINE_NAMED_CID(PURPLE_PROXY_CID);
+NS_DEFINE_NAMED_CID(PURPLE_PROXY_INFO_CID);
+NS_DEFINE_NAMED_CID(PURPLE_TAG_CID);
+NS_DEFINE_NAMED_CID(PURPLE_TAGS_SERVICE_CID);
+NS_DEFINE_NAMED_CID(PURPLE_UNKNOWN_PROTOCOL_CID);
 #ifdef XP_MACOSX
-  ,{
-    "Dock Badge Service",
-    NSDOCKBADGESERVICE_CID,
-    NSDOCKBADGESERVICE_CONTRACTID,
-    nsDockTileConstructor
-  }
+NS_DEFINE_NAMED_CID(NSDOCKBADGESERVICE_CID);
 #endif
+
+static const mozilla::Module::CIDEntry kPurpleCIDs[] = {
+  { &kPURPLE_ACCOUNT_CID, false, NULL, purpleAccountBaseConstructor },
+  { &kPURPLE_ACCOUNTBUDDY_CID, false, NULL, purpleAccountBuddyConstructor },
+  { &kPURPLE_BUDDY_CID, false, NULL, purpleBuddyConstructor },
+  { &kPURPLE_CONV_CHAT_CID, false, NULL, purpleConvChatConstructor },
+  { &kPURPLE_CONV_IM_CID, false, NULL, purpleConvIMConstructor },
+  { &kPURPLE_CORE_SERVICE_CID, true, NULL, purpleCoreServiceConstructor },
+  { &kPURPLE_MESSAGE_CID, false, NULL, purpleMessageConstructor },
+  { &kPURPLE_PROTOCOL_CID, false, NULL, purpleProtocolConstructor },
+  { &kPURPLE_PROXY_CID, false, NULL, purpleProxyConstructor },
+  { &kPURPLE_PROXY_INFO_CID, false, NULL, purpleProxyInfoConstructor },
+  { &kPURPLE_TAG_CID, false, NULL, purpleTagConstructor },
+  { &kPURPLE_TAGS_SERVICE_CID, true, NULL, purpleTagsServiceConstructor },
+  { &kPURPLE_UNKNOWN_PROTOCOL_CID, false, NULL,
+    purpleUnknownProtocolConstructor },
+#ifdef XP_MACOSX
+  { &kNSDOCKBADGESERVICE_CID, true, NULL, nsDockTileConstructor },
+#endif
+  { NULL }
 };
 
-NS_IMPL_NSGETMODULE(purpleModule, components)
+static const mozilla::Module::ContractIDEntry kPurpleContracts[] = {
+  { PURPLE_ACCOUNT_CONTRACTID, &kPURPLE_ACCOUNT_CID },
+  { PURPLE_ACCOUNTBUDDY_CONTRACTID, &kPURPLE_ACCOUNTBUDDY_CID },
+  { PURPLE_BUDDY_CONTRACTID, &kPURPLE_BUDDY_CID },
+  { PURPLE_CONV_CHAT_CONTRACTID, &kPURPLE_CONV_CHAT_CID },
+  { PURPLE_CONV_IM_CONTRACTID, &kPURPLE_CONV_IM_CID },
+  { PURPLE_CORE_SERVICE_CONTRACTID, &kPURPLE_CORE_SERVICE_CID },
+  { PURPLE_MESSAGE_CONTRACTID, &kPURPLE_MESSAGE_CID },
+  { PURPLE_PROTOCOL_CONTRACTID, &kPURPLE_PROTOCOL_CID },
+  { PURPLE_PROXY_CONTRACTID, &kPURPLE_PROXY_CID },
+  { PURPLE_PROXY_INFO_CONTRACTID, &kPURPLE_PROXY_INFO_CID },
+  { PURPLE_TAG_CONTRACTID, &kPURPLE_TAG_CID },
+  { PURPLE_TAGS_SERVICE_CONTRACTID, &kPURPLE_TAGS_SERVICE_CID },
+  { PURPLE_UNKNOWN_PROTOCOL_CONTRACTID, &kPURPLE_UNKNOWN_PROTOCOL_CID },
+#ifdef XP_MACOSX
+  { NSDOCKBADGESERVICE_CONTRACTID, &kNSDOCKBADGESERVICE_CID },
+#endif
+  { NULL }
+};
+
+static const mozilla::Module kPurpleModule = {
+  mozilla::Module::kVersion,
+  kPurpleCIDs,
+  kPurpleContracts
+};
+
+NSMODULE_DEFN(purpleModule) = &kPurpleModule;

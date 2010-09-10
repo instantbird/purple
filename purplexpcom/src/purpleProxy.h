@@ -44,6 +44,7 @@
 
 #include "purpleIProxy.h"
 #include <nsIPrefBranch.h>
+#include <nsIClassInfo.h>
 #include <nsStringAPI.h>
 #include "nsCOMPtr.h"
 
@@ -73,6 +74,7 @@ class purpleProxy : public purpleIProxy
 {
 public:
   NS_DECL_ISUPPORTS
+  NS_DECL_NSICLASSINFO
   NS_DECL_PURPLEIPROXYINFO
   NS_DECL_PURPLEIPROXY
 

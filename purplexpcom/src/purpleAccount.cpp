@@ -36,12 +36,12 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "purpleAccount.h"
-#include "purpleClassInfo.h"
 #include "purpleCoreService.h"
 #include "purpleGListEnumerator.h"
 #include "purpleStorage.h"
 #include <nsIObserverService.h>
 #include <nsIPrefService.h>
+#include <nsIProgrammingLanguage.h>
 #include <nsIClassInfoImpl.h>
 #include <nsServiceManagerUtils.h>
 #include <nsComponentManagerUtils.h>
@@ -108,7 +108,15 @@ protected:
   PRPackedBool mRequired;
 };
 
-PURPLE_IMPL_ISUPPORTS1_CI(purpleChatRoomField, purpleIChatRoomField)
+// D36DC0D5-438F-4C65-865B-EDE5DB7906D5
+#define PURPLE_CHAT_ROOM_FIELD_CID \
+  { 0xD36DC0D5, 0x438F, 0x4C65,                               \
+    { 0x86, 0x5B, 0xED, 0xE5, 0xDB, 0x79, 0x06, 0xD5 }        \
+  }
+
+NS_IMPL_CLASSINFO(purpleChatRoomField, NULL, 0, PURPLE_CHAT_ROOM_FIELD_CID)
+NS_IMPL_THREADSAFE_CI(purpleChatRoomField)
+NS_IMPL_ISUPPORTS1_CI(purpleChatRoomField, purpleIChatRoomField)
 
 #define PURPLE_IMPL_GETFIELDVALUE(aType, aName, aStar)                  \
   NS_IMETHODIMP purpleChatRoomField::Get##aName(aType a##aName)         \
@@ -169,7 +177,16 @@ protected:
   gchar *mKeys[MAX_KEYS];
 };
 
-PURPLE_IMPL_ISUPPORTS1_CI(purpleChatRoomFieldValues, purpleIChatRoomFieldValues)
+// DB27B00F-E9E6-4FC1-B16C-AB47A7BF58ED
+#define PURPLE_CHAT_ROOM_FIELD_VALUE_CID                      \
+  { 0xDB27B00F, 0xE9E6, 0x4FC1,                               \
+    { 0xB1, 0x6C, 0xAB, 0x47, 0xA7, 0xBF, 0x58, 0xED }        \
+ }
+
+NS_IMPL_CLASSINFO(purpleChatRoomFieldValues, NULL, 0,
+                  PURPLE_CHAT_ROOM_FIELD_VALUE_CID)
+NS_IMPL_THREADSAFE_CI(purpleChatRoomFieldValues)
+NS_IMPL_ISUPPORTS1_CI(purpleChatRoomFieldValues, purpleIChatRoomFieldValues)
 
 /* AUTF8String getValue (in AUTF8String aIdentifier); */
 NS_IMETHODIMP

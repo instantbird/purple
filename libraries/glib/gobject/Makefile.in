@@ -41,9 +41,10 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= glib/gobject
+MODULE		= gobject
+EXPORTS_NAMESPACES=gobject
 
-EXPORTS		= \
+EXPORTS_gobject = \
 		gboxed.h		\
 		gclosure.h		\
 		genums.h		\

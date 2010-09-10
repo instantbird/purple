@@ -45,6 +45,7 @@
 #include <nsMemory.h>
 #include <mozIStoragePendingStatement.h>
 
+NS_IMPL_CLASSINFO(purpleBuddy, NULL, 0, PURPLE_BUDDY_CID)
 NS_IMPL_ISUPPORTS1_CI(purpleBuddy, purpleIBuddy)
 
 #ifdef PR_LOGGING

@@ -44,6 +44,7 @@
 
 #include "purpleIProxy.h"
 #include <nsStringAPI.h>
+#include <nsIClassInfo.h>
 
 // 41d3137c-ccb6-4678-890a-4f7a622b7bf8
 #define PURPLE_PROXY_INFO_CID                                   \
@@ -63,6 +64,7 @@ class purpleProxyInfo : public purpleIProxyInfo
 {
 public:
   NS_DECL_ISUPPORTS
+  NS_DECL_NSICLASSINFO
   NS_DECL_PURPLEIPROXYINFO
 
   purpleProxyInfo();

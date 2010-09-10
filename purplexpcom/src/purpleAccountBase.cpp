@@ -36,7 +36,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "purpleAccountBase.h"
-#include "purpleClassInfo.h"
 #include "purpleCoreService.h"
 #include "purpleGListEnumerator.h"
 #include "purpleStorage.h"
@@ -48,6 +47,7 @@
 #include <nsNetUtil.h>
 #include <prprf.h>
 
+NS_IMPL_CLASSINFO(purpleAccountBase, NULL, 0, PURPLE_ACCOUNT_CID)
 NS_IMPL_ISUPPORTS2_CI(purpleAccountBase, purpleIAccount,
                       purpleIAccountBase)
 

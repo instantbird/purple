@@ -56,6 +56,7 @@ extern PRLogModuleInfo *gPurpleConvLog;
 #define LOG(args) PR_LOG(gPurpleConvLog, PR_LOG_DEBUG, args)
 
 //NS_IMPL_ISUPPORTS2_CI(purpleConvIM, purpleIConversation, purpleIConvIM)
+NS_IMPL_CLASSINFO(purpleConvIM, NULL, 0, PURPLE_CONV_IM_CID)
 NS_INTERFACE_MAP_BEGIN(purpleConvIM)
   NS_INTERFACE_MAP_ENTRY(purpleIConvIM)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(purpleIConversation, purpleConversation)

@@ -39,12 +39,14 @@
 #include "purpleAccount.h"
 #include "purplePref.h"
 #include "purpleGListEnumerator.h"
-#include "purpleClassInfo.h"
+#include <nsIClassInfoImpl.h>
+#include <nsMemory.h>
 #include <nsCOMPtr.h>
 #include <nsComponentManagerUtils.h>
 #include <nsArrayEnumerator.h>
 #include <nsNetUtil.h>
 #include <nsIChromeRegistry.h>
+#include <nsIProgrammingLanguage.h>
 
 #ifdef PR_LOGGING
 //
@@ -76,7 +78,15 @@ protected:
   const PurpleAccountUserSplit *mUserSplit;
 };
 
-PURPLE_IMPL_ISUPPORTS1_CI(purpleUsernameSplit, purpleIUsernameSplit)
+// EF2D4BA7-27E4-446C-894A-418685A8516D
+#define PURPLE_USERNAME_SPLIT_CID                      \
+  { 0xEF2D4BA7, 0x27E4, 0x446C,                        \
+    { 0x89, 0x4A, 0x41, 0x86, 0x85, 0xA8, 0x51, 0x6D } \
+  }
+
+NS_IMPL_CLASSINFO(purpleUsernameSplit, NULL, 0, PURPLE_USERNAME_SPLIT_CID)
+NS_IMPL_THREADSAFE_CI(purpleUsernameSplit)
+NS_IMPL_ISUPPORTS1_CI(purpleUsernameSplit, purpleIUsernameSplit)
 
 #define PURPLE_IMPL_GETSPLITVALUE(aType, aName, aPurpleName, aStar)           \
   NS_IMETHODIMP purpleUsernameSplit::Get##aName(aType a##aName)               \
@@ -100,6 +110,7 @@ PURPLE_IMPL_GETSPLITVALUE(char *, Separator, separator, *)
 PURPLE_IMPL_GETSPLITVALUE(PRBool *, Reverse, reverse, *)
 
 /* Implementation file */
+NS_IMPL_CLASSINFO(purpleProtocol, NULL, 0, PURPLE_PROTOCOL_CID)
 NS_IMPL_ISUPPORTS1_CI(purpleProtocol, purpleIProtocol)
 
 purpleProtocol::purpleProtocol()

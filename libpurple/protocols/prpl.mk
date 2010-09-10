@@ -47,19 +47,14 @@ endif
 IS_COMPONENT	= 1
 VISIBILITY_FLAGS=
 
-REQUIRES	= \
-		libpurple \
-		purplexpcom \
-		$(NULL)
+LOCAL_INCLUDES = -I$(DIST)/include/libpurple
 
 ifneq (,$(filter-out WINNT WINCE Darwin,$(OS_ARCH)))
-LOCAL_INCLUDES	= $(GLIB_CFLAGS)
+LOCAL_INCLUDES	+= $(GLIB_CFLAGS)
 EXTRA_LIBS	= ../../libpurple.so $(GLIB_LIBS) -lgmodule-2.0 -lxml2 -lz
 else
+LOCAL_INCLUDES  += -I$(DIST)/include/glib
 EXTRA_LIBS	= -L../.. -lpurple -L$(DIST)/lib -lz
-REQUIRES	+= \
-		glib \
-		$(NULL)
 endif
 
 ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))

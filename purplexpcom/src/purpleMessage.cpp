@@ -50,6 +50,7 @@ static PRLogModuleInfo *gPurpleMessageLog = nsnull;
 #endif
 #define LOG(args) PR_LOG(gPurpleMessageLog, PR_LOG_DEBUG, args)
 
+NS_IMPL_CLASSINFO(purpleMessage, NULL, 0, PURPLE_MESSAGE_CID)
 NS_IMPL_ISUPPORTS1_CI(purpleMessage, purpleIMessage)
 
 PRUint32 purpleMessage::sLastId = 0;

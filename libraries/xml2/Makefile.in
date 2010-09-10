@@ -42,6 +42,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= libxml
+EXPORTS_NAMESPACES= libxml
 LIBRARY_NAME	= xml2
 FORCE_STATIC_LIB= 1
 LIB_IS_C_ONLY	= 1
@@ -49,7 +50,7 @@ LIB_IS_C_ONLY	= 1
 
 VISIBILITY_FLAGS=
 
-EXPORTS		= \
+EXPORTS_libxml	= \
 		config.h \
 		libxml.h \
 		elfgcchack.h \
