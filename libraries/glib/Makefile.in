@@ -154,6 +154,7 @@ CSRCS		= \
 		garray.c \
 		gatomic.c \
 		gconvert.c \
+		gbase64.c \
 		gdataset.c \
 		gdir.c \
 		gerror.c \

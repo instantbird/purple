@@ -597,10 +597,15 @@ gboolean qq_process_keep_alive_2008(guint8 *data, gint data_len, PurpleConnectio
 
 #if !defined(_MSC_VER) || defined(_USE_32BIT_TIME_T)
 	tm_local = localtime(&server_time);
-	purple_debug_info("QQ", "Server time: %d-%d-%d, %d:%d:%d\n",
-			(1900 +tm_local->tm_year), (1 + tm_local->tm_mon), tm_local->tm_mday,
-			tm_local->tm_hour, tm_local->tm_min, tm_local->tm_sec);
+
+	if (tm_local != NULL)
+		purple_debug_info("QQ", "Server time: %d-%d-%d, %d:%d:%d\n",
+				(1900 +tm_local->tm_year), (1 + tm_local->tm_mon), tm_local->tm_mday,
+				tm_local->tm_hour, tm_local->tm_min, tm_local->tm_sec);
+	else
+		purple_debug_error("QQ", "Server time could not be parsed\n");
 #endif
+
 	return TRUE;
 }
 
@@ -821,11 +826,11 @@ static void captcha_request_destory(qq_captcha_request *captcha_req)
 static void captcha_input_cancel_cb(qq_captcha_request *captcha_req,
 		PurpleRequestFields *fields)
 {
-	captcha_request_destory(captcha_req);
-
 	purple_connection_error_reason(captcha_req->gc,
 			PURPLE_CONNECTION_ERROR_AUTHENTICATION_FAILED,
 			_("Failed captcha verification"));
+
+	captcha_request_destory(captcha_req);
 }
 
 static void captcha_input_ok_cb(qq_captcha_request *captcha_req,

@@ -223,7 +223,7 @@ xmlnode_set_attrib_full(xmlnode *node, const char *attr, const char *xmlns, cons
 
 
 const char *
-xmlnode_get_attrib(xmlnode *node, const char *attr)
+xmlnode_get_attrib(const xmlnode *node, const char *attr)
 {
 	xmlnode *x;
 
@@ -240,9 +240,9 @@ xmlnode_get_attrib(xmlnode *node, const char *attr)
 }
 
 const char *
-xmlnode_get_attrib_with_namespace(xmlnode *node, const char *attr, const char *xmlns)
+xmlnode_get_attrib_with_namespace(const xmlnode *node, const char *attr, const char *xmlns)
 {
-	xmlnode *x;
+	const xmlnode *x;
 
 	g_return_val_if_fail(node != NULL, NULL);
 	g_return_val_if_fail(attr != NULL, NULL);
@@ -543,31 +543,6 @@ xmlnode_to_formatted_str(const xmlnode *node, int *len)
 		*len += sizeof("<?xml version='1.0' encoding='UTF-8' ?>" NEWLINE_S NEWLINE_S) - 1;
 
 	return xml_with_declaration;
-}
-
-static char *purple_unescape_text(const char *in)
-{
-    GString *ret;
-    const char *c = in;
-
-    if (in == NULL)
-        return NULL;
-
-    ret = g_string_new("");
-    while (*c) {
-        int len;
-        const char *ent;
-
-        if ((ent = purple_markup_unescape_entity(c, &len)) != NULL) {
-            g_string_append(ret, ent);
-            c += len;
-        } else {
-            g_string_append_c(ret, *c);
-            c++;
-        }
-    }
-
-    return g_string_free(ret, FALSE);
 }
 
 struct _xmlnode_parser_data {

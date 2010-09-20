@@ -106,6 +106,33 @@ typedef enum
  */
 #define PURPLE_CHAT(obj) ((PurpleChat *)(obj))
 
+#if 0
+#include "media.h"
+#else
+/** extracted from media.h */
+/** Media caps */
+typedef enum {
+	PURPLE_MEDIA_CAPS_NONE = 0,
+	PURPLE_MEDIA_CAPS_AUDIO = 1,
+	PURPLE_MEDIA_CAPS_AUDIO_SINGLE_DIRECTION = 1 << 1,
+	PURPLE_MEDIA_CAPS_VIDEO = 1 << 2,
+	PURPLE_MEDIA_CAPS_VIDEO_SINGLE_DIRECTION = 1 << 3,
+	PURPLE_MEDIA_CAPS_AUDIO_VIDEO = 1 << 4,
+	PURPLE_MEDIA_CAPS_MODIFY_SESSION = 1 << 5,
+	PURPLE_MEDIA_CAPS_CHANGE_DIRECTION = 1 << 6
+} PurpleMediaCaps;
+
+/** Media session types */
+typedef enum {
+	PURPLE_MEDIA_NONE	= 0,
+	PURPLE_MEDIA_RECV_AUDIO = 1 << 0,
+	PURPLE_MEDIA_SEND_AUDIO = 1 << 1,
+	PURPLE_MEDIA_RECV_VIDEO = 1 << 2,
+	PURPLE_MEDIA_SEND_VIDEO = 1 << 3,
+	PURPLE_MEDIA_AUDIO = PURPLE_MEDIA_RECV_AUDIO | PURPLE_MEDIA_SEND_AUDIO,
+	PURPLE_MEDIA_VIDEO = PURPLE_MEDIA_RECV_VIDEO | PURPLE_MEDIA_SEND_VIDEO
+} PurpleMediaSessionType;
+#endif
 #include "account.h"
 #include "buddyicon.h"
 #include "status.h"
@@ -143,6 +170,7 @@ struct _PurpleBuddy {
 	PurpleBuddyIcon *icon;                    /**< The buddy icon. */
 	PurpleAccount *account;					/**< the account this buddy belongs to */
 	PurplePresence *presence;
+	PurpleMediaCaps media_caps;		/**< The media capabilities of the buddy. */
 };
 
 /**
@@ -657,6 +685,24 @@ PurpleContact *purple_buddy_get_contact(PurpleBuddy *buddy);
 PurplePresence *purple_buddy_get_presence(const PurpleBuddy *buddy);
 
 /**
+ * Gets the media caps from a buddy.
+ *
+ * @param buddy The buddy.
+ * @return      The media caps.
+ *
+ * @since 2.7.0
+ */
+PurpleMediaCaps purple_buddy_get_media_caps(const PurpleBuddy *buddy);
+
+/**
+ * Sets the media caps for a buddy.
+ *
+ * @param buddy      The PurpleBuddy.
+ * @param media_caps The PurpleMediaCaps.
+ */
+void purple_buddy_set_media_caps(PurpleBuddy *buddy, PurpleMediaCaps media_caps);
+
+/**
  * Adds a new buddy to the buddy list.
  *
  * The buddy will be inserted right after node or prepended to the
@@ -713,6 +759,16 @@ PurpleContact *purple_contact_new(void);
  * @param contact  The contact to destroy
  */
 void purple_contact_destroy(PurpleContact *contact);
+
+/**
+ * Gets the PurpleGroup from a PurpleContact
+ *
+ * @param contact  The contact
+ * @return         The group
+ *
+ * @since 2.7.0
+ */
+PurpleGroup *purple_contact_get_group(const PurpleContact *contact);
 
 /**
  * Adds a new contact to the buddy list.

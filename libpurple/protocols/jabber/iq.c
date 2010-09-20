@@ -45,8 +45,8 @@
 #include "win32/utsname.h"
 #endif
 
-GHashTable *iq_handlers = NULL;
-GHashTable *signal_iq_handlers = NULL;
+static GHashTable *iq_handlers = NULL;
+static GHashTable *signal_iq_handlers = NULL;
 
 JabberIq *jabber_iq_new(JabberStream *js, JabberIqType type)
 {

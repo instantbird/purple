@@ -119,11 +119,6 @@ wpurple_write( socket, buf, buflen )
 #define close( fd ) \
 wpurple_close( fd )
 
-#if !GLIB_CHECK_VERSION(2,8,0)
-#define g_access( filename, mode) \
-wpurple_g_access( filename, mode )
-#endif
-
 #ifndef sleep
 #define sleep(x) Sleep((x)*1000)
 #endif
@@ -138,20 +133,13 @@ wpurple_gethostname( name, size )
   g_get_current_time( timeval )
 
 /* stdio.h */
+#undef snprintf
 #define snprintf _snprintf
+#undef vsnprintf
 #define vsnprintf _vsnprintf
 
 #define rename( oldname, newname ) \
 wpurple_rename( oldname, newname )
-
-#if GLIB_CHECK_VERSION(2,6,0)
-#ifdef g_rename
-# undef g_rename
-#endif
-/* This is necessary because we want rename on win32 to be able to overwrite an existing file, it is done in internal.h if GLib < 2.6*/
-#define g_rename(oldname, newname) \
-wpurple_rename(oldname, newname)
-#endif
 
 /* sys/stat.h */
 #define fchmod(a,b)

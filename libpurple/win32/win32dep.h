@@ -60,7 +60,7 @@ FARPROC wpurple_find_and_loadproc(const char *dllname, const char *procedure);
 char *wpurple_escape_dirsep(const char *filename); /* needs to be g_free'd */
 
 /* Determine Purple paths */
-gchar *wpurple_get_special_folder(int folder_type); /* needs to be g_free'd */
+/* gchar *wpurple_get_special_folder(int folder_type); /* needs to be g_free'd */
 /* const char *wpurple_install_dir(void); */
 /* const char *wpurple_lib_dir(void); */
 /* const char *wpurple_locale_dir(void); */
