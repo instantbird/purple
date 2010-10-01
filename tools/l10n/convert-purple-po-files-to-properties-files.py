@@ -7,7 +7,7 @@ import hashlib
 import os
 
 # the list of locales that we want to convert
-po_files = ['af', 'am', 'ar', 'az', 'bg', 'bn', 'bs', 'ca', 'cs', 'da', 'de', 'dz', 'el', 'eo', 'es', 'et', 'eu', 'fa', 'fi', 'fr', 'ga', 'gl', 'gu', 'he', 'hi', 'hu', 'id', 'it', 'ja', 'ka', 'kn', 'ko', 'ku', 'lo', 'lt', 'mk', 'mn', 'nb', 'ne', 'nl', 'nn', 'oc', 'pa', 'pl', 'ps', 'pt', 'ro', 'ru', 'si', 'sk', 'sl', 'sq', 'sr', 'sv', 'ta', 'te', 'th', 'tr', 'uk', 'ur', 'vi', 'xh']
+po_files = ['af', 'am', 'ar', 'az', 'bg', 'bn', 'bs', 'ca', 'cs', 'da', 'de', 'dz', 'el', 'eo', 'es', 'et', 'eu', 'fa', 'fi', 'fr', 'ga', 'gl', 'gu', 'he', 'hi', 'hu', 'id', 'it', 'ja', 'ka', 'kn', 'ko', 'ku', 'lo', 'lt', 'mk', 'mn', 'nb', 'ne', 'nl', 'nn', 'oc', 'pa', 'pl', 'ps', 'pt', 'ro', 'ru', 'si', 'sk', 'sl', 'sq', 'sr', 'sv', 'ta', 'te', 'th', 'tr', 'uk', 'ur', 'vi', 'xh', 'be@latin', 'bn_IN', 'ca@valencia', 'en_AU', 'en_CA', 'en_GB', 'hy', 'km', 'mr', 'ms_MY', 'my_MM', 'or', 'pt_BR', 'sr@latin', 'sw', 'zh_CN', 'zh_HK', 'zh_TW']
 
 # md5 hash of translator comments. Libpurple/gettext mixes translator
 # comments with code comments, we need to filter them. These are the
