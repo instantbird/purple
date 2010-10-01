@@ -264,18 +264,3 @@ void purpleConversation::NotifyObservers(nsISupports *aSubject,
   for (PRInt32 i = 0; i < mObservers.Count(); ++i)
     mObservers[i]->Observe(aSubject, aTopic, aData);
 }
-
-/* void setBaseURI (in nsIDOMDocument aDocument, in nsIURI aURI); */
-NS_IMETHODIMP purpleConversation::SetBaseURI(nsIDOMDocument *aDocument, nsIURI *aURI)
-{
-  NS_ENSURE_ARG_POINTER(aDocument);
-  NS_ENSURE_ARG_POINTER(aURI);
-
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDocument);
-  NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
-
-  nsresult rv = doc->SetBaseURI(aURI);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
