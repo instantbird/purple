@@ -65,7 +65,7 @@ static void auth_response (gpointer data, gint source, PurpleInputCondition cond
   buf[length] = 0;
   purple_debug_info("netsoul", "auth_response got : %s\n", buf);
   tab = g_strsplit(buf, " ", 6);
-  if (strcmp(*tab, "rep")) {
+  if (!*tab || strcmp(*tab, "rep")) {
     purple_connection_error(gc, _("Wrong Answer from server\n"));
     return;
   }
