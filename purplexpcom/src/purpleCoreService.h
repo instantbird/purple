@@ -46,14 +46,10 @@
 #include "purpleIdle.h"
 #include "purpleICoreService.h"
 #include "purpleConversation.h"
-#include<nsIMutableArray.h>
-#include<nsCOMPtr.h>
+#include <nsIMutableArray.h>
+#include <nsCOMArray.h>
+#include <nsCOMPtr.h>
 #include <nsIPrefBranch2.h>
-#include <nsInterfaceHashtable.h>
-#include <nsDataHashtable.h>
-#include "purpleBuddy.h"
-#include "purpleTag.h"
-#include<nsCOMArray.h>
 
 #define PURPLE_ENSURE_INIT(x)                   \
   NS_ENSURE_TRUE(x, NS_ERROR_NOT_INITIALIZED)
@@ -97,9 +93,7 @@ protected:
   nsCOMArray<purpleIProtocol> mProtocols;
   nsCOMArray<purpleProxy> mProxies;
   nsCOMPtr<purpleIAccountsService> mAccountsService;
-  nsCOMPtr<purpleITagsService> mTagsService;
   nsCOMArray<purpleConversation> mConversations;
-  nsInterfaceHashtable<nsUint32HashKey, purpleBuddy> mBuddiesById;
   nsCOMPtr<purpleIProxyInfo> mGlobalProxy;
   nsCOMPtr<purpleIdleObserver> mIdleObserver;
 };

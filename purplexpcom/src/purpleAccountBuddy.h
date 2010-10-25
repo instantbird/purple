@@ -38,49 +38,52 @@
 #ifndef PURPLE_ACCOUNT_BUDDY_H_
 # define PURPLE_ACCOUNT_BUDDY_H_
 
-#include "purpleIAccountBuddy.h"
-#include "purpleTag.h"
+#include "purpleAccount.h"
+#include "imIContactsService.h"
 #include <nsCOMPtr.h>
+#include <nsStringAPI.h>
 
-// af152d5b-fa54-45d4-b6a7-5b4cabef9b7c
+#pragma GCC visibility push(default)
+#include <libpurple/blist.h>
+#pragma GCC visibility pop
+
 #define PURPLE_ACCOUNTBUDDY_CID                                 \
   { 0xaf152d5b, 0xfa54, 0x45d4,                                 \
       { 0xb6, 0xa7, 0x5b, 0x4c, 0xab, 0xef, 0x9b, 0x7c }        \
   }
 
-#define PURPLE_ACCOUNTBUDDY_CONTRACTID          \
-  "@instantbird.org/purple/accountbuddy;1"
-
 #define GET_NODE_UI_DATA(aNode)                                 \
   purple_blist_node_get_ui_data(PURPLE_BLIST_NODE(aNode))
 
-class purpleAccountBuddy : public purpleIAccountBuddy
+class purpleAccountBuddy : public imIAccountBuddy
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_PURPLEIACCOUNTBUDDY
+  NS_DECL_IMIACCOUNTBUDDY
+  NS_DECL_IMISTATUSINFO
 
-  purpleAccountBuddy();
-  void Init(purpleIAccount *aAccount, PurpleBuddy *aBuddy, purpleTag *aTag);
-  void Uninit();
-  nsresult Store(PRInt32 aBuddyId);
-  nsresult UnStore(PRInt32 aBuddyId);
-  PurpleBuddy *GetBuddy() { return mBuddy; }
-  void SetBuddyAlias(const nsCString& aBuddyAlias);
+  purpleAccountBuddy(PurpleBuddy *aPurpleBuddy, imIBuddy *aBuddy = nsnull);
+  void UnInit();
   static inline purpleAccountBuddy *fromPurpleBuddy(PurpleBuddy *aBuddy) {
     return static_cast<purpleAccountBuddy *>(GET_NODE_UI_DATA(aBuddy));
   }
+  static inline imITag *GetTagFromPurpleGroup(PurpleGroup *aGroup)
+  {
+    return static_cast<imITag *>(GET_NODE_UI_DATA(aGroup));
+  }
+  static PurpleGroup *GetPurpleGroupForTag(imITag *aTag);
+  nsresult NotifyObservers(const char *aSignal,
+                           const PRUnichar *aData = nsnull);
 
 private:
   ~purpleAccountBuddy();
   static void CleanUserInfo(void *aData);
-  PurplePluginProtocolInfo *GetPrplInfo(PurpleBuddy *aBuddy);
 
 protected:
   /* additional members */
   nsCOMPtr<purpleIAccount> mAccount;
-  PurpleBuddy *mBuddy;
-  nsCOMPtr<purpleTag> mTag;
+  PurpleBuddy *mPurpleBuddy;
+  nsCOMPtr<imIBuddy> mBuddy;
 };
 
 #endif /* !PURPLE_ACCOUNT_BUDDY_H_ */

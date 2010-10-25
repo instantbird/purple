@@ -68,7 +68,7 @@ public:
   purpleAccountBase();
 
 protected:
-  ~purpleAccountBase();
+  virtual ~purpleAccountBase();
   nsresult GetPrefBranch();
   nsresult unstoreAccount();
   nsresult SetBoolPref(const char *aName, PRBool aValue);

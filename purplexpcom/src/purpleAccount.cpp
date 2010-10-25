@@ -36,9 +36,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "purpleAccount.h"
+#include "purpleAccountBuddy.h"
 #include "purpleCoreService.h"
 #include "purpleGListEnumerator.h"
-#include "purpleStorage.h"
 #include <nsIObserverService.h>
 #include <nsIPrefService.h>
 #include <nsIProgrammingLanguage.h>
@@ -482,47 +482,58 @@ NS_IMETHODIMP purpleAccount::CreateConversation(const nsACString& aName,
   return NS_OK;
 }
 
-/* void addBuddy (in purpleITag aTag, in AUTF8String aName); */
-NS_IMETHODIMP purpleAccount::AddBuddy(purpleITag *aTag,
+/* void addBuddy (in imITag aTag, in AUTF8String aName); */
+NS_IMETHODIMP purpleAccount::AddBuddy(imITag *aTag,
                                       const nsACString& aName)
 {
   PURPLE_ENSURE_INIT(mProtocol && mAccount);
   NS_ENSURE_ARG_POINTER(aTag);
   NS_ENSURE_ARG(!aName.IsEmpty());
 
-  purpleTag *tag = static_cast<purpleTag *>(aTag);
-  PurpleBuddy *buddy = purple_buddy_new(mAccount, PromiseFlatCString(aName).get(), NULL);
-  tag->addBuddy(buddy);
+  PurpleGroup *group = purpleAccountBuddy::GetPurpleGroupForTag(aTag);
+  NS_ENSURE_TRUE(group, NS_ERROR_UNEXPECTED);
+
+  PurpleBuddy *buddy =
+    purple_buddy_new(mAccount, PromiseFlatCString(aName).get(), NULL);
+  purple_blist_add_buddy(buddy, NULL, group, NULL);
   purple_account_add_buddy(mAccount, buddy);
   return NS_OK;
 }
 
-/* void LoadBuddy (in purpleIBuddy aBuddy, in AUTF8String aName,
-                   in AUTF8String aAlias, in AUTF8String aServerAlias,
-                   in purpleITag aTag); */
-NS_IMETHODIMP purpleAccount::LoadBuddy(purpleIBuddy *aBuddy,
-                                       const nsACString & aName,
-                                       const nsACString & aAlias,
-                                       const nsACString & aServerAlias,
-                                       purpleITag *aTag)
+/* imIAccountBuddy LoadBuddy (in imIBuddy aBuddy, in imITag aTag); */
+NS_IMETHODIMP purpleAccount::LoadBuddy(imIBuddy *aBuddy,
+                                       imITag *aTag,
+                                       imIAccountBuddy **aResult)
 {
+  NS_ENSURE_ARG_POINTER(aBuddy);
+  NS_ENSURE_ARG_POINTER(aTag);
   PURPLE_ENSURE_INIT(mProtocol && mAccount);
 
-  purpleTag *tag = static_cast<purpleTag *>(aTag);
+  nsCString userName;
+  nsresult rv = aBuddy->GetUserName(userName);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(!userName.IsEmpty(), NS_ERROR_UNEXPECTED);
+
+  PurpleGroup *group = purpleAccountBuddy::GetPurpleGroupForTag(aTag);
+  NS_ENSURE_TRUE(group, NS_ERROR_UNEXPECTED);
+
   PurpleBuddy *buddy =
-    purple_buddy_new(mAccount, PromiseFlatCString(aName).get(),
-                     aAlias.IsEmpty() ? NULL : PromiseFlatCString(aAlias).get());
+    purple_buddy_new(mAccount, userName.get(), NULL);
 
-  // Ignore server aliases that are identical to the name.
-  // (We used to mistakenly store the name in the srv_alias column
-  // when there was no server alias.)
-  if (!aServerAlias.IsEmpty() && !aServerAlias.Equals(aName)) {
-    buddy->server_alias =
-      purple_utf8_strip_unprintables(PromiseFlatCString(aServerAlias).get());
-  }
-  tag->addBuddy(buddy);
+  // Set the server alias on the blist node if the display name of the
+  // imIBuddy is different from the userName
+  nsCString displayName;
+  rv = aBuddy->GetDisplayName(displayName);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(!displayName.IsEmpty(), NS_ERROR_UNEXPECTED);
+  if (!displayName.Equals(userName))
+    buddy->server_alias = purple_utf8_strip_unprintables(displayName.get());
 
-  static_cast<purpleBuddy *>(aBuddy)->AddAccount(this, buddy, tag);
+  nsCOMPtr<imIAccountBuddy> accountBuddy =
+    new purpleAccountBuddy(buddy, aBuddy);
+  purple_blist_add_buddy(buddy, NULL, group, NULL);
+
+  NS_ADDREF(*aResult = accountBuddy);
   return NS_OK;
 }
 
@@ -531,7 +542,8 @@ PurplePluginProtocolInfo *purpleAccount::GetPrplInfo()
   NS_ENSURE_TRUE(mAccount, NULL);
 
   PurpleConnection *gc = purple_account_get_connection(mAccount);
-  NS_ENSURE_TRUE(gc, NULL);
+  if (!gc)
+    return NULL;
 
   PurplePlugin *prpl = purple_connection_get_prpl(gc);
   NS_ENSURE_TRUE(prpl, NULL);

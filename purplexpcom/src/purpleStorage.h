@@ -50,14 +50,6 @@ class purpleStorage
     return mDBConn;
   }
   nsCOMPtr<mozIStorageStatement> mEnsureAccountStoredStatement;
-  nsCOMPtr<mozIStorageStatement> mGetGroupIdFromName;
-  nsCOMPtr<mozIStorageStatement> mGetBuddyIdFromNameAndPrpl;
-  nsCOMPtr<mozIStorageStatement> mInsertGroup;
-  nsCOMPtr<mozIStorageStatement> mInsertBuddy;
-  nsCOMPtr<mozIStorageStatement> mUpdateBuddyServerAlias;
-  nsCOMPtr<mozIStorageStatement> mInsertAccountBuddy;
-  nsCOMPtr<mozIStorageStatement> mGetContactIdForBuddy;
-  nsCOMPtr<mozIStorageStatement> mLastId;
 
  private:
   static purpleStorage *mInstance;

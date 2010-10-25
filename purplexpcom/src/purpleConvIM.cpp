@@ -36,13 +36,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "purpleConvIM.h"
-#include "purpleIAccountBuddy.h"
-#include "purpleCoreService.h"
+#include "purpleAccountBuddy.h"
 
-#include <nsCOMPtr.h>
 #include <nsIObserverService.h>
 #include <nsServiceManagerUtils.h>
-#include <nsStringAPI.h>
 #include <nsXPCOM.h>
 #include <nsIClassInfoImpl.h>
 #include <nsMemory.h>
@@ -120,8 +117,8 @@ NS_IMETHODIMP purpleConvIM::SendMsg(const nsACString& aMsg)
   return NS_OK;
 }
 
-/* readonly attribute purpleIAccountBuddy buddy; */
-NS_IMETHODIMP purpleConvIM::GetBuddy(purpleIAccountBuddy * *aBuddy)
+/* readonly attribute imIAccountBuddy buddy; */
+NS_IMETHODIMP purpleConvIM::GetBuddy(imIAccountBuddy * *aBuddy)
 {
   NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
 
@@ -133,7 +130,7 @@ NS_IMETHODIMP purpleConvIM::GetBuddy(purpleIAccountBuddy * *aBuddy)
     return NS_OK;
   }
 
-  purpleIAccountBuddy *pab = purpleAccountBuddy::fromPurpleBuddy(buddy);
+  imIAccountBuddy *pab = purpleAccountBuddy::fromPurpleBuddy(buddy);
   NS_ENSURE_TRUE(pab, NS_ERROR_NOT_INITIALIZED);
 
   NS_ADDREF(*aBuddy = pab);

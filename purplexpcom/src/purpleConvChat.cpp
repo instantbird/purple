@@ -37,7 +37,6 @@
 
 #include "purpleConvChat.h"
 #include "purpleConvChatBuddy.h"
-#include "purpleIAccountBuddy.h"
 #include "purpleGListEnumerator.h"
 
 #include <nsXPCOM.h>

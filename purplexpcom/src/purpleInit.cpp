@@ -508,6 +508,12 @@ static PurpleConversationUiOps conversation_uiops =
   NULL, NULL, NULL, NULL
 };
 
+/*
+ * Used as handle to connect and then mass-disconnect the buddy list signals.
+ * The value is 1 when the signals are connected, 0 when they are not.
+ */
+static int blist_signals_handle = 0;
+
 static void buddy_signals(PurpleBuddy *aBuddy, const char *aSignal)
 {
   // FIXME when this was handled by purpleCoreService, signals sent
@@ -516,31 +522,29 @@ static void buddy_signals(PurpleBuddy *aBuddy, const char *aSignal)
   LOG(("Attempting to send %s signal, group = %s, buddy = %s", aSignal,
        purple_group_get_name(purple_buddy_get_group(aBuddy)), aBuddy->name));
 
-  nsCOMPtr<purpleIAccountBuddy> pab =
+  nsCOMPtr<purpleAccountBuddy> pab =
     purpleAccountBuddy::fromPurpleBuddy(aBuddy);
   NS_ENSURE_TRUE(pab, );
 
-  // FIXME: all this should be moved inside purpleAccountBuddy / purpleTag
-  nsCOMPtr<purpleITag> tag;
-  nsresult rv = pab->GetTag(getter_AddRefs(tag));
-  if (NS_SUCCEEDED(rv))
-    tag->NotifyObservers(pab, aSignal, nsnull);
-
-  nsCOMPtr<nsIObserverService> os =
-    do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+  nsresult rv = pab->NotifyObservers(aSignal);
   NS_ENSURE_SUCCESS(rv, );
-  os->NotifyObservers(pab, aSignal, nsnull);
 }
 
-#define PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER(aSignal, aHandler)  \
-  purple_signal_connect(instance, aSignal, &handle,             \
-                        PURPLE_CALLBACK(aHandler),              \
-                        (void *)aSignal)
+static void buddy_signed_on(PurpleBuddy *aBuddy, const char *aSignal)
+{
+  buddy_signals(aBuddy, "account-buddy-availability-changed");
+  buddy_signals(aBuddy, "account-buddy-status-changed");
+  buddy_signals(aBuddy, "account-buddy-signed-on");
+}
 
-#define PURPLE_CONNECT_BUDDY_SIGNAL(aSignal)                    \
-  PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER(aSignal, buddy_signals)
+static void buddy_signed_off(PurpleBuddy *aBuddy, const char *aSignal)
+{
+  buddy_signals(aBuddy, "account-buddy-availability-changed");
+  buddy_signals(aBuddy, "account-buddy-status-changed");
+  buddy_signals(aBuddy, "account-buddy-signed-off");
+}
 
-static void buddy_added(PurpleBuddy *buddy, void *null)
+static void buddy_added(PurpleBuddy *aBuddy, void *null)
 {
   // This is the buddy-added purple signal. It is fired when a buddy
   // is added to the list or to a group.
@@ -548,37 +552,47 @@ static void buddy_added(PurpleBuddy *buddy, void *null)
   // FIXME what should we do if the buddy is moved to a new group. Is
   // ui_data already set in this case?
 
-  // let pcs create the purpleBuddy first
-  nsCOMPtr<purpleICoreService> pcs =
-    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-  pcs->PurpleBuddyAdded(buddy);
+  nsCOMPtr<imIContactsService> contacts =
+    do_GetService("@instantbird.org/purple/contacts-service;1");
+  NS_ENSURE_TRUE(contacts, );
 
-  buddy_signals(buddy, "buddy-added");
+  nsCOMPtr<imIAccountBuddy> accountBuddy =
+    new purpleAccountBuddy(aBuddy);
+  contacts->AccountBuddyAdded(accountBuddy);
 }
 
-static void buddy_removed(PurpleBuddy *buddy, void *null)
+// This is still called even after signals have been removed.
+static void buddy_removed(PurpleBuddy *aBuddy, void *null)
 {
   // This is the buddy-removed purple signal. It is fired when a buddy
   // is removed permanenty (ie from the server list or if the user
   // request the deletion of a buddy in her list)
 
-  // send the signal first, before actually removing the buddy
-  buddy_signals(buddy, "buddy-deleted");
+  purpleAccountBuddy *accountBuddy =
+    purpleAccountBuddy::fromPurpleBuddy(aBuddy);
+  NS_ENSURE_TRUE(accountBuddy, );
 
-  nsCOMPtr<purpleICoreService> pcs =
-    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-  pcs->PurpleBuddyRemoved(buddy);
+  if (blist_signals_handle) {
+    nsCOMPtr<imIContactsService> contacts =
+      do_GetService("@instantbird.org/purple/contacts-service;1");
+    if (contacts)
+      contacts->AccountBuddyRemoved(accountBuddy);
+  }
+
+  accountBuddy->UnInit();
 }
 
 static void buddy_away(PurpleBuddy *aBuddy,
                        PurpleStatus *old_status, PurpleStatus *status)
 {
-  buddy_signals(aBuddy, "buddy-away");
+  buddy_signals(aBuddy, "account-buddy-availability-changed");
+  buddy_signals(aBuddy, "account-buddy-status-changed");
 }
 
 static void buddy_idle(PurpleBuddy *aBuddy, gboolean old_idle, gboolean idle)
 {
-  buddy_signals(aBuddy, "buddy-idle");
+  buddy_signals(aBuddy, "account-buddy-availability-changed");
+  buddy_signals(aBuddy, "account-buddy-status-changed");
 }
 
 static void buddy_alias(PurpleBlistNode *aNode, const char *old_alias)
@@ -587,38 +601,60 @@ static void buddy_alias(PurpleBlistNode *aNode, const char *old_alias)
   if (!PURPLE_BLIST_NODE_IS_BUDDY(aNode))
     return;
 
-  PurpleBuddy *buddy = (PurpleBuddy *)aNode;
-  buddy_signals(buddy, "buddy-alias");
-
-  purpleBuddy *buddyPtr = purpleBuddy::fromPurpleBuddy(buddy);
-  if (!buddyPtr)
+  purpleAccountBuddy *pab =
+    purpleAccountBuddy::fromPurpleBuddy((PurpleBuddy *)aNode);
+  if (!pab)
     return; // it's fine to ignore these notifications for unknown buddies
-  buddyPtr->UpdateServerAlias(purple_buddy_get_server_alias(buddy));
+
+  nsString oldAlias;
+  NS_CStringToUTF16(nsDependentCString(old_alias), NS_CSTRING_ENCODING_UTF8,
+                    oldAlias);
+
+  pab->NotifyObservers("account-buddy-display-name-changed", oldAlias.get());
 }
+
+
+#define PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER(aSignal, aHandler)          \
+  purple_signal_connect(instance, aSignal, &blist_signals_handle,       \
+                        PURPLE_CALLBACK(aHandler), (void *)aSignal)
 
 void
 connect_to_blist_signals()
 {
-  int handle;
+  // Remove the existing buddy-removed signal if this is a
+  // re-initialization of libpurple.
+  purple_signals_disconnect_by_handle(&blist_signals_handle);
+
   void *instance = purple_blist_get_handle();
-  PURPLE_CONNECT_BUDDY_SIGNAL("buddy-signed-on");
-  PURPLE_CONNECT_BUDDY_SIGNAL("buddy-signed-off");
+  PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER("buddy-signed-on", buddy_signed_on);
+  PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER("buddy-signed-off", buddy_signed_off);
   PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER("buddy-added", buddy_added);
   PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER("buddy-removed", buddy_removed);
-  // This buddy-removed-from-group purple signal was added for
-  // Instantbird.  It is fired when a buddy is removed permanenty from
-  // a group but not from the buddy list. (ie when the buddy has been
-  // moved)
-  PURPLE_CONNECT_BUDDY_SIGNAL("buddy-removed-from-group");
   PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER("buddy-status-changed", buddy_away);
   PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER("buddy-idle-changed", buddy_idle);
   PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER("blist-node-aliased", buddy_alias);
+  blist_signals_handle = 1;
+  LOG(("Connected to blist signals"));
+}
 
-  LOG(("Connecting to blist signals"));
+void
+disconnect_blist_signals()
+{
+  purple_signals_disconnect_by_handle(&blist_signals_handle);
+  blist_signals_handle = 0;
+
+  // Reconnect the buddy-removed handler so that we can still properly
+  // unInit the purpleAccountBuddy instances.
+  void *instance = purple_blist_get_handle();
+  PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER("buddy-removed", buddy_removed);
 }
 
 static void remove_blist_node(PurpleBuddyList *aList, PurpleBlistNode *aNode)
 {
+  // Ignore this ui ops if buddy list signals are not connected:
+  if (!blist_signals_handle)
+    return;
+
   // This is the removed blist uiop. It is fired when a possibly
   // visible element of the buddy list is removed (because the account
   // got disconnected)
@@ -629,7 +665,8 @@ static void remove_blist_node(PurpleBuddyList *aList, PurpleBlistNode *aNode)
 
   PurpleBuddy *buddy = (PurpleBuddy *) aNode;
   LOG(("purple uiop : remove_blist_node, name = %s", buddy->name));
-  buddy_signals(buddy, "buddy-removed");
+  buddy_signals(buddy, "account-buddy-availability-changed");
+  buddy_signals(buddy, "account-buddy-status-changed");
 }
 
 static PurpleBlistUiOps blist_uiops = {
@@ -643,8 +680,11 @@ static PurpleBlistUiOps blist_uiops = {
   NULL, /* request_add_buddy */
   NULL, /* request_add_chat */
   NULL, /* request_add_group */
+  NULL, /* save_node */
+  NULL, /* remove_node */
+  NULL, /* save_account */
 
-  NULL, NULL, NULL, NULL
+  NULL
 };
 
 

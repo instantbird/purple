@@ -65,7 +65,6 @@ CPPSRCS		= \
 		purpleAccountBase.cpp \
 		purpleAccountBuddy.cpp \
 		purpleAccountsService.cpp \
-		purpleBuddy.cpp \
 		purpleConversation.cpp \
 		purpleConvIM.cpp \
 		purpleConvChat.cpp \
@@ -86,8 +85,6 @@ CPPSRCS		= \
 		purpleProxyInfo.cpp \
 		purpleSockets.cpp \
 		purpleStorage.cpp \
-		purpleTag.cpp \
-		purpleTagsService.cpp \
 		purpleTimer.cpp \
 		purpleTooltipInfo.cpp \
 		purpleUnknownProtocol.cpp \
@@ -103,6 +100,9 @@ DEFINES 	+= -DPURPLE_PLUGINS
 endif
 
 EXTRA_COMPONENTS = gtalkOverrideProtocol.js facebookOverrideProtocol.js overrideProtocols.manifest
+
+EXTRA_COMPONENTS += imContacts.js imContacts.manifest
+
 ifdef MOZ_DEBUG
 EXTRA_COMPONENTS += jsTestProtocol.js jsTestProtocol.manifest
 endif

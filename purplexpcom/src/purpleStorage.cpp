@@ -130,32 +130,5 @@ nsresult purpleStorage::Init()
 
   CREATE_STATEMENT(mEnsureAccountStoredStatement,
                    "SELECT name, prpl FROM accounts WHERE id = ?1");
-
-  CREATE_STATEMENT(mGetGroupIdFromName,
-                   "SELECT id FROM tags WHERE name = ?1");
-
-  CREATE_STATEMENT(mGetBuddyIdFromNameAndPrpl,
-                   "SELECT b.id FROM buddies b "
-                               "JOIN account_buddy ab ON buddy_id = b.id "
-                               "JOIN accounts a ON account_id = a.id "
-                               "WHERE b.key = ?1 and a.prpl = ?2");
-
-  CREATE_STATEMENT(mInsertGroup,
-                   "INSERT INTO tags (name, position) VALUES(?1, ?2)");
-
-  CREATE_STATEMENT(mInsertBuddy,
-                   "INSERT INTO buddies (key, name, srv_alias, position) VALUES(?1, ?2, ?3, ?4)");
-
-  CREATE_STATEMENT(mUpdateBuddyServerAlias,
-                   "UPDATE buddies SET srv_alias = ?1 WHERE id = ?2");
-
-  CREATE_STATEMENT(mInsertAccountBuddy,
-                   "INSERT INTO account_buddy (account_id, buddy_id, tag_id) VALUES(?1, ?2, ?3)");
-
-  CREATE_STATEMENT(mGetContactIdForBuddy,
-                   "SELECT contact_id FROM buddies WHERE id = ?1");
-
-  CREATE_STATEMENT(mLastId, "SELECT last_insert_rowid()");
-
   return NS_OK;
 }

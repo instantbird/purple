@@ -37,7 +37,6 @@
 
 #include "purpleAccountBuddy.h"
 #include "purpleCoreService.h"
-#include "purpleStorage.h"
 #include "purpleGetText.h"
 #include "purpleGListEnumerator.h"
 #include "purpleTooltipInfo.h"
@@ -52,7 +51,7 @@
 #pragma GCC visibility pop
 
 NS_IMPL_CLASSINFO(purpleAccountBuddy, NULL, 0, PURPLE_ACCOUNTBUDDY_CID)
-NS_IMPL_ISUPPORTS1_CI(purpleAccountBuddy, purpleIAccountBuddy)
+NS_IMPL_ISUPPORTS1_CI(purpleAccountBuddy, imIAccountBuddy)
 
 #ifdef PR_LOGGING
 //
@@ -62,117 +61,55 @@ static PRLogModuleInfo *gPurpleAccountBuddyLog = nsnull;
 #endif
 #define LOG(args) PR_LOG(gPurpleAccountBuddyLog, PR_LOG_DEBUG, args)
 
-purpleAccountBuddy::purpleAccountBuddy()
+purpleAccountBuddy::purpleAccountBuddy(PurpleBuddy *aPurpleBuddy,
+                                       imIBuddy *aBuddy)
+  : mPurpleBuddy(aPurpleBuddy),
+    mBuddy(aBuddy)
 {
   /* member initializers and constructor code */
+  MOZ_COUNT_CTOR(purpleAccountBuddy);
 #ifdef PR_LOGGING
   if (!gPurpleAccountBuddyLog)
     gPurpleAccountBuddyLog = PR_NewLogModule("purpleAccountBuddy");
 #endif
+
+  purple_blist_node_set_ui_data(PURPLE_BLIST_NODE(aPurpleBuddy), this);
+  PurpleAccount *account = purple_buddy_get_account(aPurpleBuddy);
+  purpleAccount *pAccount = purpleAccount::fromPurpleAccount(account);
+  if (NS_LIKELY(pAccount))
+    pAccount->GetConcreteAccount(getter_AddRefs(mAccount));
+  NS_ASSERTION(mAccount, "Failed to get the account from a PurpleBuddy");
 }
 
 purpleAccountBuddy::~purpleAccountBuddy()
 {
   /* destructor code */
-}
-
-void purpleAccountBuddy::Init(purpleIAccount *aAccount,
-                              PurpleBuddy *aBuddy,
-                              purpleTag *aTag)
-{
-  mAccount = aAccount;
-  mBuddy = aBuddy;
-  purple_blist_node_set_ui_data(PURPLE_BLIST_NODE(aBuddy), this);
-  // aTag is unused because we don't cache the tag here any more, we
-  // use the ui data of the libpurple buddy list node instead.
-  // ToDo for 0.3: see if we should remove the 'tag' parameters in most
-  // 'AddAccount' methods.
-}
-
-void purpleAccountBuddy::Uninit()
-{
-  purple_blist_node_set_ui_data(PURPLE_BLIST_NODE(mBuddy), nsnull);
+  MOZ_COUNT_DTOR(purpleAccountBuddy);
+  UnInit();
   mBuddy = NULL;
 }
 
-nsresult purpleAccountBuddy::Store(PRInt32 aBuddyId)
+void purpleAccountBuddy::UnInit()
 {
-  NS_ENSURE_TRUE(aBuddyId, NS_ERROR_INVALID_ARG);
-
-  PRUint32 accountId;
-  nsresult rv = mAccount->GetNumericId(&accountId);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(accountId, NS_ERROR_UNEXPECTED);
-
-  nsCOMPtr<purpleITag> tag;
-  rv = GetTag(getter_AddRefs(tag));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRInt32 groupId;
-  rv = tag->GetId(&groupId);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(groupId, NS_ERROR_UNEXPECTED);
-
-  purpleStorage *storageInstance = purpleStorage::GetInstance();
-  mozIStorageStatement *statement = storageInstance->mInsertAccountBuddy;
-  mozStorageStatementScoper scoper(statement);
-  rv = statement->BindInt32Parameter(0, accountId);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = statement->BindInt32Parameter(1, aBuddyId);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = statement->BindInt32Parameter(2, groupId);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  LOG(("purpleAccountBuddy::Store(buddyId = %i, groupId = %i)",
-       aBuddyId, groupId));
-
-  return statement->Execute();
+  if (mPurpleBuddy) {
+    purple_blist_node_set_ui_data(PURPLE_BLIST_NODE(mPurpleBuddy), nsnull);
+    mPurpleBuddy = NULL;
+  }
 }
 
-nsresult purpleAccountBuddy::UnStore(PRInt32 aBuddyId)
-{
-  PRUint32 accountId;
-  nsresult rv = mAccount->GetNumericId(&accountId);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<purpleITag> tag;
-  rv = GetTag(getter_AddRefs(tag));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRInt32 groupId;
-  rv = tag->GetId(&groupId);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  purpleStorage *storageInstance = purpleStorage::GetInstance();
-  mozIStorageConnection *DBConn = storageInstance->GetConnection();
-  nsCOMPtr<mozIStorageStatement> statement;
-  rv = DBConn->CreateStatement(NS_LITERAL_CSTRING(
-    "DELETE FROM account_buddy WHERE account_id = ?1 AND buddy_id = ?2 AND tag_id = ?3"),
-    getter_AddRefs(statement));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = statement->BindInt32Parameter(0, accountId);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = statement->BindInt32Parameter(1, aBuddyId);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = statement->BindInt32Parameter(2, groupId);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  LOG(("purpleAccountBuddy::UnStore(buddyId = %i, groupId = %i)",
-       aBuddyId, groupId));
-
-  return statement->Execute();
-}
-
-/* readonly attribute purpleIBuddy buddy; */
-NS_IMETHODIMP purpleAccountBuddy::GetBuddy(purpleIBuddy * *aBuddy)
+/* attribute imIBuddy buddy; */
+NS_IMETHODIMP purpleAccountBuddy::GetBuddy(imIBuddy * *aBuddy)
 {
   NS_ENSURE_TRUE(mBuddy, NS_ERROR_NOT_INITIALIZED);
 
-  purpleIBuddy *buddy = purpleBuddy::fromPurpleBuddy(mBuddy);
-  NS_ENSURE_TRUE(buddy, NS_ERROR_NOT_INITIALIZED);
+  NS_ADDREF(*aBuddy = mBuddy);
+  return NS_OK;
+}
+NS_IMETHODIMP purpleAccountBuddy::SetBuddy(imIBuddy * aBuddy)
+{
+  NS_ENSURE_TRUE(!mBuddy, NS_ERROR_ALREADY_INITIALIZED);
 
-  NS_ADDREF(*aBuddy = buddy);
+  mBuddy = aBuddy;
   return NS_OK;
 }
 
@@ -185,128 +122,98 @@ NS_IMETHODIMP purpleAccountBuddy::GetAccount(purpleIAccount * *aAccount)
   return NS_OK;
 }
 
-/* attribute purpleITag tag; */
-NS_IMETHODIMP purpleAccountBuddy::GetTag(purpleITag * *aTag)
+PurpleGroup *purpleAccountBuddy::GetPurpleGroupForTag(imITag *aTag)
 {
-  NS_ENSURE_TRUE(mBuddy, NS_ERROR_NOT_INITIALIZED);
+  nsCString name;
+  nsresult rv = aTag->GetName(name);
+  NS_ENSURE_SUCCESS(rv, NULL);
 
-  purpleITag *tag = purpleTag::fromPurpleGroup(purple_buddy_get_group(mBuddy));
-  NS_ENSURE_TRUE(tag, NS_ERROR_NOT_INITIALIZED);
+  // creating an already existing group will return the existing group
+  PurpleGroup *group = purple_group_new(name.get());
+  NS_ENSURE_TRUE(group, NULL);
+
+  if (!GET_NODE_UI_DATA(group)) {
+    // The group is new, set ui_data to the tag.
+    purple_blist_node_set_ui_data(PURPLE_BLIST_NODE(group), aTag);
+    NS_ADDREF(aTag);
+
+    purple_blist_add_group(group, NULL);
+  }
+
+  return group;
+}
+
+/* attribute purpleITag tag; */
+NS_IMETHODIMP purpleAccountBuddy::GetTag(imITag * *aTag)
+{
+  NS_ENSURE_TRUE(mPurpleBuddy, NS_ERROR_NOT_INITIALIZED);
+
+  PurpleGroup *group = purple_buddy_get_group(mPurpleBuddy);
+  imITag *tag = GetTagFromPurpleGroup(group);
+  if (!tag) {
+    // The group is new, create a tag for it, and set ui_data on the group node
+    nsCOMPtr<imITagsService> its =
+      do_GetService("@instantbird.org/purple/tags-service;1");
+    NS_ENSURE_TRUE(its, NS_ERROR_UNEXPECTED);
+
+    nsCString groupName(purple_group_get_name(group));
+    nsresult rv = its->CreateTag(groupName, &tag);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(tag, NS_ERROR_UNEXPECTED);
+
+    // The CreateTag function adds a reference that we keep for the ui_data
+    purple_blist_node_set_ui_data(PURPLE_BLIST_NODE(group), tag);
+  }
 
   NS_ADDREF(*aTag = tag);
   return NS_OK;
 }
-NS_IMETHODIMP purpleAccountBuddy::SetTag(purpleITag * aTag)
+NS_IMETHODIMP purpleAccountBuddy::SetTag(imITag * aTag)
 {
   NS_ENSURE_ARG_POINTER(aTag);
   NS_ENSURE_TRUE(mBuddy, NS_ERROR_NOT_INITIALIZED);
 
-  static_cast<purpleTag *>(aTag)->addBuddy(mBuddy);
+  PurpleGroup *oldGroup = purple_buddy_get_group(mPurpleBuddy);
+  imITag *oldTag = GetTagFromPurpleGroup(oldGroup);
 
-  // Now collect the data we need to make the SQL UPDATE query
-  // First, the tag id
-  nsCOMPtr<purpleITag> tag;
-  nsresult rv = GetTag(getter_AddRefs(tag));
-  NS_ENSURE_SUCCESS(rv, rv);
+  PurpleContact *contact =
+    PURPLE_CONTACT(PURPLE_BLIST_NODE(mPurpleBuddy)->parent);
+  PurpleGroup *group = GetPurpleGroupForTag(aTag);
 
-  PRInt32 tagId;
-  rv = tag->GetId(&tagId);
-  NS_ENSURE_SUCCESS(rv, rv);
+  purple_blist_add_contact(contact, group, NULL);
 
-  // Then the account id
-  PRUint32 accountId;
-  rv = mAccount->GetNumericId(&accountId);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<imIContactsService> contacts =
+    do_GetService("@instantbird.org/purple/contacts-service;1");
+  NS_ENSURE_TRUE(contacts, NS_ERROR_UNEXPECTED);
 
-  // And finally the buddy id
-  nsCOMPtr<purpleICoreService> pcs =
-    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(pcs, NS_ERROR_UNEXPECTED);
-
-  nsCOMPtr<purpleIBuddy> buddy;
-  rv = GetBuddy(getter_AddRefs(buddy));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRInt32 buddyId;
-  rv = buddy->GetId(&buddyId);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Get the mozStorage stuff
-  purpleStorage *storageInstance = purpleStorage::GetInstance();
-  NS_ENSURE_TRUE(storageInstance, NS_ERROR_OUT_OF_MEMORY);
-
-  mozIStorageConnection *DBConn = storageInstance->GetConnection();
-  NS_ENSURE_TRUE(DBConn, NS_ERROR_UNEXPECTED);
-
-  // Finally, do our query!
-  nsCOMPtr<mozIStorageStatement> statement;
-  rv = DBConn->CreateStatement(NS_LITERAL_CSTRING(
-    "UPDATE account_buddy SET tag_id = ?1 "
-    "WHERE account_id = ?2 AND buddy_id = ?3"),
-    getter_AddRefs(statement));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = statement->BindInt32Parameter(0, tagId);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = statement->BindInt64Parameter(1, accountId);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = statement->BindInt64Parameter(2, buddyId);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return statement->Execute();
+  return contacts->AccountBuddyMoved(this, oldTag, aTag);
 }
 
-/* readonly attribute AUTF8String buddyName; */
-NS_IMETHODIMP purpleAccountBuddy::GetBuddyName(nsACString& aBuddyName)
+/* readonly attribute AUTF8String userName; */
+NS_IMETHODIMP purpleAccountBuddy::GetUserName(nsACString& aUserName)
 {
-  NS_ENSURE_TRUE(mBuddy, NS_ERROR_NOT_INITIALIZED);
+  NS_ENSURE_TRUE(mPurpleBuddy, NS_ERROR_NOT_INITIALIZED);
 
-  aBuddyName = purple_buddy_get_name(mBuddy);
+  aUserName = purple_buddy_get_name(mPurpleBuddy);
   return NS_OK;
 }
 
 /* readonly attribute AUTF8String normalizedName; */
 NS_IMETHODIMP purpleAccountBuddy::GetNormalizedName(nsACString& aNormalizedName)
 {
-  NS_ENSURE_TRUE(mBuddy, NS_ERROR_NOT_INITIALIZED);
+  NS_ENSURE_TRUE(mPurpleBuddy, NS_ERROR_NOT_INITIALIZED);
 
-  aNormalizedName = purple_normalize(purple_buddy_get_account(mBuddy),
-                                     purple_buddy_get_name(mBuddy));
-  return NS_OK;
-}
-
-/* readonly attribute AUTF8String loggedIn */
-NS_IMETHODIMP purpleAccountBuddy::GetLoggedIn(nsACString& aLoggedIn)
-{
-  NS_ENSURE_TRUE(mBuddy, NS_ERROR_NOT_INITIALIZED);
-
-  PurplePresence *presence = purple_buddy_get_presence(mBuddy);
-  time_t loginTime = purple_presence_get_login_time(presence);
-
-  if ((PURPLE_BUDDY_IS_ONLINE(mBuddy)) && (loginTime > 0)) {
-    time_t now = time(NULL);
-
-    if (loginTime > now)
-      aLoggedIn = purple_date_format_long(localtime(&loginTime));
-    else {
-      // returns a copy - we need to free it
-      char *tmp = purple_str_seconds_to_string(now - loginTime);
-      aLoggedIn = tmp;
-      g_free(tmp);
-    }
-  }
-  else {
-    // didn't find a valid time - set it to NULL
-    aLoggedIn.SetIsVoid(true);
-  }
-
+  aNormalizedName = purple_normalize(purple_buddy_get_account(mPurpleBuddy),
+                                     purple_buddy_get_name(mPurpleBuddy));
   return NS_OK;
 }
 
 /* readonly attribute AUTF8String buddyIconFilename; */
 NS_IMETHODIMP purpleAccountBuddy::GetBuddyIconFilename(nsACString& aBuddyIconFilename)
 {
-  NS_ENSURE_TRUE(mBuddy, NS_ERROR_NOT_INITIALIZED);
+  NS_ENSURE_TRUE(mPurpleBuddy, NS_ERROR_NOT_INITIALIZED);
 
-  PurpleBuddyIcon *icon = purple_buddy_get_icon(mBuddy);
+  PurpleBuddyIcon *icon = purple_buddy_get_icon(mPurpleBuddy);
   char *fname;
 
   if (icon && (fname = purple_buddy_icon_get_full_path(icon))) {
@@ -327,19 +234,6 @@ void purpleAccountBuddy::CleanUserInfo(void *aData)
     purple_notify_user_info_destroy((PurpleNotifyUserInfo *)aData);
 }
 
-PurplePluginProtocolInfo *purpleAccountBuddy::GetPrplInfo(PurpleBuddy *aBuddy)
-{
-  PurpleAccount *pAccount = purple_buddy_get_account(aBuddy);
-  PurpleConnection *gc = purple_account_get_connection(pAccount);
-  if (!gc)
-    return NULL;
-
-  purpleAccount *account = purpleAccount::fromPurpleAccount(pAccount);
-  NS_ENSURE_TRUE(account, NULL);
-
-  return account->GetPrplInfo();
-}
-
 /*   nsISimpleEnumerator getTooltipInfo(); */
 NS_IMETHODIMP purpleAccountBuddy::GetTooltipInfo(nsISimpleEnumerator** aTooltipInfo)
 {
@@ -350,16 +244,21 @@ NS_IMETHODIMP purpleAccountBuddy::GetTooltipInfo(nsISimpleEnumerator** aTooltipI
   nsCString name;
   mAccount->GetName(name);
   LOG(("purpleAccountBuddy::GetTooltipInfo buddy = %s, account = %s",
-       mBuddy->name, name.get()));
+       mPurpleBuddy->name, name.get()));
 #endif
 
   *aTooltipInfo = nsnull;
-  PurplePluginProtocolInfo *prpl_info = GetPrplInfo(mBuddy);
+
+  purpleAccount *account =
+    purpleAccount::fromPurpleAccount(purple_buddy_get_account(mPurpleBuddy));
+  NS_ENSURE_TRUE(account, NS_ERROR_NOT_INITIALIZED);
+
+  PurplePluginProtocolInfo *prpl_info = account->GetPrplInfo();
   if (prpl_info && prpl_info->tooltip_text) {
     PurpleNotifyUserInfo *user_info = purple_notify_user_info_new();
 
     /* Idle */
-    PurplePresence *presence = purple_buddy_get_presence(mBuddy);
+    PurplePresence *presence = purple_buddy_get_presence(mPurpleBuddy);
     if (purple_presence_is_idle(presence)) {
       time_t idle_secs = purple_presence_get_idle_time(presence);
       if (idle_secs > 0) {
@@ -371,7 +270,7 @@ NS_IMETHODIMP purpleAccountBuddy::GetTooltipInfo(nsISimpleEnumerator** aTooltipI
       }
     }
 
-    prpl_info->tooltip_text(mBuddy, user_info, true);
+    prpl_info->tooltip_text(mPurpleBuddy, user_info, true);
     purpleGListEnumerator *enumerator = new purpleGListEnumerator();
     enumerator->Init(purple_notify_user_info_get_entries(user_info),
                      purpleTypeToInterface<purpleTooltipInfo,
@@ -384,50 +283,102 @@ NS_IMETHODIMP purpleAccountBuddy::GetTooltipInfo(nsISimpleEnumerator** aTooltipI
   return NS_OK;
 }
 
-/* readonly attribute AUTF8String buddyAlias; */
-NS_IMETHODIMP purpleAccountBuddy::GetBuddyAlias(nsACString& aBuddyAlias)
+/* readonly attribute AUTF8String displayName; */
+NS_IMETHODIMP purpleAccountBuddy::GetDisplayName(nsACString& aDisplayName)
 {
-  NS_ENSURE_TRUE(mBuddy, NS_ERROR_NOT_INITIALIZED);
+  NS_ENSURE_TRUE(mPurpleBuddy, NS_ERROR_NOT_INITIALIZED);
 
-  aBuddyAlias = purple_buddy_get_alias(mBuddy);
+  aDisplayName = purple_buddy_get_alias(mPurpleBuddy);
   return NS_OK;
 }
-void purpleAccountBuddy::SetBuddyAlias(const nsCString& aBuddyAlias)
+
+/* attribute AUTF8String serverAlias; */
+NS_IMETHODIMP purpleAccountBuddy::GetServerAlias(nsACString& aServerAlias)
 {
-  purple_blist_alias_buddy(mBuddy, aBuddyAlias.get());
-  serv_alias_buddy(mBuddy);
+  NS_ENSURE_TRUE(mPurpleBuddy, NS_ERROR_NOT_INITIALIZED);
+
+  aServerAlias = purple_buddy_get_alias(mPurpleBuddy);
+  return NS_OK;
+}
+NS_IMETHODIMP purpleAccountBuddy::SetServerAlias(const nsACString& aServerAlias)
+{
+  nsString wideOldServerAlias;
+  NS_CStringToUTF16(nsDependentCString(purple_buddy_get_alias(mPurpleBuddy)),
+                    NS_CSTRING_ENCODING_UTF8, wideOldServerAlias);
+
+  purple_blist_alias_buddy(mPurpleBuddy,
+                           PromiseFlatCString(aServerAlias).get());
+  serv_alias_buddy(mPurpleBuddy);
+  return NotifyObservers("account-buddy-display-name-changed",
+                         wideOldServerAlias.get());
+}
+
+nsresult purpleAccountBuddy::NotifyObservers(const char* aSignal,
+                                             const PRUnichar *aData)
+{
+  NS_ENSURE_ARG(aSignal);
+  NS_ENSURE_TRUE(mBuddy, NS_ERROR_NOT_INITIALIZED);
+
+  return mBuddy->Observe(this, aSignal, aData);
 }
 
 /* purpleIConversation createConversation (); */
 NS_IMETHODIMP purpleAccountBuddy::CreateConversation(purpleIConversation **aResult)
 {
-  NS_ENSURE_TRUE(mAccount && mBuddy, NS_ERROR_NOT_INITIALIZED);
+  NS_ENSURE_TRUE(mAccount && mPurpleBuddy, NS_ERROR_NOT_INITIALIZED);
 
-  nsCString buddyName(purple_buddy_get_name(mBuddy));
+  nsCString buddyName(purple_buddy_get_name(mPurpleBuddy));
   return mAccount->CreateConversation(buddyName, aResult);
 }
 
 /* readonly attribute boolean canSendMessage; */
 NS_IMETHODIMP purpleAccountBuddy::GetCanSendMessage(PRBool *aCanSendMessage)
 {
-  NS_ENSURE_TRUE(mBuddy, NS_ERROR_NOT_INITIALIZED);
+  NS_ENSURE_TRUE(mPurpleBuddy, NS_ERROR_NOT_INITIALIZED);
 
   *aCanSendMessage =
-    purple_presence_is_online(purple_buddy_get_presence(mBuddy)) ||
-    purple_account_supports_offline_message(purple_buddy_get_account(mBuddy),
-                                            mBuddy);
+    purple_presence_is_online(purple_buddy_get_presence(mPurpleBuddy)) ||
+    purple_account_supports_offline_message(purple_buddy_get_account(mPurpleBuddy),
+                                            mPurpleBuddy);
   return NS_OK;
 }
 
-#define PURPLE_PRESENCE_GET_BOOL_IMPL(aName, aFctName)                  \
-  NS_IMETHODIMP purpleAccountBuddy::Get##aName(PRBool *a##aName)        \
-  {                                                                     \
-    NS_ENSURE_TRUE(mAccount && mBuddy, NS_ERROR_NOT_INITIALIZED);       \
-                                                                        \
-    *a##aName =                                                         \
-      purple_account_is_connected(purple_buddy_get_account(mBuddy)) &&  \
-      purple_presence_is_##aFctName(purple_buddy_get_presence(mBuddy)); \
-    return NS_OK;                                                       \
+/* readonly attribute long statusType; */
+NS_IMETHODIMP purpleAccountBuddy::GetStatusType(PRInt32 *aStatusType)
+{
+  NS_ENSURE_TRUE(mAccount && mPurpleBuddy, NS_ERROR_NOT_INITIALIZED);
+
+  if (!purple_account_is_connected(purple_buddy_get_account(mPurpleBuddy))) {
+    *aStatusType = STATUS_UNKNOWN;
+    return NS_OK;
+  }
+
+  PurplePresence *presence = purple_buddy_get_presence(mPurpleBuddy);
+  if (!purple_presence_is_online(presence))
+    *aStatusType = STATUS_OFFLINE;
+  else if (purple_presence_is_idle(presence))
+    *aStatusType = STATUS_IDLE;
+  else if (purple_presence_is_status_primitive_active(presence, PURPLE_STATUS_MOBILE))
+    *aStatusType = STATUS_MOBILE;
+  else if (purple_presence_is_available(presence))
+    *aStatusType = STATUS_AVAILABLE;
+  else if (purple_presence_is_status_primitive_active(presence, PURPLE_STATUS_AWAY) ||
+           purple_presence_is_status_primitive_active(presence, PURPLE_STATUS_EXTENDED_AWAY))
+    *aStatusType = STATUS_AWAY;
+  else
+    *aStatusType = STATUS_UNAVAILABLE;
+  return NS_OK;
+}
+
+#define PURPLE_PRESENCE_GET_BOOL_IMPL(aName, aFctName)                        \
+  NS_IMETHODIMP purpleAccountBuddy::Get##aName(PRBool *a##aName)              \
+  {                                                                           \
+    NS_ENSURE_TRUE(mAccount && mPurpleBuddy, NS_ERROR_NOT_INITIALIZED);       \
+                                                                              \
+    *a##aName =                                                               \
+      purple_account_is_connected(purple_buddy_get_account(mPurpleBuddy)) &&  \
+      purple_presence_is_##aFctName(purple_buddy_get_presence(mPurpleBuddy)); \
+    return NS_OK;                                                             \
   }
 
 /* readonly attribute boolean online; */
@@ -444,23 +395,28 @@ NS_IMETHODIMP purpleAccountBuddy::GetMobile(PRBool *aMobile)
 {
   NS_ENSURE_TRUE(mBuddy, NS_ERROR_NOT_INITIALIZED);
 
-  *aMobile =
-    purple_presence_is_status_primitive_active(purple_buddy_get_presence(mBuddy),
-                                               PURPLE_STATUS_MOBILE);
+  PurplePresence *presence = purple_buddy_get_presence(mPurpleBuddy);
+  *aMobile = purple_presence_is_status_primitive_active(presence,
+                                                        PURPLE_STATUS_MOBILE);
   return NS_OK;
 }
 
 /* readonly attribute string status; */
-NS_IMETHODIMP purpleAccountBuddy::GetStatus(nsACString &aStatus)
+NS_IMETHODIMP purpleAccountBuddy::GetStatusText(nsACString &aStatusText)
 {
-  NS_ENSURE_TRUE(mBuddy, NS_ERROR_NOT_INITIALIZED);
+  NS_ENSURE_TRUE(mPurpleBuddy, NS_ERROR_NOT_INITIALIZED);
 
-  aStatus.Truncate();
-  PurplePluginProtocolInfo *prpl_info = GetPrplInfo(mBuddy);
+  aStatusText.Truncate();
+
+  purpleAccount *account =
+    purpleAccount::fromPurpleAccount(purple_buddy_get_account(mPurpleBuddy));
+  NS_ENSURE_TRUE(account, NS_ERROR_NOT_INITIALIZED);
+
+  PurplePluginProtocolInfo *prpl_info = account->GetPrplInfo();
   if (prpl_info && prpl_info->status_text) {
-    char *tmp1 = prpl_info->status_text(mBuddy);
+    char *tmp1 = prpl_info->status_text(mPurpleBuddy);
     char *tmp2 = purple_unescape_html(tmp1);
-    aStatus = tmp2;
+    aStatusText = tmp2;
     g_free(tmp1);
     g_free(tmp2);
   }
@@ -468,13 +424,20 @@ NS_IMETHODIMP purpleAccountBuddy::GetStatus(nsACString &aStatus)
   return NS_OK;
 }
 
+/* readonly attribute long availabilityDetails; */
+NS_IMETHODIMP purpleAccountBuddy::GetAvailabilityDetails(PRInt32 *aAvailabilityDetails)
+{
+  *aAvailabilityDetails = 0; // FIXME
+  return NS_OK;
+}
+
 /* void remove (); */
 NS_IMETHODIMP purpleAccountBuddy::Remove()
 {
-  NS_ENSURE_TRUE(mBuddy, NS_ERROR_NOT_INITIALIZED);
+  NS_ENSURE_TRUE(mPurpleBuddy, NS_ERROR_NOT_INITIALIZED);
 
-  purple_account_remove_buddy(mBuddy->account, mBuddy,
-                              purple_buddy_get_group(mBuddy));
-  purple_blist_remove_buddy(mBuddy);
+  purple_account_remove_buddy(mPurpleBuddy->account, mPurpleBuddy,
+                              purple_buddy_get_group(mPurpleBuddy));
+  purple_blist_remove_buddy(mPurpleBuddy);
   return NS_OK;
 }

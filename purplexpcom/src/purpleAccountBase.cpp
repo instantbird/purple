@@ -352,21 +352,17 @@ NS_IMETHODIMP purpleAccountBase::CreateConversation(const nsACString& aName,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* void addBuddy (in purpleITag aTag, in AUTF8String aName); */
-NS_IMETHODIMP purpleAccountBase::AddBuddy(purpleITag *aTag,
+/* void addBuddy (in imITag aTag, in AUTF8String aName); */
+NS_IMETHODIMP purpleAccountBase::AddBuddy(imITag *aTag,
                                           const nsACString& aName)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* void LoadBuddy (in purpleIBuddy aBuddy, in AUTF8String aName,
-                   in AUTF8String aAlias, in AUTF8String aServerAlias,
-                   in purpleITag aTag); */
-NS_IMETHODIMP purpleAccountBase::LoadBuddy(purpleIBuddy *aBuddy,
-                                           const nsACString & aName,
-                                           const nsACString & aAlias,
-                                           const nsACString & aServerAlias,
-                                           purpleITag *aTag)
+/* imIAccountBuddy LoadBuddy (in imIBuddy aBuddy, in imITag aTag); */
+NS_IMETHODIMP purpleAccountBase::LoadBuddy(imIBuddy *aBuddy,
+                                           imITag *aTag,
+                                           imIAccountBuddy **aResult)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

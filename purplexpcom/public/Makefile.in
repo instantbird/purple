@@ -45,10 +45,9 @@ MODULE		= purplexpcom
 XPIDL_MODULE	= purplexpcom
 
 XPIDLSRCS	= \
+		imIContactsService.idl \
 		purpleIAccount.idl \
-		purpleIAccountBuddy.idl \
 		purpleIAccountsService.idl \
-		purpleIBuddy.idl \
 		purpleIConversation.idl \
 		purpleICoreService.idl \
 		purpleIMessage.idl \
@@ -57,8 +56,6 @@ XPIDLSRCS	= \
 		purpleIProtocol.idl \
 		purpleIProxy.idl \
 		purpleISocket.idl \
-		purpleITag.idl \
-		purpleITagsService.idl \
 		purpleITooltipInfo.idl \
 		$(NULL)
 
