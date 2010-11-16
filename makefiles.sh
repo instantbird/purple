@@ -52,7 +52,6 @@ purple/libpurple/protocols/yahoo/Makefile
 purple/libpurple/protocols/myspace/Makefile
 purple/libpurple/protocols/jabber/Makefile
 purple/libpurple/protocols/oscar/Makefile
-purple/purplexpcom/Makefile
 purple/purplexpcom/public/Makefile
 purple/purplexpcom/src/Makefile
 "

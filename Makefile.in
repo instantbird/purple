@@ -50,7 +50,8 @@ endif
 
 DIRS		+= \
 		libpurple \
-		purplexpcom \
+		purplexpcom/public \
+		purplexpcom/src \
 		locales \
 		$(NULL)
 
