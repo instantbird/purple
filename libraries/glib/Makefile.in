@@ -42,7 +42,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= glib
-EXPORTS_NAMESPACES= glib
+EXPORTS_NAMESPACES= glib gobject
 LIBRARY_NAME	= glib
 FORCE_STATIC_LIB= 1
 LIB_IS_C_ONLY	= 1
@@ -60,8 +60,6 @@ DSO_LDOPTS	+= -DEF:$(srcdir)/glib-wince.def
 endif
 
 DEFINES		+= -DGOBJECT_COMPILATION
-
-DIRS		= gobject
 
 EXPORTS_glib	= \
 		gunicodeprivate.h \
@@ -149,6 +147,27 @@ EXPORTS_glib	+= \
 		wince-stat.h \
 		$(NULL)
 endif
+
+EXPORTS_gobject = \
+		gobject/gboxed.h		\
+		gobject/gclosure.h		\
+		gobject/genums.h		\
+		gobject/gobject.h		\
+		gobject/gobjectalias.h		\
+		gobject/gparam.h		\
+		gobject/gparamspecs.h		\
+		gobject/gsignal.h		\
+		gobject/gsourceclosure.h	\
+		gobject/gtype.h			\
+		gobject/gtypemodule.h		\
+		gobject/gtypeplugin.h		\
+		gobject/gvalue.h		\
+		gobject/gvaluearray.h		\
+		gobject/gvaluecollector.h	\
+		gobject/gvaluetypes.h		\
+		gobject/gobjectnotifyqueue.c	\
+		gobject/gmarshal.h		\
+		$(NULL)
 
 CSRCS		= \
 		garray.c \
@@ -238,7 +257,7 @@ endif
 include $(topsrcdir)/config/rules.mk
 
 export::
-	mkdir -p libcharset
+	mkdir -p libcharset gobject
 ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
 	mkdir -p gnulib
 endif

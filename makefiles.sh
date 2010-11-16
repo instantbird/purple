@@ -39,7 +39,6 @@ purple/Makefile
 purple/locales/Makefile
 purple/libraries/xml2/Makefile
 purple/libraries/glib/Makefile
-purple/libraries/glib/gobject/Makefile
 purple/libpurple/Makefile
 purple/libpurple/protocols/irc/Makefile
 purple/libpurple/protocols/simple/Makefile
