@@ -39,49 +39,24 @@
 #define CUSTOM_PLUGIN_PATH     "protocols"
 
 #pragma GCC visibility push(default)
-#include <libpurple/account.h>
-#include <libpurple/accountopt.h>
 #include <libpurple/cmds.h>
-#include <libpurple/conversation.h>
 #include <libpurple/core.h>
-#include <libpurple/debug.h>
-#include <libpurple/eventloop.h>
-#include <libpurple/ft.h>
 #include <libpurple/gettext.h>
-#include <libpurple/log.h>
-#include <libpurple/notify.h>
-#include <libpurple/prefs.h>
-#include <libpurple/prpl.h>
-#include <libpurple/savedstatuses.h>
-#include <libpurple/status.h>
-#include <libpurple/util.h>
-#include <libpurple/whiteboard.h>
-#include <libpurple/dnsquery.h>
 #pragma GCC visibility pop
 
-#include <string.h>
-
-#ifndef _WIN32
-#include <unistd.h>
-#endif
-
-#include "purpleConversation.h"
-#include "purpleConvChatBuddy.h"
+#include "purpleAccount.h"
+#include "purpleAccountBuddy.h"
 #include "purpleCoreService.h"
 #include "purpleGetText.h"
-#include "purpleMessage.h"
 #include "purpleTimer.h"
 #include "purpleSockets.h"
 #include "purpleDebug.h"
 #include "purpleDNS.h"
 #include <purpleIPlugin.h>
-#include <xpcom-config.h>
 #include <nsServiceManagerUtils.h>
-#include <nsIObserverService.h>
 #include <nsCOMPtr.h>
 #include <nsStringAPI.h>
 #include <nsNetCID.h>
-#include <nsEmbedString.h>
 #include <nsICategoryManager.h>
 #include <nsIDOMWindowInternal.h>
 #include <nsIIdleService.h>
@@ -98,8 +73,6 @@
 #include <nsDirectoryServiceUtils.h>
 #include <nsAppDirectoryServiceDefs.h>
 #include <nsDirectoryServiceDefs.h>
-#include <nsArrayEnumerator.h>
-#include <nsISupportsPrimitives.h>
 
 #define PURPLE_PROTOCOL_PLUGIN_CATEGORY   "purple-protocol-plugin"
 
@@ -108,7 +81,7 @@
 //
 // NSPR_LOG_MODULES=purpleInit:5
 //
-static PRLogModuleInfo *gPurpleInitLog = nsnull;
+PRLogModuleInfo *gPurpleInitLog = nsnull;
 #endif
 #define LOG(args) PR_LOG(gPurpleInitLog, PR_LOG_DEBUG, args)
 
@@ -365,149 +338,6 @@ PurpleAccountUiOps account_uiops = {
   NULL, NULL, NULL, NULL
 };
 
-/*** Conversation uiops ***/
-static void create_conv(PurpleConversation *aConv)
-{
-  LOG(("Create conversation with name: %s", purple_conversation_get_name(aConv)));
-
-  nsCOMPtr<purpleConversation> conv;
-  PurpleConversationType type = purple_conversation_get_type(aConv);
-  const char *contractid = nsnull;
-  switch (type) {
-    case PURPLE_CONV_TYPE_IM:
-      contractid = "@instantbird.org/purple/convim;1";
-      break;
-    case PURPLE_CONV_TYPE_CHAT:
-      contractid = "@instantbird.org/purple/convchat;1";
-      break;
-    default:
-      NS_WARNING("purpleInit: create_conv, Unknown conversation type\n");
-      return;
-  }
-  conv = do_CreateInstance(contractid);
-  NS_ENSURE_TRUE(conv, );
-  conv->SetConv(aConv);
-
-  nsCOMPtr<purpleICoreService> pcs =
-    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-  NATIVE_PCS(pcs)->AddConversation(conv);
-}
-
-static void destroy_conv(PurpleConversation *aConv)
-{
-  LOG(("destroy_conv uiop called"));
-
-  nsCOMPtr<purpleICoreService> pcs =
-    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-  NATIVE_PCS(pcs)->RemoveConversation(aConv);
-}
-
-static void notify_conv(PurpleConversation *aConv, nsISupports *aSubject,
-                        const char *aTopic, const PRUnichar *aData = nsnull)
-{
-  NS_ENSURE_TRUE(aConv,);
-
-  purpleConversation *conversation = purpleConversation::fromPurpleConv(aConv);
-  NS_ENSURE_TRUE(conversation,);
-
-  conversation->NotifyObservers(aSubject, aTopic, aData);
-}
-
-static void write_conv(PurpleConversation *conv, const char *who,
-                       const char *alias, const char *message,
-                       PurpleMessageFlags flags, time_t mtime)
-{
-  nsresult rv;
-  nsCOMPtr<purpleMessage> msg =
-    do_CreateInstance(PURPLE_MESSAGE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv,);
-
-  msg->Init(conv, who, alias, message, flags, mtime);
-
-  nsCOMPtr<purpleICoreService> pcs =
-    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID, &rv);
-  pcs->NotifyObservers(msg, "new-text", nsnull);
-
-  notify_conv(conv, msg, "new-text");
-}
-
-static void conv_add_chat_users(PurpleConversation *conv,
-                                GList *cbuddies,
-                                gboolean new_arrivals)
-{
-  nsCOMArray<purpleIConvChatBuddy> cBuddiesArray;
-
-  while (cbuddies) {
-    purpleConvChatBuddy *buddy = new purpleConvChatBuddy();
-    buddy->Init((PurpleConvChatBuddy *)cbuddies->data);
-    cBuddiesArray.AppendObject(buddy);
-    cbuddies = cbuddies->next;
-  }
-  nsCOMPtr<nsISimpleEnumerator> enumerator;
-  NS_NewArrayEnumerator(getter_AddRefs(enumerator), cBuddiesArray);
-  notify_conv(conv, enumerator, "chat-buddy-add");
-}
-
-static void conv_remove_chat_users(PurpleConversation *conv,
-                                   GList *users)
-{
-  nsCOMArray<nsISupportsString> stringsArray;
-  while (users) {
-    nsCOMPtr<nsISupportsString> string =
-      do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
-    string->SetData(NS_ConvertUTF8toUTF16((const char *)users->data));
-    stringsArray.AppendObject(string);
-    users = users->next;
-  }
-  nsCOMPtr<nsISimpleEnumerator> enumerator;
-  NS_NewArrayEnumerator(getter_AddRefs(enumerator), stringsArray);
-  notify_conv(conv, enumerator, "chat-buddy-remove");
-}
-
-static void conv_update_chat_usr(PurpleConversation *conv, const char *user,
-                                 const PRUnichar *aData = nsnull)
-{
-  PurpleConvChatBuddy *prplBuddy = purple_conv_chat_cb_find(PURPLE_CONV_CHAT(conv), user);
-  NS_ENSURE_TRUE(prplBuddy,);
-
-  purpleConvChatBuddy *buddy = new purpleConvChatBuddy();
-  buddy->Init(prplBuddy);
-  notify_conv(conv, static_cast<purpleIConvChatBuddy *>(buddy),
-              "chat-buddy-update", aData);
-}
-
-static void conv_update_chat_user(PurpleConversation *conv, const char *user)
-{
-  conv_update_chat_usr(conv, user, nsnull);
-}
-
-static void conv_rename_chat_user(PurpleConversation *conv, const char *old_name,
-                                  const char *new_name, const char *new_alias)
-{
-  conv_update_chat_usr(conv, new_name, NS_ConvertUTF8toUTF16(old_name).get());
-}
-
-static PurpleConversationUiOps conversation_uiops =
-{
-  create_conv,               /* create_conversation  */
-  destroy_conv,              /* destroy_conversation */
-  NULL,                      /* write_chat           */
-  NULL,                      /* write_im             */
-  write_conv,                /* write_conv           */
-  conv_add_chat_users,       /* chat_add_users       */
-  conv_rename_chat_user,     /* chat_rename_user     */
-  conv_remove_chat_users,    /* chat_remove_users    */
-  conv_update_chat_user,     /* chat_update_user     */
-  NULL,                      /* present              */
-  NULL,                      /* has_focus            */
-  NULL,                      /* custom_smiley_add    */
-  NULL,                      /* custom_smiley_write  */
-  NULL,                      /* custom_smiley_close  */
-  NULL,                      /* send_confirm         */
-
-  NULL, NULL, NULL, NULL
-};
-
 /*
  * Used as handle to connect and then mass-disconnect the buddy list signals.
  * The value is 1 when the signals are connected, 0 when they are not.
@@ -686,64 +516,6 @@ static PurpleBlistUiOps blist_uiops = {
 
   NULL
 };
-
-
-static void update_chat_topic(PurpleConversation *aConv,
-                              const char *aWho,
-                              const char *aNew)
-{
-  notify_conv(aConv, nsnull, "chat-update-topic");
-}
-
-static void conversation_updated(PurpleConversation *aConv, PurpleConvUpdateType aType)
-{
-  switch (aType) {
-    case PURPLE_CONV_UPDATE_TYPING:
-      notify_conv(aConv, nsnull, "update-typing");
-      break;
-
-    case PURPLE_CONV_UPDATE_AWAY:
-    case PURPLE_CONV_ACCOUNT_ONLINE:
-    case PURPLE_CONV_ACCOUNT_OFFLINE:
-      notify_conv(aConv, nsnull, "update-buddy-status");
-      break;
-
-    case PURPLE_CONV_UPDATE_TITLE:
-      // The test prevents a warning caused by libpurple stupidly
-      // calling purple_conversation_autoset_title before the
-      // create_conversation uiop.
-      if (aConv && aConv->ui_data)
-        notify_conv(aConv, nsnull, "update-conv-title");
-      break;
-
-    case PURPLE_CONV_UPDATE_CHATLEFT:
-      {
-        purpleConversation *conversation =
-          purpleConversation::fromPurpleConv(aConv);
-        nsCOMPtr<purpleICoreService> pcs =
-          do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-        if (conversation && pcs)
-          pcs->NotifyObservers(conversation, "conversation-left-chat", nsnull);
-      }
-      notify_conv(aConv, nsnull, "update-conv-chatleft");
-      break;
-
-    default:
-      ;
-  }
-}
-
-static void connect_to_conversations_signals()
-{
-  static int handle;
-  purple_signal_connect(purple_conversations_get_handle(), "chat-topic-changed", &handle,
-                        PURPLE_CALLBACK(update_chat_topic), NULL);
-
-  purple_signal_connect(purple_conversations_get_handle(), "conversation-updated", &handle,
-                        PURPLE_CALLBACK(conversation_updated), NULL);
-
-  LOG(("Connecting to conversation signals"));
-}
 
 static PurpleDebugUiOps debugconsoleuiops = {
   purpleDebug::ReportMessage,
@@ -1236,7 +1008,6 @@ init_libpurple()
   purple_util_set_user_dir(cPath.get());
 
   purple_core_set_ui_ops(&core_uiops);
-  purple_conversations_set_ui_ops(&conversation_uiops);
   purple_connections_set_ui_ops(&connection_uiops);
   purple_accounts_set_ui_ops(&account_uiops);
   purple_blist_set_ui_ops(&blist_uiops);
@@ -1260,7 +1031,6 @@ init_libpurple()
   connect_to_connections_signals();
   connect_to_accounts_signals();
   //  connect_to_blist_signals();
-  connect_to_conversations_signals();
 
   purple_cmd_register("raw", "s", PURPLE_CMD_P_DEFAULT,
                       (PurpleCmdFlag) (PURPLE_CMD_FLAG_CHAT | PURPLE_CMD_FLAG_IM),
