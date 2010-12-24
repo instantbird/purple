@@ -90,6 +90,7 @@ NS_IMPL_ISUPPORTS3_CI(purpleCoreService, purpleICoreService,
 
 extern nsresult init_libpurple();
 extern void init_libpurple_conversations();
+extern void init_libpurple_accounts();
 extern void connect_to_blist_signals();
 extern void disconnect_blist_signals();
 
@@ -198,6 +199,7 @@ NS_IMETHODIMP purpleCoreService::Init()
   NS_ENSURE_SUCCESS(rv, rv);
 
   /* Init libpurple subsystems */
+  init_libpurple_accounts();
   init_libpurple_conversations();
 
   /* Load the list of protocol plugins and their specific options */

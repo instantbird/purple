@@ -35,9 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
-#define CUSTOM_PLUGIN_PATH     "protocols"
-
 #pragma GCC visibility push(default)
 #include <libpurple/cmds.h>
 #include <libpurple/core.h>
@@ -58,16 +55,11 @@
 #include <nsStringAPI.h>
 #include <nsNetCID.h>
 #include <nsICategoryManager.h>
-#include <nsIDOMWindowInternal.h>
 #include <nsIIdleService.h>
-#include <nsIPromptService.h>
 #include <nsIPrefBranch2.h>
 #include <nsIPrefService.h>
 #include <nsICancelable.h>
-#include <nsIStringBundle.h>
 #include <nsISupportsPrimitives.h>
-#include <nsThreadUtils.h>
-#include <nsIWindowMediator.h>
 #include <nsIXULAppInfo.h>
 #include <nsComponentManagerUtils.h>
 #include <nsDirectoryServiceUtils.h>
@@ -132,211 +124,6 @@ static PurpleEventLoopUiOps eventloops =
   NULL, NULL, NULL, NULL
 };
 /*** End of the eventloop functions. ***/
-
-/*** Connection uiops ***/
-#define IMPL_GET_ACCOUNT_FROM_UI_DATA(aVar)                        \
-  purpleAccount *account = purpleAccount::fromPurpleAccount(aVar); \
-  NS_ENSURE_TRUE(account,)
-
-#define IMPL_GET_ACCOUNT                                        \
-  PurpleAccount *pAccount = purple_connection_get_account(gc);  \
-  NS_ENSURE_TRUE(pAccount,);                                    \
-  IMPL_GET_ACCOUNT_FROM_UI_DATA(pAccount)
-
-static void connecting(PurpleAccount *aAccount)
-{
-  IMPL_GET_ACCOUNT_FROM_UI_DATA(aAccount);
-  account->Connecting(EmptyCString());
-}
-static void connect_progress(PurpleConnection *gc, const char *text,
-                             size_t step, size_t step_count)
-{
-  IMPL_GET_ACCOUNT;
-  account->Connecting(nsDependentCString(text));
-}
-static void connected(PurpleConnection *gc)
-{
-  IMPL_GET_ACCOUNT;
-  account->Connected();
-}
-static void disconnected(PurpleConnection *gc)
-{
-  IMPL_GET_ACCOUNT;
-  account->Disconnected();
-}
-static void disconnecting(PurpleConnection *gc)
-{
-  IMPL_GET_ACCOUNT;
-  account->Disconnecting(purpleIAccount::NO_ERROR, EmptyCString());
-}
-static void report_disconnect_reason(PurpleConnection *gc,
-                                     PurpleConnectionError reason,
-                                     const char *text)
-{
-  IMPL_GET_ACCOUNT;
-  account->Disconnecting(reason, nsDependentCString(text));
-}
-
-PurpleConnectionUiOps connection_uiops = {
-  connect_progress,
-  connected,
-  disconnected,
-  NULL, /* notice = dead code ? */
-  NULL, /* report_disconnect: deprecated in favour of report_disconnect_reason */
-  NULL, /* network_connected */
-  NULL, /* network_disconnected */
-  report_disconnect_reason,
-
-  NULL, NULL, NULL
-};
-
-static void connect_to_connections_signals()
-{
-  int handle;
-  void *instance = purple_connections_get_handle();
-  purple_signal_connect(instance, "signing-off", &handle,
-                        PURPLE_CALLBACK(disconnecting), NULL);
-}
-
-static void connect_to_accounts_signals()
-{
-  int handle;
-  void *instance = purple_accounts_get_handle();
-  purple_signal_connect(instance, "account-connecting", &handle,
-                        PURPLE_CALLBACK(connecting), NULL);
-}
-
-
-/*** Account uiops ***/
-class purpleAuthorizationRequest : public nsIRunnable
-{
-  public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIRUNNABLE
-
-    purpleAuthorizationRequest(const char *remote_user,
-                               PurpleAccountRequestAuthorizationCb authorize_cb,
-                               PurpleAccountRequestAuthorizationCb deny_cb,
-                               void *user_data);
-    void Cancel() {
-      mAuthorizeCb = NULL;
-      mDenyCb = NULL;
-      mUserData = NULL;
-    }
-
-  private:
-    PurpleAccountRequestAuthorizationCb mAuthorizeCb, mDenyCb;
-    nsString mRemoteUser;
-    void *mUserData;
-};
-
-NS_IMPL_ISUPPORTS1(purpleAuthorizationRequest, nsIRunnable)
-
-purpleAuthorizationRequest::purpleAuthorizationRequest(const char *remote_user,
-                                                       PurpleAccountRequestAuthorizationCb authorize_cb,
-                                                       PurpleAccountRequestAuthorizationCb deny_cb,
-                                                       void *user_data)
-  : mAuthorizeCb(authorize_cb), mDenyCb(deny_cb), mUserData(user_data)
-{
-  nsCString cRemoteUser(remote_user);
-  NS_CStringToUTF16(cRemoteUser, NS_CSTRING_ENCODING_UTF8, mRemoteUser);
-
-  NS_DispatchToMainThread(this);
-}
-
-NS_IMETHODIMP purpleAuthorizationRequest::Run()
-{
-  if (!mAuthorizeCb && !mDenyCb)
-    return NS_OK;
-
-  nsresult rv;
-  nsCOMPtr<nsIPromptService> promptService =
-    do_GetService("@mozilla.org/embedcomp/prompt-service;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIStringBundleService> bundleService =
-    do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIStringBundle> stringBundle;
-  rv = bundleService->CreateBundle("chrome://instantbird/locale/accounts.properties",
-                                   getter_AddRefs(stringBundle));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsString title;
-  rv = stringBundle->GetStringFromName(NS_LITERAL_STRING("requestAuthorizeTitle").get(),
-                                       getter_Copies(title));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsString allow;
-  rv = stringBundle->GetStringFromName(NS_LITERAL_STRING("requestAuthorizeAllow").get(),
-                                       getter_Copies(allow));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsString deny;
-  rv = stringBundle->GetStringFromName(NS_LITERAL_STRING("requestAuthorizeDeny").get(),
-                                       getter_Copies(deny));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  const PRUnichar *whoFlat = mRemoteUser.get();
-  nsString msg;
-  rv = stringBundle->FormatStringFromName(NS_LITERAL_STRING("requestAuthorizeText").get(),
-                                          &whoFlat, 1, getter_Copies(msg));
-
-  nsCOMPtr<nsIWindowMediator> wm = do_GetService(NS_WINDOWMEDIATOR_CONTRACTID);
-  NS_ENSURE_TRUE(wm, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIDOMWindowInternal> window;
-  wm->GetMostRecentWindow(NS_LITERAL_STRING("Messenger:blist").get(),
-                          getter_AddRefs(window));
-
-  PRInt32 result;
-  PRUint32 flags = (nsIPromptService::BUTTON_POS_0 +
-                    nsIPromptService::BUTTON_POS_1) *
-                   nsIPromptService::BUTTON_TITLE_IS_STRING;
-  promptService->ConfirmEx(window, title.get(), msg.get(), flags, allow.get(),
-                           deny.get(), nsnull, nsnull, nsnull, &result);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (result) {
-    // Index 1 means "deny"
-    if (mDenyCb)
-      mDenyCb(mUserData);
-  }
-  else {
-    if (mAuthorizeCb)
-      mAuthorizeCb(mUserData);
-    //FIXME Prompt to add to blist
-  }
-
-  return NS_OK;
-}
-
-static void *request_authorize(PurpleAccount *account, const char *remote_user,
-                               const char *id, const char *alias,
-                               const char *message, gboolean on_list,
-                               PurpleAccountRequestAuthorizationCb authorize_cb,
-                               PurpleAccountRequestAuthorizationCb deny_cb,
-                               void *user_data)
-{
-  return new purpleAuthorizationRequest(remote_user, authorize_cb, deny_cb, user_data);
-}
-
-static void close_account_request(void *ui_handle)
-{
-  NS_ENSURE_TRUE(ui_handle, );
-
-  ((purpleAuthorizationRequest *)ui_handle)->Cancel();
-}
-
-PurpleAccountUiOps account_uiops = {
-  NULL, /* notify_added, nearly dead code ? */
-  NULL, /* status_changed */
-  NULL, /* request_add, nearly dead */
-  request_authorize,
-  close_account_request,
-
-  NULL, NULL, NULL, NULL
-};
 
 /*
  * Used as handle to connect and then mass-disconnect the buddy list signals.
@@ -1008,8 +795,6 @@ init_libpurple()
   purple_util_set_user_dir(cPath.get());
 
   purple_core_set_ui_ops(&core_uiops);
-  purple_connections_set_ui_ops(&connection_uiops);
-  purple_accounts_set_ui_ops(&account_uiops);
   purple_blist_set_ui_ops(&blist_uiops);
   purple_debug_set_ui_ops(&debugconsoleuiops);
   purple_dnsquery_set_ui_ops(&dnsUiOps);
@@ -1028,8 +813,6 @@ init_libpurple()
   NS_ASSERTION(purpleCoreInit, "purple_core_init failed!!!");
   NS_ENSURE_TRUE(purpleCoreInit, NS_ERROR_FAILURE);
 
-  connect_to_connections_signals();
-  connect_to_accounts_signals();
   //  connect_to_blist_signals();
 
   purple_cmd_register("raw", "s", PURPLE_CMD_P_DEFAULT,
