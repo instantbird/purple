@@ -74,6 +74,7 @@ CPPSRCS		= \
 		purpleDNS.cpp \
 		purpleInit.cpp \
 		purpleInitAccounts.cpp \
+		purpleInitContacts.cpp \
 		purpleInitConv.cpp \
 		purpleIdle.cpp \
 		purpleGetText.cpp \

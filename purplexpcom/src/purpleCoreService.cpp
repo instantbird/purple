@@ -89,8 +89,9 @@ NS_IMPL_ISUPPORTS3_CI(purpleCoreService, purpleICoreService,
                       nsIObserver, purpleIAccountsService)
 
 extern nsresult init_libpurple();
-extern void init_libpurple_conversations();
 extern void init_libpurple_accounts();
+extern void init_libpurple_blist();
+extern void init_libpurple_conversations();
 extern void connect_to_blist_signals();
 extern void disconnect_blist_signals();
 
@@ -416,10 +417,7 @@ nsresult purpleCoreService::InitBuddyList()
   nsresult rv = contacts->InitContacts();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  /* The only effect is to set blist_loaded to TRUE */
-  purple_blist_load();
-
-  connect_to_blist_signals();
+  init_libpurple_blist();
   return NS_OK;
 }
 
