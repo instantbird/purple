@@ -1410,9 +1410,12 @@ purple_request_action_with_icon_varg(void *handle, const char *title,
 		handles = g_list_append(handles, info);
 
 		return info->ui_handle;
+	} else {
+		/* Fall back on the non-icon request if the UI doesn't support icon
+		 requests */
+		return purple_request_action_varg(handle, title, primary, secondary,
+			default_action, account, who, conv, user_data, action_count, actions);
 	}
-	else
-		PURPLE_REQUEST_NO_OPS("fields", title, primary);
 
 	return NULL;
 }

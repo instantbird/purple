@@ -30,7 +30,7 @@
 #include "buddy.h"
 #include "chat.h"
 #include "data.h"
-#include "google.h"
+#include "google/google.h"
 #include "message.h"
 #include "xmlnode.h"
 #include "pep.h"
@@ -297,7 +297,6 @@ static void handle_error(JabberMessage *jm)
 }
 
 static void handle_buzz(JabberMessage *jm) {
-	PurpleBuddy *buddy;
 	PurpleAccount *account;
 
 	/* Delayed buzz MUST NOT be accepted */
@@ -310,7 +309,7 @@ static void handle_buzz(JabberMessage *jm) {
 
 	account = purple_connection_get_account(jm->js->gc);
 
-	if ((buddy = purple_find_buddy(account, jm->from)) == NULL)
+	if (purple_find_buddy(account, jm->from) == NULL)
 		return; /* Do not accept buzzes from unknown people */
 
 	/* xmpp only has 1 attention type, so index is 0 */

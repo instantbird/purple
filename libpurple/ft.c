@@ -752,6 +752,7 @@ purple_xfer_get_status(const PurpleXfer *xfer)
 	return xfer->status;
 }
 
+/* FIXME: Rename with cancelled for 3.0.0. */
 gboolean
 purple_xfer_is_canceled(const PurpleXfer *xfer)
 {
@@ -1290,6 +1291,11 @@ begin_transfer(PurpleXfer *xfer, PurpleInputCondition cond)
 	PurpleXferType type = purple_xfer_get_type(xfer);
 	PurpleXferUiOps *ui_ops = purple_xfer_get_ui_ops(xfer);
 
+	if (xfer->start_time != 0) {
+		purple_debug_error("xfer", "Transfer is being started multiple times\n");
+		g_return_if_reached();
+	}
+
 	if (ui_ops == NULL || (ui_ops->ui_read == NULL && ui_ops->ui_write == NULL)) {
 		xfer->dest_fp = g_fopen(purple_xfer_get_local_filename(xfer),
 		                        type == PURPLE_XFER_RECEIVE ? "wb" : "rb");
@@ -1481,6 +1487,20 @@ purple_xfer_cancel_local(PurpleXfer *xfer)
 	char *msg = NULL;
 
 	g_return_if_fail(xfer != NULL);
+
+	/* TODO: We definitely want to close any open request dialogs associated
+	   with this transfer.  However, in some cases the request dialog might
+	   own a reference on the xfer.  This happens at least with the "%s wants
+	   to send you %s" dialog from purple_xfer_ask_recv().  In these cases
+	   the ref count will not be decremented when the request dialog is
+	   closed, so the ref count will never reach 0 and the xfer will never
+	   be freed.  This is a memleak and should be fixed.  It's not clear what
+	   the correct fix is.  Probably requests should have a destroy function
+	   that is called when the request is destroyed.  But also, ref counting
+	   xfer objects makes this code REALLY complicated.  An alternate fix is
+	   to not ref count and instead just make sure the object still exists
+	   when we try to use it. */
+	purple_request_close_with_handle(xfer);
 
 	purple_xfer_set_status(xfer, PURPLE_XFER_STATUS_CANCEL_LOCAL);
 	xfer->end_time = time(NULL);

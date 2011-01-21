@@ -48,7 +48,6 @@ CSRCS		= \
 		cmdproc.c \
 		command.c \
 		contact.c \
-		dialog.c \
 		directconn.c \
 		error.c \
 		group.c \
@@ -60,21 +59,25 @@ CSRCS		= \
 		notification.c \
 		object.c \
 		oim.c \
+		p2p.c \
 		page.c \
+		sbconn.c \
 		servconn.c \
 		session.c \
 		slp.c \
 		slpcall.c \
 		slplink.c \
 		slpmsg.c \
+		slpmsg_part.c \
 		soap.c \
 		state.c \
 		switchboard.c \
-		sync.c \
 		table.c \
+		tlv.c \
 		transaction.c \
 		user.c \
 		userlist.c \
+		xfer.c \
 		msnutils.c \
 		$(NULL)
 
