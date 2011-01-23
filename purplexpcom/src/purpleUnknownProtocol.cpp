@@ -128,7 +128,7 @@ NS_IMETHODIMP purpleUnknownProtocol::GetUsernameEmptyText(nsACString &aUsernameE
   return NS_OK;
 }
 
-#define PURPLE_IMPL_GETBOOLOPT(aOpt, aConst)                            \
+#define PURPLE_IMPL_GETBOOLOPT(aOpt)                                    \
   NS_IMETHODIMP purpleUnknownProtocol::Get##aOpt(PRBool *a##aOpt)       \
   {                                                                     \
     /* FALSE seems acceptable for all the options */                    \
@@ -137,31 +137,34 @@ NS_IMETHODIMP purpleUnknownProtocol::GetUsernameEmptyText(nsACString &aUsernameE
   }
 
 /* readonly attribute boolean uniqueChatName; */
-PURPLE_IMPL_GETBOOLOPT(UniqueChatName, UNIQUE_CHATNAME)
+PURPLE_IMPL_GETBOOLOPT(UniqueChatName)
 
 /* readonly attribute boolean chatHasTopic; */
-PURPLE_IMPL_GETBOOLOPT(ChatHasTopic, CHAT_TOPIC)
+PURPLE_IMPL_GETBOOLOPT(ChatHasTopic)
 
 /* readonly attribute boolean noPassword; */
-PURPLE_IMPL_GETBOOLOPT(NoPassword, NO_PASSWORD)
+PURPLE_IMPL_GETBOOLOPT(NoPassword)
 
 /* readonly attribute boolean newMailNotification; */
-PURPLE_IMPL_GETBOOLOPT(NewMailNotification, MAIL_CHECK)
+PURPLE_IMPL_GETBOOLOPT(NewMailNotification)
 
 /* readonly attribute boolean imagesInIM; */
-PURPLE_IMPL_GETBOOLOPT(ImagesInIM, IM_IMAGE)
+PURPLE_IMPL_GETBOOLOPT(ImagesInIM)
 
 /* readonly attribute boolean passwordOptional; */
-PURPLE_IMPL_GETBOOLOPT(PasswordOptional, PASSWORD_OPTIONAL)
+PURPLE_IMPL_GETBOOLOPT(PasswordOptional)
 
 /* readonly attribute boolean usePointSize; */
-PURPLE_IMPL_GETBOOLOPT(UsePointSize, USE_POINTSIZE)
+PURPLE_IMPL_GETBOOLOPT(UsePointSize)
 
 /* readonly attribute boolean registerNoScreenName; */
-PURPLE_IMPL_GETBOOLOPT(RegisterNoScreenName, REGISTER_NOSCREENNAME)
+PURPLE_IMPL_GETBOOLOPT(RegisterNoScreenName)
 
 /* readonly attribute boolean slashCommandsNative; */
-PURPLE_IMPL_GETBOOLOPT(SlashCommandsNative, SLASH_COMMANDS_NATIVE)
+PURPLE_IMPL_GETBOOLOPT(SlashCommandsNative)
+
+/* readonly attribute boolean usePurpleProxy; */
+PURPLE_IMPL_GETBOOLOPT(UsePurpleProxy)
 
 /* purpleIAccount getAccount (in AUTF8String aName, in AUTF8String aKey); */
 NS_IMETHODIMP purpleUnknownProtocol::GetAccount(const nsACString & aKey,

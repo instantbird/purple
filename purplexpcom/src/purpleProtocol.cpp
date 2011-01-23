@@ -293,6 +293,13 @@ PURPLE_IMPL_GETBOOLOPT(RegisterNoScreenName, REGISTER_NOSCREENNAME)
 /* readonly attribute boolean slashCommandsNative; */
 PURPLE_IMPL_GETBOOLOPT(SlashCommandsNative, SLASH_COMMANDS_NATIVE)
 
+/* readonly attribute boolean usePurpleProxy; */
+NS_IMETHODIMP purpleProtocol::GetUsePurpleProxy(PRBool *aUsePurpleProxy)
+{
+  *aUsePurpleProxy = PR_TRUE;
+  return NS_OK;
+}
+
 /* purpleIAccount getAccount (in AUTF8String aName, in AUTF8String aKey); */
 NS_IMETHODIMP purpleProtocol::GetAccount(const nsACString & aKey,
                                          const nsACString & aName,
