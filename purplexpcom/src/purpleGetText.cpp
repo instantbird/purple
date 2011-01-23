@@ -167,13 +167,14 @@ const char *purpleGetText::GetTextIdentifier(const char *string)
   nsCString str(string);
   ToLowerCase(str);
 
-  // Replace non alphanumeric characters by spaces
+  // Replace non alphanumeric characters (except underscore) by spaces
   // Keep % symbols for now
   char *buf;
   for (buf = str.BeginWriting(); *buf; ++buf) {
     if (IN_RANGE(*buf, 'A', 'Z') ||
         IN_RANGE(*buf, 'a', 'z') ||
         IN_RANGE(*buf, '0', '9') ||
+        *buf == '_' ||
         *buf == '%')
       continue;
     *buf = ' ';
@@ -396,8 +397,9 @@ const char *purpleGetText::GetText(const char *package,
 #ifdef DEBUG
     nsCString warning(NS_LITERAL_CSTRING("caching the missingness of "));
     warning.Append(package);
-    warning.Append(':');
+    warning.Append('<');
     warning.Append(string);
+    warning.Append('>');
     NS_WARNING(warning.get());
 #endif
     return string;
