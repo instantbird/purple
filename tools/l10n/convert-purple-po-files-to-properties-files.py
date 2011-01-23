@@ -112,7 +112,7 @@ def package_from_path(aString):
 # This won't contain the hex hash for duplicate entries.
 # The identifier is composed of the 7 first words of the message, in camel case
 # words starting with % or 0x are skipped
-# non-alphanumeric characters are removed
+# non-alphanumeric characters are removed, except underscore (_).
 def make_id_from_string(aString):
     # utility functions
     def no_percent_strings(aString):
