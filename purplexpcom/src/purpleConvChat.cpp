@@ -151,6 +151,18 @@ NS_IMETHODIMP purpleConvChat::GetTopicSetter(nsACString & aTopicSetter)
   return NS_OK;
 }
 
+/* readonly attribute AUTF8String nick; */
+NS_IMETHODIMP purpleConvChat::GetNick(nsACString & aNick)
+{
+  NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
+
+  PurpleConvChat *chat = purple_conversation_get_chat_data(mConv);
+  NS_ENSURE_TRUE(chat, NS_ERROR_FAILURE);
+
+  aNick = purple_conv_chat_get_nick(chat);
+  return NS_OK;
+}
+
 /* readonly attribute boolean left; */
 NS_IMETHODIMP purpleConvChat::GetLeft(PRBool *aLeft)
 {
