@@ -548,7 +548,7 @@ msn_show_locations(PurplePluginAction *action)
 	for (l = session->user->endpoints; l; l = l->next) {
 		MsnUserEndpoint *ep = l->data;
 
-		if (ep->id[0] != '\0' && strncasecmp(ep->id + 1, session->guid, 36) == 0)
+		if (ep->id[0] != '\0' && g_ascii_strncasecmp(ep->id + 1, session->guid, 36) == 0)
 			/* Don't add myself to the list */
 			continue;
 
@@ -617,7 +617,7 @@ disable_mpop_cb(PurpleConnection *pc)
 		MsnUserEndpoint *ep = l->data;
 		char *user;
 
-		if (ep->id[0] != '\0' && strncasecmp(ep->id + 1, session->guid, 36) == 0)
+		if (ep->id[0] != '\0' && g_ascii_strncasecmp(ep->id + 1, session->guid, 36) == 0)
 			/* Don't kick myself */
 			continue;
 
