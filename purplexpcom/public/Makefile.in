@@ -55,6 +55,7 @@ XPIDLSRCS	= \
 		purpleIPref.idl \
 		purpleIProtocol.idl \
 		purpleIProxy.idl \
+		purpleIRequest.idl \
 		purpleISocket.idl \
 		purpleITooltipInfo.idl \
 		$(NULL)

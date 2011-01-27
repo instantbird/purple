@@ -102,7 +102,13 @@ ifdef PURPLE_PLUGINS
 DEFINES 	+= -DPURPLE_PLUGINS
 endif
 
-EXTRA_COMPONENTS = gtalkOverrideProtocol.js facebookOverrideProtocol.js overrideProtocols.manifest
+EXTRA_COMPONENTS = \
+		gtalkOverrideProtocol.js \
+		facebookOverrideProtocol.js \
+		overrideProtocols.manifest \
+		twitter.js \
+		twitter.manifest \
+		$(NULL)
 
 EXTRA_COMPONENTS += imContacts.js imContacts.manifest
 
