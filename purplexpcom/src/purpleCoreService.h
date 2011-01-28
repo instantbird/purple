@@ -45,7 +45,6 @@
 #include "purpleIAccount.h"
 #include "purpleIdle.h"
 #include "purpleICoreService.h"
-#include "purpleConversation.h"
 #include <nsIMutableArray.h>
 #include <nsCOMArray.h>
 #include <nsCOMPtr.h>
@@ -65,8 +64,6 @@ public:
 
   NS_FORWARD_SAFE_PURPLEIACCOUNTSSERVICE(mAccountsService);
 
-  void AddConversation(purpleConversation* aConv);
-  void RemoveConversation(PurpleConversation *aConv);
   nsresult NotifyObservers(nsISupports *aObj, const char *aEvent) {
     return NotifyObservers(aObj, aEvent, nsnull);
   }
@@ -93,9 +90,10 @@ protected:
   nsCOMArray<purpleIProtocol> mProtocols;
   nsCOMArray<purpleProxy> mProxies;
   nsCOMPtr<purpleIAccountsService> mAccountsService;
-  nsCOMArray<purpleConversation> mConversations;
+  nsCOMArray<purpleIConversation> mConversations;
   nsCOMPtr<purpleIProxyInfo> mGlobalProxy;
   nsCOMPtr<purpleIdleObserver> mIdleObserver;
+  static PRUint32 sLastConversationId;
 };
 
 #define PURPLE_CORE_SERVICE_CID \
@@ -106,8 +104,5 @@ protected:
 
 #define PURPLE_CORE_SERVICE_CONTRACTID \
     "@instantbird.org/purple/core;1"
-
-#define NATIVE_PCS(aPcs) \
-  static_cast<purpleCoreService *>(aPcs.get())
 
 #endif /* !PURPLE_CORE_SERVICE_H_ */

@@ -81,16 +81,21 @@ static void create_conv(PurpleConversation *aConv)
 
   nsCOMPtr<purpleICoreService> pcs =
     do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-  NATIVE_PCS(pcs)->AddConversation(conv);
+  pcs->AddConversation(conv);
 }
 
 static void destroy_conv(PurpleConversation *aConv)
 {
   LOG(("destroy_conv uiop called"));
 
+  NS_ENSURE_TRUE(aConv,);
+
+  purpleConversation *conversation = purpleConversation::fromPurpleConv(aConv);
+  NS_ENSURE_TRUE(conversation,);
+
   nsCOMPtr<purpleICoreService> pcs =
     do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-  NATIVE_PCS(pcs)->RemoveConversation(aConv);
+  pcs->RemoveConversation(conversation);
 }
 
 static void notify_conv(PurpleConversation *aConv, nsISupports *aSubject,

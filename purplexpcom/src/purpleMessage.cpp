@@ -37,6 +37,7 @@
 
 #include "purpleMessage.h"
 #include "purpleCoreService.h"
+#include "purpleConversation.h"
 #include <nsCOMPtr.h>
 #include <nsServiceManagerUtils.h>
 #include <nsIClassInfoImpl.h>

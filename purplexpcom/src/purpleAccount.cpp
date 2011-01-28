@@ -38,6 +38,7 @@
 #include "purpleAccount.h"
 #include "purpleAccountBuddy.h"
 #include "purpleCoreService.h"
+#include "purpleConversation.h"
 #include "purpleGListEnumerator.h"
 #include <nsIObserverService.h>
 #include <nsIPrefService.h>

@@ -52,8 +52,6 @@ public:
   purpleConversation();
 
   void SetConv(PurpleConversation *aConv);
-  void UnInit();
-  PRUint32 GetId() { return mId; }
   void NotifyObservers(nsISupports *aSubject,
                        const char *aTopic,
                        const PRUnichar *aData);
@@ -62,7 +60,6 @@ public:
   }
 
 private:
-  static PRUint32 sLastId;
   nsCOMArray<nsIObserver> mObservers;
 
 protected:

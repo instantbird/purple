@@ -56,6 +56,11 @@ interface purpleICoreService: purpleIAccountsService {
   void quit();
   readonly attribute AUTF8String version;
 
+  // register a conversation. This will create a unique id for the
+  // conversation and set it.
+  void addConversation(in purpleIConversation aConversation);
+  void removeConversation(in purpleIConversation aConversation);
+
   nsISimpleEnumerator getConversations();
   purpleIConversation getConversationById(in unsigned long aId);
 

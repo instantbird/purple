@@ -577,7 +577,8 @@ NS_IMETHODIMP purpleCoreService::GetConversationById(PRUint32 aId,
   LOG(("GetConversationById(%i)", aId));
 
   for (PRInt32 i = mConversations.Count() - 1; i >= 0; --i) {
-    if (mConversations[i]->GetId() == aId) {
+    PRUint32 id;
+    if (NS_SUCCEEDED(mConversations[i]->GetId(&id)) && id == aId) {
       NS_ADDREF(*aResult = mConversations[i]);
       return NS_OK;
     }
@@ -587,26 +588,27 @@ NS_IMETHODIMP purpleCoreService::GetConversationById(PRUint32 aId,
   return NS_OK;
 }
 
-void purpleCoreService::AddConversation(purpleConversation* aConv)
+PRUint32 purpleCoreService::sLastConversationId = 0;
+
+/* void addConversation (in purpleIConversation aConversation); */
+NS_IMETHODIMP purpleCoreService::AddConversation(purpleIConversation *aConversation)
 {
-  mConversations.AppendObject(aConv);
-  NotifyObservers(aConv, "new-conversation");
+  aConversation->SetId(++sLastConversationId);
+  mConversations.AppendObject(aConversation);
+  NotifyObservers(aConversation, "new-conversation");
+  return NS_OK;
 }
 
-void purpleCoreService::RemoveConversation(PurpleConversation *aConv)
+/* void removeConversation (in purpleIConversation aConversation); */
+NS_IMETHODIMP purpleCoreService::RemoveConversation(purpleIConversation *aConversation)
 {
-  LOG(("purpleCoreService::RemoveConversation aConv = @%x",  aConv));
+  LOG(("purpleCoreService::RemoveConversation aConv = @%x",  aConversation));
 
-  purpleConversation *conv = purpleConversation::fromPurpleConv(aConv);
-  if (!conv) {
-    LOG(("purpleConversation::RemoveConversation already uninitialized"));
-    return;
-  }
-
-  NotifyObservers(conv, "conversation-closed");
-  conv->UnInit();
-  mConversations.RemoveObject(conv);
+  NotifyObservers(aConversation, "conversation-closed");
+  aConversation->UnInit();
+  mConversations.RemoveObject(aConversation);
   LOG(("purpleCoreSevice::RemoveConversation: Done"));
+  return NS_OK;
 }
 
 /* nsISimpleEnumerator getProtocols (); */

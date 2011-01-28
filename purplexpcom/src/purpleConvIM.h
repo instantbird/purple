@@ -70,6 +70,12 @@ public:
   NS_SCRIPTABLE NS_IMETHOD GetId(PRUint32 *aId) {
     return purpleConversation::GetId(aId);
   }
+  NS_SCRIPTABLE NS_IMETHOD SetId(PRUint32 aId) {
+    return purpleConversation::SetId(aId);
+  }
+  NS_SCRIPTABLE NS_IMETHOD UnInit(void) {
+    return purpleConversation::UnInit();
+  }
   NS_SCRIPTABLE NS_IMETHOD Close(void) {
     return purpleConversation::Close();
   }

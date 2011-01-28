@@ -58,13 +58,11 @@ PRLogModuleInfo *gPurpleConvLog = nsnull;
 #endif
 #define LOG(args) PR_LOG(gPurpleConvLog, PR_LOG_DEBUG, args)
 
-PRUint32 purpleConversation::sLastId = 0;
-
 purpleConversation::purpleConversation()
-  : mUninitialized(PR_FALSE)
+  : mId(0),
+    mUninitialized(PR_FALSE)
 {
   /* member initializers and constructor code */
-  mId = ++sLastId;
 #ifdef PR_LOGGING
   if (!gPurpleConvLog)
     gPurpleConvLog = PR_NewLogModule("purpleConversation");
@@ -92,12 +90,14 @@ void purpleConversation::SetConv(PurpleConversation *aConv)
 }
 
 /* call this only from the destroy_conv uiop or when exiting */
-void purpleConversation::UnInit()
+/* void unInit (); */
+NS_IMETHODIMP purpleConversation::UnInit()
 {
   LOG(("purpleConversation::unInit (mId == %i)", mId));
   mConv->ui_data = NULL;
   mConv = NULL;
   mUninitialized = PR_TRUE;
+  return NS_OK;
 }
 
 /* readonly attribute purpleIAccount account; */
@@ -140,10 +140,18 @@ NS_IMETHODIMP purpleConversation::GetTitle(nsACString& aTitle)
   return NS_OK;
 }
 
-/* readonly attribute long idConv; */
+/* attribute unsigned long id; */
 NS_IMETHODIMP purpleConversation::GetId(PRUint32 *aId)
 {
   *aId = mId;
+  return NS_OK;
+}
+NS_IMETHODIMP purpleConversation::SetId(PRUint32 aId)
+{
+  NS_ENSURE_ARG(aId);
+  NS_ENSURE_TRUE(!mId, NS_ERROR_ALREADY_INITIALIZED);
+
+  mId = aId;
   return NS_OK;
 }
 
