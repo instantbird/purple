@@ -155,69 +155,6 @@ NS_IMETHODIMP purpleConversation::SetId(PRUint32 aId)
   return NS_OK;
 }
 
-/* boolean doCommand (in AUTF8String aMsg); */
-NS_IMETHODIMP purpleConversation::DoCommand(const nsACString &aMsg,
-                                            PRBool *aHandled)
-{
-  NS_ASSERTION(!aMsg.IsEmpty(), "Looking for commands in an empty message?");
-  NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
-
-  PromiseFlatCString flatMsg(aMsg);
-  const char *msg = flatMsg.get();
-
-  if (*msg != '/' || *(msg + 1) == '/') {
-    *aHandled = PR_FALSE;
-    return NS_OK;
-  }
-
-  char *error = NULL;
-  PurpleCmdStatus status = purple_cmd_do_command(mConv, msg + 1,
-                                                 msg, &error);
-  g_free(error);
-  switch (status) {
-    case PURPLE_CMD_STATUS_OK:
-      LOG(("Command executed in conversation with mId %i", mId));
-      *aHandled = PR_TRUE;
-      return NS_OK;
-
-    case PURPLE_CMD_STATUS_NOT_FOUND:
-      {
-        // Check if '/' is native to the protocol. If it is, a
-        // non-existing command is likely an error, don't send the
-        // message
-        nsCOMPtr<purpleIAccount> account;
-        nsresult rv = GetAccount(getter_AddRefs(account));
-        NS_ENSURE_SUCCESS(rv, rv);
-        NS_ENSURE_TRUE(account, NS_ERROR_NULL_POINTER);
-
-        nsCOMPtr<purpleIProtocol> proto;
-        rv = account->GetProtocol(getter_AddRefs(proto));
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        PRBool slashCommandsNative = PR_FALSE;
-        rv = proto->GetSlashCommandsNative(&slashCommandsNative);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        if (slashCommandsNative) {
-          LOG(("The '/' is native on this protocol, a non-existing command is an error"));
-          return NS_ERROR_FAILURE;
-        }
-      }
-
-    case PURPLE_CMD_STATUS_WRONG_TYPE:
-    case PURPLE_CMD_STATUS_WRONG_PRPL:
-      *aHandled = PR_FALSE;
-      return NS_OK;
-
-    case PURPLE_CMD_STATUS_WRONG_ARGS:
-    case PURPLE_CMD_STATUS_FAILED:
-    default: // only to work around the warning
-             // 'control reaches end of non-void function'
-      LOG(("Error while attempting to execute the command"));
-      return NS_ERROR_FAILURE;
-  }
-}
-
 /* void sendMsg (in AUTF8String aMsg); */
 NS_IMETHODIMP purpleConversation::SendMsg(const nsACString& aMsg)
 {

@@ -74,6 +74,7 @@ CPPSRCS		= \
 		purpleDNS.cpp \
 		purpleInit.cpp \
 		purpleInitAccounts.cpp \
+		purpleInitCommands.cpp \
 		purpleInitContacts.cpp \
 		purpleInitConv.cpp \
 		purpleIdle.cpp \
@@ -110,7 +111,10 @@ EXTRA_COMPONENTS = \
 		twitter.manifest \
 		$(NULL)
 
-EXTRA_COMPONENTS += imContacts.js imContacts.manifest
+EXTRA_COMPONENTS += \
+		imContacts.js imContacts.manifest \
+		imCommands.js imCommands.manifest \
+		$(NULL)
 
 ifdef MOZ_DEBUG
 EXTRA_COMPONENTS += jsTestProtocol.js jsTestProtocol.manifest

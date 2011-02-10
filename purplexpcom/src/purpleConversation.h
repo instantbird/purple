@@ -52,6 +52,7 @@ public:
   purpleConversation();
 
   void SetConv(PurpleConversation *aConv);
+  PurpleConversation *GetConv() { return mConv; };
   void NotifyObservers(nsISupports *aSubject,
                        const char *aTopic,
                        const PRUnichar *aData);

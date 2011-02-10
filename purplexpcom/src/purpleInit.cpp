@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #pragma GCC visibility push(default)
-#include <libpurple/cmds.h>
+#include <glib.h>
 #include <libpurple/core.h>
 #include <libpurple/gettext.h>
 #pragma GCC visibility pop
@@ -138,38 +138,6 @@ static PurpleDnsQueryUiOps dnsUiOps = {
 
   NULL,NULL,NULL,NULL
 };
-
-// Taken from pidgin/gtkconv.c (GPL, ...)
-static PurpleCmdRet raw_command_cb(PurpleConversation *conv,
-                                   const char *cmd, char **args,
-                                   char **error, void *data)
-{
-  if (purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_IM)
-    purple_conv_im_send(PURPLE_CONV_IM(conv), args[0]);
-  else if (purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_CHAT)
-    purple_conv_chat_send(PURPLE_CONV_CHAT(conv), args[0]);
-
-  return PURPLE_CMD_RET_OK;
-}
-
-#define IMPL_STATUS_COMMAND(aName, aStatus)                             \
-  static PurpleCmdRet aName##_command_cb(PurpleConversation *conv,      \
-                                         const char *cmd, char **args,  \
-                                         char **error, void *data)      \
-  {                                                                     \
-    nsCString message(args[0]);                                         \
-                                                                        \
-    nsCOMPtr<purpleICoreService> pcs =                                  \
-      do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);                    \
-    pcs->SetStatus(purpleICoreService::STATUS_##aStatus, message);      \
-                                                                        \
-    return PURPLE_CMD_RET_OK;                                           \
-  }
-
-IMPL_STATUS_COMMAND(back, AVAILABLE)
-IMPL_STATUS_COMMAND(away, AWAY)
-IMPL_STATUS_COMMAND(busy, UNAVAILABLE)
-IMPL_STATUS_COMMAND(offline, OFFLINE)
 
 // GetText ui ops
 PurpleGetTextUiOps gettext_uiops = {
@@ -632,28 +600,6 @@ init_libpurple()
   gboolean purpleCoreInit = purple_core_init("instantbird");
   NS_ASSERTION(purpleCoreInit, "purple_core_init failed!!!");
   NS_ENSURE_TRUE(purpleCoreInit, NS_ERROR_FAILURE);
-
-  purple_cmd_register("raw", "s", PURPLE_CMD_P_DEFAULT,
-                      (PurpleCmdFlag) (PURPLE_CMD_FLAG_CHAT | PURPLE_CMD_FLAG_IM),
-                      NULL, raw_command_cb,
-                      "raw &lt;message&gt;:  Send a raw message (without escaping or handling of formatting).",
-                      NULL);
-
-#define REGISTER_STATUS_COMMAND(aName, aCallback, aDescription) \
-  purple_cmd_register(#aName, "s", PURPLE_CMD_P_HIGH,\
-                      (PurpleCmdFlag) (PURPLE_CMD_FLAG_CHAT | PURPLE_CMD_FLAG_IM | PURPLE_CMD_FLAG_ALLOW_WRONG_ARGS),\
-                      NULL, aCallback, aDescription, NULL)
-
-  REGISTER_STATUS_COMMAND(back, back_command_cb,
-                          "back &lt;message&gt;:  Set the status to Available and use |message| as status message.");
-  REGISTER_STATUS_COMMAND(away, away_command_cb,
-                          "away &lt;message&gt;:  Set the status to Away and use |message| as status message.");
-  REGISTER_STATUS_COMMAND(busy, busy_command_cb,
-                          "busy &lt;message&gt;:  Set the status to Busy and use |message| as status message.");
-  REGISTER_STATUS_COMMAND(dnd, busy_command_cb,
-                          "dnd &lt;message&gt;:  Set the status to Busy and use |message| as status message.");
-  REGISTER_STATUS_COMMAND(offline, offline_command_cb,
-                          "offline:  Set the status to Offline.");
 
   /* Create the purple buddylist. Required before any account is created. */
   purple_set_blist(purple_blist_new());

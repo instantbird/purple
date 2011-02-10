@@ -43,6 +43,7 @@
 #include "purpleStorage.h"
 #include "purpleSockets.h"
 #include "purpleTimer.h"
+#include "imICommandsService.h"
 
 #pragma GCC visibility push(default)
 #include <libpurple/core.h>
@@ -91,6 +92,7 @@ NS_IMPL_ISUPPORTS3_CI(purpleCoreService, purpleICoreService,
 extern nsresult init_libpurple();
 extern void init_libpurple_accounts();
 extern void init_libpurple_blist();
+extern void init_libpurple_commands();
 extern void init_libpurple_conversations();
 extern void connect_to_blist_signals();
 extern void disconnect_blist_signals();
@@ -194,6 +196,12 @@ NS_IMETHODIMP purpleCoreService::Init()
   purpleNetworkObserver::init();
   purpleDNS::init();
   purpleTimer::init();
+
+  nsCOMPtr<imICommandsService> commands =
+    do_GetService(IM_COMMANDS_SERVICE_CONTRACTID);
+  if (commands)
+    commands->InitCommands();
+  init_libpurple_commands();
 
   /* Init the core of libpurple */
   rv = init_libpurple();
@@ -547,6 +555,11 @@ NS_IMETHODIMP purpleCoreService::Quit()
   purpleDNS::unInit();
   purpleTimer::unInit();
   purpleGetText::unInit();
+
+  nsCOMPtr<imICommandsService> commands =
+    do_GetService(IM_COMMANDS_SERVICE_CONTRACTID);
+  if (commands)
+    commands->UnInitCommands();
 
   mQuitting = PR_FALSE;
   return NS_OK;
