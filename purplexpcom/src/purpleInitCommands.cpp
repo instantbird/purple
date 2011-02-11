@@ -45,7 +45,7 @@
 
 #include <nsIClassInfo.h>
 #include <nsServiceManagerUtils.h>
-#include <nsStringApi.h>
+#include <nsStringAPI.h>
 
 #ifdef PR_LOGGING
 //
