@@ -44,11 +44,13 @@
 #include <libpurple/connection.h>
 #pragma GCC visibility pop
 
-#include <nsXPCOM.h>
-#include <nsStringAPI.h>
 #include <nsCOMPtr.h>
+#include <nsServiceManagerUtils.h>
+#include <nsStringAPI.h>
+#include <nsXPCOM.h>
 #include <nsIDocument.h>
 #include <nsIDOMDocument.h>
+#include <nsIObserverService.h>
 
 #ifdef PR_LOGGING
 //
@@ -167,6 +169,13 @@ NS_IMETHODIMP purpleConversation::Close()
   NS_ENSURE_TRUE(mConv || mUninitialized, NS_ERROR_NOT_INITIALIZED);
 
   LOG(("purpleConversation::Close (mId = %i)", mId));
+
+  nsresult rv;
+  nsCOMPtr<nsIObserverService> os =
+    do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  os->NotifyObservers(this, "closing-conversation", nsnull);
 
   if (!mUninitialized) {
     purple_conversation_destroy(mConv);
