@@ -853,7 +853,7 @@ NS_IMETHODIMP purpleCoreService::ProcessAutoLogin()
     PRInt16 currentStatus;
     nsresult rv = GetCurrentStatusType(&currentStatus);
     NS_ENSURE_SUCCESS(rv, rv);
-    if (currentStatus == STATUS_OFFLINE) {
+    if (currentStatus == imIStatusInfo::STATUS_OFFLINE) {
       nsresult rv = SetStatus(PURPLE_STATUS_AVAILABLE, EmptyCString());
       NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -927,13 +927,13 @@ NS_IMETHODIMP purpleCoreService::GetCurrentStatusType(PRInt16 *aCurrentStatus)
   NS_ASSERTION(status, "purple_savedstatus_get_current should never return NULL");
   PurpleStatusPrimitive type = purple_savedstatus_get_type(status);
   if (purple_savedstatus_is_idleaway() && type != PURPLE_STATUS_OFFLINE) {
-    *aCurrentStatus = STATUS_IDLE;
+    *aCurrentStatus = imIStatusInfo::STATUS_IDLE;
     return NS_OK;
   }
 
 #define MAP_PURPLE_STATUS(aStatus)                       \
   case PURPLE_STATUS_##aStatus:                          \
-    *aCurrentStatus = STATUS_##aStatus;                  \
+    *aCurrentStatus = imIStatusInfo::STATUS_##aStatus;   \
     break
 
   switch (type) {
@@ -972,8 +972,9 @@ nsresult purpleCoreService::SetStatus(PurpleStatusPrimitive aStatus,
 NS_IMETHODIMP purpleCoreService::SetStatus(PRInt16 aStatus, const nsACString & aMessage)
 {
   PurpleStatusPrimitive status;
+#define STATUS_UNSET STATUS_UNKNOWN
 #define MAP_PURPLE_STATUS(aStatus)                \
-    case STATUS_##aStatus:                        \
+    case imIStatusInfo::STATUS_##aStatus:         \
       status = PURPLE_STATUS_##aStatus;           \
       break
 

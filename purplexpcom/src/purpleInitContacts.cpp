@@ -75,17 +75,21 @@ static void buddy_signals(PurpleBuddy *aBuddy, const char *aSignal)
   NS_ENSURE_SUCCESS(rv, );
 }
 
-static void buddy_signed_on(PurpleBuddy *aBuddy, const char *aSignal)
+void buddy_availability_changed(PurpleBuddy *aBuddy)
 {
   buddy_signals(aBuddy, "account-buddy-availability-changed");
   buddy_signals(aBuddy, "account-buddy-status-changed");
+}
+
+static void buddy_signed_on(PurpleBuddy *aBuddy, const char *aSignal)
+{
+  buddy_availability_changed(aBuddy);
   buddy_signals(aBuddy, "account-buddy-signed-on");
 }
 
 static void buddy_signed_off(PurpleBuddy *aBuddy, const char *aSignal)
 {
-  buddy_signals(aBuddy, "account-buddy-availability-changed");
-  buddy_signals(aBuddy, "account-buddy-status-changed");
+  buddy_availability_changed(aBuddy);
   buddy_signals(aBuddy, "account-buddy-signed-off");
 }
 
@@ -130,14 +134,12 @@ static void buddy_removed(PurpleBuddy *aBuddy, void *null)
 static void buddy_away(PurpleBuddy *aBuddy,
                        PurpleStatus *old_status, PurpleStatus *status)
 {
-  buddy_signals(aBuddy, "account-buddy-availability-changed");
-  buddy_signals(aBuddy, "account-buddy-status-changed");
+  buddy_availability_changed(aBuddy);
 }
 
 static void buddy_idle(PurpleBuddy *aBuddy, gboolean old_idle, gboolean idle)
 {
-  buddy_signals(aBuddy, "account-buddy-availability-changed");
-  buddy_signals(aBuddy, "account-buddy-status-changed");
+  buddy_availability_changed(aBuddy);
 }
 
 static void buddy_alias(PurpleBlistNode *aNode, const char *old_alias)
@@ -210,8 +212,7 @@ static void remove_blist_node(PurpleBuddyList *aList, PurpleBlistNode *aNode)
 
   PurpleBuddy *buddy = (PurpleBuddy *) aNode;
   LOG(("purple uiop : remove_blist_node, name = %s", buddy->name));
-  buddy_signals(buddy, "account-buddy-availability-changed");
-  buddy_signals(buddy, "account-buddy-status-changed");
+  buddy_availability_changed(buddy);
 }
 
 static PurpleBlistUiOps blist_uiops = {

@@ -58,6 +58,8 @@ extern PRLogModuleInfo *gPurpleInitLog;
 #endif
 #define LOG(args) PR_LOG(gPurpleInitLog, PR_LOG_DEBUG, args)
 
+extern void buddy_availability_changed(PurpleBuddy *aBuddy);
+
 /*** Connection uiops ***/
 #define IMPL_GET_ACCOUNT_FROM_UI_DATA(aVar)                        \
   purpleAccount *account = purpleAccount::fromPurpleAccount(aVar); \
@@ -83,6 +85,22 @@ static void connected(PurpleConnection *gc)
 {
   IMPL_GET_ACCOUNT;
   account->Connected();
+
+  for (PurpleBlistNode *gnode = purple_blist_get_root(); gnode; gnode = gnode->next) {
+    if (!PURPLE_BLIST_NODE_IS_GROUP(gnode))
+      continue;
+    for (PurpleBlistNode *cnode = gnode->child; cnode; cnode = cnode->next) {
+      if (!PURPLE_BLIST_NODE_IS_CONTACT(cnode))
+        continue;
+      for (PurpleBlistNode *bnode = cnode->child; bnode; bnode = bnode->next) {
+        if (!PURPLE_BLIST_NODE_IS_BUDDY(bnode))
+          continue;
+        PurpleBuddy *buddy = (PurpleBuddy*)bnode;
+        if (buddy->account == pAccount)
+          buddy_availability_changed(buddy);
+      }
+    }
+  }
 }
 static void disconnected(PurpleConnection *gc)
 {

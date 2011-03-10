@@ -115,16 +115,9 @@ interface purpleICoreService: purpleIAccountsService {
   // FIXME: this should really go in a purpleStorage service
   readonly attribute mozIStorageConnection storageConnection;
 
-  const short STATUS_UNSET = 0;
-  const short STATUS_OFFLINE = 1;
-  const short STATUS_MOBILE = 2;
-  const short STATUS_INVISIBLE = 3;
-  const short STATUS_IDLE = 4;
-  const short STATUS_AWAY = 5;
-  const short STATUS_UNAVAILABLE = 6;
-  const short STATUS_AVAILABLE = 7;
-
   readonly attribute AUTF8String currentStatusMessage;
+
+  // See imIStatusInfo in imIContactsService.idl for the values.
   readonly attribute short currentStatusType;
 
   // Only works with STATUS_OFFLINE, STATUS_UNAVAILABLE, STATUS_AWAY,

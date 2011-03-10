@@ -407,6 +407,8 @@ NS_IMETHODIMP purpleAccountBuddy::GetStatusText(nsACString &aStatusText)
   NS_ENSURE_TRUE(mPurpleBuddy, NS_ERROR_NOT_INITIALIZED);
 
   aStatusText.Truncate();
+  if (!purple_account_is_connected(purple_buddy_get_account(mPurpleBuddy)))
+    return NS_OK;
 
   purpleAccount *account =
     purpleAccount::fromPurpleAccount(purple_buddy_get_account(mPurpleBuddy));
