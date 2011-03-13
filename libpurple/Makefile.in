@@ -196,6 +196,14 @@ CSRCS		= \
 		blist.c \
 		buddyicon.c \
 		cipher.c \
+		ciphers/des.c \
+		ciphers/gchecksum.c \
+		ciphers/hmac.c \
+		ciphers/md4.c \
+		ciphers/md5.c \
+		ciphers/rc4.c \
+		ciphers/sha1.c \
+		ciphers/sha256.c \
 		circbuffer.c \
 		cmds.c \
 		connection.c \
@@ -260,6 +268,9 @@ ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 export::
 	mkdir -p win32
 endif
+
+export::
+	mkdir -p ciphers
 
 ifneq (,$(STATIC_PRPLS))
 $(STATIC_PRPL_LIBS):: $(STATIC_PROTO_libs)

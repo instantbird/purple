@@ -265,12 +265,6 @@ msn_switchboard_add_user(MsnSwitchBoard *swboard, const char *user)
 		return;
 	}
 
-	/* Don't add ourselves either... */
-	if (g_str_equal(passport, purple_account_get_username(account))) {
-		g_free(passport);
-		return;
-	}
-	
 	if (!msnuser) {
 		purple_debug_info("msn","User %s is not on our list.\n", passport);
 		msnuser = msn_user_new(userlist, passport, NULL);
@@ -831,7 +825,7 @@ msn_switchboard_show_ink(MsnSwitchBoard *swboard, const char *passport,
 
 	data += sizeof("base64:") - 1;
 	image_data = purple_base64_decode(data, &image_len);
-	if (!image_data || !image_len) 
+	if (!image_data || !image_len)
 	{
 		purple_debug_error("msn", "Unable to decode Ink from Base64 format.\n");
 		return;
