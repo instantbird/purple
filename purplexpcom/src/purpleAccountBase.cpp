@@ -803,8 +803,10 @@ NS_IMETHODIMP purpleAccountBase::Disconnecting(PRInt16 aConnectionErrorReason,
   finishedAutoLogin();
   CheckAndSetFirstConnectionState(FIRST_CONNECTION_SET);
 
-  if (aConnectionErrorReason != NO_ERROR)
+  if (aConnectionErrorReason != NO_ERROR) {
+    startReconnectTimer();
     sendNotification("account-connect-error");
+  }
   return sendNotification("account-disconnecting");
 }
 
@@ -814,9 +816,11 @@ NS_IMETHODIMP purpleAccountBase::Disconnected()
   NS_ENSURE_TRUE(mConnectionState != STATE_DISCONNECTED, NS_ERROR_UNEXPECTED);
   mConnectionState = STATE_DISCONNECTED;
 
-  nsresult rv = sendNotification("account-disconnected");
-  NS_ENSURE_SUCCESS(rv, rv);
+  return sendNotification("account-disconnected");
+}
 
+nsresult purpleAccountBase::startReconnectTimer()
+{
   if (mConnectionErrorReason != (PurpleConnectionError)ERROR_NETWORK_ERROR &&
       mConnectionErrorReason != (PurpleConnectionError)ERROR_ENCRYPTION_ERROR)
     return NS_OK;
@@ -829,8 +833,8 @@ NS_IMETHODIMP purpleAccountBase::Disconnected()
   nsCString timers;
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   NS_ENSURE_TRUE(prefs, NS_ERROR_OUT_OF_MEMORY);
-  rv = prefs->GetCharPref("messenger.accounts.reconnectTimer",
-                          getter_Copies(timers));
+  nsresult rv = prefs->GetCharPref("messenger.accounts.reconnectTimer",
+                                   getter_Copies(timers));
   NS_ENSURE_SUCCESS(rv, rv);
 
   /* If the last successful connection is older than 10 seconds, reset the

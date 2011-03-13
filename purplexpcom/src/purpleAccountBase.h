@@ -100,6 +100,7 @@ protected:
 
   /* Automatic reconnection stuff */
   nsCOMPtr<nsITimer> mTimer;
+  nsresult startReconnectTimer();
   static void reconnectTimerCallback(nsITimer *aTimer, void *aClosure);
   PRUint16 mReconnectAttempts;
   PRTime mTimeOfNextReconnect;
