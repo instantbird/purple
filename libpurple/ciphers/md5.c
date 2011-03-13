@@ -301,9 +301,9 @@ static PurpleCipherOps MD5Ops = {
 	NULL,			/* Get Option		*/
 	md5_init,		/* init				*/
 	md5_reset,		/* reset			*/
-	purple_g_checksum_uninit,	/* uninit			*/
+	md5_uninit,	/* uninit			*/
 	NULL,			/* set iv			*/
-	purple_g_checksum_append,	/* append			*/
+	md5_append,	/* append			*/
 	md5_digest,		/* digest			*/
 	NULL,			/* encrypt			*/
 	NULL,			/* decrypt			*/

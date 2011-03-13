@@ -252,13 +252,13 @@ sha1_digest(PurpleCipherContext *context, size_t in_len, guchar digest[20],
 }
 
 static PurpleCipherOps SHA1Ops = {
-	NULL,			/* Set Option		*/
-	NULL,			/* Get Option		*/
+	sha1_set_opt,		/* Set Option		*/
+	sha1_get_opt,		/* Get Option		*/
 	sha1_init,		/* init				*/
 	sha1_reset,		/* reset			*/
-	purple_g_checksum_uninit,	/* uninit			*/
+	sha1_uninit,		/* uninit			*/
 	NULL,			/* set iv			*/
-	purple_g_checksum_append,	/* append			*/
+	sha1_append,		/* append			*/
 	sha1_digest,	/* digest			*/
 	NULL,			/* encrypt			*/
 	NULL,			/* decrypt			*/
