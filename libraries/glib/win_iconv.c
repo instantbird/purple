@@ -19,6 +19,12 @@
  * be used for encoding validation purpose.
  */
 
+/* for WC_NO_BEST_FIT_CHARS */
+#ifndef WINVER
+# define WINVER 0x0500
+#endif
+
+#define STRICT
 #include <windows.h>
 #include <errno.h>
 #include <string.h>
@@ -36,10 +42,12 @@
 
 #define MB_CHAR_MAX 16
 
-#define UNICODE_MODE_BOM_DONE 1
-#define UNICODE_MODE_SWAPPED 2
+#define UNICODE_MODE_BOM_DONE   1
+#define UNICODE_MODE_SWAPPED    2
 
-#define UNICODE_FLAG_USE_BOM_ENDIAN 1
+#define FLAG_USE_BOM_ENDIAN     1
+#define FLAG_TRANSLIT           2 /* //TRANSLIT */
+#define FLAG_IGNORE             4 /* //IGNORE (not implemented) */
 
 #define return_error(code)  \
     do {                    \
@@ -60,18 +68,6 @@
 #define xmax(a, b) ((a) > (b) ? (a) : (b))
 
 #define STATIC_STRLEN(arr) (sizeof(arr) - 1)
-
-#ifdef WINCE
-static int*
-_errno(void)
-{
-    return &errno;
-}
-#endif
-
-#ifndef EILSEQ
-# define EILSEQ 42
-#endif
 
 typedef unsigned char uchar;
 typedef unsigned short ushort;
@@ -149,6 +145,7 @@ static int name_to_codepage(const char *name);
 static uint utf16_to_ucs4(const ushort *wbuf);
 static void ucs4_to_utf16(uint wc, ushort *wbuf, int *wbufsize);
 static int is_unicode(int codepage);
+static int mbtowc_flags(int codepage);
 static int must_use_null_useddefaultchar(int codepage);
 static void check_utf_bom(rec_iconv_t *cd, ushort *wbuf, int *wbufsize);
 static char *strrstr(const char *str, const char *token);
@@ -164,6 +161,7 @@ static HMODULE hlastdll; /* keep dll loaded for efficiency (unnecessary?) */
 
 static int sbcs_mblen(csconv_t *cv, const uchar *buf, int bufsize);
 static int dbcs_mblen(csconv_t *cv, const uchar *buf, int bufsize);
+static int mbcs_mblen(csconv_t *cv, const uchar *buf, int bufsize);
 static int utf8_mblen(csconv_t *cv, const uchar *buf, int bufsize);
 static int eucjp_mblen(csconv_t *cv, const uchar *buf, int bufsize);
 
@@ -190,19 +188,27 @@ static struct {
     {1200, "CP1200"},
     {1200, "UTF16LE"},
     {1200, "UTF-16LE"},
+    {1200, "UCS2LE"},
+    {1200, "UCS-2LE"},
 
     {1201, "CP1201"},
     {1201, "UTF16BE"},
     {1201, "UTF-16BE"},
+    {1201, "UCS2BE"},
+    {1201, "UCS-2BE"},
     {1201, "unicodeFFFE"},
 
     {12000, "CP12000"},
     {12000, "UTF32LE"},
     {12000, "UTF-32LE"},
+    {12000, "UCS4LE"},
+    {12000, "UCS-4LE"},
 
     {12001, "CP12001"},
     {12001, "UTF32BE"},
     {12001, "UTF-32BE"},
+    {12001, "UCS4BE"},
+    {12001, "UCS-4BE"},
 
 #ifndef GLIB_COMPILATION
     /*
@@ -213,12 +219,18 @@ static struct {
     {1201, "UTF-16"},
     {12001, "UTF32"},
     {12001, "UTF-32"},
+    {12001, "UCS-4"},
+    {12001, "UCS4"},
 #else
     /* Default is little endian, because the platform is */
     {1200, "UTF16"},
     {1200, "UTF-16"},
+    {1200, "UCS2"},
+    {1200, "UCS-2"},
     {12000, "UTF32"},
     {12000, "UTF-32"},
+    {12000, "UCS4"},
+    {12000, "UCS-4"},
 #endif
 
     /* copy from libiconv `iconv -l` */
@@ -694,10 +706,20 @@ static RFC1766TOLCIDA Rfc1766ToLcidA;
 static int
 load_mlang()
 {
-    HMODULE h;
+    HMODULE h = NULL;
+    char mlang_dll[MAX_PATH + 100];
+    int n;
     if (ConvertINetString != NULL)
         return TRUE;
-    h = LoadLibraryW(L"mlang.dll");
+    n = GetSystemDirectory(mlang_dll, MAX_PATH);
+    if (n > 0 && n < MAX_PATH)
+    {
+        if (mlang_dll[n-1] != '\\' &&
+            mlang_dll[n-1] != '/')
+            strcat(mlang_dll, "\\");
+        strcat(mlang_dll, "mlang.dll");
+        h = LoadLibrary(mlang_dll);
+    }
     if (!h)
         return FALSE;
     ConvertINetString = (CONVERTINETSTRING)GetProcAddress(h, "ConvertINetString");
@@ -877,9 +899,10 @@ win_iconv(iconv_t _cd, const char **inbuf, size_t *inbytesleft, char **outbuf, s
 static csconv_t
 make_csconv(const char *_name)
 {
-    CPINFO cpinfo;
+    CPINFOEX cpinfoex;
     csconv_t cv;
     int use_compat = TRUE;
+    int flag = 0;
     char name[128];
     char *p;
 
@@ -890,11 +913,15 @@ make_csconv(const char *_name)
     {
         if (_stricmp(p + 2, "nocompat") == 0)
             use_compat = FALSE;
+        else if (_stricmp(p + 2, "translit") == 0)
+            flag |= FLAG_TRANSLIT;
+        else if (_stricmp(p + 2, "ignore") == 0)
+            flag |= FLAG_IGNORE;
         *p = 0;
     }
 
     cv.mode = 0;
-    cv.flags = 0;
+    cv.flags = flag;
     cv.mblen = NULL;
     cv.flush = NULL;
     cv.compat = NULL;
@@ -903,15 +930,21 @@ make_csconv(const char *_name)
     {
         cv.mbtowc = utf16_mbtowc;
         cv.wctomb = utf16_wctomb;
-        if (_stricmp(name, "UTF-16") == 0 || _stricmp(name, "UTF16") == 0)
-            cv.flags |= UNICODE_FLAG_USE_BOM_ENDIAN;
+        if (_stricmp(name, "UTF-16") == 0 ||
+	    _stricmp(name, "UTF16") == 0 ||
+	    _stricmp(name, "UCS-2") == 0 ||
+	    _stricmp(name, "UCS2") == 0)
+            cv.flags |= FLAG_USE_BOM_ENDIAN;
     }
     else if (cv.codepage == 12000 || cv.codepage == 12001)
     {
         cv.mbtowc = utf32_mbtowc;
         cv.wctomb = utf32_wctomb;
-        if (_stricmp(name, "UTF-32") == 0 || _stricmp(name, "UTF32") == 0)
-            cv.flags |= UNICODE_FLAG_USE_BOM_ENDIAN;
+        if (_stricmp(name, "UTF-32") == 0 ||
+	    _stricmp(name, "UTF32") == 0 ||
+	    _stricmp(name, "UCS-4") == 0 ||
+	    _stricmp(name, "UCS4") == 0)
+            cv.flags |= FLAG_USE_BOM_ENDIAN;
     }
     else if (cv.codepage == 65001)
     {
@@ -932,15 +965,16 @@ make_csconv(const char *_name)
         cv.mblen = eucjp_mblen;
     }
     else if (IsValidCodePage(cv.codepage)
-            && GetCPInfo(cv.codepage, &cpinfo) != 0
-            && (cpinfo.MaxCharSize == 1 || cpinfo.MaxCharSize == 2))
+	     && GetCPInfoEx(cv.codepage, 0, &cpinfoex) != 0)
     {
         cv.mbtowc = kernel_mbtowc;
         cv.wctomb = kernel_wctomb;
-        if (cpinfo.MaxCharSize == 1)
+        if (cpinfoex.MaxCharSize == 1)
             cv.mblen = sbcs_mblen;
-        else
+        else if (cpinfoex.MaxCharSize == 2)
             cv.mblen = dbcs_mblen;
+	else
+	    cv.mblen = mbcs_mblen;
     }
     else
     {
@@ -1020,6 +1054,35 @@ is_unicode(int codepage)
             codepage == 65000 || codepage == 65001);
 }
 
+/*
+ * Check if codepage is one of those for which the dwFlags parameter
+ * to MultiByteToWideChar() must be zero. Return zero or
+ * MB_ERR_INVALID_CHARS.  The docs in Platform SDK for for Windows
+ * Server 2003 R2 claims that also codepage 65001 is one of these, but
+ * that doesn't seem to be the case. The MSDN docs for MSVS2008 leave
+ * out 65001 (UTF-8), and that indeed seems to be the case on XP, it
+ * works fine to pass MB_ERR_INVALID_CHARS in dwFlags when converting
+ * from UTF-8.
+ */
+static int
+mbtowc_flags(int codepage)
+{
+    return (codepage == 50220 || codepage == 50221 ||
+	    codepage == 50222 || codepage == 50225 ||
+	    codepage == 50227 || codepage == 50229 ||
+	    codepage == 52936 || codepage == 54936 ||
+	    (codepage >= 57002 && codepage <= 57011) ||
+	    codepage == 65000 || codepage == 42) ? 0 : MB_ERR_INVALID_CHARS;
+}
+
+/*
+ * Check if codepage is one those for which the lpUsedDefaultChar
+ * parameter to WideCharToMultiByte() must be NULL.  The docs in
+ * Platform SDK for for Windows Server 2003 R2 claims that this is the
+ * list below, while the MSDN docs for MSVS2008 claim that it is only
+ * for 65000 (UTF-7) and 65001 (UTF-8). This time the earlier Platform
+ * SDK seems to be correct, at least for XP.
+ */
 static int
 must_use_null_useddefaultchar(int codepage)
 {
@@ -1036,7 +1099,7 @@ static void
 check_utf_bom(rec_iconv_t *cd, ushort *wbuf, int *wbufsize)
 {
     /* If we have a BOM, trust it, despite what the caller said */
-    if (wbuf[0] == 0xFFFE && (cd->from.flags & UNICODE_FLAG_USE_BOM_ENDIAN))
+    if (wbuf[0] == 0xFFFE && (cd->from.flags & FLAG_USE_BOM_ENDIAN))
     {
         /* swap endian: 1200 <-> 1201 or 12000 <-> 12001 */
         cd->from.codepage ^= 1;
@@ -1228,6 +1291,28 @@ dbcs_mblen(csconv_t *cv, const uchar *buf, int bufsize)
 }
 
 static int
+mbcs_mblen(csconv_t *cv, const uchar *buf, int bufsize)
+{
+    int len = 0;
+
+    if (cv->codepage == 54936) {
+	if (buf[0] <= 0x7F) len = 1;
+	else if (buf[0] >= 0x81 && buf[0] <= 0xFE &&
+		 bufsize >= 2 &&
+		 ((buf[1] >= 0x40 && buf[1] <= 0x7E) ||
+		  (buf[1] >= 0x80 && buf[1] <= 0xFE))) len = 2;
+	else if (buf[0] >= 0x81 && buf[0] <= 0xFE &&
+		 bufsize >= 4 &&
+		 buf[1] >= 0x30 && buf[1] <= 0x39) len = 4;
+	else
+	    return_error(EINVAL);
+	return len;
+    }
+    else
+	return_error(EINVAL);
+}
+
+static int
 utf8_mblen(csconv_t *cv, const uchar *buf, int bufsize)
 {
     int len = 0;
@@ -1287,7 +1372,13 @@ kernel_mbtowc(csconv_t *cv, const uchar *buf, int bufsize, ushort *wbuf, int *wb
     len = cv->mblen(cv, buf, bufsize);
     if (len == -1)
         return -1;
-    *wbufsize = MultiByteToWideChar(cv->codepage, MB_ERR_INVALID_CHARS,
+    /* If converting from ASCII, reject 8bit
+     * chars. MultiByteToWideChar() doesn't. Note that for ASCII we
+     * know that the mblen function is sbcs_mblen() so len is 1.
+     */
+    if (cv->codepage == 20127 && buf[0] >= 0x80)
+        return_error(EILSEQ);
+    *wbufsize = MultiByteToWideChar(cv->codepage, mbtowc_flags (cv->codepage),
             (const char *)buf, len, (wchar_t *)wbuf, *wbufsize);
     if (*wbufsize == 0)
         return_error(EILSEQ);
@@ -1298,13 +1389,22 @@ static int
 kernel_wctomb(csconv_t *cv, ushort *wbuf, int wbufsize, uchar *buf, int bufsize)
 {
     BOOL usedDefaultChar = 0;
+    BOOL *p = NULL;
+    int flags = 0;
     int len;
 
     if (bufsize == 0)
         return_error(E2BIG);
-    len = WideCharToMultiByte(cv->codepage, 0,
-            (const wchar_t *)wbuf, wbufsize, (char *)buf, bufsize, NULL,
-            must_use_null_useddefaultchar(cv->codepage) ? NULL : &usedDefaultChar);
+    if (!must_use_null_useddefaultchar(cv->codepage))
+    {
+        p = &usedDefaultChar;
+#ifdef WC_NO_BEST_FIT_CHARS
+        if (!(cv->flags & FLAG_TRANSLIT))
+            flags |= WC_NO_BEST_FIT_CHARS;
+#endif
+    }
+    len = WideCharToMultiByte(cv->codepage, flags,
+            (const wchar_t *)wbuf, wbufsize, (char *)buf, bufsize, NULL, p);
     if (len == 0)
     {
         if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
@@ -1863,4 +1963,3 @@ main(int argc, char **argv)
     return 0;
 }
 #endif
-
