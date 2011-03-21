@@ -43,6 +43,7 @@
 #include "purpleConvChatBuddy.h"
 #include "purpleCoreService.h"
 #include "purpleMessage.h"
+#include <nsIObserverService.h>
 #include <nsISupportsPrimitives.h>
 #include <nsArrayEnumerator.h>
 #include <nsComponentManagerUtils.h>
@@ -120,10 +121,11 @@ static void write_conv(PurpleConversation *conv, const char *who,
 
   msg->Init(conv, who, alias, message, flags, mtime);
 
-  nsCOMPtr<purpleICoreService> pcs =
-    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID, &rv);
-  pcs->NotifyObservers(msg, "new-text", nsnull);
+  nsCOMPtr<nsIObserverService> os =
+    do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,);
 
+  os->NotifyObservers(msg, "new-text", nsnull);
   notify_conv(conv, msg, "new-text");
 }
 
@@ -236,10 +238,10 @@ static void conversation_updated(PurpleConversation *aConv, PurpleConvUpdateType
       {
         purpleConversation *conversation =
           purpleConversation::fromPurpleConv(aConv);
-        nsCOMPtr<purpleICoreService> pcs =
-          do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-        if (conversation && pcs)
-          pcs->NotifyObservers(conversation, "conversation-left-chat", nsnull);
+        nsCOMPtr<nsIObserverService> os =
+          do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+        if (conversation && os)
+          os->NotifyObservers(conversation, "conversation-left-chat", nsnull);
       }
       notify_conv(aConv, nsnull, "update-conv-chatleft");
       break;

@@ -102,9 +102,6 @@ interface purpleICoreService: purpleIAccountsService {
   */
   void processAutoLogin();
 
-  void notifyObservers(in nsISupports aObj, in string aEvent,
-                       [optional] in wstring aData);
-
   /* buddy related event fired:
       - buddy-added: a new buddy has been added to the buddy list
       - buddy-signed-on: this buddy has just signed on

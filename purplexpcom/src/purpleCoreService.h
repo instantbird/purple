@@ -64,10 +64,6 @@ public:
 
   NS_FORWARD_SAFE_PURPLEIACCOUNTSSERVICE(mAccountsService);
 
-  nsresult NotifyObservers(nsISupports *aObj, const char *aEvent) {
-    return NotifyObservers(aObj, aEvent, nsnull);
-  }
-
 private:
   ~purpleCoreService();
   void InitProtocols();
@@ -82,6 +78,8 @@ private:
   nsresult SetStatus(PurpleStatusPrimitive aStatus, const nsACString &aMessage);
   nsresult addIdleObserver();
   nsresult removeIdleObserver();
+  nsresult NotifyObservers(nsISupports *aObj, const char *aEvent,
+                           const PRUnichar *aData = nsnull);
 
 protected:
   PRBool mInitialized;

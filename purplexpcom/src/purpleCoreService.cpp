@@ -888,10 +888,9 @@ NS_IMETHODIMP purpleCoreService::ProcessAutoLogin()
 }
 
 
-/* void notifyObservers (in nsISupports aObj, in string aEvent, in wstring aData); */
-NS_IMETHODIMP purpleCoreService::NotifyObservers(nsISupports *aObj,
-                                                 const char *aEvent,
-                                                 const PRUnichar *aData)
+nsresult purpleCoreService::NotifyObservers(nsISupports *aObj,
+                                            const char *aEvent,
+                                            const PRUnichar *aData)
 {
   nsresult rv;
   nsCOMPtr<nsIObserverService> os =
