@@ -41,8 +41,8 @@
 
 #include "purpleConversation.h"
 #include "purpleConvChatBuddy.h"
-#include "purpleCoreService.h"
 #include "purpleMessage.h"
+#include "imIConversationsService.h"
 #include <nsIObserverService.h>
 #include <nsISupportsPrimitives.h>
 #include <nsArrayEnumerator.h>
@@ -80,9 +80,10 @@ static void create_conv(PurpleConversation *aConv)
   NS_ENSURE_TRUE(conv, );
   conv->SetConv(aConv);
 
-  nsCOMPtr<purpleICoreService> pcs =
-    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-  pcs->AddConversation(conv);
+  nsCOMPtr<imIConversationsService> convs =
+    do_GetService("@instantbird.org/purple/conversations-service;1");
+  NS_ENSURE_TRUE(convs, );
+  convs->AddConversation(conv);
 }
 
 static void destroy_conv(PurpleConversation *aConv)
@@ -94,9 +95,10 @@ static void destroy_conv(PurpleConversation *aConv)
   purpleConversation *conversation = purpleConversation::fromPurpleConv(aConv);
   NS_ENSURE_TRUE(conversation,);
 
-  nsCOMPtr<purpleICoreService> pcs =
-    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
-  pcs->RemoveConversation(conversation);
+  nsCOMPtr<imIConversationsService> convs =
+    do_GetService("@instantbird.org/purple/conversations-service;1");
+  NS_ENSURE_TRUE(convs, );
+  convs->RemoveConversation(conversation);
 }
 
 static void notify_conv(PurpleConversation *aConv, nsISupports *aSubject,

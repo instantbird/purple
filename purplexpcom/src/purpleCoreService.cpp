@@ -44,6 +44,7 @@
 #include "purpleSockets.h"
 #include "purpleTimer.h"
 #include "imICommandsService.h"
+#include "imIConversationsService.h"
 
 #pragma GCC visibility push(default)
 #include <libpurple/core.h>
@@ -102,8 +103,7 @@ purpleCoreService::purpleCoreService()
    mQuitting(PR_FALSE),
    mAutoLoginStatus(AUTOLOGIN_ENABLED),
    mProtocols(nsnull),
-   mProxies(nsnull),
-   mConversations(nsnull)
+   mProxies(nsnull)
 {
 #ifdef PR_LOGGING
   if (!gPurpleCoreServiceLog)
@@ -523,10 +523,11 @@ NS_IMETHODIMP purpleCoreService::Quit()
   os->NotifyObservers(static_cast<purpleICoreService *>(this),
                       "purple-quit", nsnull);
 
-  for (PRInt32 i = mConversations.Count() - 1; i >= 0; --i) {
-    mConversations[i]->UnInit();
-  }
-  mConversations.Clear();
+  nsCOMPtr<imIConversationsService> conversations =
+    do_GetService("@instantbird.org/purple/conversations-service;1");
+  if (conversations)
+    conversations->UnInitConversations();
+
   disconnect_blist_signals();
   mAccountsService->UnInitAccounts();
   mAccountsService = nsnull;
@@ -569,58 +570,6 @@ NS_IMETHODIMP purpleCoreService::Quit()
 NS_IMETHODIMP purpleCoreService::GetVersion(nsACString& aVersion)
 {
   aVersion = purple_core_get_version();
-  return NS_OK;
-}
-
-/* nsISimpleEnumerator getConversations (); */
-NS_IMETHODIMP purpleCoreService::GetConversations(nsISimpleEnumerator **aResult)
-{
-  PURPLE_ENSURE_INIT(mInitialized);
-
-  return NS_NewArrayEnumerator(aResult, mConversations);
-}
-
-
-/* purpleIProtocol getConversationById (in string aConversationId); */
-NS_IMETHODIMP purpleCoreService::GetConversationById(PRUint32 aId,
-                                                     purpleIConversation **aResult)
-{
-  PURPLE_ENSURE_INIT(mInitialized);
-
-  LOG(("GetConversationById(%i)", aId));
-
-  for (PRInt32 i = mConversations.Count() - 1; i >= 0; --i) {
-    PRUint32 id;
-    if (NS_SUCCEEDED(mConversations[i]->GetId(&id)) && id == aId) {
-      NS_ADDREF(*aResult = mConversations[i]);
-      return NS_OK;
-    }
-  }
-
-  *aResult = nsnull;
-  return NS_OK;
-}
-
-PRUint32 purpleCoreService::sLastConversationId = 0;
-
-/* void addConversation (in purpleIConversation aConversation); */
-NS_IMETHODIMP purpleCoreService::AddConversation(purpleIConversation *aConversation)
-{
-  aConversation->SetId(++sLastConversationId);
-  mConversations.AppendObject(aConversation);
-  NotifyObservers(aConversation, "new-conversation");
-  return NS_OK;
-}
-
-/* void removeConversation (in purpleIConversation aConversation); */
-NS_IMETHODIMP purpleCoreService::RemoveConversation(purpleIConversation *aConversation)
-{
-  LOG(("purpleCoreService::RemoveConversation aConv = @%x",  aConversation));
-
-  NotifyObservers(aConversation, "conversation-closed");
-  aConversation->UnInit();
-  mConversations.RemoveObject(aConversation);
-  LOG(("purpleCoreSevice::RemoveConversation: Done"));
   return NS_OK;
 }
 

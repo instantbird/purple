@@ -113,6 +113,7 @@ EXTRA_COMPONENTS = \
 
 EXTRA_COMPONENTS += \
 		imContacts.js imContacts.manifest \
+		imConversations.js imConversations.manifest \
 		imCommands.js imCommands.manifest \
 		$(NULL)
 

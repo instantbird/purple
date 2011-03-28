@@ -88,7 +88,6 @@ protected:
   nsCOMArray<purpleIProtocol> mProtocols;
   nsCOMArray<purpleProxy> mProxies;
   nsCOMPtr<purpleIAccountsService> mAccountsService;
-  nsCOMArray<purpleIConversation> mConversations;
   nsCOMPtr<purpleIProxyInfo> mGlobalProxy;
   nsCOMPtr<purpleIdleObserver> mIdleObserver;
   static PRUint32 sLastConversationId;

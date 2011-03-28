@@ -96,6 +96,8 @@ void purpleConversation::SetConv(PurpleConversation *aConv)
 NS_IMETHODIMP purpleConversation::UnInit()
 {
   LOG(("purpleConversation::unInit (mId == %i)", mId));
+  NS_ENSURE_TRUE(mConv && !mUninitialized, NS_ERROR_NOT_INITIALIZED);
+
   mConv->ui_data = NULL;
   mConv = NULL;
   mUninitialized = PR_TRUE;
@@ -213,8 +215,8 @@ void purpleConversation::NotifyObservers(nsISupports *aSubject,
                                          const char *aTopic,
                                          const PRUnichar *aData)
 {
-  LOG(("purpleConversation::NotifyObservers (mId = %i, topic = %s)",
-       mId, aTopic));
+  LOG(("purpleConversation(mId = %i)::NotifyObservers(@%x, topic = %s)",
+       mId, aSubject, aTopic));
   for (PRInt32 i = 0; i < mObservers.Count(); ++i)
     mObservers[i]->Observe(aSubject, aTopic, aData);
 }
