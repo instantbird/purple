@@ -445,7 +445,7 @@ void purpleCoreService::InitProtocols()
     }
   }
 
-  LOG(("Init override protocols"));
+  LOG(("Init JS protocols"));
   nsCOMPtr<nsICategoryManager> catMgr =
     do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
   NS_ENSURE_TRUE(catMgr, );
@@ -476,7 +476,7 @@ void purpleCoreService::InitProtocols()
     LOG(("Attempting to register %s", contractId.get()));
     nsCOMPtr<purpleIProtocol> proto = do_CreateInstance(contractId.get());
     if (!proto) {
-      NS_WARNING("Failed attempt to register a protocol override component");
+      NS_WARNING("Failed attempt to register a protocol component");
       continue;
     }
 
