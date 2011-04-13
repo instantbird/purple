@@ -1,6 +1,3 @@
-pref("plugins.core.statenotify.notify_away", true);
-pref("plugins.core.statenotify.notify_idle", true);
-pref("plugins.core.statenotify.notify_signon", true);
 pref("plugins.prpl.oscar.recent_buddies", false);
 pref("plugins.prpl.qq.auto_get_authorize_info", true);
 pref("plugins.prpl.qq.resend_interval", 3);

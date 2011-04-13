@@ -4,6 +4,7 @@
 % locale purple @AB_CD@ %locale/@AB_CD@/purple/
 	locale/@AB_CD@/purple/conversations.properties (%conversations.properties)
 	locale/@AB_CD@/purple/prpl.properties	(%purple.properties)
+	locale/@AB_CD@/purple/status.properties (%status.properties)
 % locale oscar @AB_CD@ %locale/@AB_CD@/oscar/
 	locale/@AB_CD@/oscar/prpl.properties	(%oscar.properties)
 % locale jabber @AB_CD@ %locale/@AB_CD@/jabber/

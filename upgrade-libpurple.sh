@@ -36,7 +36,6 @@ pruneunused() {
   rm -rf $1/{ChangeLog*,config*,compile,AUTHORS,COPYRIGHT,NEWS,aclocal.m4,depcomp,install-sh,intltool*,missing,pidgin.*,ltmain.sh}
   find . -name 'Makefile.*' -exec rm -r {} \;
   mv $1/libpurple/plugins/ssl/ssl-nss.c $1/libpurple
-  mv $1/libpurple/plugins/statenotify.c $1/libpurple
   rm -rf $1/libpurple/{plugins,gconf,example,tests}
   rm -rf $1/libpurple/protocols/{bonjour,msnp9,sametime,silc,silc10,toc,zephyr}
   rm -rf $1/libpurple/protocols/jabber/jingle

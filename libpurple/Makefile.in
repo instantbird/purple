@@ -231,7 +231,6 @@ CSRCS		= \
 		savedstatuses.c \
 		server.c \
 		signals.c \
-		statenotify.c \
 		dnsquery.c \
 		dnssrv.c \
 		smiley.c \

@@ -222,12 +222,6 @@ static void conversation_updated(PurpleConversation *aConv, PurpleConvUpdateType
       notify_conv(aConv, nsnull, "update-typing");
       break;
 
-    case PURPLE_CONV_UPDATE_AWAY:
-    case PURPLE_CONV_ACCOUNT_ONLINE:
-    case PURPLE_CONV_ACCOUNT_OFFLINE:
-      notify_conv(aConv, nsnull, "update-buddy-status");
-      break;
-
     case PURPLE_CONV_UPDATE_TITLE:
       // The test prevents a warning caused by libpurple stupidly
       // calling purple_conversation_autoset_title before the
