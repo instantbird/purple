@@ -51,8 +51,6 @@ def fix_location(aString):
 
     if aString == "../libpurple/plugins/ssl/ssl-nss.c":
         return "../libpurple/ssl-nss.c"
-    if aString == "../libpurple/plugins/statenotify.c":
-        return "../libpurple/statenotify.c";
     return aString
 
 # fix strings for display on a single line
