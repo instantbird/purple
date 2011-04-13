@@ -464,6 +464,8 @@ nsresult purpleAccountBase::GetPrefBranch()
 
   /* get the branch */
   nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(prefs, NS_ERROR_UNEXPECTED);
+
   nsresult rv = prefs->GetBranch(root.get(), getter_AddRefs(mPrefBranch));
   NS_ENSURE_SUCCESS(rv, rv);
 
