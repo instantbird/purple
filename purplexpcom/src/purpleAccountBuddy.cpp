@@ -337,9 +337,10 @@ NS_IMETHODIMP purpleAccountBuddy::GetCanSendMessage(PRBool *aCanSendMessage)
   NS_ENSURE_TRUE(mPurpleBuddy, NS_ERROR_NOT_INITIALIZED);
 
   *aCanSendMessage =
-    purple_presence_is_online(purple_buddy_get_presence(mPurpleBuddy)) ||
-    purple_account_supports_offline_message(purple_buddy_get_account(mPurpleBuddy),
-                                            mPurpleBuddy);
+    purple_account_is_connected(purple_buddy_get_account(mPurpleBuddy)) &&
+    (purple_presence_is_online(purple_buddy_get_presence(mPurpleBuddy)) ||
+     purple_account_supports_offline_message(purple_buddy_get_account(mPurpleBuddy),
+                                             mPurpleBuddy));
   return NS_OK;
 }
 
