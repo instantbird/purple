@@ -287,7 +287,7 @@ NS_IMETHODIMP purpleAccount::UnInit()
 
   if (mHasValidProtocol) {
     nsCOMPtr<nsIObserverService> os =
-      do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+      do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
     if (NS_LIKELY(os)) {
       os->RemoveObserver(this, "user-icon-changed");
       os->RemoveObserver(this, "user-display-name-changed");
