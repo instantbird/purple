@@ -271,12 +271,35 @@ static void close_account_request(void *ui_handle)
   ((purpleAuthorizationRequest *)ui_handle)->Cancel();
 }
 
+static void set_account_int(PurpleAccount *aAccount,
+                            const char *aName, int aValue)
+{
+  IMPL_GET_ACCOUNT_FROM_UI_DATA(aAccount);
+  account->purpleAccountBase::SetInt(aName, aValue);
+}
+static void set_account_string(PurpleAccount *aAccount,
+                               const char *aName, const char *aValue)
+{
+  IMPL_GET_ACCOUNT_FROM_UI_DATA(aAccount);
+  account->purpleAccountBase::SetString(aName, aValue ? aValue : "");
+}
+static void set_account_bool(PurpleAccount *aAccount,
+                             const char *aName, gboolean aValue)
+{
+  IMPL_GET_ACCOUNT_FROM_UI_DATA(aAccount);
+  account->purpleAccountBase::SetBool(aName, aValue);
+}
+
 static PurpleAccountUiOps account_uiops = {
   NULL, /* notify_added, nearly dead code ? */
   NULL, /* status_changed */
   NULL, /* request_add, nearly dead */
   request_authorize,
   close_account_request,
+
+  set_account_int,
+  set_account_string,
+  set_account_bool,
 
   NULL, NULL, NULL, NULL
 };

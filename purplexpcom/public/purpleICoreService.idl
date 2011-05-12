@@ -43,6 +43,8 @@
 
 //forward declarations
 interface mozIStorageConnection;
+interface nsILocalFile;
+interface nsIFileURL;
 
 /*
  * This is a proxy to the libpurple core
@@ -115,4 +117,12 @@ interface purpleICoreService: purpleIAccountsService {
   // changed.  When called with STATUS_OFFLINE, the aMessage parameter
   // is ignored.
   void setStatus(in short aStatus, in AUTF8String aMessage);
+
+  /* Will fire an user-icon-changed notificaton. */
+  void setUserIcon(in nsILocalFile aIconFile);
+
+  nsIFileURL getUserIcon();
+
+  /* The setter will fire an user-display-name-changed notificaton. */
+  attribute AUTF8String userDisplayName;
 };

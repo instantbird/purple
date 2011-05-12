@@ -82,6 +82,8 @@ static PRLogModuleInfo *gPurpleCoreServiceLog = nsnull;
 
 #define PREF_STARTUP_ACTION     "messenger.startup.action"
 #define PREF_REPORT_IDLE        "messenger.status.reportIdle"
+#define PREF_USER_ICON_FILENAME "messenger.status.userIconFileName"
+#define PREF_USER_DISPLAY_NAME  "messenger.status.userDisplayName"
 
 #define QUIT_APPLICATION_GRANTED_NOTIFICATION "quit-application-granted"
 
@@ -208,7 +210,6 @@ NS_IMETHODIMP purpleCoreService::Init()
   NS_ENSURE_SUCCESS(rv, rv);
 
   /* Init libpurple subsystems */
-  init_libpurple_accounts();
   init_libpurple_conversations();
 
   /* Load the list of protocol plugins and their specific options */
@@ -228,6 +229,10 @@ NS_IMETHODIMP purpleCoreService::Init()
 
   rv = mAccountsService->InitAccounts();
   NS_ENSURE_SUCCESS(rv, rv);
+
+  /* Set the ui ops only after the accounts are loaded to avoid useless
+     set_* ops calls during the load of account specific preferences. */
+  init_libpurple_accounts();
 
   /* Load the buddy list from mozStorage */
   rv = InitBuddyList();
@@ -529,7 +534,14 @@ NS_IMETHODIMP purpleCoreService::Quit()
     conversations->UnInitConversations();
 
   disconnect_blist_signals();
+
+  // Prevent the cached account icons from being uncached while
+  // uninitializing the accounts.
+  gboolean caching = purple_buddy_icons_is_caching();
+  purple_buddy_icons_set_caching(FALSE);
   mAccountsService->UnInitAccounts();
+  purple_buddy_icons_set_caching(caching);
+
   mAccountsService = nsnull;
   nsCOMPtr<imIContactsService> contacts =
     do_GetService("@instantbird.org/purple/contacts-service;1");
@@ -940,6 +952,140 @@ NS_IMETHODIMP purpleCoreService::SetStatus(PRInt16 aStatus, const nsACString & a
 #undef MAP_PURPLE_STATUS
 
   return SetStatus(status, aMessage);
+}
+
+/* void setUserIcon (in nsILocalFile aIconFile); */
+NS_IMETHODIMP purpleCoreService::SetUserIcon(nsILocalFile *aIconFile)
+{
+  // Get the profile folder
+  nsCOMPtr<nsIFile> folder;
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                       getter_AddRefs(folder));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsString newName;
+  if (aIconFile) {
+    // newName = userIcon-<timestamp(now)>.<aIconFile.extension>
+    newName.AssignLiteral("userIcon-");
+    newName.AppendInt(PR_Now() / PR_USEC_PER_SEC);
+
+    nsString leafName;
+    rv = aIconFile->GetLeafName(leafName);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Remove trailing dots (invalid Windows extension)
+    leafName.Trim(".", PR_FALSE);
+    PRInt32 extPos = leafName.RFindChar(PRUnichar('.'));
+    newName.Append(StringTail(leafName, leafName.Length() - extPos));
+
+    rv = aIconFile->CopyTo(folder, newName);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    LOG(("SetUserIcon: copied new icon to %s",
+         NS_ConvertUTF16toUTF8(newName).get()));
+  }
+
+  // Get the previous file name
+  nsCString oldFileName;
+  rv = mPrefService->GetCharPref(PREF_USER_ICON_FILENAME,
+                                 getter_Copies(oldFileName));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Save the new file name
+  rv = mPrefService->SetCharPref(PREF_USER_ICON_FILENAME,
+                                 NS_ConvertUTF16toUTF8(newName).get());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Now that the new icon has been copied to the profile directory
+  // and the pref value changed, we can remove the old icon. Ignore
+  // failures so that we always fire the user-icon-changed notification.
+  if (!oldFileName.IsEmpty()) {
+    folder->Append(NS_ConvertUTF8toUTF16(oldFileName));
+
+    PRBool exists;
+    if (NS_FAILED(folder->Exists(&exists)) || !exists)
+      NS_WARNING("The old icon file doesn't exist!");
+    else {
+      rv = folder->Remove(PR_FALSE);
+      if (NS_FAILED(rv))
+        NS_WARNING("Failed to remove the old icon");
+      else
+        LOG(("SetUserIcon: removed %s", oldFileName.get()));
+    }
+  }
+
+  return NotifyObservers(static_cast<purpleICoreService *>(this),
+                         "user-icon-changed", newName.get());
+}
+
+/* nsIFileURL getUserIcon (); */
+NS_IMETHODIMP purpleCoreService::GetUserIcon(nsIFileURL **aResult)
+{
+  nsCString fileName;
+  nsresult rv = mPrefService->GetCharPref(PREF_USER_ICON_FILENAME,
+                                          getter_Copies(fileName));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (fileName.IsEmpty()) {
+    // No icon has been set.
+    *aResult = nsnull;
+    return NS_OK;
+  }
+
+  // Get the profile folder
+  nsCOMPtr<nsIFile> folder;
+  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                              getter_AddRefs(folder));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = folder->Append(NS_ConvertUTF8toUTF16(fileName));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool exists;
+  rv = folder->Exists(&exists);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!exists) {
+    NS_WARNING("Invalid userIconFileName preference");
+    *aResult = nsnull;
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIURI> fileURI;
+  rv = NS_NewFileURI(getter_AddRefs(fileURI), folder);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(fileURI, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  fileURL.swap(*aResult);
+  return NS_OK;
+}
+
+/* attribute AUTF8String userDisplayName; */
+NS_IMETHODIMP purpleCoreService::GetUserDisplayName(nsACString & aUserDisplayName)
+{
+  NS_ENSURE_TRUE(mPrefService, NS_ERROR_NOT_INITIALIZED);
+
+  nsCString displayName;
+  nsresult rv = mPrefService->GetCharPref(PREF_USER_DISPLAY_NAME,
+                                          getter_Copies(displayName));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  aUserDisplayName = displayName;
+  return NS_OK;
+}
+NS_IMETHODIMP purpleCoreService::SetUserDisplayName(const nsACString & aUserDisplayName)
+{
+  NS_ENSURE_TRUE(mPrefService, NS_ERROR_NOT_INITIALIZED);
+
+  nsresult rv = mPrefService->SetCharPref(PREF_USER_DISPLAY_NAME,
+                                          PromiseFlatCString(aUserDisplayName).get());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NotifyObservers(static_cast<purpleICoreService *>(this),
+                         "user-display-name-changed",
+                         NS_ConvertUTF8toUTF16(aUserDisplayName).get());
 }
 
 nsresult purpleCoreService::addIdleObserver()

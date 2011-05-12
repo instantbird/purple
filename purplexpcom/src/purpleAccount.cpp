@@ -40,13 +40,18 @@
 #include "purpleCoreService.h"
 #include "purpleConversation.h"
 #include "purpleGListEnumerator.h"
+
+#include <imgITools.h>
+#include <imgIContainer.h>
+#include <nsIConsoleService.h>
 #include <nsIObserverService.h>
 #include <nsIPrefService.h>
 #include <nsIProgrammingLanguage.h>
 #include <nsIClassInfoImpl.h>
-#include <nsServiceManagerUtils.h>
 #include <nsComponentManagerUtils.h>
 #include <nsNetUtil.h>
+#include <nsServiceManagerUtils.h>
+#include <nsStringStream.h>
 #include <prprf.h>
 
 #pragma GCC visibility push(default)
@@ -238,6 +243,10 @@ purpleChatRoomFieldValues::GetHashTable(GHashTable * *aHashTable)
   return NS_OK;
 }
 
+NS_IMPL_CLASSINFO(purpleAccount, NULL, 0, PURPLE_ACCOUNT_CID)
+NS_IMPL_ISUPPORTS3_CI(purpleAccount, purpleIAccount,
+                      purpleIAccountBase, nsIObserver)
+
 purpleAccount::purpleAccount(PRBool aIsValidProtocol)
   : mAccount(NULL)
 {
@@ -275,6 +284,15 @@ NS_IMETHODIMP purpleAccount::UnInit()
        mAccount ? purple_account_get_username(mAccount) : "(mAccount = NULL)",
        NS_SUCCEEDED(rv) ? protoId.get() : "mProtocol = NULL"));
 #endif
+
+  if (mHasValidProtocol) {
+    nsCOMPtr<nsIObserverService> os =
+      do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+    if (NS_LIKELY(os)) {
+      os->RemoveObserver(this, "user-icon-changed");
+      os->RemoveObserver(this, "user-display-name-changed");
+    }
+  }
 
   if (mAccount) {
     // disconnect before removing the ui_data pointer so that
@@ -434,7 +452,30 @@ nsresult purpleAccount::Init(const nsACString & aKey,
   }
   NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, prefs);
 
-  return NS_OK;
+  // Apply the current icon only if the account doesn't have a cached icon.
+
+  // FIXME: This function is called both when creating an account and
+  // when loading an existing account. Our goal here is to apply the
+  // current icon to new accounts.  Usually, existing accounts
+  // supporting buddy icons will have a cached icon. Unfortunately, if
+  // during load we find an account that can support buddy icons but
+  // has no cached buddy icon, we will apply the current buddy icon to
+  // it but it won't be cached because the account ui ops aren't set
+  // yet. If this happens, it will slow down each startup (because of
+  // the icon conversion happening during startup). It's unlikely to
+  // happen unless the user removes buddy_icon preferences from
+  // about:config or a prpl which used to not support buddy icons got
+  // updated.
+  if (!purple_account_get_string(mAccount, "buddy_icon", NULL))
+    ApplyCurrentUserIcon();
+
+  // Observe user icon changes.
+  nsCOMPtr<nsIObserverService> os =
+    do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  os->AddObserver(this, "user-display-name-changed", PR_FALSE);
+  return os->AddObserver(this, "user-icon-changed", PR_FALSE);
 }
 
 /* void connect (); */
@@ -542,11 +583,12 @@ PurplePluginProtocolInfo *purpleAccount::GetPrplInfo()
 {
   NS_ENSURE_TRUE(mAccount, NULL);
 
+  PurplePlugin *prpl;
   PurpleConnection *gc = purple_account_get_connection(mAccount);
-  if (!gc)
-    return NULL;
-
-  PurplePlugin *prpl = purple_connection_get_prpl(gc);
+  if (gc)
+    prpl = purple_connection_get_prpl(gc);
+  else
+    prpl = purple_find_prpl(purple_account_get_protocol_id(mAccount));
   NS_ENSURE_TRUE(prpl, NULL);
 
   return PURPLE_PLUGIN_PROTOCOL_INFO(prpl);
@@ -560,7 +602,7 @@ NS_IMETHODIMP purpleAccount::GetChatRoomFields(nsISimpleEnumerator **aResult)
   NS_ENSURE_TRUE(gc, NS_ERROR_FAILURE);
 
   PurplePluginProtocolInfo *prplInfo = GetPrplInfo();
-  NS_ENSURE_TRUE(prplInfo, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(prplInfo && prplInfo->chat_info, NS_ERROR_FAILURE);
 
   purpleGListEnumerator *enumerator = new purpleGListEnumerator();
   enumerator->Init(prplInfo->chat_info(gc),
@@ -853,3 +895,242 @@ PURPLE_IMPL_GETFLAG(NoUrlDesc, NO_URLDESC)
 
 /* readonly attribute boolean noImages; */
 PURPLE_IMPL_GETFLAG(NoImages, NO_IMAGES)
+
+/* nsIObserver implementation */
+NS_IMETHODIMP purpleAccount::Observe(nsISupports *aSubject,
+                                     const char *aTopic,
+                                     const PRUnichar *aData)
+{
+  NS_ENSURE_TRUE(mAccount, NS_ERROR_NOT_INITIALIZED);
+
+  if (!strcmp("user-icon-changed", aTopic)) {
+    LOG(("observing user-icon changed on account %s\n",
+         purple_account_get_username(mAccount)));
+    return ApplyCurrentUserIcon();
+  }
+
+  if (!strcmp("user-display-name-changed", aTopic)) {
+    if (purple_account_is_connected(mAccount)) {
+      purple_account_set_public_alias(mAccount,
+                                      aData ? NS_ConvertUTF16toUTF8(aData).get() : NULL,
+                                      NULL, NULL);
+    }
+    return NS_OK;
+  }
+
+  return NS_ERROR_UNEXPECTED;
+}
+
+nsresult purpleAccount::ApplyCurrentUserIcon()
+{
+  // Summary:
+  // * If the prpl doesn't support buddy icons, return early.
+  // * Get the icon file URL from purpleCoreService.
+  // * Read the image into a buffer, and decode it to know it's width,
+  //   height and mime type.
+  // * if the image we have is acceptable w.r.t prpl constraints
+  //    * use the icon and return
+  //   else
+  //    * iterate other the list of image formats the prpl support:
+  //      for each format, attempt to convert the image
+  // Get a channel for the icon
+  // See if the prpl has constraints
+  // Get image info (size, dimensions, type)
+  // If should resize
+  //   Ask libpurple for the desired new size
+  // Get the image data
+  // Set the icon
+  // Store the handle in the preferences
+
+  NS_ENSURE_TRUE(mAccount, NS_ERROR_NOT_INITIALIZED);
+
+  PurplePluginProtocolInfo *prplInfo = GetPrplInfo();
+  NS_ENSURE_TRUE(prplInfo, NS_ERROR_FAILURE);
+
+  if (!prplInfo->set_buddy_icon) {
+    // The protocol plugin doesn't support buddy icons, don't bother...
+    LOG((" protocol plugin %s doesn't support buddy icons\n",
+         purple_account_get_protocol_id(mAccount)));
+    return NS_OK;
+  }
+
+  nsresult rv;
+  nsCOMPtr<purpleICoreService> pcs =
+    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIFileURL> fileURL;
+  rv = pcs->GetUserIcon(getter_AddRefs(fileURL));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!fileURL) {
+    LOG(("Removing the old icon"));
+    SetAccountIcon(EmptyCString());
+    return NS_OK;
+  }
+
+  // Inspired from nsFaviconService::SetFaviconDataFromDataURL
+  // (toolkit/components/places/nsFaviconService.cpp)
+  nsCOMPtr<nsIChannel> channel;
+  NS_NewChannel(getter_AddRefs(channel), fileURL);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Let's say blocking stream is OK for local (small) files...
+  nsCOMPtr<nsIInputStream> stream;
+  rv = channel->Open(getter_AddRefs(stream));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 available;
+  rv = stream->Available(&available);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(available != 0, NS_ERROR_FAILURE);
+
+  // Read all the data.
+  nsCString buffer;
+  buffer.SetLength(available);
+  PRUint32 numRead;
+  rv = stream->Read(buffer.BeginWriting(), available, &numRead);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(numRead == available, NS_ERROR_FAILURE);
+
+  nsCString mimeType;
+  rv = channel->GetContentType(mimeType);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<imgITools> imgtool =
+    do_CreateInstance("@mozilla.org/image/tools;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIStringInputStream> rawStream =
+    do_CreateInstance(NS_STRINGINPUTSTREAM_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = rawStream->ShareData(buffer.get(), available);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<imgIContainer> image;
+  rv = imgtool->DecodeImageData(rawStream, mimeType, getter_AddRefs(image));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 width = 0;
+  PRInt32 height = 0;
+  image->GetWidth(&width);
+  image->GetHeight(&height);
+  NS_ENSURE_TRUE(width && height, NS_ERROR_FAILURE);
+
+  LOG(("read image of type %s, height: %i, width: %i\n",
+       mimeType.get(), height, width));
+
+  // We have all the info we need about the input image. Now see what
+  // the prpl can accept.
+  NS_ENSURE_TRUE(prplInfo->icon_spec.format, NS_ERROR_UNEXPECTED);
+
+  nsCString format(prplInfo->icon_spec.format);
+  char *tmp = format.BeginWriting();
+  PRBool found = PR_FALSE;
+  for (const char *token = NS_strtok(",", &tmp);
+       token;
+       token = NS_strtok(",", &tmp)) {
+    // Possible types in libpurple: png,gif,jpeg,bmp,ico
+    if (!strcmp(token, "png") && mimeType.Equals("image/png") ||
+        !strcmp(token, "gif") && mimeType.Equals("image/gif") ||
+        !strcmp(token, "jpeg") && mimeType.Equals("image/jpeg") ||
+        !strcmp(token, "bmp") && mimeType.Equals("image/bmp") ||
+        !strcmp(token, "ico") && mimeType.Equals("image/x-icon")) {
+      found = PR_TRUE;
+      LOG(("  current file is of acceptable type: %s", token));
+      break;
+    }
+  }
+
+  if (found &&
+      (!prplInfo->icon_spec.max_filesize ||
+       available <= prplInfo->icon_spec.max_filesize) &&              /* The file size is acceptable */
+      (!(prplInfo->icon_spec.scale_rules & PURPLE_ICON_SCALE_SEND) || /* The prpl doesn't want us to scale before it sends */
+       (prplInfo->icon_spec.min_width <= width &&
+        prplInfo->icon_spec.max_width >= width &&
+        prplInfo->icon_spec.min_height <= height &&
+        prplInfo->icon_spec.max_height >= height))) {                 /* The icon is of the correct size */
+    SetAccountIcon(buffer);
+    return NS_OK;
+  }
+
+  // We should resize and/or convert.
+  PRInt32 newWidth = width;
+  PRInt32 newHeight = height;
+
+  if ((prplInfo->icon_spec.scale_rules & PURPLE_ICON_SCALE_SEND) &&
+      (width < prplInfo->icon_spec.min_width ||
+       width > prplInfo->icon_spec.max_width ||
+       height < prplInfo->icon_spec.min_height ||
+       height > prplInfo->icon_spec.max_height)) {
+    purple_buddy_icon_get_scale_size(&prplInfo->icon_spec,
+                                     &newWidth, &newHeight);
+  }
+
+  format = prplInfo->icon_spec.format;
+  tmp = format.BeginWriting();
+  LOG(("Going to resize (w: %i, h: %i) or convert, possible formats: %s",
+       newWidth, newHeight, tmp));
+  for (const char *ext = NS_strtok(",", &tmp);
+       ext;
+       ext = NS_strtok(",", &tmp)) {
+    // Get the new mime type from the file extension.
+    const char *newMimeType;
+    if (!strcmp(ext, "png"))
+      newMimeType = "image/png";
+    else if (!strcmp(ext, "gif"))
+      newMimeType = "image/gif";
+    else if (!strcmp(ext, "jpeg"))
+      newMimeType = "image/jpeg";
+    else if (!strcmp(ext, "bmp"))
+      newMimeType = "image/bmp";
+    else if (!strcmp(ext, "ico"))
+      newMimeType = "image/x-icon";
+    else
+      continue;
+
+    // scale and recompress
+    nsCOMPtr<nsIInputStream> iconStream;
+    rv = imgtool->EncodeScaledImage(image, nsDependentCString(newMimeType),
+                                    newWidth, newHeight,
+                                    getter_AddRefs(iconStream));
+    if (NS_FAILED(rv))
+      continue;
+
+    // Read the stream into a new buffer.
+    nsCString newBuffer;
+    PRUint32 avail;
+    iconStream->Available(&avail);
+    newBuffer.SetLength(avail);
+    PRUint32 length;
+    iconStream->Read(newBuffer.BeginWriting(), avail, &length);
+    NS_ENSURE_TRUE(length == avail && length > 0, NS_ERROR_FAILURE);
+
+    LOG((" converted into %s, new size: %i", newMimeType, newBuffer.Length()));
+    if ((prplInfo->icon_spec.max_filesize != 0) &&
+        (newBuffer.Length() > prplInfo->icon_spec.max_filesize))
+      continue;
+
+    SetAccountIcon(newBuffer);
+    return NS_OK;
+  }
+
+  // Report the error.
+  nsCOMPtr<nsIConsoleService> consoleService =
+    do_GetService("@mozilla.org/consoleservice;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsString msg(NS_LITERAL_STRING("Could not convert the icon to a suitable format for "));
+  msg.Append(NS_ConvertUTF8toUTF16(purple_account_get_username(mAccount)));
+  return consoleService->LogStringMessage(msg.get());
+}
+
+void purpleAccount::SetAccountIcon(const nsCString& aBuffer)
+{
+  LOG(("Setting icon for account %s", purple_account_get_username(mAccount)));
+  // libpurple will g_free so we need to g_memdup the buffer.
+  guchar *data =
+    static_cast<guchar *>(g_memdup(aBuffer.get(), aBuffer.Length()));
+  purple_buddy_icons_set_account_icon(mAccount, data, aBuffer.Length());
+}

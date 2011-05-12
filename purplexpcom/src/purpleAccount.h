@@ -39,12 +39,16 @@
 # define PURPLE_ACCOUNT_H_
 
 #include "purpleAccountBase.h"
+#include <nsIObserver.h>
 
 #define UI_ID                  "instantbird"
 
-class purpleAccount : public purpleAccountBase
+class purpleAccount : public purpleAccountBase, public nsIObserver
 {
 public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
   //  NS_DECL_PURPLEIACCOUNT
   NS_SCRIPTABLE NS_IMETHOD UnInit(void);
   NS_SCRIPTABLE NS_IMETHOD Connect(void);
@@ -100,6 +104,8 @@ private:
   inline void GetBoolPref(const char *aName);
   inline void GetIntPref(const char *aName);
   inline void GetCharPref(const char *aName);
+  nsresult ApplyCurrentUserIcon();
+  inline void SetAccountIcon(const nsCString& aBuffer);
 
 protected:
   /* additional members */

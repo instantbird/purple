@@ -1951,6 +1951,7 @@ void
 purple_account_set_int(PurpleAccount *account, const char *name, int value)
 {
 	PurpleAccountSetting *setting;
+	PurpleAccountUiOps *ui_ops;
 
 	g_return_if_fail(account != NULL);
 	g_return_if_fail(name    != NULL);
@@ -1962,6 +1963,11 @@ purple_account_set_int(PurpleAccount *account, const char *name, int value)
 
 	g_hash_table_insert(account->settings, g_strdup(name), setting);
 
+	ui_ops = purple_accounts_get_ui_ops();
+
+	if (ui_ops != NULL && ui_ops->set_int != NULL)
+		ui_ops->set_int(account, name, value);
+
 	schedule_accounts_save();
 }
 
@@ -1970,6 +1976,7 @@ purple_account_set_string(PurpleAccount *account, const char *name,
 						const char *value)
 {
 	PurpleAccountSetting *setting;
+	PurpleAccountUiOps *ui_ops;
 
 	g_return_if_fail(account != NULL);
 	g_return_if_fail(name    != NULL);
@@ -1981,6 +1988,11 @@ purple_account_set_string(PurpleAccount *account, const char *name,
 
 	g_hash_table_insert(account->settings, g_strdup(name), setting);
 
+	ui_ops = purple_accounts_get_ui_ops();
+
+	if (ui_ops != NULL && ui_ops->set_string != NULL)
+		ui_ops->set_string(account, name, value);
+
 	schedule_accounts_save();
 }
 
@@ -1988,6 +2000,7 @@ void
 purple_account_set_bool(PurpleAccount *account, const char *name, gboolean value)
 {
 	PurpleAccountSetting *setting;
+	PurpleAccountUiOps *ui_ops;
 
 	g_return_if_fail(account != NULL);
 	g_return_if_fail(name    != NULL);
@@ -1998,6 +2011,11 @@ purple_account_set_bool(PurpleAccount *account, const char *name, gboolean value
 	setting->value.boolean = value;
 
 	g_hash_table_insert(account->settings, g_strdup(name), setting);
+
+	ui_ops = purple_accounts_get_ui_ops();
+
+	if (ui_ops != NULL && ui_ops->set_bool != NULL)
+		ui_ops->set_bool(account, name, value);
 
 	schedule_accounts_save();
 }

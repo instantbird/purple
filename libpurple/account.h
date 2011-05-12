@@ -105,6 +105,10 @@ struct _PurpleAccountUiOps
 	 */
 	void (*close_account_request)(void *ui_handle);
 
+	void (*set_int)(PurpleAccount *account, const char *name, int value);
+	void (*set_string)(PurpleAccount *account, const char *name, const char *value);
+	void (*set_bool)(PurpleAccount *account, const char *name, gboolean value);
+
 	void (*_purple_reserved1)(void);
 	void (*_purple_reserved2)(void);
 	void (*_purple_reserved3)(void);

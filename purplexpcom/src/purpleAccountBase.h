@@ -58,7 +58,7 @@
 #define ACCOUNT_KEY "account"
 #define PREF_AUTOLOGIN_PENDING  "messenger.accounts.autoLoginPending"
 
-class purpleAccountBase : public purpleIAccount, purpleIAccountBase
+class purpleAccountBase : public purpleIAccount, public purpleIAccountBase
 {
 public:
   NS_DECL_ISUPPORTS

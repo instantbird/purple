@@ -187,6 +187,9 @@ purple_buddy_icon_data_uncache_file(const char *filename)
 
 	g_return_if_fail(filename != NULL);
 
+	if (!purple_buddy_icons_is_caching())
+		return;
+
 	/* It's possible that there are other references to this icon
 	 * cache file that are not currently loaded into memory. */
 	if (GPOINTER_TO_INT(g_hash_table_lookup(icon_file_cache, filename)))
