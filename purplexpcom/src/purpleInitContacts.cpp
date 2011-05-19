@@ -142,6 +142,11 @@ static void buddy_idle(PurpleBuddy *aBuddy, gboolean old_idle, gboolean idle)
   buddy_availability_changed(aBuddy);
 }
 
+static void buddy_icon(PurpleBuddy *aBuddy)
+{
+  buddy_signals(aBuddy, "account-buddy-icon-changed");
+}
+
 static void buddy_alias(PurpleBlistNode *aNode, const char *old_alias)
 {
   // We are only interested by buddy aliases
@@ -179,6 +184,7 @@ connect_to_blist_signals()
   PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER("buddy-removed", buddy_removed);
   PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER("buddy-status-changed", buddy_away);
   PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER("buddy-idle-changed", buddy_idle);
+  PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER("buddy-icon-changed", buddy_icon);
   PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER("blist-node-aliased", buddy_alias);
   blist_signals_handle = 1;
   LOG(("Connected to blist signals"));
