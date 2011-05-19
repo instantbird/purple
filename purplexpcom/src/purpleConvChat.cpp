@@ -127,7 +127,7 @@ NS_IMETHODIMP purpleConvChat::GetParticipants(nsISimpleEnumerator **_retval NS_O
   return NS_OK;
 }
 
-/* readonly attribute AUTF8String topic; */
+/*          attribute AUTF8String topic; */
 NS_IMETHODIMP purpleConvChat::GetTopic(nsACString & aTopic)
 {
   NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
@@ -136,6 +136,22 @@ NS_IMETHODIMP purpleConvChat::GetTopic(nsACString & aTopic)
   NS_ENSURE_TRUE(chat, NS_ERROR_FAILURE);
 
   aTopic = purple_conv_chat_get_topic(chat);
+  return NS_OK;
+}
+NS_IMETHODIMP purpleConvChat::SetTopic(const nsACString & aTopic)
+{
+  NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
+
+  PurpleConnection *gc = purple_conversation_get_gc(mConv);
+  NS_ENSURE_TRUE(gc, NS_ERROR_NOT_AVAILABLE);
+
+  PurplePluginProtocolInfo *prplInfo = PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl);
+  NS_ENSURE_TRUE(prplInfo, NS_ERROR_NOT_AVAILABLE);
+  NS_ENSURE_TRUE(prplInfo->set_chat_topic, NS_ERROR_NOT_IMPLEMENTED);
+
+  prplInfo->set_chat_topic(gc,
+                           purple_conv_chat_get_id(PURPLE_CONV_CHAT(mConv)),
+                           PromiseFlatCString(aTopic).get());
   return NS_OK;
 }
 
@@ -148,6 +164,20 @@ NS_IMETHODIMP purpleConvChat::GetTopicSetter(nsACString & aTopicSetter)
   NS_ENSURE_TRUE(chat, NS_ERROR_FAILURE);
 
   aTopicSetter = chat->who;
+  return NS_OK;
+}
+
+/* readonly attribute boolean topicSettable; */
+NS_IMETHODIMP purpleConvChat::GetTopicSettable(PRBool *aTopicSettable)
+{
+  NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
+
+  PurplePluginProtocolInfo *prplInfo = NULL;
+  PurpleConnection *gc = purple_conversation_get_gc(mConv);
+  if (!gc || !(prplInfo = PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl)))
+    *aTopicSettable = PR_FALSE;
+  else
+    *aTopicSettable = prplInfo->set_chat_topic != NULL;
   return NS_OK;
 }
 
