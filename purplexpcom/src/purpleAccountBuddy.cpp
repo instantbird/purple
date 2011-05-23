@@ -44,6 +44,7 @@
 #include <nsServiceManagerUtils.h>
 #include <nsIClassInfoImpl.h>
 #include <nsMemory.h>
+#include <nsNetUtil.h>
 #include <prprf.h>
 
 #pragma GCC visibility push(default)
@@ -216,16 +217,24 @@ NS_IMETHODIMP purpleAccountBuddy::GetBuddyIconFilename(nsACString& aBuddyIconFil
   PurpleBuddyIcon *icon = purple_buddy_get_icon(mPurpleBuddy);
   char *fname;
 
-  if (icon && (fname = purple_buddy_icon_get_full_path(icon))) {
-    aBuddyIconFilename = NS_LITERAL_CSTRING("file://");
-    aBuddyIconFilename.Append(fname);
-    g_free(fname);
-  } else {
+  if (!icon || !(fname = purple_buddy_icon_get_full_path(icon))) {
     // set it to NULL
     aBuddyIconFilename.SetIsVoid(true);
+    return NS_OK;
   }
 
-  return NS_OK;
+  // Create a nsILocalFile and then a nsIFileURI from that.
+  nsCOMPtr <nsILocalFile> iconFile;
+  nsresult rv = NS_NewLocalFile(NS_ConvertUTF8toUTF16(fname), PR_TRUE,
+                                getter_AddRefs(iconFile));
+  g_free(fname);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIURI> fileURI;
+  rv = NS_NewFileURI(getter_AddRefs(fileURI), iconFile);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return fileURI->GetSpec(aBuddyIconFilename);
 }
 
 void purpleAccountBuddy::CleanUserInfo(void *aData)
