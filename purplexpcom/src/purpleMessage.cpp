@@ -38,6 +38,8 @@
 #include "purpleMessage.h"
 #include "purpleCoreService.h"
 #include "purpleConversation.h"
+#include "purpleConvIM.h"
+#include "imIContactsService.h"
 #include <nsCOMPtr.h>
 #include <nsServiceManagerUtils.h>
 #include <nsIClassInfoImpl.h>
@@ -124,6 +126,35 @@ PURPLE_IMPL_GETSTRING(Message, mMessage)
 NS_IMETHODIMP purpleMessage::SetMessage(nsACString const& aMessage)
 {
   mMessage = aMessage;
+  return NS_OK;
+}
+
+/* readonly attribute AUTF8String iconURL; */
+NS_IMETHODIMP purpleMessage::GetIconURL(nsACString& aUserIconURL)
+{
+  if (!(mFlags & PURPLE_MESSAGE_RECV)) {
+    aUserIconURL = "";
+    return NS_OK;
+  }
+
+  NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
+  purpleConversation *conv = purpleConversation::fromPurpleConv(mConv);
+  NS_ENSURE_TRUE(conv, NS_ERROR_NOT_INITIALIZED);
+
+  PRBool isChat = PR_TRUE;
+  nsresult rv = conv->GetIsChat(&isChat);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!isChat) {
+    nsCOMPtr<imIAccountBuddy> buddy;
+    rv = static_cast<purpleConvIM *>(conv)->GetBuddy(getter_AddRefs(buddy));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    LOG(("GetIconURL: found a buddy for the message, returning its icon"));
+    return buddy->GetBuddyIconFilename(aUserIconURL);
+  }
+
+  aUserIconURL = "";
   return NS_OK;
 }
 
