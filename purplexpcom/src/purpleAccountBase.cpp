@@ -969,3 +969,10 @@ PURPLE_IMPL_GETFLAG(NoUrlDesc, NO_URLDESC, PR_FALSE)
 
 /* readonly attribute boolean noImages; */
 PURPLE_IMPL_GETFLAG(NoImages, NO_IMAGES, PR_TRUE)
+
+/* readonly attribute PRInt32 maxMessageLength; */
+NS_IMETHODIMP purpleAccountBase::GetMaxMessageLength(PRInt32 *aMaxMessageLength)
+{
+  *aMaxMessageLength = 0;
+  return NS_OK;
+}

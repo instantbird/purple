@@ -264,6 +264,9 @@ interface purpleIAccount: nsISupports {
   //   PURPLE_CONNECTION_NO_IMAGES
   //    Connection does not support sending of images.
   readonly attribute boolean noImages;
+
+  // This is currently used only by Twitter.
+  readonly attribute PRInt32 maxMessageLength;
 };
 
 /*
