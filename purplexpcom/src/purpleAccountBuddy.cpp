@@ -256,12 +256,17 @@ NS_IMETHODIMP purpleAccountBuddy::GetTooltipInfo(nsISimpleEnumerator** aTooltipI
        mPurpleBuddy->name, name.get()));
 #endif
 
-  *aTooltipInfo = nsnull;
+  PurpleAccount *pAccount = purple_buddy_get_account(mPurpleBuddy);
+  NS_ENSURE_TRUE(pAccount, NS_ERROR_NOT_INITIALIZED);
+  if (!purple_account_is_connected(pAccount)) {
+    *aTooltipInfo = nsnull;
+    return NS_OK;
+  }
 
-  purpleAccount *account =
-    purpleAccount::fromPurpleAccount(purple_buddy_get_account(mPurpleBuddy));
+  purpleAccount *account = purpleAccount::fromPurpleAccount(pAccount);
   NS_ENSURE_TRUE(account, NS_ERROR_NOT_INITIALIZED);
 
+  *aTooltipInfo = nsnull;
   PurplePluginProtocolInfo *prpl_info = account->GetPrplInfo();
   if (prpl_info && prpl_info->tooltip_text) {
     PurpleNotifyUserInfo *user_info = purple_notify_user_info_new();
@@ -416,14 +421,18 @@ NS_IMETHODIMP purpleAccountBuddy::GetStatusText(nsACString &aStatusText)
 {
   NS_ENSURE_TRUE(mPurpleBuddy, NS_ERROR_NOT_INITIALIZED);
 
-  aStatusText.Truncate();
-  if (!purple_account_is_connected(purple_buddy_get_account(mPurpleBuddy)))
-    return NS_OK;
+  PurpleAccount *pAccount = purple_buddy_get_account(mPurpleBuddy);
+  NS_ENSURE_TRUE(pAccount, NS_ERROR_NOT_INITIALIZED);
 
-  purpleAccount *account =
-    purpleAccount::fromPurpleAccount(purple_buddy_get_account(mPurpleBuddy));
+  if (!purple_account_is_connected(pAccount)) {
+    aStatusText.Truncate();
+    return NS_OK;
+  }
+
+  purpleAccount *account = purpleAccount::fromPurpleAccount(pAccount);
   NS_ENSURE_TRUE(account, NS_ERROR_NOT_INITIALIZED);
 
+  aStatusText.Truncate();
   PurplePluginProtocolInfo *prpl_info = account->GetPrplInfo();
   if (prpl_info && prpl_info->status_text) {
     char *tmp1 = prpl_info->status_text(mPurpleBuddy);
