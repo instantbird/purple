@@ -1126,28 +1126,31 @@ migrate_buddy_icon(PurpleBlistNode *node, const char *setting_name,
 }
 
 void
+purple_buddy_icons_account_loaded(PurpleAccount *account)
+{
+	const char *account_icon_file = purple_account_get_string(account, "buddy_icon", NULL);
+
+	if (account_icon_file != NULL)
+	{
+		const char *dirname = purple_buddy_icons_get_cache_dir();
+		char *path = g_build_filename(dirname, account_icon_file, NULL);
+		if (!g_file_test(path, G_FILE_TEST_EXISTS))
+		{
+			purple_account_set_string(account, "buddy_icon", NULL);
+		} else {
+			ref_filename(account_icon_file);
+		}
+		g_free(path);
+	}
+}
+
+void
 _purple_buddy_icons_account_loaded_cb()
 {
-	const char *dirname = purple_buddy_icons_get_cache_dir();
 	GList *cur;
 
 	for (cur = purple_accounts_get_all(); cur != NULL; cur = cur->next)
-	{
-		PurpleAccount *account = cur->data;
-		const char *account_icon_file = purple_account_get_string(account, "buddy_icon", NULL);
-
-		if (account_icon_file != NULL)
-		{
-			char *path = g_build_filename(dirname, account_icon_file, NULL);
-			if (!g_file_test(path, G_FILE_TEST_EXISTS))
-			{
-				purple_account_set_string(account, "buddy_icon", NULL);
-			} else {
-				ref_filename(account_icon_file);
-			}
-			g_free(path);
-		}
-	}
+		purple_buddy_icons_account_loaded(cur->data);
 }
 
 void

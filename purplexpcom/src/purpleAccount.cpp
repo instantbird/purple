@@ -468,6 +468,8 @@ nsresult purpleAccount::Init(const nsACString & aKey,
   // updated.
   if (!purple_account_get_string(mAccount, "buddy_icon", NULL))
     ApplyCurrentUserIcon();
+  else
+    purple_buddy_icons_account_loaded(mAccount);
 
   // Observe user icon changes.
   nsCOMPtr<nsIObserverService> os =

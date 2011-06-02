@@ -270,6 +270,17 @@ time_t
 purple_buddy_icons_get_account_icon_timestamp(PurpleAccount *account);
 
 /**
+ * References the current icon of the loaded account.
+ *
+ * UIs should call this after loading an account, if the accounts
+ * aren't stored in the accounts.xml libpurple file.
+ *
+ * @param account The account
+ */
+void
+purple_buddy_icons_account_loaded(PurpleAccount *account);
+
+/**
  * Returns a boolean indicating if a given blist node has a custom buddy icon.
  *
  * @param node The blist node.
