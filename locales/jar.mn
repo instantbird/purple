@@ -26,3 +26,4 @@
 	locale/@AB_CD@/simple/prpl.properties	(%simple.properties)
 % locale novell @AB_CD@ %locale/@AB_CD@/novell/
 	locale/@AB_CD@/novell/prpl.properties	(%novell.properties)
+	locale/@AB_CD@/purple/twitter.properties	(%twitter.properties)
