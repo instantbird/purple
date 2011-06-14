@@ -182,6 +182,7 @@ for pack in strings:
             fhandle.write('\n' + comment + '\n')
         plural = allstrings[msg]['plural']
         if plural != '':
+            fhandle.write('\n# LOCALIZATION NOTE (' + id + '): Semi-colon list of plural forms.\n# See: http://developer.mozilla.org/en/docs/Localization_and_Plurals\n')
             msg += ';' + plural
         fhandle.write(id + '=' + fix_multiline_string(fix_ellipsis(msg)) + '\n')
     fhandle.close()
