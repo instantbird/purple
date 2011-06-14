@@ -50,12 +50,6 @@ DEFINES += \
 
 include $(topsrcdir)/config/rules.mk
 
-ifneq (en-US,$(AB_CD))
-libs realchrome::
-	@echo "Comparing $(AB_CD) to en-US"
-	@$(PERL) $(MOZILLA_SRCDIR)/toolkit/locales/compare-locales.pl $(srcdir)/en-US $(LOCALE_SRCDIR)
-endif
-
 libs-%: AB_CD=$*
 libs-%:
 	# XXX: it would be nice if we could just do nothing if no langpack is being done
