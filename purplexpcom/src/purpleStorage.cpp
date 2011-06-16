@@ -83,6 +83,9 @@ nsresult purpleStorage::Init()
   mDBConn->GetConnectionReady(&ready);
   NS_ENSURE_TRUE(ready, NS_ERROR_UNEXPECTED);
 
+  // Grow blist db in 512KB increments.
+  mDBConn->SetGrowthIncrement(512 * 1024, EmptyCString());
+
   DO_SQL("CREATE TABLE IF NOT EXISTS accounts ("
          "id INTEGER PRIMARY KEY, "
          "name VARCHAR, "
