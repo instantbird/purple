@@ -150,8 +150,10 @@ NS_IMETHODIMP purpleMessage::GetIconURL(nsACString& aUserIconURL)
     rv = static_cast<purpleConvIM *>(conv)->GetBuddy(getter_AddRefs(buddy));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    LOG(("GetIconURL: found a buddy for the message, returning its icon"));
-    return buddy->GetBuddyIconFilename(aUserIconURL);
+    if (buddy) {
+      LOG(("GetIconURL: found a buddy for the message, returning its icon"));
+      return buddy->GetBuddyIconFilename(aUserIconURL);
+    }
   }
 
   aUserIconURL = "";
