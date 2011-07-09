@@ -100,7 +100,8 @@ aim_ssi_item_debug_append(GString *str, char *prefix, struct aim_ssi_item *item)
 {
 	g_string_append_printf(str, 
 		"%s gid=0x%04hx, bid=0x%04hx, list_type=0x%04hx [%s], name=%s.\n",
-		prefix, item->gid, item->bid, item->type, aim_ssi_type_to_string(item->type), item->name);
+		prefix, item->gid, item->bid, item->type, aim_ssi_type_to_string(item->type),
+		item->name ? item->name : "(null)");
 }
 
 /**
@@ -1682,7 +1683,7 @@ static int receiveauthgrant(OscarData *od, FlapConnection *conn, aim_module_t *m
  * granted, denied, or dropped.
  *
  */
-int aim_ssi_sendauthrequest(OscarData *od, char *bn, const char *msg)
+int aim_ssi_sendauthrequest(OscarData *od, const char *bn, const char *msg)
 {
 	FlapConnection *conn;
 	ByteStream bs;
@@ -1759,7 +1760,7 @@ static int receiveauthrequest(OscarData *od, FlapConnection *conn, aim_module_t 
  * if reply=0x01 then grant
  *
  */
-int aim_ssi_sendauthreply(OscarData *od, char *bn, guint8 reply, const char *msg)
+int aim_ssi_sendauthreply(OscarData *od, const char *bn, guint8 reply, const char *msg)
 {
 	FlapConnection *conn;
 	ByteStream bs;
