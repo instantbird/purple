@@ -43,6 +43,9 @@
 #include <nsThreadUtils.h>
 #include <nsICancelable.h>
 #include <prio.h>
+#ifdef XP_WIN
+#include <winsock2.h>
+#endif
 
 #ifdef PR_LOGGING
 #include <prnetdb.h>
@@ -190,21 +193,29 @@ nsresult purpleDNSRequest::OnLookupComplete(nsICancelable *request,
   while (more)
   {
     record->GetNextAddr(purple_dnsquery_get_port(query_data), &addr);
-    hosts = g_slist_append(hosts, GINT_TO_POINTER(sizeof(addr.inet)));
-#ifndef XP_WIN
-    //actually this may only be needed on Mac OS X
-    sockaddr *addr2 = (sockaddr *) g_memdup(&addr.inet, sizeof(addr.inet));
-    addr2->sa_family = addr.inet.family; //very ugly!!
+
+    size_t size =
+      (addr.raw.family == PR_AF_INET  ? sizeof(addr.inet) :
+#ifdef XP_UNIX
+       addr.raw.family == PR_AF_LOCAL ? sizeof(addr.local) :
+#endif
+                                        sizeof(addr.ipv6));
+    hosts = g_slist_append(hosts, GINT_TO_POINTER(size));
+
+    struct sockaddr *addr2 =
+      (struct sockaddr *)g_malloc0(MAX(size, sizeof(struct sockaddr)));
+    memcpy(addr2, &addr, size);
+#ifdef XP_MACOSX
+    addr2->sa_len = size;
+    addr2->sa_family = addr.raw.family;
+#endif
     hosts = g_slist_append(hosts, addr2);
+
 #if defined(PR_LOGGING)
     char ipaddr[64];
-
     if (PR_NetAddrToString(&addr, ipaddr, sizeof(ipaddr)) == PR_SUCCESS) {
       LOG(("Found ip: %s", ipaddr));
     }
-#endif
-#else
-    hosts = g_slist_append(hosts, g_memdup(&addr.inet, sizeof(addr.inet)));
 #endif
 
     record->HasMore(&more);
