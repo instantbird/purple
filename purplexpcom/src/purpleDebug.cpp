@@ -282,6 +282,11 @@ nsresult purpleDebug::init()
     gPurpleDebugLog = PR_NewLogModule("purpleDebug");
 #endif
 
+#ifdef DEBUG
+  if (g_getenv("PURPLE_VERBOSE_DEBUG"))
+    purple_debug_set_verbose(TRUE);
+#endif
+
   if (!sInstance) {
     LOG(("creating a new instance of purpleDebug"));
     sInstance = new purpleDebug();
