@@ -135,8 +135,6 @@ wpurple_gethostname( name, size )
 /* stdio.h */
 #undef snprintf
 #define snprintf _snprintf
-#undef vsnprintf
-#define vsnprintf _vsnprintf
 
 #define rename( oldname, newname ) \
 wpurple_rename( oldname, newname )
