@@ -113,15 +113,13 @@ def package_from_path(aString):
 # non-alphanumeric characters are removed, except underscore (_).
 def make_id_from_string(aString):
     # utility functions
-    def no_percent_strings(aString):
-        return not (aString == '' or aString.startswith("%") or
-                                     aString.startswith("0x"))
+    def filter_invalid_words(aString):
+        return not (aString == '' or aString.startswith("0x"))
     def capitalize_string(aString):
         return aString.capitalize()
 
-    exp = re.compile('[^%\w]')
-    str = exp.sub(' ', aString)
-    words = filter(no_percent_strings, str.split(" "))
+    words = filter(filter_invalid_words,
+                   re.split('(?:[^%\w]+|%\w+)+', aString))
     if words == []:
         return ''
     else:
