@@ -123,7 +123,9 @@ EXTRA_COMPONENTS += jsTestProtocol.js jsTestProtocol.manifest
 endif
 
 EXTRA_JS_MODULES = \
+	http.jsm \
 	imStatusUtils.jsm \
+	imXPCOMUtils.jsm \
 	jsProtoHelper.jsm \
 	socket.jsm \
 	$(NULL)
