@@ -65,6 +65,7 @@ CPPSRCS		= \
 		purpleAccount.cpp \
 		purpleAccountBase.cpp \
 		purpleAccountBuddy.cpp \
+		purpleAccountScoper.cpp \
 		purpleAccountsService.cpp \
 		purpleConversation.cpp \
 		purpleConvIM.cpp \

@@ -54,6 +54,7 @@ struct purpleDNSRequest: nsIDNSListener
 
   purpleDNSRequest();
   ~purpleDNSRequest();
+  PRUint32 mAccountId;
   PurpleDnsQueryData *query_data;
   PurpleDnsQueryResolvedCallback resolved_cb;
   PurpleDnsQueryFailedCallback failed_cb;

@@ -55,5 +55,6 @@ interface purpleISocket: nsISupports {
             in long aFd,
             in purpleInputCondition aCondition);
   readonly attribute unsigned long id;
+  readonly attribute unsigned long accountId;
   void cancel();
 };

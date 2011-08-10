@@ -40,6 +40,8 @@
 #include "purpleCoreService.h"
 #include "purpleConversation.h"
 #include "purpleGListEnumerator.h"
+#include "purpleSockets.h"
+#include "purpleTimer.h"
 
 #include <imgITools.h>
 #include <imgIContainer.h>
@@ -248,7 +250,8 @@ NS_IMPL_ISUPPORTS3_CI(purpleAccount, purpleIAccount,
                       purpleIAccountBase, nsIObserver)
 
 purpleAccount::purpleAccount(PRBool aIsValidProtocol)
-  : mAccount(NULL)
+  : mScoper(nsnull),
+    mAccount(NULL)
 {
   /* member initializers and constructor code */
 #ifdef PR_LOGGING
@@ -491,6 +494,7 @@ NS_IMETHODIMP purpleAccount::Connect()
     NS_ENSURE_TRUE(!NS_IsOffline(), NS_ERROR_FAILURE);
 
   /* enabling an account in libpurple connects it automatically */
+  purpleAccountScoper scoper(mId);
   purple_account_set_enabled(mAccount, UI_ID, TRUE);
   // purple_account_connect(mAccount);
 
@@ -503,6 +507,7 @@ NS_IMETHODIMP purpleAccount::Disconnect()
   PURPLE_ENSURE_INIT(mAccount);
   LOG(("Attempting to disconnect %s\n", mAccount->username));
 
+  purpleAccountScoper scoper(mId);
   purple_account_set_enabled(mAccount, UI_ID, FALSE);
 
   return NS_OK;
@@ -514,6 +519,7 @@ NS_IMETHODIMP purpleAccount::CreateConversation(const nsACString& aName,
 {
   NS_ENSURE_TRUE(!aName.IsEmpty(), NS_ERROR_INVALID_ARG);
 
+  purpleAccountScoper scoper(mId);
   PurpleConversation *conv;
   conv = purple_conversation_new(PURPLE_CONV_TYPE_IM, this->mAccount,
                                  PromiseFlatCString(aName).get());
@@ -534,6 +540,7 @@ NS_IMETHODIMP purpleAccount::AddBuddy(imITag *aTag,
   NS_ENSURE_ARG_POINTER(aTag);
   NS_ENSURE_ARG(!aName.IsEmpty());
 
+  purpleAccountScoper scoper(mId);
   PurpleGroup *group = purpleAccountBuddy::GetPurpleGroupForTag(aTag);
   NS_ENSURE_TRUE(group, NS_ERROR_UNEXPECTED);
 
@@ -657,6 +664,7 @@ NS_IMETHODIMP purpleAccount::JoinChat(purpleIChatRoomFieldValues *aComponents)
   NS_ENSURE_TRUE(aComponents, NS_ERROR_INVALID_ARG);
 
   PURPLE_ENSURE_INIT(mAccount);
+  purpleAccountScoper scoper(mId);
   PurpleConnection *gc = purple_account_get_connection(mAccount);
   NS_ENSURE_TRUE(gc, NS_ERROR_FAILURE);
 
@@ -863,6 +871,16 @@ NS_IMETHODIMP purpleAccount::Disconnecting(PRInt16 aConnectionErrorReason,
                                           aConnectionErrorMessage);
 }
 
+/* void disconnected (); */
+NS_IMETHODIMP purpleAccount::Disconnected()
+{
+  // Double check that callbacks of the account have been removed.
+  purpleSocketWatcher::CancelWatchFromAccountId(mId);
+  purpleTimer::CancelTimerFromAccountId(mId);
+
+  return purpleAccountBase::Disconnected();
+}
+
 /* Get flag from PurpleConnection->flags */
 #define PURPLE_IMPL_GETFLAG(aName, aFlag)                                 \
   NS_IMETHODIMP purpleAccount::Get##aName(PRBool *a##aName)               \
@@ -913,6 +931,7 @@ NS_IMETHODIMP purpleAccount::Observe(nsISupports *aSubject,
 
   if (!strcmp("user-display-name-changed", aTopic)) {
     if (purple_account_is_connected(mAccount)) {
+      purpleAccountScoper scoper(mId);
       purple_account_set_public_alias(mAccount,
                                       aData ? NS_ConvertUTF16toUTF8(aData).get() : NULL,
                                       NULL, NULL);
@@ -1131,6 +1150,7 @@ nsresult purpleAccount::ApplyCurrentUserIcon()
 void purpleAccount::SetAccountIcon(const nsCString& aBuffer)
 {
   LOG(("Setting icon for account %s", purple_account_get_username(mAccount)));
+  purpleAccountScoper scoper(mId);
   // libpurple will g_free so we need to g_memdup the buffer.
   guchar *data =
     static_cast<guchar *>(g_memdup(aBuffer.get(), aBuffer.Length()));

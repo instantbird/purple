@@ -141,12 +141,32 @@ static void connect_to_connections_signals()
                         PURPLE_CALLBACK(disconnecting), NULL);
 }
 
+static void before_status_change(PurpleAccount *aAccount,
+                                 PurpleStatus *old_status,
+                                 PurpleStatus *new_status)
+{
+  IMPL_GET_ACCOUNT_FROM_UI_DATA(aAccount);
+  account->EnterScope();
+}
+
+static void after_status_change(PurpleAccount *aAccount,
+                                PurpleStatus *old_status,
+                                PurpleStatus *new_status)
+{
+  IMPL_GET_ACCOUNT_FROM_UI_DATA(aAccount);
+  account->ExitScope();
+}
+
 static void connect_to_accounts_signals()
 {
   int handle;
   void *instance = purple_accounts_get_handle();
   purple_signal_connect(instance, "account-connecting", &handle,
                         PURPLE_CALLBACK(connecting), NULL);
+  purple_signal_connect(instance, "account-status-changing", &handle,
+                        PURPLE_CALLBACK(before_status_change), NULL);
+  purple_signal_connect(instance, "account-status-changed", &handle,
+                        PURPLE_CALLBACK(after_status_change), NULL);
 }
 
 

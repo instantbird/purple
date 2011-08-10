@@ -54,6 +54,7 @@ class purpleTimeout: public nsIRunnable
 struct purpleTimeout
 {
 #endif
+  PRUint32 mAccountId;
   PRUint32 mId;
   nsCOMPtr<nsITimer> mTimer;
   GSourceFunc mFunction;
@@ -71,6 +72,7 @@ class purpleTimer
                              gpointer aData);
   static void ExecTimer(nsITimer *aTimer, void *aTimerClosure);
   static PRBool CancelTimer(PRUint32 aId);
+  static nsresult CancelTimerFromAccountId(PRUint32 aAccountId);
 
  private:
   static nsTArray<purpleTimeout *> *sTimeouts;

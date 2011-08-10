@@ -45,6 +45,8 @@
 #include <libpurple/conversation.h>
 #pragma GCC visibility pop
 
+class purpleAccount;
+
 class purpleConversation : public purpleIConversation
 {
 public:
@@ -65,6 +67,7 @@ private:
 
 protected:
   ~purpleConversation();
+  purpleAccount *GetAccount();
   PurpleConversation *mConv;
   PRUint32 mId;
   PRBool mUninitialized;

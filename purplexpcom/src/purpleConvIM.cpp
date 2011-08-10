@@ -101,6 +101,7 @@ NS_IMETHODIMP purpleConvIM::SendMsg(const nsACString& aMsg)
 {
   NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
 
+  purpleAccountScoper scoper(purpleConversation::GetAccount());
   PromiseFlatCString flatMsg(aMsg);
   purple_conv_im_send(mConv->u.im, flatMsg.get());
   LOG(("IM message sent: %s", flatMsg.get()));
@@ -161,6 +162,7 @@ NS_IMETHODIMP purpleConvIM::SendTyping(PRUint32 aLength)
   NS_ENSURE_TRUE(im, NS_ERROR_UNEXPECTED);
 
   LOG(("purpleConvIM::SendTyping Length = %u", aLength));
+  purpleAccountScoper scoper(purpleConversation::GetAccount());
 
   // First, stop the typed timeout
   purple_conv_im_stop_send_typed_timeout(im);

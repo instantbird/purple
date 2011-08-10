@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "purpleDNS.h"
+#include "purpleAccountScoper.h"
 #include <nsComponentManagerUtils.h>
 #include <nsServiceManagerUtils.h>
 #include <nsNetUtil.h>
@@ -94,6 +95,7 @@ gboolean purpleDNS::Resolve(PurpleDnsQueryData *query_data,
   nsCOMPtr<nsIThread> thread = do_GetMainThread();
   nsCOMPtr<purpleDNSRequest> listener;
   listener = new purpleDNSRequest();
+  listener->mAccountId = purpleAccountScoper::GetCurrentAccountId();
   listener->query_data = query_data;
   listener->resolved_cb = resolved_cb;
   listener->failed_cb = failed_cb;
@@ -170,6 +172,8 @@ nsresult purpleDNSRequest::OnLookupComplete(nsICancelable *request,
 {
   NS_ASSERTION(NS_IsMainThread(), "wrong thread");
   NS_ASSERTION(request == asyncResolv, "wrong request");
+
+  purpleAccountScoper scoper(mAccountId);
 
   if (NS_FAILED(status)) {
     Failed("DNS query failed\n");

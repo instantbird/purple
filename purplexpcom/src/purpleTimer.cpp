@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "purpleTimer.h"
+#include "purpleAccountScoper.h"
 #include <prlog.h>
 #include <nsComponentManagerUtils.h>
 
@@ -70,7 +71,7 @@ void purpleTimer::init()
 
 void purpleTimer::unInit()
 {
-  LOG(("purpleTimer::unInit: removing %s leftover timeouts",
+  LOG(("purpleTimer::unInit: removing %i leftover timeouts",
        sTimeouts->Length()));
 
   for (PRUint32 i = 0; i < sTimeouts->Length(); ++i) {
@@ -142,11 +143,13 @@ PRUint32 purpleTimer::AddTimeout(PRUint32 aInterval,
 #endif
 
   timer->mId = ++sLastTimer;
+  timer->mAccountId = purpleAccountScoper::GetCurrentAccountId();
   timer->mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
   timer->mTimer->InitWithFuncCallback(ExecTimer, timer,
                                       aInterval, nsITimer::TYPE_REPEATING_SLACK);
   sTimeouts->AppendElement(timer);
-  LOG(("TIMEOUTADD id = %i; interval = %ims\n", timer->mId, aInterval));
+  LOG(("TIMEOUTADD id = %i; accountId = %u; interval = %ims\n",
+       timer->mId, timer->mAccountId, aInterval));
 
   return timer->mId;
 }
@@ -163,7 +166,8 @@ void purpleTimer::ExecTimer(nsITimer *aTimer, void *aTimerClosure)
      mFunction calls purple_timeout_remove, timeout will already be
      freed when we will try to call CancelTimer */
   PRUint32 id = timeout->mId;
-  LOG(("TIMEOUT EXEC id = %i", id));
+  LOG(("TIMEOUT EXEC id = %i, accountId = %u", id, timeout->mAccountId));
+  purpleAccountScoper scoper(timeout->mAccountId);
   PRBool shouldContinue = timeout->mFunction(timeout->mData);
   if (!shouldContinue) {
     CancelTimer(id);
@@ -188,4 +192,22 @@ PRBool purpleTimer::CancelTimer(PRUint32 aId)
 
   LOG(("purpleTimer::CancelTimer : Timeout with id %i not found.", aId));
   return PR_FALSE;
+}
+
+nsresult purpleTimer::CancelTimerFromAccountId(PRUint32 aAccountId)
+{
+  LOG(("Checking if timers from account %u remain", aAccountId));
+  NS_ENSURE_TRUE(sTimeouts, NS_ERROR_FAILURE);
+
+  for (PRInt32 i = sTimeouts->Length() - 1; i >= 0; --i) {
+    if ((*sTimeouts)[i]->mAccountId == aAccountId) {
+      purpleTimeout *timeout = (*sTimeouts)[i];
+      timeout->mTimer->Cancel();
+      delete timeout;
+      sTimeouts->RemoveElementAt(i);
+      LOG(("Timeout elt found at index %i; canceled and removed", i));
+      NS_WARNING("Found timer for disconnected account");
+    }
+  }
+  return NS_OK;
 }

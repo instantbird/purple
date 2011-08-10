@@ -104,6 +104,16 @@ NS_IMETHODIMP purpleConversation::UnInit()
   return NS_OK;
 }
 
+purpleAccount *purpleConversation::GetAccount()
+{
+  NS_ENSURE_TRUE(mConv, nsnull);
+
+  PurpleAccount *pAccount = purple_conversation_get_account(mConv);
+  NS_ENSURE_TRUE(pAccount, nsnull);
+
+  return purpleAccount::fromPurpleAccount(pAccount);
+}
+
 /* readonly attribute purpleIAccount account; */
 NS_IMETHODIMP purpleConversation::GetAccount(purpleIAccount * *aAccount)
 {
@@ -180,6 +190,7 @@ NS_IMETHODIMP purpleConversation::Close()
   os->NotifyObservers(this, "closing-conversation", nsnull);
 
   if (!mUninitialized) {
+    purpleAccountScoper scoper(GetAccount());
     purple_conversation_destroy(mConv);
     mConv = NULL;
   }

@@ -97,6 +97,7 @@ class purpleSocket : public purpleISocket
 
  private:
   static PRUint32 sLastSocket;
+  PRUint32 mAccountId;
   PRUint32 mId;
   PRInt32 mFd;
   PurpleInputFunction mFunction;
@@ -113,6 +114,7 @@ class purpleSocketWatcher
   static PRUint32 AddWatch(gint aFd, PurpleInputCondition aCondition,
                            PurpleInputFunction aFunction, gpointer aData);
   static PRBool CancelWatch(PRUint32 aId);
+  static nsresult CancelWatchFromAccountId(PRUint32 aAccountId);
   static nsISocketTransportService *getSts();
   static void init();
   static void unInit();

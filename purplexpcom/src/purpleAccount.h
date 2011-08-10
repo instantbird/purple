@@ -39,6 +39,7 @@
 # define PURPLE_ACCOUNT_H_
 
 #include "purpleAccountBase.h"
+#include "purpleAccountScoper.h"
 #include <nsIObserver.h>
 
 #define UI_ID                  "instantbird"
@@ -88,6 +89,7 @@ public:
 
   NS_SCRIPTABLE NS_IMETHOD Disconnecting(PRInt16 aConnectionErrorReason,
                                          const nsACString & aConnectionErrorMessage);
+  NS_SCRIPTABLE NS_IMETHOD Disconnected();
 
   purpleAccount(PRBool aIsValidProtocol = PR_TRUE);
   PurpleAccount *GetPurpleAccount() { return mAccount; }
@@ -95,6 +97,8 @@ public:
     return static_cast<purpleAccount *>(aAccount->ui_data);
   }
   PurplePluginProtocolInfo *GetPrplInfo();
+  inline void EnterScope() { mScoper = new purpleAccountScoper(mId); }
+  inline void ExitScope() { delete mScoper; mScoper = nsnull; }
 
 private:
   ~purpleAccount();
@@ -106,6 +110,7 @@ private:
   inline void GetCharPref(const char *aName);
   nsresult ApplyCurrentUserIcon();
   inline void SetAccountIcon(const nsCString& aBuffer);
+  purpleAccountScoper *mScoper;
 
 protected:
   /* additional members */

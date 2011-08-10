@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "purpleSockets.h"
+#include "purpleAccountScoper.h"
 #include <private/pprio.h>
 #include <nsComponentManagerUtils.h>
 #include <nsServiceManagerUtils.h>
@@ -86,6 +87,7 @@ NS_IMETHODIMP purpleSocket::Init(PurpleInputFunction aFunction,
                                  PurpleInputCondition aCondition,
                                  PRInt32 *aResultId)
 {
+  mAccountId = purpleAccountScoper::GetCurrentAccountId();
   mId = ++sLastSocket;
   *aResultId = mId;
   mFunction = aFunction;
@@ -124,6 +126,12 @@ NS_IMETHODIMP purpleSocket::GetId(PRUint32 *aId)
   return NS_OK;
 }
 
+NS_IMETHODIMP purpleSocket::GetAccountId(PRUint32 *aAccountId)
+{
+  *aAccountId = mAccountId;
+  return NS_OK;
+}
+
 NS_IMETHODIMP purpleSocket::Cancel()
 {
   return mInternal->Cancel();
@@ -131,7 +139,9 @@ NS_IMETHODIMP purpleSocket::Cancel()
 
 NS_IMETHODIMP purpleSocket::CallLibpurpleCallback()
 {
-  LOG(("[%i] CallLibpurpleCallback\n", mId));
+  LOG(("[%i] CallLibpurpleCallback (accountId = %u)\n", mId, mAccountId));
+
+  purpleAccountScoper scoper(mAccountId);
   mFunction(mData, mFd, mCondition);
 
   return NS_OK;
@@ -401,7 +411,8 @@ PRUint32 purpleSocketWatcher::AddWatch(gint aFd, PurpleInputCondition aCondition
   NS_ENSURE_SUCCESS(rv, 0);
 
   sSockets->AppendElement(socket);
-  LOG(("[%i]SOCKETADD fd = %i\n", id, aFd));
+  LOG(("[%i]SOCKETADD fd = %i, accountId = %u\n",
+       id, aFd, purpleAccountScoper::GetCurrentAccountId()));
 
   return id;
 }
@@ -409,7 +420,7 @@ PRUint32 purpleSocketWatcher::AddWatch(gint aFd, PurpleInputCondition aCondition
 PRBool purpleSocketWatcher::CancelWatch(PRUint32 aId)
 {
   LOG(("[%u]SOCKETCANCEL\n", aId));
-  NS_ENSURE_TRUE(sSockets, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(sSockets, PR_FALSE);
 
   for (PRUint32 i = 0; i < sSockets->Length(); ++i) {
     PRUint32 id;
@@ -424,6 +435,25 @@ PRBool purpleSocketWatcher::CancelWatch(PRUint32 aId)
 
   NS_WARNING("Failed to cancelWatch: socket not found");
   return PR_FALSE;
+}
+
+nsresult purpleSocketWatcher::CancelWatchFromAccountId(PRUint32 aAccountId)
+{
+  LOG(("[ ]SOCKETCANCELFROMACCOUNTID, accountId = %u\n", aAccountId));
+  NS_ENSURE_TRUE(sSockets, NS_ERROR_FAILURE);
+
+  for (PRInt32 i = sSockets->Length() - 1; i >= 0; --i) {
+    PRUint32 accountId;
+    (*sSockets)[i]->GetAccountId(&accountId);
+    if (accountId == aAccountId) {
+      (*sSockets)[i]->Cancel();
+      sSockets->RemoveElementAt(i);
+      LOG(("[ ]Socket from account %u found at index %i; canceled and removed\n",
+           aAccountId, i));
+      NS_WARNING("Found socket listener for disconnected account");
+    }
+  }
+  return NS_OK;
 }
 
 NS_IMPL_ISUPPORTS1(purpleSocketNetworkStateObserver, nsIObserver)

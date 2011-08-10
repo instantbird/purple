@@ -102,6 +102,7 @@ NS_IMETHODIMP purpleConvChat::SendMsg(const nsACString& aMsg)
 {
   NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
 
+  purpleAccountScoper scoper(purpleConversation::GetAccount());
   PromiseFlatCString flatMsg(aMsg);
   purple_conv_chat_send(mConv->u.chat, flatMsg.get());
   LOG(("chat message sent: %s", flatMsg.get()));
@@ -149,6 +150,7 @@ NS_IMETHODIMP purpleConvChat::SetTopic(const nsACString & aTopic)
   NS_ENSURE_TRUE(prplInfo, NS_ERROR_NOT_AVAILABLE);
   NS_ENSURE_TRUE(prplInfo->set_chat_topic, NS_ERROR_NOT_IMPLEMENTED);
 
+  purpleAccountScoper scoper(purpleConversation::GetAccount());
   prplInfo->set_chat_topic(gc,
                            purple_conv_chat_get_id(PURPLE_CONV_CHAT(mConv)),
                            PromiseFlatCString(aTopic).get());
