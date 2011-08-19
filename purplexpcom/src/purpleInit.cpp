@@ -83,7 +83,7 @@ PRLogModuleInfo *gPurpleInitLog = nsnull;
 static nsresult open_libpurple(void)
 {
   nsCOMPtr<nsIFile> folder;
-  nsresult rv = NS_GetSpecialDirectory("resource:app",
+  nsresult rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR,
                                        getter_AddRefs(folder));
   NS_ENSURE_SUCCESS(rv, rv);
 
