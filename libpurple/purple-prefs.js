@@ -1,3 +1,4 @@
+pref("plugins.prpl.meanwhile.blist_action", 4);
 pref("plugins.prpl.oscar.recent_buddies", false);
 pref("plugins.prpl.qq.auto_get_authorize_info", true);
 pref("plugins.prpl.qq.resend_interval", 3);

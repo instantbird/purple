@@ -102,6 +102,7 @@ PROTOCOLS	= \
 		myspace \
 		novell \
 		qq \
+		sametime \
 		simple \
 		yahoo \
 		netsoul \
