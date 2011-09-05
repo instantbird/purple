@@ -57,6 +57,7 @@ public:
   NS_SCRIPTABLE NS_IMETHOD CreateConversation(const nsACString & aName, purpleIConversation **_retval NS_OUTPARAM);
   NS_SCRIPTABLE NS_IMETHOD AddBuddy(imITag *aTag, const nsACString & aName);
   NS_SCRIPTABLE NS_IMETHOD LoadBuddy(imIBuddy *aBuddy, imITag *aTag, imIAccountBuddy **aResult);
+  NS_SCRIPTABLE NS_IMETHOD RequestBuddyInfo(const nsACString & aBuddyName);
   NS_SCRIPTABLE NS_IMETHOD GetCanJoinChat(PRBool *aCanJoinChat);
   NS_SCRIPTABLE NS_IMETHOD GetChatRoomFields(nsISimpleEnumerator **_retval NS_OUTPARAM);
   NS_SCRIPTABLE NS_IMETHOD GetChatRoomDefaultFieldValues(const nsACString & aDefaultChatName, purpleIChatRoomFieldValues **_retval NS_OUTPARAM);

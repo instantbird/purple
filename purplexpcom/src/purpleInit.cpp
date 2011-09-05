@@ -45,7 +45,9 @@
 #include "purpleAccountBuddy.h"
 #include "purpleCoreService.h"
 #include "purpleGetText.h"
+#include "purpleGListEnumerator.h"
 #include "purpleTimer.h"
+#include "purpleTooltipInfo.h"
 #include "purpleSockets.h"
 #include "purpleDebug.h"
 #include "purpleDNS.h"
@@ -56,6 +58,7 @@
 #include <nsNetCID.h>
 #include <nsICategoryManager.h>
 #include <nsIIdleService.h>
+#include <nsIObserverService.h>
 #include <nsIPrefBranch2.h>
 #include <nsIPrefService.h>
 #include <nsICancelable.h>
@@ -549,6 +552,35 @@ static PurpleCoreUiOps core_uiops =
   NULL, NULL, NULL
 };
 
+static void *notify_userinfo(PurpleConnection *gc, const char *who,
+                             PurpleNotifyUserInfo *user_info)
+{
+  LOG(("purpleInit::notify_userinfo, who = %s", who));
+
+  nsCOMPtr<purpleGListEnumerator> enumerator = new purpleGListEnumerator();
+  enumerator->Init(purple_notify_user_info_get_entries(user_info),
+                   purpleTypeToInterface<purpleTooltipInfo,
+                                         purpleITooltipInfo,
+                                         PurpleNotifyUserInfoEntry>);
+
+  nsString wWho;
+  CopyUTF8toUTF16(nsDependentCString(who), wWho);
+
+  nsCOMPtr<nsIObserverService> os =
+    do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+  os->NotifyObservers(enumerator, "user-info-received", wWho.get());
+  return NULL;
+}
+
+static PurpleNotifyUiOps notify_uiops =
+{
+  NULL, NULL, NULL, NULL, NULL, NULL,
+  notify_userinfo,
+  NULL, NULL,
+
+  NULL, NULL, NULL, NULL
+};
+
 nsresult
 init_libpurple()
 {
@@ -592,6 +624,8 @@ init_libpurple()
    * so that we can have the right prototypes for libpurple.
    */
   purple_eventloop_set_ui_ops(&eventloops);
+
+  purple_notify_set_ui_ops(&notify_uiops);
 
   /* Here "instantbird" stands for the UI_ID. libpurple
    * sometimes need this id (for example for some plugins and

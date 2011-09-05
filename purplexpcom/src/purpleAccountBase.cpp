@@ -367,6 +367,12 @@ NS_IMETHODIMP purpleAccountBase::LoadBuddy(imIBuddy *aBuddy,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+/* void requestBuddyInfo (in AUTF8String aBuddyName); */
+NS_IMETHODIMP purpleAccountBase::RequestBuddyInfo(const nsACString & aBuddyName)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 /* nsISimpleEnumerator getChatRoomFields (); */
 NS_IMETHODIMP purpleAccountBase::GetChatRoomFields(nsISimpleEnumerator **aResult)
 {

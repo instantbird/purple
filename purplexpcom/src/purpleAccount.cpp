@@ -603,6 +603,22 @@ PurplePluginProtocolInfo *purpleAccount::GetPrplInfo()
   return PURPLE_PLUGIN_PROTOCOL_INFO(prpl);
 }
 
+/* void requestBuddyInfo (in AUTF8String aBuddyName); */
+NS_IMETHODIMP purpleAccount::RequestBuddyInfo(const nsACString & aBuddyName)
+{
+  PURPLE_ENSURE_INIT(mProtocol && mAccount);
+  PurpleConnection *gc = purple_account_get_connection(mAccount);
+  if (!gc)
+    return NS_OK;
+
+  PurplePluginProtocolInfo *prplInfo = GetPrplInfo();
+  if (!prplInfo || !prplInfo->get_info)
+    return NS_OK;
+
+  prplInfo->get_info(gc, PromiseFlatCString(aBuddyName).get());
+  return NS_OK;
+}
+
 /* nsISimpleEnumerator getChatRoomFields (); */
 NS_IMETHODIMP purpleAccount::GetChatRoomFields(nsISimpleEnumerator **aResult)
 {

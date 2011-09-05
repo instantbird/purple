@@ -118,6 +118,16 @@ interface purpleIAccount: nsISupports {
   // Used while loading the buddy list at startup.
   imIAccountBuddy loadBuddy(in imIBuddy aBuddy, in imITag aTag);
 
+  /* Request more info on a buddy (typically a chat buddy).
+   * The result (if any) will be provided by a user-info-received
+   * notification dispatched through the observer service:
+   *  - aSubject will be an nsISimpleEnumerator of purpleITooltipInfo,
+   *  Do NOT store aSubject. Use it right away. The memory it points to
+   *  will be freed right after the notification is dispatched.
+   *  - aData will be aBuddyName.
+   */
+  void requestBuddyInfo(in AUTF8String aBuddyName);
+
   readonly attribute boolean canJoinChat;
   nsISimpleEnumerator getChatRoomFields();
   purpleIChatRoomFieldValues getChatRoomDefaultFieldValues([optional] in AUTF8String aDefaultChatName);
