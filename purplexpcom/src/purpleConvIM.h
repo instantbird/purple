@@ -86,8 +86,9 @@ public:
     return purpleConversation::RemoveObserver(aObserver);
   }
 
-  // Keep the SendMsg method here
+  // Keep the SendMsg and SendTyping methods here.
   NS_SCRIPTABLE NS_IMETHOD SendMsg(const nsACString & aMsg);
+  NS_SCRIPTABLE NS_IMETHODIMP SendTyping(PRUint32 aLength);
 
   purpleConvIM();
 

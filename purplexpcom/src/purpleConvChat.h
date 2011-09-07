@@ -73,6 +73,11 @@ public:
   NS_SCRIPTABLE NS_IMETHOD SetId(PRUint32 aId) {
     return purpleConversation::SetId(aId);
   }
+
+  NS_SCRIPTABLE NS_IMETHODIMP SendTyping(PRUint32 aLength) {
+    return purpleConversation::SendTyping(aLength);
+  }
+
   NS_SCRIPTABLE NS_IMETHOD UnInit(void) {
     return purpleConversation::UnInit();
   }

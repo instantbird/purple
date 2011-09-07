@@ -226,3 +226,13 @@ PURPLE_IMPL_GETBOOL(Notification, NOTIFY)
 
 /* readonly attribute boolean noLinkification; */
 PURPLE_IMPL_GETBOOL(NoLinkification, NO_LINKIFY)
+
+/* void getActions ([optional] out unsigned long actionCount,
+                    [array, retval, size_is (actionCount)] out purpleIMessageAction actions); */
+NS_IMETHODIMP purpleMessage::GetActions(PRUint32 *actionCount,
+                                        purpleIMessageAction ***actions)
+{
+  *actionCount = 0;
+  *actions = nsnull;
+  return NS_OK;
+}
