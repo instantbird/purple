@@ -128,6 +128,32 @@ NS_IMETHODIMP purpleConvChat::GetParticipants(nsISimpleEnumerator **_retval NS_O
   return NS_OK;
 }
 
+/* AUTF8String getNormalizedChatBuddyName (in AUTF8String aChatBuddyName); */
+NS_IMETHODIMP purpleConvChat::GetNormalizedChatBuddyName(const nsACString & aChatBuddyName,
+                                                         nsACString &aNormalizedName)
+{
+  NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
+
+  aNormalizedName = aChatBuddyName;
+
+  PurpleConnection *gc = purple_conversation_get_gc(mConv);
+  if (!gc)
+    return NS_OK;
+
+  PurplePluginProtocolInfo *prplInfo = PURPLE_PLUGIN_PROTOCOL_INFO(gc->prpl);
+  if (!prplInfo || !prplInfo->get_cb_real_name)
+    return NS_OK;
+
+  gchar *realName =
+    prplInfo->get_cb_real_name(gc,
+                                purple_conv_chat_get_id(PURPLE_CONV_CHAT(mConv)),
+                                PromiseFlatCString(aChatBuddyName).get());
+  if (realName && *realName)
+    aNormalizedName = realName;
+  g_free(realName);
+  return NS_OK;
+}
+
 /*          attribute AUTF8String topic; */
 NS_IMETHODIMP purpleConvChat::GetTopic(nsACString & aTopic)
 {
