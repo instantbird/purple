@@ -983,7 +983,7 @@ http_canread(gpointer data, gint source, PurpleInputCondition cond)
 				hostname[sizeof(hostname) - 1] = '\0';
 				if (ret < 0 || hostname[0] == '\0') {
 					purple_debug_warning("proxy", "gethostname() failed -- is your hostname set?");
-					strcpy(hostname, "localhost");
+					g_strlcpy(hostname, "localhost", sizeof(hostname));
 				}
 
 				if (domain != NULL)
@@ -1117,7 +1117,7 @@ http_start_connect_tunneling(PurpleProxyConnectData *connect_data) {
 		hostname[sizeof(hostname) - 1] = '\0';
 		if (ret < 0 || hostname[0] == '\0') {
 			purple_debug_warning("proxy", "gethostname() failed -- is your hostname set?");
-			strcpy(hostname, "localhost");
+			g_strlcpy(hostname, "localhost", sizeof(hostname));
 		}
 
 		t1 = g_strdup_printf("%s:%s",
