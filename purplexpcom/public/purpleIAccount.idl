@@ -133,7 +133,6 @@ interface purpleIAccount: nsISupports {
   purpleIChatRoomFieldValues getChatRoomDefaultFieldValues([optional] in AUTF8String aDefaultChatName);
   /*
    * Create a new chat conversation if it doesn't already exist.
-   * Returns the conversation if it already existed, null otherwise
    */
   void joinChat(in purpleIChatRoomFieldValues aComponents);
 
