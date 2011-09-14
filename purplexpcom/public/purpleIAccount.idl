@@ -180,7 +180,7 @@ interface purpleIAccount: nsISupports {
      indicating the current step of the connection */
   readonly attribute AUTF8String connectionStateMsg;
 
-  /* When a connection error occured, this value indicates the type of error */
+  /* When a connection error occurred, this value indicates the type of error */
   readonly attribute short connectionErrorReason;
 
   /* Number of the reconnection attempt
