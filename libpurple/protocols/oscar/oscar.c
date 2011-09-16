@@ -350,7 +350,7 @@ connection_common_established_cb(FlapConnection *conn)
 		flap_connection_send_version(od, conn);
 	else
 	{
-		if (purple_account_get_bool(account, "use_clientlogin", OSCAR_DEFAULT_USE_CLIENTLOGIN))
+		if (purple_account_get_bool(account, "use_clientlogin", od->icq ? ICQ_DEFAULT_USE_CLIENTLOGIN : AIM_DEFAULT_USE_CLIENTLOGIN))
 		{
 			ClientInfo aiminfo = CLIENTINFO_PURPLE_AIM;
 			ClientInfo icqinfo = CLIENTINFO_PURPLE_ICQ;
@@ -778,7 +778,7 @@ oscar_login(PurpleAccount *account)
 	 * This authentication method is used for both ICQ and AIM when
 	 * clientLogin is not enabled.
 	 */
-	if (purple_account_get_bool(account, "use_clientlogin", OSCAR_DEFAULT_USE_CLIENTLOGIN)) {
+	if (purple_account_get_bool(account, "use_clientlogin", od->icq ? ICQ_DEFAULT_USE_CLIENTLOGIN : AIM_DEFAULT_USE_CLIENTLOGIN)) {
 		send_client_login(od, purple_account_get_username(account));
 	} else {
 		FlapConnection *newconn;
@@ -5798,7 +5798,7 @@ void oscar_init(PurplePlugin *plugin, gboolean is_icq)
 	prpl_info->protocol_options = g_list_append(prpl_info->protocol_options, option);
 
 	option = purple_account_option_bool_new(_("Use clientLogin"), "use_clientlogin",
-			OSCAR_DEFAULT_USE_CLIENTLOGIN);
+			is_icq ? ICQ_DEFAULT_USE_CLIENTLOGIN : AIM_DEFAULT_USE_CLIENTLOGIN);
 	prpl_info->protocol_options = g_list_append(prpl_info->protocol_options, option);
 
 	option = purple_account_option_bool_new(
