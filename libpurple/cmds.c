@@ -83,7 +83,7 @@ PurpleCmdId purple_cmd_register(const gchar *cmd, const gchar *args,
 
 	ops = purple_cmds_get_ui_ops();
 	if (ops && ops->register_command)
-		ops->register_command(cmd, p, prpl_id, helpstr, c);
+		ops->register_command(cmd, p, f, prpl_id, helpstr, c);
 
 	purple_signal_emit(purple_cmds_get_handle(), "cmd-added", cmd, p, f);
 

@@ -109,8 +109,8 @@ typedef struct
 	/** If implemented, the UI is responsible for handling commands. */
 	/* @see purple_cmd_register for the argument values. */
 	void (*register_command)(const gchar *name, PurpleCmdPriority p,
-				 const gchar *prpl_id, const gchar *helpstr,
-				 PurpleCmd *cmd);
+				 PurpleCmdFlag f, const gchar *prpl_id,
+				 const gchar *helpstr, PurpleCmd *cmd);
 
 	/** Should be implemented if register_command is implemented.
 	 *  name and prpl_id should have the same value that were used
