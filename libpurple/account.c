@@ -2426,6 +2426,7 @@ purple_account_get_string(const PurpleAccount *account, const char *name,
 						const char *default_value)
 {
 	PurpleAccountSetting *setting;
+	const char *value;
 
 	g_return_val_if_fail(account != NULL, default_value);
 	g_return_val_if_fail(name    != NULL, default_value);
@@ -2437,7 +2438,11 @@ purple_account_get_string(const PurpleAccount *account, const char *name,
 
 	g_return_val_if_fail(setting->type == PURPLE_PREF_STRING, default_value);
 
-	return setting->value.string;
+	value = setting->value.string;
+	if (value == NULL || !*value)
+		return default_value;
+
+	return value;
 }
 
 gboolean
