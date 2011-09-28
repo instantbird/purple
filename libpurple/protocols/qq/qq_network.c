@@ -42,11 +42,11 @@
 #define QQ_DEFAULT_PORT					8000
 
 /* set QQ_CONNECT_MAX to 1, when test reconnecting */
-#define QQ_CONNECT_MAX				3
+#define QQ_CONNECT_MAX						3
 #define QQ_CONNECT_INTERVAL			2
-#define QQ_CONNECT_CHECK			5
-#define QQ_KEEP_ALIVE_INTERVAL			60
-#define QQ_TRANS_INTERVAL			10
+#define QQ_CONNECT_CHECK					5
+#define QQ_KEEP_ALIVE_INTERVAL		60
+#define QQ_TRANS_INTERVAL				10
 
 gboolean connect_to_server(PurpleConnection *gc, gchar *server, gint port);
 
@@ -63,7 +63,6 @@ static qq_connection *connection_find(qq_data *qd, int fd) {
 
 static qq_connection *connection_create(qq_data *qd, int fd) {
 	qq_connection *ret = g_new0(qq_connection, 1);
-	g_return_val_if_fail(ret != NULL, NULL);
 	ret->fd = fd;
 	qd->openconns = g_slist_append(qd->openconns, ret);
 	return ret;
@@ -145,6 +144,7 @@ static gint packet_get_header(guint8 *header_tag,  guint16 *source_tag,
 	bytes += qq_get16(source_tag, buf + bytes);
 	bytes += qq_get16(cmd, buf + bytes);
 	bytes += qq_get16(seq, buf + bytes);
+	bytes += 7;	/* add 4 bytes qq num and 3 bytes fill 00 00 00 */
 	return bytes;
 }
 
@@ -161,7 +161,7 @@ static gboolean connect_check(gpointer data)
 		qd->connect_watcher = 0;
 	}
 
-	if (qd->fd >= 0 && qd->ld.token != NULL && qd->ld.token_len > 0) {
+	if (qd->fd >= 0 && qd->ld.token_touch != NULL && qd->ld.token_touch_len > 0) {
 		purple_debug_info("QQ", "Connect ok\n");
 		return FALSE;
 	}
@@ -264,13 +264,13 @@ static gboolean packet_process(PurpleConnection *gc, guint8 *buf, gint buf_len)
 	gint bytes, bytes_not_read;
 
 	guint8 header_tag;
-	guint16 source_tag;
+	guint16 version_tag;
 	guint16 cmd;
 	guint16 seq;		/* May be ack_seq or send_seq, depends on cmd */
 	guint8 room_cmd;
 	guint32 room_id;
-	UPDCLS update_class;
-	guint32 ship32;
+	guint32 update_class; 
+	guintptr ship_value;
 	int ret;
 
 	qq_transaction *trans;
@@ -284,15 +284,16 @@ static gboolean packet_process(PurpleConnection *gc, guint8 *buf, gint buf_len)
 
 	/* Len, header and tail tag have been checked before */
 	bytes = 0;
-	bytes += packet_get_header(&header_tag, &source_tag, &cmd, &seq, buf + bytes);
+	bytes += packet_get_header(&header_tag, &version_tag, &cmd, &seq, buf + bytes);
 
 #if 1
-		purple_debug_info("QQ", "==> [%05d] %s 0x%04X, source tag 0x%04X len %d\n",
-				seq, qq_get_cmd_desc(cmd), cmd, source_tag, buf_len);
+		purple_debug_info("QQ", "==> [%05d] %s 0x%04X, version tag 0x%04X len %d\n",
+				seq, qq_get_cmd_desc(cmd), cmd, version_tag, buf_len);
+		
 #endif
 	/* this is the length of all the encrypted data (also remove tail tag) */
 	bytes_not_read = buf_len - bytes - 1;
-
+	
 	/* ack packet, we need to update send tranactions */
 	/* we do not check duplication for server ack */
 	trans = qq_trans_find_rcved(gc, cmd, seq);
@@ -314,20 +315,27 @@ static gboolean packet_process(PurpleConnection *gc, guint8 *buf, gint buf_len)
 	}
 
 	update_class = qq_trans_get_class(trans);
-	ship32 = qq_trans_get_ship(trans);
-	if (update_class != 0 || ship32 != 0) {
-		purple_debug_info("QQ", "Update class %d, ship32 %d\n", update_class, ship32);
+	ship_value = qq_trans_get_ship(trans);
+	if (update_class != 0 || ship_value != 0) {
+		purple_debug_info("QQ", "Update class %d, ship_value %d\n", update_class, ship_value);
 	}
 
 	switch (cmd) {
-		case QQ_CMD_TOKEN:
-		case QQ_CMD_GET_SERVER:
-		case QQ_CMD_TOKEN_EX:
-		case QQ_CMD_CHECK_PWD:
+		case QQ_CMD_TOUCH_SERVER:
+		case QQ_CMD_CAPTCHA:
+		case QQ_CMD_AUTH:
+		case QQ_CMD_VERIFY_DE:
+		case QQ_CMD_VERIFY_E5:
+		case QQ_CMD_VERIFY_E3:
 		case QQ_CMD_LOGIN:
-			ret = qq_proc_login_cmds(gc, cmd, seq, buf + bytes, bytes_not_read, update_class, ship32);
+		case QQ_CMD_LOGIN_E9:
+		case QQ_CMD_LOGIN_EA:
+		case QQ_CMD_LOGIN_GETLIST:
+		case QQ_CMD_LOGIN_ED:
+		case QQ_CMD_LOGIN_EC:
+			ret = qq_proc_login_cmds(gc, cmd, seq, buf + bytes, bytes_not_read, update_class, ship_value);
 			if (ret != QQ_LOGIN_REPLY_OK) {
-				if (ret == QQ_LOGIN_REPLY_REDIRECT) {
+				if (ret == QQ_TOUCH_REPLY_REDIRECT) {
 					redirect_server(gc);
 				}
 				return FALSE;	/* do nothing after this function and return now */
@@ -336,10 +344,10 @@ static gboolean packet_process(PurpleConnection *gc, guint8 *buf, gint buf_len)
 		case QQ_CMD_ROOM:
 			room_cmd = qq_trans_get_room_cmd(trans);
 			room_id = qq_trans_get_room_id(trans);
-			qq_proc_room_cmds(gc, seq, room_cmd, room_id, buf + bytes, bytes_not_read, update_class, ship32);
+			qq_proc_room_cmds(gc, seq, room_cmd, room_id, buf + bytes, bytes_not_read, update_class, ship_value);
 			break;
 		default:
-			qq_proc_client_cmds(gc, cmd, seq, buf + bytes, bytes_not_read, update_class, ship32);
+			qq_proc_client_cmds(gc, cmd, seq, buf + bytes, bytes_not_read, update_class, ship_value);
 			break;
 	}
 
@@ -677,13 +685,7 @@ static gboolean network_timeout(gpointer data)
 	qd->itv_count.keep_alive--;
 	if (qd->itv_count.keep_alive <= 0) {
 		qd->itv_count.keep_alive = qd->itv_config.keep_alive;
-		if (qd->client_version >= 2008) {
-			qq_request_keep_alive_2008(gc);
-		} else if (qd->client_version >= 2007) {
-			qq_request_keep_alive_2007(gc);
-		} else {
-			qq_request_keep_alive(gc);
-		}
+		qq_request_keep_alive(gc);
 		return TRUE;
 	}
 
@@ -773,14 +775,9 @@ static void connect_cb(gpointer data, gint source, const gchar *error_message)
 	}
 
 	/* _qq_show_socket("Got login socket", source); */
-	/* ok, already connected to the server */
 	qd->fd = source;
 	conn = connection_create(qd, source);
-	g_return_if_fail( conn != NULL );
-
 	if (qd->use_tcp) {
-		/* events which match "PURPLE_INPUT_READ" of
-		 * "source" would trigger the callback function */
 		conn->input_handler = purple_input_add(source, PURPLE_INPUT_READ, tcp_pending, gc);
 	} else {
 		conn->input_handler = purple_input_add(source, PURPLE_INPUT_READ, udp_pending, gc);
@@ -791,14 +788,9 @@ static void connect_cb(gpointer data, gint source, const gchar *error_message)
 
 	set_all_keys( gc );
 
-	if (qd->client_version >= 2007) {
-		purple_connection_update_progress(gc, _("Getting server"), 2, QQ_CONNECT_STEPS);
-		qq_request_get_server(gc);
-		return;
-	}
-
-	purple_connection_update_progress(gc, _("Requesting token"), 2, QQ_CONNECT_STEPS);
-	qq_request_token(gc);
+	purple_connection_update_progress(gc, _("Getting server"), 2, QQ_CONNECT_STEPS);
+	qq_request_touch_server(gc);
+	return;
 }
 
 #ifndef purple_proxy_connect_udp
@@ -1043,12 +1035,15 @@ void qq_disconnect(PurpleConnection *gc)
 	memset(qd->ld.random_key, 0, sizeof(qd->ld.random_key));
 	memset(qd->ld.pwd_md5, 0, sizeof(qd->ld.pwd_md5));
 	memset(qd->ld.pwd_twice_md5, 0, sizeof(qd->ld.pwd_twice_md5));
-	memset(qd->ld.login_key, 0, sizeof(qd->ld.login_key));
 	memset(qd->session_key, 0, sizeof(qd->session_key));
 	memset(qd->session_md5, 0, sizeof(qd->session_md5));
 
+	g_slist_foreach(qd->group_list,g_free,NULL);
+	g_slist_free(qd->group_list);
+	qd->group_list = NULL;
+	
+
 	qd->my_local_ip.s_addr = 0;
-	qd->my_local_port = 0;
 	qd->my_ip.s_addr = 0;
 	qd->my_port = 0;
 
@@ -1071,11 +1066,15 @@ static gint packet_encap(qq_data *qd, guint8 *buf, gint maxlen, guint16 cmd, gui
 	/* now comes the normal QQ packet as UDP */
 	bytes += qq_put8(buf + bytes, QQ_PACKET_TAG);
 	bytes += qq_put16(buf + bytes, qd->client_tag);
+	
 	bytes += qq_put16(buf + bytes, cmd);
 
 	bytes += qq_put16(buf + bytes, seq);
 
 	bytes += qq_put32(buf + bytes, qd->uid);
+
+	bytes += qq_putdata(buf + bytes,header_fill,sizeof(header_fill));
+
 	bytes += qq_putdata(buf + bytes, data, data_len);
 	bytes += qq_put8(buf + bytes, QQ_PACKET_TAIL);
 
@@ -1137,7 +1136,7 @@ gint qq_send_cmd_encrypted(PurpleConnection *gc, guint16 cmd, guint16 seq,
 /* Encrypt data with session_key, and send packet out */
 static gint send_cmd_detail(PurpleConnection *gc, guint16 cmd, guint16 seq,
 	guint8 *data, gint data_len, gboolean is_save2trans,
-        UPDCLS update_class, guint32 ship32)
+        guint32 update_class, guintptr ship_value)
 {
 	qq_data *qd;
 	guint8 *encrypted;
@@ -1161,13 +1160,13 @@ static gint send_cmd_detail(PurpleConnection *gc, guint16 cmd, guint16 seq,
 
 	if (is_save2trans)  {
 		qq_trans_add_client_cmd(gc, cmd, seq, encrypted, encrypted_len,
-				update_class, ship32);
+				update_class, ship_value);
 	}
 	return bytes_sent;
 }
 
 gint qq_send_cmd_mess(PurpleConnection *gc, guint16 cmd, guint8 *data, gint data_len,
-		UPDCLS update_class, guint32 ship32)
+		guint32 update_class, guintptr ship_value)
 {
 	qq_data *qd;
 	guint16 seq;
@@ -1181,7 +1180,7 @@ gint qq_send_cmd_mess(PurpleConnection *gc, guint16 cmd, guint8 *data, gint data
 		purple_debug_info("QQ", "<== [%05d] %s(0x%04X), datalen %d\n",
 				seq, qq_get_cmd_desc(cmd), cmd, data_len);
 #endif
-	return send_cmd_detail(gc, cmd, seq, data, data_len, TRUE, update_class, ship32);
+	return send_cmd_detail(gc, cmd, seq, data, data_len, TRUE, update_class, ship_value);
 }
 
 /* set seq and is_save2trans, then call send_cmd_detail */
@@ -1195,7 +1194,7 @@ gint qq_send_cmd(PurpleConnection *gc, guint16 cmd, guint8 *data, gint data_len)
 	qd = (qq_data *) gc->proto_data;
 	g_return_val_if_fail(data != NULL && data_len > 0, -1);
 
-	if (cmd != QQ_CMD_LOGOUT) {
+	if (cmd != QQ_CMD_LOGOUT && cmd != QQ_CMD_SEND_TYPING) {
 		seq = ++qd->send_seq;
 		is_save2trans = TRUE;
 	} else {
@@ -1241,31 +1240,62 @@ gint qq_send_server_reply(PurpleConnection *gc, guint16 cmd, guint16 seq, guint8
 }
 
 static gint send_room_cmd(PurpleConnection *gc, guint8 room_cmd, guint32 room_id,
-		guint8 *data, gint data_len, UPDCLS update_class, guint32 ship32)
+		guint8 *data, gint data_len, guint32 update_class, guintptr ship_value)
 {
 	qq_data *qd;
 	guint8 *buf;
-	gint buf_len;
+	gint buf_len=0;
 	guint8 *encrypted;
 	gint encrypted_len;
 	gint bytes_sent;
 	guint16 seq;
+	GSList *l;
+	qq_room_data * rmd;
 
 	g_return_val_if_fail(gc != NULL && gc->proto_data != NULL, -1);
 	qd = (qq_data *) gc->proto_data;
 
-	buf = g_newa(guint8, MAX_PACKET_SIZE);
-	memset(buf, 0, MAX_PACKET_SIZE);
+	buf = g_newa(guint8, 16+data_len);
+	memset(buf, 0, 16+data_len);
 
-	/* encap room_cmd and room id to buf*/
-	buf_len = 0;
-	buf_len += qq_put8(buf + buf_len, room_cmd);
-	if (room_id != 0) {
-		/* id 0 is for QQ Demo Group, now they are closed*/
+	switch (room_cmd)
+	{
+	case QQ_ROOM_CMD_GET_QUN_LIST:
+		buf_len = qq_put8(buf, QQ_ROOM_CMD_GET_QUN_LIST);
+		buf_len += qq_put16(buf+buf_len, (guint16)g_slist_length(qd->rooms));
+		for (l=qd->rooms; l; l=l->next)
+		{
+			rmd = (qq_room_data *)(l->data);
+			if (rmd)
+			{
+				buf_len += qq_put32(buf+buf_len, rmd->id);
+				buf_len += qq_put32(buf+buf_len, 0x00000000);
+				buf_len += qq_put8(buf+buf_len, 0x00);
+			}
+		}
+		break;
+	case QQ_ROOM_CMD_GET_INFO:
+		buf_len = qq_put8(buf, QQ_ROOM_CMD_GET_INFO);
+		buf_len += qq_put32(buf+buf_len, room_id);
+		buf_len += qq_put32(buf+buf_len, ship_value);
+		break;
+	case QQ_ROOM_CMD_GET_MEMBERS_INFO:
+	case QQ_ROOM_CMD_GET_ONLINES:
+	case QQ_ROOM_CMD_JOIN:
+		buf_len = qq_put8(buf, room_cmd);
 		buf_len += qq_put32(buf + buf_len, room_id);
-	}
-	if (data != NULL && data_len > 0) {
-		buf_len += qq_putdata(buf + buf_len, data, data_len);
+		if (data != NULL && data_len > 0) {
+			buf_len += qq_putdata(buf + buf_len, data, data_len);
+		}
+		break;
+	case QQ_ROOM_CMD_SEND_IM:
+		buf_len = qq_put8(buf, room_cmd);
+		buf_len += qq_put32(buf + buf_len, room_id);
+		if (data != NULL && data_len > 0) {
+			buf_len += qq_put16(buf + buf_len, data_len);
+			buf_len += qq_putdata(buf + buf_len, data, data_len);
+		}
+		break;
 	}
 
 	qd->send_seq++;
@@ -1290,15 +1320,15 @@ static gint send_room_cmd(PurpleConnection *gc, guint8 room_cmd, guint32 room_id
 #endif
 
 	qq_trans_add_room_cmd(gc, seq, room_cmd, room_id, encrypted, encrypted_len,
-			update_class, ship32);
+			update_class, ship_value);
 	return bytes_sent;
 }
 
 gint qq_send_room_cmd_mess(PurpleConnection *gc, guint8 room_cmd, guint32 room_id,
-		guint8 *data, gint data_len, UPDCLS update_class, guint32 ship32)
+		guint8 *data, gint data_len, guint32 update_class, guintptr ship_value)
 {
 	g_return_val_if_fail(room_cmd > 0, -1);
-	return send_room_cmd(gc, room_cmd, room_id, data, data_len, update_class, ship32);
+	return send_room_cmd(gc, room_cmd, room_id, data, data_len, update_class, ship_value);
 }
 
 gint qq_send_room_cmd(PurpleConnection *gc, guint8 room_cmd, guint32 room_id,

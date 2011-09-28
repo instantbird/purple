@@ -56,7 +56,7 @@ enum {
 };
 
 /* default process, decrypt and dump */
-static void process_unknow_cmd(PurpleConnection *gc,const gchar *title, guint8 *data, gint data_len, guint16 cmd, guint16 seq)
+static void process_unknown_cmd(PurpleConnection *gc,const gchar *title, guint8 *data, gint data_len, guint16 cmd, guint16 seq)
 {
 	gchar *msg;
 
@@ -69,8 +69,8 @@ static void process_unknow_cmd(PurpleConnection *gc,const gchar *title, guint8 *
 			">>> [%d] %s -> [default] decrypt and dump",
 			seq, qq_get_cmd_desc(cmd));
 
-	msg = g_strdup_printf("Unknow command 0x%02X, %s", cmd, qq_get_cmd_desc(cmd));
-	purple_notify_info(gc, _("QQ Error"), title, msg);
+	msg = g_strdup_printf("Unknown command 0x%02X, %s", cmd, qq_get_cmd_desc(cmd));
+	//purple_notify_info(gc, _("QQ Error"), title, msg);
 	g_free(msg);
 }
 
@@ -101,9 +101,9 @@ static void do_server_news(PurpleConnection *gc, guint8 *data, gint data_len)
 
 	bytes = 4;	/* skip unknown 4 bytes */
 
-	bytes += qq_get_vstr(&title, QQ_CHARSET_DEFAULT, data + bytes);
-	bytes += qq_get_vstr(&brief, QQ_CHARSET_DEFAULT, data + bytes);
-	bytes += qq_get_vstr(&url, QQ_CHARSET_DEFAULT, data + bytes);
+	bytes += qq_get_vstr(&title, QQ_CHARSET_DEFAULT, sizeof(guint8), data + bytes);
+	bytes += qq_get_vstr(&brief, QQ_CHARSET_DEFAULT, sizeof(guint8), data + bytes);
+	bytes += qq_get_vstr(&url, QQ_CHARSET_DEFAULT, sizeof(guint8), data + bytes);
 
 	content = g_strdup_printf(_("Server News:\n%s\n%s\n%s"), title, brief, url);
 
@@ -152,110 +152,88 @@ static void do_got_sms(PurpleConnection *gc, guint8 *data, gint data_len)
 	g_free(mobile);
 }
 
-static void do_msg_sys_30(PurpleConnection *gc, guint8 *data, gint data_len)
+static void do_msg_sys(PurpleConnection *gc, guint8 *data, gint data_len)
 {
-	gint len;
 	guint8 reply;
-	gchar **segments, *msg_utf8;
+	gchar *msg, *msg_esc;
+	qq_data * qd;
 
-	g_return_if_fail(data != NULL && data_len != 0);
+	g_return_if_fail(gc != NULL && gc->proto_data != NULL && data != NULL && data_len != 0);
 
-	len = data_len;
+	qd = (qq_data *)gc->proto_data;
 
-	if (NULL == (segments = split_data(data, len, "\x2f", 2)))
-		return;
+	qq_get8(&reply, data+4);
+	qq_get_vstr(&msg, NULL, sizeof(guint8), data+5);
 
-	reply = strtol(segments[0], NULL, 10);
-	if (reply == 1)
-		purple_debug_warning("QQ", "We are kicked out by QQ server\n");
-
-	msg_utf8 = qq_to_utf8(segments[1], QQ_CHARSET_DEFAULT);
-	qq_got_message(gc, msg_utf8);
-}
-
-static void do_msg_sys_4c(PurpleConnection *gc, guint8 *data, gint data_len)
-{
-	gint bytes;
-	gint msg_len;
-	GString *content;
-	gchar *msg = NULL;
-
-	g_return_if_fail(data != NULL && data_len > 0);
-
-	bytes = 6; /* skip 0x(06 00 01 1e 01 1c)*/
-
-	content = g_string_new("");
-	while (bytes < data_len) {
-		msg_len = qq_get_vstr(&msg, QQ_CHARSET_DEFAULT, data + bytes);
-		g_string_append(content, msg);
-		g_string_append(content, "\n");
+	if (reply == 0x01) {
+		purple_debug_error("QQ", "We are kicked out by QQ server\n");
+		msg_esc = purple_markup_escape_text(msg, -1);
+		purple_connection_error_reason(gc, PURPLE_CONNECTION_ERROR_OTHER_ERROR, msg_esc);
 		g_free(msg);
-
-		if (msg_len <= 1) {
-			break;
-		}
-		bytes += msg_len;
+		g_free(msg_esc);
+		return;
 	}
-	if (bytes != data_len) {
-		purple_debug_warning("QQ", "Failed to read QQ_MSG_SYS_4C\n");
-		qq_show_packet("do_msg_sys_4c", data, data_len);
-	}
-	qq_got_message(gc, content->str);
-	g_string_free(content, FALSE);
+	
+	qq_got_message(gc, msg);
 }
 
 static const gchar *get_im_type_desc(gint type)
 {
 	switch (type) {
-		case QQ_MSG_TO_BUDDY:
-			return "QQ_MSG_TO_BUDDY";
+		case QQ_MSG_BUDDY_09:
+			return "QQ_MSG_BUDDY_09";
 		case QQ_MSG_TO_UNKNOWN:
 			return "QQ_MSG_TO_UNKNOWN";
-		case QQ_MSG_QUN_IM_UNKNOWN:
-			return "QQ_MSG_QUN_IM_UNKNOWN";
-		case QQ_MSG_ADD_TO_QUN:
-			return "QQ_MSG_ADD_TO_QUN";
-		case QQ_MSG_DEL_FROM_QUN:
-			return "QQ_MSG_DEL_FROM_QUN";
-		case QQ_MSG_APPLY_ADD_TO_QUN:
-			return "QQ_MSG_APPLY_ADD_TO_QUN";
-		case QQ_MSG_CREATE_QUN:
-			return "QQ_MSG_CREATE_QUN";
-		case QQ_MSG_SYS_30:
-			return "QQ_MSG_SYS_30";
-		case QQ_MSG_SYS_4C:
-			return "QQ_MSG_SYS_4C";
-		case QQ_MSG_APPROVE_APPLY_ADD_TO_QUN:
-			return "QQ_MSG_APPROVE_APPLY_ADD_TO_QUN";
-		case QQ_MSG_REJCT_APPLY_ADD_TO_QUN:
-			return "QQ_MSG_REJCT_APPLY_ADD_TO_QUN";
-		case QQ_MSG_TEMP_QUN_IM:
-			return "QQ_MSG_TEMP_QUN_IM";
-		case QQ_MSG_QUN_IM:
-			return "QQ_MSG_QUN_IM";
+		case QQ_MSG_ROOM_IM_UNKNOWN:
+			return "QQ_MSG_ROOM_IM_UNKNOWN";
+		case QQ_MSG_ADD_TO_ROOM:
+			return "QQ_MSG_ADD_TO_ROOM";
+		case QQ_MSG_DEL_FROM_ROOM:
+			return "QQ_MSG_DEL_FROM_ROOM";
+		case QQ_MSG_APPLY_ADD_TO_ROOM:
+			return "QQ_MSG_APPLY_ADD_TO_ROOM";
+		case QQ_MSG_CREATE_ROOM:
+			return "QQ_MSG_CREATE_ROOM";
+		case QQ_MSG_SYS:
+			return "QQ_MSG_SYS";
+		case QQ_MSG_APPROVE_APPLY_ADD_TO_ROOM:
+			return "QQ_MSG_APPROVE_APPLY_ADD_TO_ROOM";
+		case QQ_MSG_REJCT_APPLY_ADD_TO_ROOM:
+			return "QQ_MSG_REJCT_APPLY_ADD_TO_ROOM";
+		case QQ_MSG_TEMP_ROOM_IM:
+			return "QQ_MSG_TEMP_ROOM_IM";
+		case QQ_MSG_ROOM_IM:
+			return "QQ_MSG_ROOM_IM";
 		case QQ_MSG_NEWS:
 			return "QQ_MSG_NEWS";
 		case QQ_MSG_SMS:
 			return "QQ_MSG_SMS";
-		case QQ_MSG_EXTEND:
-			return "QQ_MSG_EXTEND";
-		case QQ_MSG_EXTEND_85:
-			return "QQ_MSG_EXTEND_85";
+		case QQ_MSG_BUDDY_84:
+			return "QQ_MSG_BUDDY_84";
+		case QQ_MSG_BUDDY_85:
+			return "QQ_MSG_BUDDY_85";
+		case QQ_MSG_BUDDY_78:
+			return "QQ_MSG_BUDDY_78";
+		case QQ_MSG_BUDDY_A6:
+			return "QQ_MSG_BUDDY_A6";
+		case QQ_MSG_BUDDY_A7:
+			return "QQ_MSG_BUDDY_A7";
 		default:
 			return "QQ_MSG_UNKNOWN";
 	}
 }
 
 /* I receive a message, mainly it is text msg,
- * but we need to proess other types (group etc) */
-static void process_private_msg(guint8 *data, gint data_len, guint16 seq, PurpleConnection *gc)
+ * but we need to process other types (group etc) */
+static void process_private_msg(guint8 *data, gint data_len, guint16 cmd, guint16 seq, PurpleConnection *gc)
 {
 	qq_data *qd;
 	gint bytes;
-
+	guint16 len;
+	guint8 tmp8;
 	struct {
-		UID uid_from;
-		UID uid_to;
+		guint32 uid_from;
+		guint32 uid_to;
 		guint32 seq;
 		struct in_addr ip_from;
 		guint16 port_from;
@@ -272,7 +250,7 @@ static void process_private_msg(guint8 *data, gint data_len, guint16 seq, Purple
 	} else {
 		/* when we receive a message,
 		 * we send an ACK which is the first 16 bytes of incoming packet */
-		qq_send_server_reply(gc, QQ_CMD_RECV_IM, seq, data, 16);
+		qq_send_server_reply(gc, cmd, seq, data, 16);
 	}
 
 	/* check len first */
@@ -303,97 +281,88 @@ static void process_private_msg(guint8 *data, gint data_len, guint16 seq, Purple
 	}
 
 	switch (header.msg_type) {
-		case QQ_MSG_NEWS:
-			do_server_news(gc, data + bytes, data_len - bytes);
-			break;
-		case QQ_MSG_SMS:
-			do_got_sms(gc, data + bytes, data_len - bytes);
-			break;
-		case QQ_MSG_EXTEND:
-		case QQ_MSG_EXTEND_85:
-			purple_debug_info("QQ", "MSG from buddy [%d]\n", header.uid_from);
-			qq_process_extend_im(gc, data + bytes, data_len - bytes);
-			break;
-		case QQ_MSG_TO_UNKNOWN:
-		case QQ_MSG_TO_BUDDY:
-			purple_debug_info("QQ", "MSG from buddy [%d]\n", header.uid_from);
-			qq_process_im(gc, data + bytes, data_len - bytes);
-			break;
-		case QQ_MSG_QUN_IM_UNKNOWN:
-		case QQ_MSG_TEMP_QUN_IM:
-		case QQ_MSG_QUN_IM:
-			purple_debug_info("QQ", "MSG from room [%d]\n", header.uid_from);
-			qq_process_room_im(data + bytes, data_len - bytes, header.uid_from, gc, header.msg_type);
-			break;
-		case QQ_MSG_ADD_TO_QUN:
-			purple_debug_info("QQ", "Notice from [%d], Added\n", header.uid_from);
-			/* uid_from is group id
-			 * we need this to create a dummy group and add to blist */
-			qq_process_room_buddy_joined(data + bytes, data_len - bytes, header.uid_from, gc);
-			break;
-		case QQ_MSG_DEL_FROM_QUN:
-			purple_debug_info("QQ", "Notice from room [%d], Removed\n", header.uid_from);
-			/* uid_from is group id */
-			qq_process_room_buddy_removed(data + bytes, data_len - bytes, header.uid_from, gc);
-			break;
-		case QQ_MSG_APPLY_ADD_TO_QUN:
-			purple_debug_info("QQ", "Notice from room [%d], Joined\n", header.uid_from);
-			/* uid_from is group id */
-			qq_process_room_buddy_request_join(data + bytes, data_len - bytes, header.uid_from, gc);
-			break;
-		case QQ_MSG_APPROVE_APPLY_ADD_TO_QUN:
-			purple_debug_info("QQ", "Notice from room [%d], Confirm add in\n",
-					header.uid_from);
-			/* uid_from is group id */
-			qq_process_room_buddy_approved(data + bytes, data_len - bytes, header.uid_from, gc);
-			break;
-		case QQ_MSG_REJCT_APPLY_ADD_TO_QUN:
-			purple_debug_info("QQ", "Notice from room [%d], Refuse add in\n",
-					header.uid_from);
-			/* uid_from is group id */
-			qq_process_room_buddy_rejected(data + bytes, data_len - bytes, header.uid_from, gc);
-			break;
-		case QQ_MSG_SYS_30:
-			do_msg_sys_30(gc, data + bytes, data_len - bytes);
-			break;
-		case QQ_MSG_SYS_4C:
-			do_msg_sys_4c(gc, data + bytes, data_len - bytes);
-			break;
-		default:
-			purple_debug_warning("QQ", "MSG from %u, unknown type %s [0x%04X]\n",
-					header.uid_from, get_im_type_desc(header.msg_type), header.msg_type);
-			qq_show_packet("MSG header", data, bytes);
-			if (data_len - bytes > 0) {
-				qq_show_packet("MSG data", data + bytes, data_len - bytes);
-			}
-			break;
+	case QQ_MSG_BUDDY_84:
+	case QQ_MSG_BUDDY_85:
+		purple_debug_info("QQ", "MSG from buddy [%d]\n", header.uid_from);
+		qq_process_im(gc, data + bytes, data_len - bytes, header.msg_type);
+		break;
+	case QQ_MSG_TO_UNKNOWN:
+	case QQ_MSG_BUDDY_09:		
+	case QQ_MSG_BUDDY_A6:
+	case QQ_MSG_BUDDY_A7:
+	case QQ_MSG_BUDDY_78:
+		purple_debug_info("QQ	", "MSG from buddy [%d]\n", header.uid_from);
+		bytes += 1;
+		qq_get8(&tmp8, data+bytes);
+		while (tmp8 == 0)
+		{
+			bytes += 1;
+			bytes += qq_get16(&len, data+bytes);
+			bytes += len;
+			qq_get8(&tmp8, data+bytes);
+		}
+		qq_process_im(gc, data + bytes, data_len - bytes, header.msg_type);
+		break;
+	case QQ_MSG_TYPING:
+		qq_process_typing(gc, data+bytes, data_len-bytes, header.uid_from);
+		break;
+	case QQ_MSG_NEWS:
+		do_server_news(gc, data + bytes, data_len - bytes);
+		break;
+	case QQ_MSG_SMS:
+		do_got_sms(gc, data + bytes, data_len - bytes);
+		break;
+	case QQ_MSG_ROOM_IM_UNKNOWN:
+	case QQ_MSG_TEMP_ROOM_IM:
+	case QQ_MSG_ROOM_IM:
+	case QQ_MSG_ROOM_IM_52:
+		purple_debug_info("QQ", "MSG from room [%d]\n", header.uid_from);
+		qq_process_room_im(data + bytes, data_len - bytes, header.uid_from, gc, header.msg_type);
+		break;
+	case QQ_MSG_ADD_TO_ROOM:
+		purple_debug_info("QQ", "Notice from [%d], Added\n", header.uid_from);
+		/* uid_from is group id
+		* we need this to create a dummy group and add to blist */
+		qq_process_room_buddy_joined(data + bytes, data_len - bytes, header.uid_from, gc);
+		break;
+	case QQ_MSG_DEL_FROM_ROOM:
+		purple_debug_info("QQ", "Notice from room [%d], Removed\n", header.uid_from);
+		/* uid_from is group id */
+		qq_process_room_buddy_removed(data + bytes, data_len - bytes, header.uid_from, gc);
+		break;
+	case QQ_MSG_APPLY_ADD_TO_ROOM:
+		purple_debug_info("QQ", "Notice from room [%d], Joined\n", header.uid_from);
+		/* uid_from is group id */
+		qq_process_room_buddy_request_join(data + bytes, data_len - bytes, header.uid_from, gc);
+		break;
+	case QQ_MSG_APPROVE_APPLY_ADD_TO_ROOM:
+		purple_debug_info("QQ", "Notice from room [%d], Confirm add in\n",
+			header.uid_from);
+		/* uid_from is group id */
+		qq_process_room_buddy_approved(data + bytes, data_len - bytes, header.uid_from, gc);
+		break;
+	case QQ_MSG_REJCT_APPLY_ADD_TO_ROOM:
+		purple_debug_info("QQ", "Notice from room [%d], Refuse add in\n",
+			header.uid_from);
+		/* uid_from is group id */
+		qq_process_room_buddy_rejected(data + bytes, data_len - bytes, header.uid_from, gc);
+		break;
+	case QQ_MSG_SYS:
+		do_msg_sys(gc, data + bytes, data_len - bytes);
+		break;
+	default:
+		purple_debug_warning("QQ", "MSG from %u, unknown type %s [0x%04X]\n",
+			header.uid_from, get_im_type_desc(header.msg_type), header.msg_type);
+		qq_show_packet("MSG header", data, bytes);
+		if (data_len - bytes > 0) {
+			qq_show_packet("MSG data", data + bytes, data_len - bytes);
+		}
+		break;
 	}
 }
 
-/* Send ACK if the sys message needs an ACK */
-static void request_server_ack(PurpleConnection *gc, gchar *funct_str, gchar *from, guint16 seq)
-{
-	guint8 *raw_data;
-	gint bytes;
-	guint8 bar;
-
-	g_return_if_fail(funct_str != NULL && from != NULL);
-
-	bar = 0x1e;
-	raw_data = g_newa(guint8, strlen(funct_str) + strlen(from) + 16);
-
-	bytes = 0;
-	bytes += qq_putdata(raw_data + bytes, (guint8 *)funct_str, strlen(funct_str));
-	bytes += qq_put8(raw_data + bytes, bar);
-	bytes += qq_putdata(raw_data + bytes, (guint8 *)from, strlen(from));
-	bytes += qq_put8(raw_data + bytes, bar);
-	bytes += qq_put16(raw_data + bytes, seq);
-
-	qq_send_server_reply(gc, QQ_CMD_ACK_SYS_MSG, 0, raw_data, bytes);
-}
-
 static void do_server_notice(PurpleConnection *gc, gchar *from, gchar *to,
-		guint8 *data, gint data_len)
+	guint8 *data, gint data_len)
 {
 	qq_data *qd = (qq_data *) gc->proto_data;
 	gchar *msg, *msg_utf8;
@@ -406,7 +375,7 @@ static void do_server_notice(PurpleConnection *gc, gchar *from, gchar *to,
 	g_free(msg);
 	if (msg_utf8 == NULL) {
 		purple_debug_error("QQ", "Recv NULL sys msg from %s to %s, discard\n",
-				from, to);
+			from, to);
 		return;
 	}
 
@@ -457,8 +426,6 @@ static void process_server_msg(PurpleConnection *gc, guint8 *data, gint data_len
 	to = segments[2];
 	bytes += strlen(to) + 1;
 
-	request_server_ack(gc, funct_str, from, seq);
-
 	/* qq_show_packet("Server MSG", data, data_len); */
 	if (strtoul(to, NULL, 10) != qd->uid) {	/* not to me */
 		purple_debug_error("QQ", "Recv sys msg to [%s], not me!, discard\n", to);
@@ -468,14 +435,14 @@ static void process_server_msg(PurpleConnection *gc, guint8 *data, gint data_len
 
 	funct = strtol(funct_str, NULL, 10);
 	switch (funct) {
-		case QQ_SERVER_BUDDY_ADDED:
-		case QQ_SERVER_BUDDY_ADD_REQUEST:
+		case QQ_SERVER_BUDDY_ADDED_DEPRECATED:
 		case QQ_SERVER_BUDDY_ADDED_ME:
+		case QQ_SERVER_BUDDY_ADD_REQUEST_DEPRECATED:
 		case QQ_SERVER_BUDDY_REJECTED_ME:
-		case QQ_SERVER_BUDDY_ADD_REQUEST_EX:
+		case QQ_SERVER_BUDDY_ADD_REQUEST:
 		case QQ_SERVER_BUDDY_ADDING_EX:
 		case QQ_SERVER_BUDDY_ADDED_ANSWER:
-		case QQ_SERVER_BUDDY_ADDED_EX:
+		case QQ_SERVER_BUDDY_ADDED:
 			qq_process_buddy_from_server(gc,  funct, from, to, data + bytes, data_len - bytes);
 			break;
 		case QQ_SERVER_NOTICE:
@@ -521,8 +488,9 @@ void qq_proc_server_cmd(PurpleConnection *gc, guint16 cmd, guint16 seq, guint8 *
 
 	/* now process the packet */
 	switch (cmd) {
+		case QQ_CMD_RECV_IM_CE:
 		case QQ_CMD_RECV_IM:
-			process_private_msg(data, data_len, seq, gc);
+			process_private_msg(data, data_len, cmd, seq, gc);
 			break;
 		case QQ_CMD_RECV_MSG_SYS:
 			process_server_msg(gc, data, data_len, seq);
@@ -531,7 +499,7 @@ void qq_proc_server_cmd(PurpleConnection *gc, guint16 cmd, guint16 seq, guint8 *
 			qq_process_buddy_change_status(data, data_len, gc);
 			break;
 		default:
-			process_unknow_cmd(gc, _("Unknown SERVER CMD"), data, data_len, cmd, seq);
+			process_unknown_cmd(gc, _("Unknown SERVER CMD"), data, data_len, cmd, seq);
 			break;
 	}
 }
@@ -568,13 +536,13 @@ void qq_update_room(PurpleConnection *gc, guint8 room_cmd, guint32 room_id)
 					QQ_CMD_CLASS_UPDATE_ROOM, 0);
 			break;
 		case QQ_ROOM_CMD_GET_INFO:
-			ret = qq_request_room_get_buddies(gc, room_id, QQ_CMD_CLASS_UPDATE_ROOM);
+			ret = qq_request_room_get_members_info(gc, room_id, QQ_CMD_CLASS_UPDATE_ROOM, 0);
 			if (ret <= 0) {
 				qq_send_room_cmd_mess(gc, QQ_ROOM_CMD_GET_ONLINES, room_id, NULL, 0,
 						QQ_CMD_CLASS_UPDATE_ROOM, 0);
 			}
 			break;
-		case QQ_ROOM_CMD_GET_BUDDIES:
+		case QQ_ROOM_CMD_GET_MEMBERS_INFO:
 			qq_send_room_cmd_mess(gc, QQ_ROOM_CMD_GET_ONLINES, room_id, NULL, 0,
 					QQ_CMD_CLASS_UPDATE_ROOM, 0);
 			break;
@@ -587,10 +555,12 @@ void qq_update_room(PurpleConnection *gc, guint8 room_cmd, guint32 room_id)
 
 void qq_update_all_rooms(PurpleConnection *gc, guint8 room_cmd, guint32 room_id)
 {
+	qq_data * qd;
 	gboolean is_new_turn = FALSE;
 	guint32 next_id;
 
-	g_return_if_fail(gc != NULL);
+	g_return_if_fail (gc != NULL && gc->proto_data != NULL);
+	qd = (qq_data *) gc->proto_data;
 
 	next_id = qq_room_get_next(gc, room_id);
 	purple_debug_info("QQ", "Update rooms, next id %u, prev id %u\n", next_id, room_id);
@@ -608,21 +578,22 @@ void qq_update_all_rooms(PurpleConnection *gc, guint8 room_cmd, guint32 room_id)
 
 	switch (room_cmd) {
 		case 0:
-			qq_send_room_cmd_mess(gc, QQ_ROOM_CMD_GET_INFO, next_id, NULL, 0,
+			qq_send_room_cmd_mess(gc, QQ_ROOM_CMD_GET_QUN_LIST, 0, NULL, g_slist_length(qd->rooms) * 16,
 					QQ_CMD_CLASS_UPDATE_ALL, 0);
 			break;
+		case QQ_ROOM_CMD_GET_QUN_LIST:
 		case QQ_ROOM_CMD_GET_INFO:
 			if (!is_new_turn) {
 				qq_send_room_cmd_mess(gc, QQ_ROOM_CMD_GET_INFO, next_id, NULL, 0,
 						QQ_CMD_CLASS_UPDATE_ALL, 0);
 			} else {
-				qq_request_room_get_buddies(gc, next_id, QQ_CMD_CLASS_UPDATE_ALL);
+				qq_request_room_get_members_info(gc, next_id, QQ_CMD_CLASS_UPDATE_ALL, 0);
 			}
 			break;
-		case QQ_ROOM_CMD_GET_BUDDIES:
+		case QQ_ROOM_CMD_GET_MEMBERS_INFO:
 			/* last command */
 			if (!is_new_turn) {
-				qq_request_room_get_buddies(gc, next_id, QQ_CMD_CLASS_UPDATE_ALL);
+				qq_request_room_get_members_info(gc, next_id, QQ_CMD_CLASS_UPDATE_ALL, 0);
 			} else {
 				purple_debug_info("QQ", "Finished update\n");
 			}
@@ -641,29 +612,30 @@ void qq_update_all(PurpleConnection *gc, guint16 cmd)
 
 	switch (cmd) {
 		case 0:
-			qq_request_buddy_info(gc, qd->uid, QQ_CMD_CLASS_UPDATE_ALL, 0);
+			qq_request_get_buddy_info(gc, qd->uid, QQ_CMD_CLASS_UPDATE_ALL, 0);
 			break;
 		case QQ_CMD_GET_BUDDY_INFO:
 			qq_request_change_status(gc, QQ_CMD_CLASS_UPDATE_ALL);
 			break;
 		case QQ_CMD_CHANGE_STATUS:
-			qq_request_get_buddies(gc, 0, QQ_CMD_CLASS_UPDATE_ALL);
+			qq_request_get_group_list(gc, 0, QQ_CMD_CLASS_UPDATE_ALL);
+			break;
+		case QQ_CMD_GET_GROUP_LIST:
+			qq_request_get_buddies_list(gc, 0, QQ_CMD_CLASS_UPDATE_ALL);
 			break;
 		case QQ_CMD_GET_BUDDIES_LIST:
-			qq_request_get_buddies_and_rooms(gc, 0, QQ_CMD_CLASS_UPDATE_ALL);
+			qq_request_buddy_memo(gc, 0, QQ_CMD_CLASS_UPDATE_ALL, QQ_BUDDY_MEMO_ALIAS);
 			break;
-		case QQ_CMD_GET_BUDDIES_AND_ROOMS:
-			if (qd->client_version >= 2007) {
-				/* QQ2007/2008 can not get buddies level*/
-				qq_request_get_buddies_online(gc, 0, QQ_CMD_CLASS_UPDATE_ALL);
-			} else {
-				qq_request_get_buddies_level(gc, QQ_CMD_CLASS_UPDATE_ALL);
-			}
+		case QQ_CMD_BUDDY_MEMO:
+			qq_request_get_buddies_level(gc, QQ_CMD_CLASS_UPDATE_ALL, 0);
 			break;
 		case QQ_CMD_GET_LEVEL:
 			qq_request_get_buddies_online(gc, 0, QQ_CMD_CLASS_UPDATE_ALL);
 			break;
 		case QQ_CMD_GET_BUDDIES_ONLINE:
+			qq_request_get_buddies_sign(gc, QQ_CMD_CLASS_UPDATE_ALL, 0);
+			break;
+		case QQ_CMD_GET_BUDDIES_SIGN:
 			/* last command */
 			qq_update_all_rooms(gc, 0, 0);
 			break;
@@ -725,7 +697,7 @@ void qq_update_online(PurpleConnection *gc, guint16 cmd)
 
 void qq_proc_room_cmds(PurpleConnection *gc, guint16 seq,
 		guint8 room_cmd, guint32 room_id, guint8 *rcved, gint rcved_len,
-		UPDCLS update_class, guint32 ship32)
+		guint32 update_class, guintptr ship_value)
 {
 	qq_data *qd;
 	guint8 *data;
@@ -749,7 +721,7 @@ void qq_proc_room_cmds(PurpleConnection *gc, guint16 seq,
 
 	if (room_id <= 0) {
 		purple_debug_warning("QQ",
-			"Invaild room id, [%05d], 0x%02X %s for %d, len %d\n",
+			"room id is 0, [%05d], 0x%02X %s for %d, len %d\n",
 			seq, room_cmd, qq_get_room_cmd_desc(room_cmd), room_id, rcved_len);
 		/* Some room cmd has no room id, like QQ_ROOM_CMD_SEARCH */
 	}
@@ -783,7 +755,7 @@ void qq_proc_room_cmds(PurpleConnection *gc, guint16 seq,
 						seq, room_cmd, qq_get_room_cmd_desc(room_cmd), room_id, rcved_len);
 			} else {
 				purple_debug_warning("QQ",
-					   "Not a member of room \"%s\"\n", rmd->title_utf8);
+					   "Not a member of room \"%s\"\n", rmd->name);
 				rmd->my_role = QQ_ROOM_ROLE_NO;
 			}
 			break;
@@ -800,8 +772,11 @@ void qq_proc_room_cmds(PurpleConnection *gc, guint16 seq,
 
 	/* seems ok so far, so we process the reply according to sub_cmd */
 	switch (reply_cmd) {
+	case QQ_ROOM_CMD_GET_QUN_LIST:
+		qq_process_room_cmd_get_qun_list(data + bytes, data_len - bytes, gc);
+		break;
 	case QQ_ROOM_CMD_GET_INFO:
-		qq_process_room_cmd_get_info(data + bytes, data_len - bytes, ship32, gc);
+		qq_process_room_cmd_get_info(data + bytes, data_len - bytes, ship_value, gc);
 		break;
 	case QQ_ROOM_CMD_CREATE:
 		qq_group_process_create_group_reply(data + bytes, data_len - bytes, gc);
@@ -816,7 +791,7 @@ void qq_proc_room_cmds(PurpleConnection *gc, guint16 seq,
 		qq_group_process_activate_group_reply(data + bytes, data_len - bytes, gc);
 		break;
 	case QQ_ROOM_CMD_SEARCH:
-		qq_process_room_search(gc, data + bytes, data_len - bytes, ship32);
+		qq_process_room_search(gc, data + bytes, data_len - bytes, ship_value);
 		break;
 	case QQ_ROOM_CMD_JOIN:
 		qq_process_group_cmd_join_group(data + bytes, data_len - bytes, gc);
@@ -830,17 +805,14 @@ void qq_proc_room_cmds(PurpleConnection *gc, guint16 seq,
 	case QQ_ROOM_CMD_SEND_IM:
 		qq_process_room_send_im(gc, data + bytes, data_len - bytes);
 		break;
-	case QQ_ROOM_CMD_SEND_IM_EX:
-		qq_process_room_send_im_ex(gc, data + bytes, data_len - bytes);
-		break;
 	case QQ_ROOM_CMD_GET_ONLINES:
 		qq_process_room_cmd_get_onlines(data + bytes, data_len - bytes, gc);
 		break;
-	case QQ_ROOM_CMD_GET_BUDDIES:
-		qq_process_room_cmd_get_buddies(data + bytes, data_len - bytes, gc);
+	case QQ_ROOM_CMD_GET_MEMBERS_INFO:
+		qq_process_room_cmd_get_members_info(data + bytes, data_len - bytes, ship_value, gc);
 		break;
 	default:
-		purple_debug_warning("QQ", "Unknow room cmd 0x%02X %s\n",
+		purple_debug_warning("QQ", "Unknown room cmd 0x%02X %s\n",
 			   reply_cmd, qq_get_room_cmd_desc(reply_cmd));
 	}
 
@@ -861,7 +833,7 @@ void qq_proc_room_cmds(PurpleConnection *gc, guint16 seq,
 }
 
 guint8 qq_proc_login_cmds(PurpleConnection *gc,  guint16 cmd, guint16 seq,
-		guint8 *rcved, gint rcved_len, UPDCLS update_class, guint32 ship32)
+		guint8 *rcved, gint rcved_len, guint32 update_class, guintptr ship_value)
 {
 	qq_data *qd;
 	guint8 *data = NULL;
@@ -875,56 +847,49 @@ guint8 qq_proc_login_cmds(PurpleConnection *gc,  guint16 cmd, guint16 seq,
 	data = g_newa(guint8, rcved_len);
 
 	switch (cmd) {
-		case QQ_CMD_TOKEN:
-			if (qq_process_token(gc, rcved, rcved_len) == QQ_LOGIN_REPLY_OK) {
-				if (qd->client_version >= 2007) {
-					qq_request_token_ex(gc);
-				} else {
-					qq_request_login(gc);
-				}
-				return QQ_LOGIN_REPLY_OK;
-			}
-			return QQ_LOGIN_REPLY_ERR;
-		case QQ_CMD_GET_SERVER:
-		case QQ_CMD_TOKEN_EX:
+		case QQ_CMD_TOUCH_SERVER:
+		case QQ_CMD_CAPTCHA:
 			data_len = qq_decrypt(data, rcved, rcved_len, qd->ld.random_key);
 			break;
-		case QQ_CMD_CHECK_PWD:
-			/* May use password_twice_md5 in the past version like QQ2005 */
+		case QQ_CMD_AUTH:
 			data_len = qq_decrypt(data, rcved, rcved_len, qd->ld.random_key);
 			if (data_len >= 0) {
 				purple_debug_warning("QQ", "Decrypt login packet by random_key, %d bytes\n", data_len);
 			} else {
-				data_len = qq_decrypt(data, rcved, rcved_len, qd->ld.pwd_twice_md5);
+				data_len = qq_decrypt(data, rcved, rcved_len, qd->ld.keys[4]);
 				if (data_len >= 0) {
-					purple_debug_warning("QQ", "Decrypt login packet by pwd_twice_md5, %d bytes\n", data_len);
+					purple_debug_warning("QQ", "Decrypt login packet by auth_key1, %d bytes\n", data_len);
 				}
 			}
 			break;
+		case QQ_CMD_VERIFY_DE:
+			data_len = qq_decrypt(data, rcved, rcved_len, qd->ld.keys[0]);
+			break;
+		case QQ_CMD_VERIFY_E5:
+			data_len = qq_decrypt(data, rcved, rcved_len, qd->ld.keys[1]);
+			break;
+		case QQ_CMD_VERIFY_E3:
+			data_len = qq_decrypt(data, rcved, rcved_len, qd->ld.keys[3]);
+			break;
 		case QQ_CMD_LOGIN:
-		default:
-			if (qd->client_version >= 2007) {
-				data_len = qq_decrypt(data, rcved, rcved_len, qd->ld.pwd_twice_md5);
-				if (data_len >= 0) {
-					purple_debug_warning("QQ", "Decrypt login packet by pwd_twice_md5\n");
-				} else {
-					data_len = qq_decrypt(data, rcved, rcved_len, qd->ld.login_key);
-					if (data_len >= 0) {
-						purple_debug_warning("QQ", "Decrypt login packet by login_key\n");
-					}
-				}
+			data_len = qq_decrypt(data, rcved, rcved_len, qd->ld.keys[2]);
+			if (data_len >= 0) {
+				purple_debug_info("QQ", "Decrypt login packet by Key0_VerifyE5\n");
 			} else {
-				/* May use password_twice_md5 in the past version like QQ2005 */
-				data_len = qq_decrypt(data, rcved, rcved_len, qd->ld.random_key);
+				/* network condition may has changed. please sign in again. */
+				data_len = qq_decrypt(data, rcved, rcved_len, qd->ld.keys[0]);	
 				if (data_len >= 0) {
-					purple_debug_warning("QQ", "Decrypt login packet by random_key\n");
-				} else {
-					data_len = qq_decrypt(data, rcved, rcved_len, qd->ld.pwd_twice_md5);
-					if (data_len >= 0) {
-						purple_debug_warning("QQ", "Decrypt login packet by pwd_twice_md5\n");
-					}
+					purple_debug_info("QQ", "Decrypt login packet rarely by Key2_Auth\n");
 				}
 			}
+			break;
+		case QQ_CMD_LOGIN_E9:
+		case QQ_CMD_LOGIN_EA:
+		case QQ_CMD_LOGIN_GETLIST:
+		case QQ_CMD_LOGIN_ED:
+		case QQ_CMD_LOGIN_EC:
+		default:
+			data_len = qq_decrypt(data, rcved, rcved_len, qd->session_key);
 			break;
 	}
 
@@ -940,20 +905,20 @@ guint8 qq_proc_login_cmds(PurpleConnection *gc,  guint16 cmd, guint16 seq,
 	}
 
 	switch (cmd) {
-		case QQ_CMD_GET_SERVER:
-			ret_8 = qq_process_get_server(gc, data, data_len);
+		case QQ_CMD_TOUCH_SERVER:
+			ret_8 = qq_process_touch_server(gc, data, data_len);
 			if ( ret_8 == QQ_LOGIN_REPLY_OK) {
-				qq_request_token(gc);
-			} else if ( ret_8 == QQ_LOGIN_REPLY_REDIRECT) {
-				return QQ_LOGIN_REPLY_REDIRECT;
+				qq_request_captcha(gc);
+			} else if ( ret_8 == QQ_TOUCH_REPLY_REDIRECT) {
+				return QQ_TOUCH_REPLY_REDIRECT;
 			}
 			break;
-		case QQ_CMD_TOKEN_EX:
-			ret_8 = qq_process_token_ex(gc, data, data_len);
+		case QQ_CMD_CAPTCHA:
+			ret_8 = qq_process_captcha(gc, data, data_len);
 			if (ret_8 == QQ_LOGIN_REPLY_OK) {
-				qq_request_check_pwd(gc);
-			} else if (ret_8 == QQ_LOGIN_REPLY_NEXT_TOKEN_EX) {
-				qq_request_token_ex_next(gc);
+				qq_request_auth(gc);
+			} else if (ret_8 == QQ_LOGIN_REPLY_NEXT_CAPTCHA) {
+				qq_request_captcha_next(gc);
 			} else if (ret_8 == QQ_LOGIN_REPLY_CAPTCHA_DLG) {
 				qq_captcha_input_dialog(gc, &(qd->captcha));
 				g_free(qd->captcha.token);
@@ -961,44 +926,71 @@ guint8 qq_proc_login_cmds(PurpleConnection *gc,  guint16 cmd, guint16 seq,
 				memset(&qd->captcha, 0, sizeof(qd->captcha));
 			}
 			break;
-		case QQ_CMD_CHECK_PWD:
-			ret_8 = qq_process_check_pwd(gc, data, data_len);
+		case QQ_CMD_AUTH:
+			ret_8 = qq_process_auth(gc, data, data_len);
+			if (ret_8 == QQ_LOGIN_REPLY_DE)
+			{
+				qq_request_verify_DE(gc);
+			} else if (ret_8 == QQ_LOGIN_REPLY_OK) {
+				qq_request_verify_E5(gc);
+			} else	return ret_8;
+			break;
+		case QQ_CMD_VERIFY_DE:
+			ret_8 = qq_process_verify_DE(gc, data, data_len);
 			if (ret_8 != QQ_LOGIN_REPLY_OK) {
 				return ret_8;
 			}
-			if (qd->client_version >= 2008) {
-				qq_request_login_2008(gc);
-			} else {
-				qq_request_login_2007(gc);
+			qq_request_verify_E5(gc);
+			break;
+		case QQ_CMD_VERIFY_E5:
+			ret_8 = qq_process_verify_E5(gc, data, data_len);
+			if (ret_8 != QQ_LOGIN_REPLY_OK) {
+				return ret_8;
 			}
+			qq_request_verify_E3(gc);
+			break;
+		case QQ_CMD_VERIFY_E3:
+			ret_8 = qq_process_verify_E3(gc, data, data_len);
+			if (ret_8 != QQ_LOGIN_REPLY_OK) {
+				return ret_8;
+			}
+			qq_request_login(gc);
 			break;
 		case QQ_CMD_LOGIN:
-			if (qd->client_version >= 2008) {
-				ret_8 = qq_process_login_2008(gc, data, data_len);
-				if ( ret_8 == QQ_LOGIN_REPLY_REDIRECT) {
-                		qq_request_get_server(gc);
-                		return QQ_LOGIN_REPLY_OK;
-            	}
-			} else if (qd->client_version >= 2007) {
-				ret_8 = qq_process_login_2007(gc, data, data_len);
-				if ( ret_8 == QQ_LOGIN_REPLY_REDIRECT) {
-                		qq_request_get_server(gc);
-                		return QQ_LOGIN_REPLY_OK;
-            	}
+			ret_8 = qq_process_login(gc, data, data_len);
+			if ( ret_8 == QQ_TOUCH_REPLY_REDIRECT) {
+           		qq_request_touch_server(gc);
+				return QQ_LOGIN_REPLY_OK;
+           	}
+			if (ret_8 == QQ_LOGIN_REPLY_OK) {
+				qq_request_login_E9(gc);
 			} else {
-				ret_8 = qq_process_login(gc, data, data_len);
-			}
-			if (ret_8 != QQ_LOGIN_REPLY_OK) {
 				return ret_8;
 			}
+
+			break;
+		case QQ_CMD_LOGIN_E9:
+			qq_request_login_EA(gc);
+			break;
+		case QQ_CMD_LOGIN_EA:
+			qq_request_login_getlist(gc, 0x0001);
+			break;
+		case QQ_CMD_LOGIN_GETLIST:
+			ret_8 = qq_process_login_getlist(gc, data, data_len);
+			if (ret_8 == QQ_LOGIN_REPLY_OK)
+			{
+				qq_request_login_ED(gc);
+			}
+			break;
+		case QQ_CMD_LOGIN_EC:
+			break;
+		case QQ_CMD_LOGIN_ED:
+			qq_request_login_EC(gc);
 
 			purple_connection_update_progress(gc, _("Logging in"), QQ_CONNECT_STEPS - 1, QQ_CONNECT_STEPS);
 			purple_debug_info("QQ", "Login replies OK; everything is fine\n");
 			purple_connection_set_state(gc, PURPLE_CONNECTED);
 			qd->is_login = TRUE;	/* must be defined after sev_finish_login */
-
-			/* now initiate QQ Qun, do it first as it may take longer to finish */
-			qq_room_data_initial(gc);
 
 			/* is_login, but we have packets before login */
 			qq_trans_process_remained(gc);
@@ -1006,14 +998,14 @@ guint8 qq_proc_login_cmds(PurpleConnection *gc,  guint16 cmd, guint16 seq,
 			qq_update_all(gc, 0);
 			break;
 		default:
-			process_unknow_cmd(gc, _("Unknown LOGIN CMD"), data, data_len, cmd, seq);
+			process_unknown_cmd(gc, _("Unknown LOGIN CMD"), data, data_len, cmd, seq);
 			return QQ_LOGIN_REPLY_ERR;
 	}
 	return QQ_LOGIN_REPLY_OK;
 }
 
 void qq_proc_client_cmds(PurpleConnection *gc, guint16 cmd, guint16 seq,
-		guint8 *rcved, gint rcved_len, UPDCLS update_class, guint32 ship32)
+		guint8 *rcved, gint rcved_len, guint32 update_class, guintptr ship_value)
 {
 	qq_data *qd;
 
@@ -1023,7 +1015,7 @@ void qq_proc_client_cmds(PurpleConnection *gc, guint16 cmd, guint16 seq,
 	guint8 ret_8 = 0;
 	guint16 ret_16 = 0;
 	guint32 ret_32 = 0;
-	gboolean is_unknow = FALSE;
+	gboolean not_to_update = FALSE;
 
 	g_return_if_fail(rcved_len > 0);
 
@@ -1051,20 +1043,14 @@ void qq_proc_client_cmds(PurpleConnection *gc, guint16 cmd, guint16 seq,
 		case QQ_CMD_UPDATE_INFO:
 			qq_process_change_info(gc, data, data_len);
 			break;
-		case QQ_CMD_ADD_BUDDY_NO_AUTH:
-			qq_process_add_buddy_no_auth(gc, data, data_len, ship32);
-			break;
 		case QQ_CMD_REMOVE_BUDDY:
-			qq_process_remove_buddy(gc, data, data_len, ship32);
+			qq_process_remove_buddy(gc, data, data_len, ship_value);
 			break;
 		case QQ_CMD_REMOVE_ME:
-			qq_process_buddy_remove_me(gc, data, data_len, ship32);
-			break;
-		case QQ_CMD_ADD_BUDDY_AUTH:
-			qq_process_add_buddy_auth(data, data_len, gc);
+			qq_process_buddy_remove_me(gc, data, data_len, ship_value);
 			break;
 		case QQ_CMD_GET_BUDDY_INFO:
-			qq_process_get_buddy_info(data, data_len, ship32, gc);
+			qq_process_get_buddy_info(data, data_len, ship_value, gc);
 			break;
 		case QQ_CMD_CHANGE_STATUS:
 			qq_process_change_status(data, data_len, gc);
@@ -1073,11 +1059,7 @@ void qq_proc_client_cmds(PurpleConnection *gc, guint16 cmd, guint16 seq,
 			do_im_ack(data, data_len, gc);
 			break;
 		case QQ_CMD_KEEP_ALIVE:
-			if (qd->client_version >= 2008) {
-				qq_process_keep_alive_2008(data, data_len, gc);
-			} else if (qd->client_version >= 2007) {
-				qq_process_keep_alive_2007(data, data_len, gc);
-			} else {
+			if (qd->client_version >= 2010) {
 				qq_process_keep_alive(data, data_len, gc);
 			}
 			break;
@@ -1089,56 +1071,71 @@ void qq_proc_client_cmds(PurpleConnection *gc, guint16 cmd, guint16 seq,
 				return;
 			}
 			purple_debug_info("QQ", "All online buddies received\n");
-			qq_update_buddyies_status(gc);
+			qq_update_buddies_status(gc);
 			break;
 		case QQ_CMD_GET_LEVEL:
 			qq_process_get_level_reply(data, data_len, gc);
+			if (ship_value)
+			{
+				purple_debug_info("QQ", "Requesting Buddy Level pos: %d\n", ship_value);
+				qq_request_get_buddies_level(gc, 0, ship_value);
+			}
+			break;
+		case QQ_CMD_GET_BUDDIES_SIGN:
+			qq_process_get_buddies_sign(data, data_len, gc);
+			if (ship_value)
+			{
+				purple_debug_info("QQ", "Requesting Buddy Signature pos: %d\n", ship_value);
+				qq_request_get_buddies_sign(gc, 0, ship_value);
+			}
+			break;
+		case QQ_CMD_GET_GROUP_LIST:
+			ret_32 = qq_process_get_group_list(data, data_len, gc);
+			/* if still have remained group name */
+			if (ret_32)
+			{
+				purple_debug_info("QQ", "Requesting for Group pos: %d\n", ret_32);
+				qq_request_get_group_list(gc, ret_32, 0);
+				not_to_update = TRUE;		//not to update else when get_group not finished
+			}
 			break;
 		case QQ_CMD_GET_BUDDIES_LIST:
-			ret_16 = qq_process_get_buddies(data, data_len, gc);
+			ret_16 = qq_process_get_buddies_list(data, data_len, gc);
 			if (ret_16 > 0	&& ret_16 < 0xffff) {
 				purple_debug_info("QQ", "Requesting for more buddies\n");
-				qq_request_get_buddies(gc, ret_16, update_class);
+				qq_request_get_buddies_list(gc, ret_16, update_class);
 				return;
 			}
 			purple_debug_info("QQ", "All buddies received. Requesting buddies' levels\n");
 			break;
-		case QQ_CMD_GET_BUDDIES_AND_ROOMS:
-			ret_32 = qq_process_get_buddies_and_rooms(data, data_len, gc);
-			if (ret_32 > 0 && ret_32 < 0xffffffff) {
-				purple_debug_info("QQ", "Requesting for more buddies and groups\n");
-				qq_request_get_buddies_and_rooms(gc, ret_32, update_class);
-				return;
-			}
-			purple_debug_info("QQ", "All buddies and groups received\n");
+		case QQ_CMD_SEARCH_UID:
+			qq_process_search_uid(gc, data, data_len, ship_value);
 			break;
-		case QQ_CMD_AUTH_CODE:
-			qq_process_auth_code(gc, data, data_len, ship32);
+		case QQ_CMD_AUTH_TOKEN:
+			qq_process_auth_token(gc, data, data_len, update_class, ship_value);
 			break;
 		case QQ_CMD_BUDDY_QUESTION:
-			qq_process_question(gc, data, data_len, ship32);
+			qq_process_question(gc, data, data_len, ship_value);
 			break;
-		case QQ_CMD_ADD_BUDDY_NO_AUTH_EX:
-			qq_process_add_buddy_no_auth_ex(gc, data, data_len, ship32);
+		case QQ_CMD_ADD_BUDDY_TOUCH:
+			qq_process_add_buddy_touch(gc, data, data_len, ship_value);
 			break;
-		case QQ_CMD_ADD_BUDDY_AUTH_EX:
-			qq_process_add_buddy_auth_ex(gc, data, data_len, ship32);
+		case QQ_CMD_ADD_BUDDY_POST:
+			qq_process_add_buddy_post(gc, data, data_len, ship_value);
 			break;
-		case QQ_CMD_BUDDY_CHECK_CODE:
+		/*case QQ_CMD_BUDDY_CHECK_CODE:
 			qq_process_buddy_check_code(gc, data, data_len);
-			break;
+			break;*/
 		case QQ_CMD_BUDDY_MEMO:
 			purple_debug_info("QQ", "Receive memo from server!\n");
-			qq_process_get_buddy_memo(gc, data, data_len, update_class, ship32);
-			return;
-			purple_debug_info("QQ", "Should NOT be here...\n");
+			qq_process_get_buddy_memo(gc, data, data_len, update_class, ship_value);
 			break;
 		default:
-			process_unknow_cmd(gc, _("Unknown CLIENT CMD"), data, data_len, cmd, seq);
-			is_unknow = TRUE;
+			process_unknown_cmd(gc, _("Unknown CLIENT CMD"), data, data_len, cmd, seq);
+			not_to_update = TRUE;
 			break;
 	}
-	if (is_unknow)
+	if (not_to_update)
 		return;
 
 	if (update_class == QQ_CMD_CLASS_NONE)

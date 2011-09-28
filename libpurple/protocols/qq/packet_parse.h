@@ -30,7 +30,7 @@
 
 /* According to "UNIX Network Programming", all TCP/IP implementations
  * must support a minimum IP datagram size of 576 bytes, regardless of the MTU.
- * Assuming a 20 byte IP header and 8 byte UDP header, this leaves 548 bytes
+ * Assuming a 20 byte IP header and 8 byte UDP header, this leaves 548 bytes 
  * as a safe maximum size for UDP messages.
  *
  * TCP allows packet 64K
@@ -47,14 +47,14 @@ gint qq_get8(guint8 *b, guint8 *buf);
 gint qq_get16(guint16 *w, guint8 *buf);
 gint qq_get32(guint32 *dw,  guint8 *buf);
 gint qq_getIP(struct in_addr *ip, guint8 *buf);
-gint qq_getime(time_t *t, guint8 *buf);
+gint qq_gettime(time_t *t, guint8 *buf);
 gint qq_getdata(guint8 *data, gint datalen, guint8 *buf);
 
 gint qq_put8(guint8 *buf, guint8 b);
 gint qq_put16(guint8 *buf, guint16 w);
 gint qq_put32(guint8 *buf, guint32 dw);
 gint qq_putIP(guint8* buf, struct in_addr *ip);
-gint qq_putime(guint8 *buf, time_t *t);
+gint qq_puttime(guint8 *buf, time_t *t);
 gint qq_putdata(guint8 *buf, const guint8 *data, const int datalen);
 
 /*

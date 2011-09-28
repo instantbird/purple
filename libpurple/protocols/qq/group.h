@@ -31,7 +31,7 @@
 #include "roomlist.h"
 #include "qq.h"
 
-#define PURPLE_GROUP_QQ_QUN         "QQ 群"
+#define PURPLE_GROUP_QQ_ROOM         "QQ Qun"
 
 typedef enum {
 	QQ_ROOM_ROLE_NO = 0x00,	/* default 0x00 means not member */
@@ -40,23 +40,26 @@ typedef enum {
 	QQ_ROOM_ROLE_ADMIN
 } qq_room_role;
 
-typedef struct _qq_room_data {
+typedef struct _qq_room_data qq_room_data;
+struct _qq_room_data {
 	/* all these will be saved when we exit Purple */
 	qq_room_role my_role;	/* my role for this room */
 	guint32 id;
-	guint32 ext_id;
-	guint8 type8;			/* permanent or temporory */
-	UID creator_uid;
+	guint32 qun_id;
+	guint8 type8;			/* permanent or temporary */
+	guint32 creator_uid;
 	guint32 category;
 	guint8 auth_type;
-	gchar *title_utf8;
-	gchar *desc_utf8;
+	gchar *name;
+	gchar *bulletin;	
+	gchar *intro;			/* TODO: display these info */
+	guint8 *token;
 	/* all these will be loaded from the network */
-	gchar *notice_utf8;	/* group notice by admin */
 
-	gboolean is_got_buddies;
+	gboolean is_show_chat;
+	gboolean has_got_members_info;
 	GList *members;
-} qq_room_data;
+};
 
 GList *qq_chat_info(PurpleConnection *gc);
 GHashTable *qq_chat_info_defaults(PurpleConnection *gc, const gchar *chat_name);

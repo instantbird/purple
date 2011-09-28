@@ -29,15 +29,11 @@
 #include "packet_parse.h"
 #include "utils.h"
 
-#define UTF8                  "UTF-8"
-#define QQ_CHARSET_ZH_CN      "GB18030"
-#define QQ_CHARSET_ENG        "ISO-8859-1"
-
 #define QQ_NULL_MSG           "(NULL)"	/* return this if conversion fails */
 
 /* convert a string from from_charset to to_charset, using g_convert */
 /* Warning: do not return NULL */
-static gchar *do_convert(const gchar *str, gssize len, guint8 *out_len, const gchar *to_charset, const gchar *from_charset)
+static gchar *do_convert(const gchar *str, gssize len, gsize *out_len, const gchar *to_charset, const gchar *from_charset)
 {
 	GError *error = NULL;
 	gchar *ret;
@@ -62,43 +58,66 @@ static gchar *do_convert(const gchar *str, gssize len, guint8 *out_len, const gc
 }
 
 /*
+ * Changed!!!! Check Every Invoke!!!!
  * take the input as a pascal string and return a converted c-string in UTF-8
+ * len_size is the size of length bytes in pascal string
+ * if from_charset == NULL, will not do the conversion
  * returns the number of bytes read, return -1 if fatal error
  * the converted UTF-8 will be saved in ret
  * Return: *ret != NULL
  */
-gint qq_get_vstr(gchar **ret, const gchar *from_charset, guint8 *data)
+gint qq_get_vstr( gchar **ret, const gchar *from_charset, gsize len_size, guint8 *data )
 {
-	gssize len;
-	guint8 out_len;
+	guint32 len = 0;
+	guint32 tmp = 0;
+	gint i;
 
-	g_return_val_if_fail(data != NULL && from_charset != NULL, -1);
+	g_return_val_if_fail(data != NULL, -1);
 
-	len = data[0];
-	if (len == 0) {
+	for (i=len_size-1; i>=0; --i) {
+		tmp = *((guint8 *)(data+i));
+		tmp <<= (len_size-i-1) * 8;
+		len ^= tmp;
+	}
+
+	if (len) {
+		if (from_charset)
+		{
+			*ret = do_convert((gchar *) (data + len_size), len, NULL, UTF8, from_charset);
+		} else {
+			*ret = (gchar *)g_malloc0(len+1);
+			g_memmove(*ret, data+len_size, len);
+		}
+	} else {	
 		*ret = g_strdup("");
 		return 1;
 	}
-	*ret = do_convert((gchar *) (data + 1), len, &out_len, UTF8, from_charset);
-
-	return out_len + 1;
+	return len + len_size;
 }
 
-gint qq_put_vstr(guint8 *buf, const gchar *str_utf8, const gchar *to_charset)
+gint qq_put_vstr( guint8 *buf, const gchar *str_utf8, gsize len_size, const gchar *to_charset )
 {
 	gchar *str;
-	guint8 len;
+	guint32 len;
+	guint i;
 
-	if (str_utf8 == NULL || str_utf8[0] == '\0') {
-		buf[0] = 0;
-		return 1;
+
+	if (str_utf8 == NULL)	len = 0;
+	else	{
+		len = strlen(str_utf8);
+
+		if (to_charset) {
+			str = do_convert(str_utf8, -1, &len, to_charset, UTF8);
+			if (len > 0)	g_memmove(buf + len_size, str, len);
+		}
+		else	g_memmove(buf + len_size, str_utf8, len);
 	}
-	str = do_convert(str_utf8, -1, &len, to_charset, UTF8);
-	buf[0] = len;
-	if (len > 0) {
-		memcpy(buf + 1, str, len);
-	}
-	return 1 + len;
+	
+	/* TODO: this part not working on BIG ENDIAN */
+	for (i=0; i<len_size; ++i)
+		buf[i] = *((guint8 *)(&len)+len_size-1-i);
+
+	return len_size + len;
 }
 
 /* Warning: do not return NULL */

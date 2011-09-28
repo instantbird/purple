@@ -271,7 +271,6 @@ g_intern_static_string
 #endif
 #endif
 
-#if 0
 #if IN_HEADER(__G_DATE_H__)
 #if IN_FILE(__G_DATE_C__)
 g_date_add_days
@@ -324,7 +323,6 @@ g_date_valid_julian G_GNUC_CONST
 g_date_valid_month G_GNUC_CONST
 g_date_valid_weekday G_GNUC_CONST
 g_date_valid_year G_GNUC_CONST
-#endif
 #endif
 #endif
 

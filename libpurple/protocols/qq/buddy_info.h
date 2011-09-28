@@ -51,18 +51,17 @@
 #define QQ_FRIEND_FLAG_MOBILE           0x10
 #define QQ_FRIEND_FLAG_BIND_MOBILE  0x20
 */
-#define QQ_COMM_FLAG_QQ_VIP			0x02
+#define QQ_COMM_FLAG_QQ_VIP			0x04
 #define QQ_COMM_FLAG_QQ_MEMBER		0x04
 #define QQ_COMM_FLAG_TCP_MODE    	0x10
-#define QQ_COMM_FLAG_MOBILE       	0x20
-#define QQ_COMM_FLAG_BIND_MOBILE	0x40
+#define QQ_COMM_FLAG_MOBILE       	0x02
+#define QQ_COMM_FLAG_BIND_MOBILE	0x20
 #define QQ_COMM_FLAG_VIDEO          	0x80
 
 #define QQ_EXT_FLAG_ZONE				0x02
 
 #define QQ_BUDDY_GENDER_GG          0x00
 #define QQ_BUDDY_GENDER_MM          0x01
-#define QQ_BUDDY_GENDER_UNKNOWN     0xff
 
 enum {
 	QQ_BUDDY_INFO_UPDATE_ONLY = 0,
@@ -78,15 +77,18 @@ gchar *qq_get_icon_name(gint face);
 gchar *qq_get_icon_path(gchar *icon_name);
 void qq_change_icon_cb(PurpleConnection *gc, const char *filepath);
 
-void qq_request_buddy_info(PurpleConnection *gc, UID uid, UPDCLS update_class, int action);
+void qq_request_get_buddy_info(PurpleConnection *gc, guint32 uid,
+		guint32 update_class, int action);
 void qq_set_custom_icon(PurpleConnection *gc, PurpleStoredImage *img);
 void qq_process_change_info(PurpleConnection *gc, guint8 *data, gint data_len);
 void qq_process_get_buddy_info(guint8 *data, gint data_len, guint32 action, PurpleConnection *gc);
 
-void qq_request_get_level(PurpleConnection *gc, UID uid);
-void qq_request_get_level_2007(PurpleConnection *gc, UID uid);
-void qq_request_get_buddies_level(PurpleConnection *gc, UPDCLS update_class);
+void qq_request_get_level(PurpleConnection *gc, guint32 uid);
+void qq_request_get_buddies_level(PurpleConnection *gc, guint32 update_class, guint pos);
 void qq_process_get_level_reply(guint8 *buf, gint buf_len, PurpleConnection *gc);
 
 void qq_update_buddy_icon(PurpleAccount *account, const gchar *who, gint face);
+void request_change_info(PurpleConnection *gc, guint8 *data, guint8 *token, guint token_size);
+void qq_request_get_buddies_sign(PurpleConnection *gc, guint32 update_class, guint32 pos);
+void qq_process_get_buddies_sign(guint8 *data, gint data_len, PurpleConnection *gc);
 #endif

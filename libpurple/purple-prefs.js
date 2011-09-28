@@ -1,7 +1,7 @@
 pref("plugins.prpl.meanwhile.blist_action", 4);
 pref("plugins.prpl.oscar.recent_buddies", false);
 pref("plugins.prpl.qq.auto_get_authorize_info", true);
-pref("plugins.prpl.qq.resend_interval", 3);
+pref("plugins.prpl.qq.resend_interval", 4);
 pref("plugins.prpl.qq.resend_times", 10);
 pref("plugins.prpl.qq.show_fake_video", false);
 pref("plugins.prpl.qq.show_status_by_icon", true);

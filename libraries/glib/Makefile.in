@@ -79,6 +79,7 @@ EXPORTS_glib	= \
 		gprintfint.h \
 		glibintl.h \
 		glib.h \
+		gdate.h \
 		gdir.h \
 		gdebug.h \
 		gdatasetprivate.h \
@@ -176,6 +177,7 @@ CSRCS		= \
 		gbase64.c \
 		gchecksum.c \
 		gdataset.c \
+		gdate.c \
 		gdir.c \
 		gerror.c \
 		gfileutils.c \

@@ -37,12 +37,12 @@
 
 static void _qq_group_search_callback(PurpleConnection *gc, const gchar *input)
 {
-	guint32 ext_id;
+	guint32 qun_id;
 
 	g_return_if_fail(input != NULL);
-	ext_id = strtoul(input, NULL, 10);
+	qun_id = strtoul(input, NULL, 10);
 	/* 0x00000000 means search for demo group */
-	qq_request_room_search(gc, ext_id, QQ_ROOM_SEARCH_ONLY);
+	qq_request_room_search(gc, qun_id, QQ_ROOM_SEARCH_ONLY);
 }
 
 static void _qq_group_search_cancel_callback(PurpleConnection *gc, const gchar *input)
@@ -63,7 +63,7 @@ GList *qq_chat_info(PurpleConnection *gc)
 
 	pce = g_new0(struct proto_chat_entry, 1);
 	pce->label = _("ID: ");
-	pce->identifier = QQ_ROOM_KEY_EXTERNAL_ID;
+	pce->identifier = QQ_ROOM_KEY_QUN_ID;
 	m = g_list_append(m, pce);
 
 	return m;
@@ -76,7 +76,7 @@ GHashTable *qq_chat_info_defaults(PurpleConnection *gc, const gchar *chat_name)
 	defaults = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, g_free);
 
 	if (chat_name != NULL)
-		g_hash_table_insert(defaults, QQ_ROOM_KEY_EXTERNAL_ID, g_strdup(chat_name));
+		g_hash_table_insert(defaults, QQ_ROOM_KEY_QUN_ID, g_strdup(chat_name));
 
 	return defaults;
 }
@@ -95,7 +95,7 @@ PurpleRoomlist *qq_roomlist_get_list(PurpleConnection *gc)
 	rl = purple_roomlist_new(purple_connection_get_account(gc));
 	qd->roomlist = rl;
 
-	f = purple_roomlist_field_new(PURPLE_ROOMLIST_FIELD_STRING, _("Group ID"), QQ_ROOM_KEY_EXTERNAL_ID, FALSE);
+	f = purple_roomlist_field_new(PURPLE_ROOMLIST_FIELD_STRING, _("Group ID"), QQ_ROOM_KEY_QUN_ID, FALSE);
 	fields = g_list_append(fields, f);
 	f = purple_roomlist_field_new(PURPLE_ROOMLIST_FIELD_STRING, "", QQ_ROOM_KEY_INTERNAL_ID, TRUE);
 	fields = g_list_append(fields, f);

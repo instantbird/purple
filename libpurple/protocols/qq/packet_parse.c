@@ -100,7 +100,7 @@ gint qq_getdata(guint8 *data, gint datalen, guint8 *buf)
 /* read four bytes as "time_t" from buf,
  * return the number of bytes read if succeeds, otherwise return -1
  * This function is a wrapper around read_packet_dw() to avoid casting. */
-gint qq_getime(time_t *t, guint8 *buf)
+gint qq_gettime(time_t *t, guint8 *buf)
 {
 	guint32 dw_dest;
 	memcpy(&dw_dest, buf, sizeof(dw_dest));
@@ -159,7 +159,7 @@ gint qq_put32(guint8 *buf, guint32 dw)
     return sizeof(dw_porter);
 }
 
-gint qq_putime(guint8 *buf, time_t *t)
+gint qq_puttime(guint8 *buf, time_t *t)
 {
 	guint32 dw, dw_porter;
 	memcpy(&dw, t, sizeof(dw));

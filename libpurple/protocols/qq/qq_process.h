@@ -39,12 +39,12 @@ enum {
 };
 
 guint8 qq_proc_login_cmds(PurpleConnection *gc,  guint16 cmd, guint16 seq,
-		guint8 *rcved, gint rcved_len, UPDCLS update_class, guint32 ship32);
+		guint8 *rcved, gint rcved_len, guint32 update_class, guintptr ship_value);
 void qq_proc_client_cmds(PurpleConnection *gc, guint16 cmd, guint16 seq,
-		guint8 *rcved, gint rcved_len, UPDCLS update_class, guint32 ship32);
+		guint8 *rcved, gint rcved_len, guint32 update_class, guintptr ship_value);
 void qq_proc_room_cmds(PurpleConnection *gc, guint16 seq,
 		guint8 room_cmd, guint32 room_id, guint8 *rcved, gint rcved_len,
-		UPDCLS update_class, guint32 ship32);
+		guint32 update_class, guintptr ship_value);
 
 void qq_proc_server_cmd(PurpleConnection *gc, guint16 cmd, guint16 seq, guint8 *rcved, gint rcved_len);
 
@@ -52,5 +52,6 @@ void qq_update_all(PurpleConnection *gc, guint16 cmd);
 void qq_update_online(PurpleConnection *gc, guint16 cmd);
 void qq_update_room(PurpleConnection *gc, guint8 room_cmd, guint32 room_id);
 void qq_update_all_rooms(PurpleConnection *gc, guint8 room_cmd, guint32 room_id);
+
 #endif
 

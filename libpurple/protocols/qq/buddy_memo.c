@@ -83,7 +83,7 @@ static const gchar *memo_txt[] = {
 
 typedef struct _modify_memo_request {
 	PurpleConnection *gc;
-	UID bd_uid;
+	guint32 bd_uid;
 	gchar **segments;
 } modify_memo_request;
 
@@ -107,7 +107,7 @@ static void memo_free(gchar **segments)
 	purple_debug_info("QQ", "memo freed\n");
 }
 
-static void update_buddy_memo(PurpleConnection *gc, UID bd_uid, gchar *alias)
+static void update_buddy_alias(PurpleConnection *gc, guint32 bd_uid, gchar *alias)
 {
 	PurpleAccount *account;
 	PurpleBuddy *buddy;
@@ -127,7 +127,7 @@ static void update_buddy_memo(PurpleConnection *gc, UID bd_uid, gchar *alias)
 	purple_blist_alias_buddy(buddy, (const char*)alias);
 }
 
-static void request_change_memo(PurpleConnection *gc, UID bd_uid, gchar **segments)
+static void request_change_memo(PurpleConnection *gc, guint32 bd_uid, gchar **segments)
 {
 	gint bytes;
 	/* Attention, length of each segment must be guint8(0~255),
@@ -170,7 +170,7 @@ static void memo_modify_cancle_cb(modify_memo_request *memo_request, PurpleReque
 static void memo_modify_ok_cb(modify_memo_request *memo_request, PurpleRequestFields *fields)
 {
 	PurpleConnection *gc;
-	UID bd_uid;
+	guint32 bd_uid;
 	gchar **segments;
 	const gchar *utf8_str;
 	gchar *value = NULL;
@@ -185,9 +185,9 @@ static void memo_modify_ok_cb(modify_memo_request *memo_request, PurpleRequestFi
 
 	for (index = 0; index < QQ_MEMO_SIZE; index++) {
 		utf8_str = purple_request_fields_get_string(fields, memo_id[index]);
-		/* update alias */
+		/* update memo */
 		if (QQ_MEMO_ALIAS == index) {
-			update_buddy_memo(gc, (UID)bd_uid, segments[QQ_MEMO_ALIAS]);
+			update_buddy_alias(gc, bd_uid, segments[QQ_MEMO_ALIAS]);
 		}
 		if (NULL == utf8_str) {
 			value = g_strdup("");
@@ -213,7 +213,7 @@ static void memo_modify_ok_cb(modify_memo_request *memo_request, PurpleRequestFi
 }
 
 /* memo modify dialogue */
-static void memo_modify_dialogue(PurpleConnection *gc, UID bd_uid, gchar **segments, guint32 action)
+static void memo_modify_dialogue(PurpleConnection *gc, guint32 bd_uid, gchar **segments, guint32 action)
 {
 	modify_memo_request *memo_request;
 	PurpleRequestField *field;
@@ -226,9 +226,6 @@ static void memo_modify_dialogue(PurpleConnection *gc, UID bd_uid, gchar **segme
 	g_return_if_fail(NULL != gc && NULL != segments);
 
 	switch (action) {
-		case QQ_BUDDY_MEMO_GET:
-			memo_free(segments);
-			break;
 		case QQ_BUDDY_MEMO_MODIFY:
 			/* keep one dialog once a time */
 			purple_request_close_with_handle(gc);
@@ -272,7 +269,7 @@ static void memo_modify_dialogue(PurpleConnection *gc, UID bd_uid, gchar **segme
 	}
 }
 
-static void qq_create_buddy_memo(PurpleConnection *gc, UID bd_uid, guint32 action)
+static void qq_create_buddy_memo(PurpleConnection *gc, guint32 bd_uid, guint32 action)
 {
 	gchar **segments;
 	gint index;
@@ -285,25 +282,23 @@ static void qq_create_buddy_memo(PurpleConnection *gc, UID bd_uid, guint32 actio
 	memo_modify_dialogue(gc, bd_uid, segments, action);
 }
 
-/* process reply to get_memo packet
- * here, update_class will be regarded as buddy's uid. because some 
- * memo packages returned without uid, which will make us confused */
-void qq_process_get_buddy_memo(PurpleConnection *gc, guint8* data, gint data_len,
-		UPDCLS update_class, guint32 action)
+/* process reply to get_memo packet */
+void qq_process_get_buddy_memo( PurpleConnection *gc, guint8* data, gint data_len, guint32 update_class, guint32 index )
 {
 	gchar **segments;
 	gint bytes;
-	gint index;
 	guint8 rcv_cmd;
 	guint32 rcv_uid;
-	guint8 unk1_8;
-	guint8 is_success;
+	guint8 is_that_all;
+	gchar * alias;
+	qq_data * qd;
+	guint i;
 
 	g_return_if_fail(NULL != gc && NULL != data && 0 != data_len);
-	/*
-	   qq_show_packet("MEMO REACH", data, data_len);
-	   */
-	purple_debug_info("QQ", "action=0x%02X\n", action);
+
+	//qq_show_packet("MEMO REACH", data, data_len);
+
+	purple_debug_info("QQ", "index=0x%02X\n", index);
 
 	bytes = 0;
 
@@ -311,24 +306,11 @@ void qq_process_get_buddy_memo(PurpleConnection *gc, guint8* data, gint data_len
 	bytes += qq_get8(&rcv_cmd, data+bytes);
 	purple_debug_info("QQ", "rcv_cmd=0x%02X\n", rcv_cmd);
 
-	/* it's possible that packet contains no buddy uid and no memo!!!
-	 * go to next step according to previous action sent */
-	if (1 == data_len) { /* only one byte */
-		purple_debug_info("QQ", "memo packet contains no buddy uid and memo...\n");
-		if (QQ_BUDDY_MEMO_MODIFY == action) {
-			UID mod_uid;
-			mod_uid = (UID)update_class;
-			qq_create_buddy_memo(gc, mod_uid, QQ_BUDDY_MEMO_MODIFY);
-			return;
-		}
-		return;
-	}
-
 	switch (rcv_cmd) {
 		case QQ_BUDDY_MEMO_MODIFY:
 		case QQ_BUDDY_MEMO_REMOVE:
-			bytes += qq_get8(&is_success, data+bytes);
-			if (QQ_BUDDY_MEMO_REQUEST_SUCCESS == is_success) {
+			bytes += qq_get8(&is_that_all, data+bytes);
+			if (QQ_BUDDY_MEMO_REQUEST_SUCCESS == is_that_all) {
 				purple_notify_message(gc, PURPLE_NOTIFY_MSG_INFO,
 						_("Memo Modify"), _("Server says:"),
 						_("Your request was accepted."),
@@ -344,24 +326,50 @@ void qq_process_get_buddy_memo(PurpleConnection *gc, guint8* data, gint data_len
 			}
 			break;
 		case QQ_BUDDY_MEMO_GET:
+			if (bytes == data_len)
+			{
+				qd = (qq_data *) gc->proto_data;
+				qq_create_buddy_memo(gc, qd->uid, QQ_BUDDY_MEMO_MODIFY);
+				break;
+			}
 			bytes += qq_get32(&rcv_uid, data+bytes);
 			purple_debug_info("QQ", "rcv_uid=%u\n", rcv_uid);
-			bytes += qq_get8(&unk1_8, data+bytes);
-			purple_debug_info("QQ", "unk1_8=0x%02X\n", unk1_8);
+			bytes += qq_get8(&is_that_all, data+bytes);
+			purple_debug_info("QQ", "is_that_all=0x%02X\n", is_that_all);
+
 			segments = g_new0(gchar*, QQ_MEMO_SIZE);
-			for (index = 0; index < QQ_MEMO_SIZE; index++) {
-				/* get utf8 string */
-				bytes += qq_get_vstr(&segments[index], QQ_CHARSET_DEFAULT, data+bytes);
+
+			for (i = 0; i < QQ_MEMO_SIZE; i++) {
+
+				bytes += qq_get_vstr(&segments[i], NULL, sizeof(guint8), data+bytes);
 				/*
-				   purple_debug_info("QQ", "bytes:%d, seg:%s\n", bytes, segments[index]);
-				   */
+			   purple_debug_info("QQ", "bytes:%d, seg:%s\n", bytes, segments[i]);
+				  */
 			}
 
 			/* common action, update buddy memo */
-			update_buddy_memo(gc, (UID)rcv_uid, segments[QQ_MEMO_ALIAS]);
+			update_buddy_alias(gc, rcv_uid, segments[QQ_MEMO_ALIAS]);
+			/* memo is thing that we regard our buddy as, so we need one more buddy_uid */
+			/* action might be QQ_BUDDY_MEMO_MODIFY */
+			memo_modify_dialogue(gc, rcv_uid, segments, i);
+			g_free(segments);
+			break;
+		case QQ_BUDDY_MEMO_ALIAS:
+			bytes += qq_get8(&is_that_all, data+bytes);
+			purple_debug_info("QQ", "is_that_all=0x%02X\n", is_that_all);
 
-			/* memo is a thing that we regard our buddy as, so we need one more buddy_uid */
-			memo_modify_dialogue(gc, rcv_uid, segments, action);
+			while (bytes < data_len)
+			{
+				bytes += qq_get32(&rcv_uid, data+bytes);
+				purple_debug_info("QQ", "rcv_uid=%u\n", rcv_uid);
+				bytes += qq_get_vstr(&alias, NULL, sizeof(guint8),data+bytes);
+				update_buddy_alias(gc, rcv_uid, alias);
+			}
+			if (!is_that_all)
+			{
+				qq_request_buddy_memo(gc, index+1, 0, QQ_BUDDY_MEMO_ALIAS);
+			}
+			
 			break;
 		default:
 			purple_debug_info("QQ", "received an UNKNOWN memo cmd!!!\n");
@@ -369,30 +377,33 @@ void qq_process_get_buddy_memo(PurpleConnection *gc, guint8* data, gint data_len
 	}
 }
 
-/* request buddy memo
- *
- * param: gc, uid, update_class, action
- * here, update_class will be set to buddy's uid. because some memo 
- * packages returned without uid, which will make us confused */
-void qq_request_buddy_memo(PurpleConnection *gc, UID bd_uid, UPDCLS update_class, guint32 action)
+/* request buddy memo */
+void qq_request_buddy_memo( PurpleConnection *gc, guint32 index, guint32 update_class, guint8 action )
 {
 	guint8 raw_data[16] = {0};
 	gint bytes;
 
-	purple_debug_info("QQ", "qq_request_buddy_memo, buddy uid=%u, update_class=%u\n",
-			bd_uid, update_class);
+	purple_debug_info("QQ", "qq_request_buddy_memo, index=%u, action=%u\n",
+			index, action);
 	g_return_if_fail(NULL != gc);
 	/* '0' is ok
 	   g_return_if_fail(uid != 0);
 	   */
 	bytes = 0;
-	bytes += qq_put8(raw_data+bytes, QQ_BUDDY_MEMO_GET);
-	bytes += qq_put32(raw_data+bytes, bd_uid);
-	/*
-	   qq_show_packet("MEMO REQUEST", raw_data, bytes);
-	   */
+	bytes += qq_put8(raw_data+bytes, action);
+	if (action == QQ_BUDDY_MEMO_ALIAS)
+	{
+		bytes += qq_put8(raw_data+bytes, (guint8)index);
+		/* need one byte of bd_index, just make a conversion */
+	} else {
+		bytes += qq_put32(raw_data+bytes, index);
+		memset(raw_data+bytes, 0x00, 4);
+		bytes += 4;
+	}
+	
+	//qq_show_packet("MEMO REQUEST", raw_data, bytes);
 
-	qq_send_cmd_mess(gc, QQ_CMD_BUDDY_MEMO, (guint8*)raw_data, bytes, update_class, action);
+	qq_send_cmd_mess(gc, QQ_CMD_BUDDY_MEMO, (guint8*)raw_data, bytes, update_class , index);
 }
 
 
