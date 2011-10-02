@@ -46,7 +46,9 @@ typedef struct _qq_net_stat qq_net_stat;
 typedef struct _qq_login_data qq_login_data;
 typedef struct _qq_captcha_data qq_captcha_data;
 
+#if !GLIB_CHECK_VERSION(2,18,0)
 typedef unsigned long guintptr;
+#endif
 
 struct _qq_captcha_data {
 	guint8 *token;
