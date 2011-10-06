@@ -122,12 +122,6 @@ static void write_conv(PurpleConversation *conv, const char *who,
   NS_ENSURE_SUCCESS(rv,);
 
   msg->Init(conv, who, alias, message, flags, mtime);
-
-  nsCOMPtr<nsIObserverService> os =
-    do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv,);
-
-  os->NotifyObservers(msg, "new-text", nsnull);
   notify_conv(conv, msg, "new-text");
 }
 
