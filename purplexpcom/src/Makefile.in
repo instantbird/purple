@@ -97,7 +97,7 @@ CPPSRCS		= \
 		$(NULL)
 
 ifeq ($(OS_ARCH),Darwin)
-CPPSRCS		+= nsDockTile.cpp
+CMMSRCS		+= nsDockTile.mm
 OS_LIBS		+= -framework Carbon
 endif
 
