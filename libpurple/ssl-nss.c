@@ -157,6 +157,7 @@ ssl_nss_init_nss(void)
 #endif
 }
 
+#if 0
 static SECStatus
 ssl_auth_cert(void *arg, PRFileDesc *socket, PRBool checksig,
 			  PRBool is_server)
@@ -185,7 +186,6 @@ ssl_auth_cert(void *arg, PRFileDesc *socket, PRBool checksig,
 #endif
 }
 
-#if 0
 static SECStatus
 ssl_bad_cert(void *arg, PRFileDesc *socket)
 {
@@ -439,10 +439,10 @@ ssl_nss_connect(PurpleSslConnection *gsc)
 	SSL_OptionSet(nss_data->in, SSL_HANDSHAKE_AS_CLIENT, PR_TRUE);
 	SSL_OptionSet(nss_data->in, SSL_ENABLE_SESSION_TICKETS, PR_FALSE);
 
+#if 0
 	SSL_AuthCertificateHook(nss_data->in,
 							(SSLAuthCertificate)ssl_auth_cert,
 							(void *)CERT_GetDefaultCertDB());
-#if 0
 	/* No point in hooking BadCert, since ssl_auth_cert always succeeds */
 	SSL_BadCertHook(nss_data->in, (SSLBadCertHandler)ssl_bad_cert, NULL);
 #endif
