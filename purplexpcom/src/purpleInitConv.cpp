@@ -44,6 +44,8 @@
 #include "purpleMessage.h"
 #include "imIConversationsService.h"
 #include <nsIObserverService.h>
+#include <nsIPrefBranch2.h>
+#include <nsIPrefService.h>
 #include <nsISupportsPrimitives.h>
 #include <nsArrayEnumerator.h>
 #include <nsComponentManagerUtils.h>
@@ -241,6 +243,26 @@ static void conversation_updated(PurpleConversation *aConv, PurpleConvUpdateType
   }
 }
 
+static gint chat_invited(PurpleAccount *aAccount,
+                         const char *aWho,
+                         const char *aName,
+                         const char *aMessage,
+                         GHashTable *data)
+{
+  LOG(("Invited to a chat"));
+
+  nsCOMPtr<nsIPrefBranch2> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(prefs, 0);
+
+  PRInt32 value = 0;
+  nsresult rv =
+    prefs->GetIntPref("messenger.conversations.autoAcceptChatInvitations",
+                      &value);
+  NS_ENSURE_SUCCESS(rv, 0);
+
+  return value;
+}
+
 void init_libpurple_conversations()
 {
   purple_conversations_set_ui_ops(&conversation_uiops);
@@ -254,6 +276,9 @@ void init_libpurple_conversations()
 
   purple_signal_connect(purple_conversations_get_handle(), "conversation-updated", &handle,
                         PURPLE_CALLBACK(conversation_updated), NULL);
+
+  purple_signal_connect(purple_conversations_get_handle(), "chat-invited", &handle,
+                        PURPLE_CALLBACK(chat_invited), NULL);
 
   LOG(("Connecting to conversation signals"));
 }
