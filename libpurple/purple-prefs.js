@@ -25,6 +25,7 @@ pref("purple.network.turn_port", 3478);
 pref("purple.network.turn_server", "");
 pref("purple.network.turn_username", "");
 pref("purple.proxy.socks4_remotedns", false);
+pref("purple.ssl.check_certificates", true);
 pref("purple.status.scores.available", 100);
 pref("purple.status.scores.away", -100);
 pref("purple.status.scores.extended_away", -200);
