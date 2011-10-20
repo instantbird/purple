@@ -71,7 +71,7 @@ class purpleTimer
                              GSourceFunc aFunction,
                              gpointer aData);
   static void ExecTimer(nsITimer *aTimer, void *aTimerClosure);
-  static PRBool CancelTimer(PRUint32 aId);
+  static gboolean CancelTimer(PRUint32 aId);
   static nsresult CancelTimerFromAccountId(PRUint32 aAccountId);
 
  private:

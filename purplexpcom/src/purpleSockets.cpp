@@ -417,10 +417,10 @@ PRUint32 purpleSocketWatcher::AddWatch(gint aFd, PurpleInputCondition aCondition
   return id;
 }
 
-PRBool purpleSocketWatcher::CancelWatch(PRUint32 aId)
+gboolean purpleSocketWatcher::CancelWatch(PRUint32 aId)
 {
   LOG(("[%u]SOCKETCANCEL\n", aId));
-  NS_ENSURE_TRUE(sSockets, PR_FALSE);
+  NS_ENSURE_TRUE(sSockets, FALSE);
 
   for (PRUint32 i = 0; i < sSockets->Length(); ++i) {
     PRUint32 id;
@@ -429,12 +429,12 @@ PRBool purpleSocketWatcher::CancelWatch(PRUint32 aId)
       (*sSockets)[i]->Cancel();
       sSockets->RemoveElementAt(i);
       LOG(("[%u]Socket elt found at index %i; canceled and removed\n", aId, i));
-      return PR_TRUE;
+      return TRUE;
     }
   }
 
   NS_WARNING("Failed to cancelWatch: socket not found");
-  return PR_FALSE;
+  return FALSE;
 }
 
 nsresult purpleSocketWatcher::CancelWatchFromAccountId(PRUint32 aAccountId)

@@ -168,15 +168,15 @@ void purpleTimer::ExecTimer(nsITimer *aTimer, void *aTimerClosure)
   PRUint32 id = timeout->mId;
   LOG(("TIMEOUT EXEC id = %i, accountId = %u", id, timeout->mAccountId));
   purpleAccountScoper scoper(timeout->mAccountId);
-  PRBool shouldContinue = timeout->mFunction(timeout->mData);
+  gboolean shouldContinue = timeout->mFunction(timeout->mData);
   if (!shouldContinue) {
     CancelTimer(id);
   }
 }
 
-PRBool purpleTimer::CancelTimer(PRUint32 aId)
+gboolean purpleTimer::CancelTimer(PRUint32 aId)
 {
-  NS_ENSURE_TRUE(sTimeouts, PR_FALSE);
+  NS_ENSURE_TRUE(sTimeouts, FALSE);
 
   LOG(("Trying to cancel timeout with id %i", aId));
   for (PRUint32 i = 0; i < sTimeouts->Length(); ++i) {
@@ -186,12 +186,12 @@ PRBool purpleTimer::CancelTimer(PRUint32 aId)
       delete timeout;
       sTimeouts->RemoveElementAt(i);
       LOG(("Timeout elt found at index %i; canceled and removed", i));
-      return PR_TRUE;
+      return TRUE;
     }
   }
 
   LOG(("purpleTimer::CancelTimer : Timeout with id %i not found.", aId));
-  return PR_FALSE;
+  return FALSE;
 }
 
 nsresult purpleTimer::CancelTimerFromAccountId(PRUint32 aAccountId)

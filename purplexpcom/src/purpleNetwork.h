@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <nsIObserver.h>
+#include <glib.h>
 
 class purpleNetworkObserver : public nsIObserver
 {
@@ -45,7 +46,7 @@ class purpleNetworkObserver : public nsIObserver
 
   static void init();
   static void unInit();
-  static PRBool IsNetworkAvailable();
+  static gboolean IsNetworkAvailable();
 
  private:
   purpleNetworkObserver();
