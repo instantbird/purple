@@ -45,12 +45,8 @@ MODULE		= purplexpcom
 XPIDL_MODULE	= purplexpcom
 
 XPIDLSRCS	= \
-		imICommandsService.idl \
-		imIContactsService.idl \
-		imIConversationsService.idl \
 		purpleIAccount.idl \
 		purpleIAccountsService.idl \
-		purpleIConversation.idl \
 		purpleICoreService.idl \
 		purpleIMessage.idl \
 		purpleIPlugin.idl \

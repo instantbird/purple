@@ -2,10 +2,7 @@
 
 @AB_CD@.jar:
 % locale purple @AB_CD@ %locale/@AB_CD@/purple/
-	locale/@AB_CD@/purple/commands.properties (%commands.properties)
-	locale/@AB_CD@/purple/conversations.properties (%conversations.properties)
 	locale/@AB_CD@/purple/prpl.properties	(%purple.properties)
-	locale/@AB_CD@/purple/status.properties (%status.properties)
 % locale oscar @AB_CD@ %locale/@AB_CD@/oscar/
 	locale/@AB_CD@/oscar/prpl.properties	(%oscar.properties)
 % locale jabber @AB_CD@ %locale/@AB_CD@/jabber/
@@ -28,4 +25,3 @@
 	locale/@AB_CD@/simple/prpl.properties	(%simple.properties)
 % locale novell @AB_CD@ %locale/@AB_CD@/novell/
 	locale/@AB_CD@/novell/prpl.properties	(%novell.properties)
-	locale/@AB_CD@/purple/twitter.properties	(%twitter.properties)

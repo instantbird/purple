@@ -105,32 +105,6 @@ ifdef PURPLE_PLUGINS
 DEFINES 	+= -DPURPLE_PLUGINS
 endif
 
-EXTRA_COMPONENTS = \
-		gtalkOverrideProtocol.js \
-		facebookOverrideProtocol.js \
-		overrideProtocols.manifest \
-		twitter.js \
-		twitter.manifest \
-		$(NULL)
-
-EXTRA_COMPONENTS += \
-		imContacts.js imContacts.manifest \
-		imConversations.js imConversations.manifest \
-		imCommands.js imCommands.manifest \
-		$(NULL)
-
-ifdef MOZ_DEBUG
-EXTRA_COMPONENTS += jsTestProtocol.js jsTestProtocol.manifest
-endif
-
-EXTRA_JS_MODULES = \
-	http.jsm \
-	imStatusUtils.jsm \
-	imXPCOMUtils.jsm \
-	jsProtoHelper.jsm \
-	socket.jsm \
-	$(NULL)
-
 EXTRA_DSO_LDOPTS += $(XPCOM_GLUE_LDOPTS) $(MOZ_COMPONENT_NSPR_LIBS)
 
 ifdef ENABLE_TESTS
