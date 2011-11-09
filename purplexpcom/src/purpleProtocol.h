@@ -38,12 +38,12 @@
 #ifndef PURPLE_PROTOCOL_H_
 # define PURPLE_PROTOCOL_H_
 
-#include "purpleIProtocol.h"
+#include "purpleProxyInfo.h"
+#include "prplIProtocol.h"
 #include "purpleIPref.h"
 #pragma GCC visibility push(default)
 #include <libpurple/account.h>
 #pragma GCC visibility pop
-#include<nsCOMArray.h>
 
 // 63ee9306-8615-4896-9f1f-6e6fafe17d1e
 #define PURPLE_PROTOCOL_CID \
@@ -54,14 +54,13 @@
 #define PURPLE_PROTOCOL_CONTRACTID \
     "@instantbird.org/purple/protocol;1"
 
-class purpleProtocol : public purpleIProtocol
+class purpleProtocol : public prplIProtocol
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_PURPLEIPROTOCOL
+  NS_DECL_PRPLIPROTOCOL
 
   purpleProtocol();
-  void Init(PurplePluginInfo *aInfo);
 
 private:
   ~purpleProtocol();

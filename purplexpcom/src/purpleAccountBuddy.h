@@ -81,7 +81,7 @@ private:
 
 protected:
   /* additional members */
-  nsCOMPtr<purpleIAccount> mAccount;
+  nsCOMPtr<imIAccount> mAccount;
   PurpleBuddy *mPurpleBuddy;
   nsCOMPtr<imIBuddy> mBuddy;
 };

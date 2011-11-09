@@ -162,7 +162,6 @@ EXPORTS_libpurple = \
 		prpl.h \
 		request.h \
 		roomlist.h \
-		savedstatuses.h \
 		server.h \
 		signals.h \
 		dnsquery.h \
@@ -229,7 +228,6 @@ CSRCS		= \
 		prpl.c \
 		request.c \
 		roomlist.c \
-		savedstatuses.c \
 		server.c \
 		signals.c \
 		dnsquery.c \

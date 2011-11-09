@@ -78,7 +78,7 @@ purpleAccountBuddy::purpleAccountBuddy(PurpleBuddy *aPurpleBuddy,
   PurpleAccount *account = purple_buddy_get_account(aPurpleBuddy);
   purpleAccount *pAccount = purpleAccount::fromPurpleAccount(account);
   if (NS_LIKELY(pAccount))
-    pAccount->GetConcreteAccount(getter_AddRefs(mAccount));
+    pAccount->GetImAccount(getter_AddRefs(mAccount));
   NS_ASSERTION(mAccount, "Failed to get the account from a PurpleBuddy");
 }
 
@@ -114,8 +114,8 @@ NS_IMETHODIMP purpleAccountBuddy::SetBuddy(imIBuddy * aBuddy)
   return NS_OK;
 }
 
-/* readonly attribute purpleIAccount account; */
-NS_IMETHODIMP purpleAccountBuddy::GetAccount(purpleIAccount * *aAccount)
+/* readonly attribute imIAccount account; */
+NS_IMETHODIMP purpleAccountBuddy::GetAccount(imIAccount * *aAccount)
 {
   NS_ENSURE_TRUE(mAccount, NS_ERROR_NOT_INITIALIZED);
 

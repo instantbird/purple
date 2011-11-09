@@ -38,85 +38,65 @@
 #ifndef PURPLE_ACCOUNT_H_
 # define PURPLE_ACCOUNT_H_
 
-#include "purpleAccountBase.h"
+#pragma GCC visibility push(default)
+#include <libpurple/account.h>
+#pragma GCC visibility pop
+
+#include <imIAccount.h>
 #include "purpleAccountScoper.h"
-#include <nsIObserver.h>
+#include "nsCOMPtr.h"
+#include <nsIPrefBranch.h>
+#include <nsStringAPI.h>
 
 #define UI_ID                  "instantbird"
 
-class purpleAccount : public purpleAccountBase, public nsIObserver
+class purpleAccount : public prplIAccount
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
+  NS_DECL_PRPLIACCOUNT
 
-  //  NS_DECL_PURPLEIACCOUNT
-  NS_SCRIPTABLE NS_IMETHOD UnInit(void);
-  NS_SCRIPTABLE NS_IMETHOD Connect(void);
-  NS_SCRIPTABLE NS_IMETHOD Disconnect(void);
-  NS_SCRIPTABLE NS_IMETHOD CreateConversation(const nsACString & aName, purpleIConversation **_retval NS_OUTPARAM);
-  NS_SCRIPTABLE NS_IMETHOD AddBuddy(imITag *aTag, const nsACString & aName);
-  NS_SCRIPTABLE NS_IMETHOD LoadBuddy(imIBuddy *aBuddy, imITag *aTag, imIAccountBuddy **aResult);
-  NS_SCRIPTABLE NS_IMETHOD RequestBuddyInfo(const nsACString & aBuddyName);
-  NS_SCRIPTABLE NS_IMETHOD GetCanJoinChat(PRBool *aCanJoinChat);
-  NS_SCRIPTABLE NS_IMETHOD GetChatRoomFields(nsISimpleEnumerator **_retval NS_OUTPARAM);
-  NS_SCRIPTABLE NS_IMETHOD GetChatRoomDefaultFieldValues(const nsACString & aDefaultChatName, purpleIChatRoomFieldValues **_retval NS_OUTPARAM);
-  NS_SCRIPTABLE NS_IMETHOD JoinChat(purpleIChatRoomFieldValues *aComponents);
-  NS_SCRIPTABLE NS_IMETHOD GetNormalizedName(nsACString & aNormalizedName);
-  NS_SCRIPTABLE NS_IMETHOD GetPassword(nsACString & aPassword);
-  NS_SCRIPTABLE NS_IMETHOD SetPassword(const nsACString & aPassword);
-  NS_SCRIPTABLE NS_IMETHOD GetRememberPassword(PRBool *aRememberPassword);
-  NS_SCRIPTABLE NS_IMETHOD SetRememberPassword(PRBool aRememberPassword);
-  NS_SCRIPTABLE NS_IMETHOD GetAlias(nsACString & aAlias);
-  NS_SCRIPTABLE NS_IMETHOD SetAlias(const nsACString & aAlias);
-  NS_SCRIPTABLE NS_IMETHOD GetProxyInfo(purpleIProxyInfo * *aProxyInfo);
-  NS_SCRIPTABLE NS_IMETHOD SetProxyInfo(purpleIProxyInfo * aProxyInfo);
-  NS_SCRIPTABLE NS_IMETHOD SetBool(const char *aName, PRBool aVal);
-  NS_SCRIPTABLE NS_IMETHOD SetInt(const char *aName, PRInt32 aVal);
-  NS_SCRIPTABLE NS_IMETHOD SetString(const char *aName, const char *aVal);
-  NS_SCRIPTABLE NS_IMETHOD GetHTMLEnabled(PRBool *aHTMLEnabled);
-  NS_SCRIPTABLE NS_IMETHOD GetNoBackgroundColors(PRBool *aNoBackgroundColors);
-  NS_SCRIPTABLE NS_IMETHOD GetAutoResponses(PRBool *aAutoResponses);
-  NS_SCRIPTABLE NS_IMETHOD GetSingleFormatting(PRBool *aSingleFormatting);
-  NS_SCRIPTABLE NS_IMETHOD GetNoNewlines(PRBool *aNoNewlines);
-  NS_SCRIPTABLE NS_IMETHOD GetNoFontSizes(PRBool *aNoFontSizes);
-  NS_SCRIPTABLE NS_IMETHOD GetNoUrlDesc(PRBool *aNoUrlDesc);
-  NS_SCRIPTABLE NS_IMETHOD GetNoImages(PRBool *aNoImages);
+  // Called by purpleProtocol:
+  purpleAccount();
+  nsresult Init(imIAccount *aImAccount, prplIProtocol *aPrpl);
 
-  // From purpleIAccountBase
-  NS_SCRIPTABLE NS_IMETHOD Init(const nsACString & aKey,
-                                const nsACString & aName,
-                                purpleIProtocol *aPrpl);
+  // Called from purpleInitAccounts:
+  nsresult Connecting(const nsACString & aConnectionStateMessage);
+  nsresult Connected();
+  nsresult Disconnecting(PRInt16 aConnectionErrorReason,
+                         const nsACString & aConnectionErrorMessage);
+  nsresult Disconnected();
 
-  NS_SCRIPTABLE NS_IMETHOD Disconnecting(PRInt16 aConnectionErrorReason,
-                                         const nsACString & aConnectionErrorMessage);
-  NS_SCRIPTABLE NS_IMETHOD Disconnected();
+  // Called from purpleInitAccounts, to save a pref libpurple has changed.
+  nsresult SetBoolPref(const char *aName, PRBool aValue);
+  nsresult SetIntPref(const char *aName, PRInt32 aValue);
+  nsresult SetStringPref(const char *aName, const char *aValue);
 
-  purpleAccount(PRBool aIsValidProtocol = PR_TRUE);
   PurpleAccount *GetPurpleAccount() { return mAccount; }
   static inline purpleAccount *fromPurpleAccount(PurpleAccount *aAccount) {
     return static_cast<purpleAccount *>(aAccount->ui_data);
   }
   PurplePluginProtocolInfo *GetPrplInfo();
+  inline PRUint32 ScopeId() { return mId; }
   inline void EnterScope() { mScoper = new purpleAccountScoper(mId); }
   inline void ExitScope() { delete mScoper; mScoper = nsnull; }
 
 private:
   ~purpleAccount();
-  nsresult SetBoolPref(const char *aName, PRBool aValue);
-  nsresult SetIntPref(const char *aName, PRInt32 aValue);
-  nsresult SetStringPref(const char *aName, const char *aValue);
-  inline void GetBoolPref(const char *aName);
-  inline void GetIntPref(const char *aName);
-  inline void GetCharPref(const char *aName);
   nsresult ApplyCurrentUserIcon();
   inline void SetAccountIcon(const nsCString& aBuffer);
   purpleAccountScoper *mScoper;
 
 protected:
   /* additional members */
+  PRUint32 mId;
+  nsCOMPtr<imIAccount> mImAccount;
   PurpleAccount *mAccount;
   nsCOMPtr<purpleIProxyInfo> mProxy;
+  PRInt16 mConnectionErrorReason;
+  PurpleStatusPrimitive mStatus;
+  nsCOMPtr<nsIPrefBranch> mPrefBranch;
+  nsCOMPtr<nsIPrefBranch> mPrefOptBranch;
 };
 
 #endif /* !PURPLE_ACCOUNT_H_ */

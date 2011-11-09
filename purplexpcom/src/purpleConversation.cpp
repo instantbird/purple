@@ -114,8 +114,8 @@ purpleAccount *purpleConversation::GetAccount()
   return purpleAccount::fromPurpleAccount(pAccount);
 }
 
-/* readonly attribute purpleIAccount account; */
-NS_IMETHODIMP purpleConversation::GetAccount(purpleIAccount * *aAccount)
+/* readonly attribute imIAccount account; */
+NS_IMETHODIMP purpleConversation::GetAccount(imIAccount * *aAccount)
 {
   NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
 
@@ -125,7 +125,7 @@ NS_IMETHODIMP purpleConversation::GetAccount(purpleIAccount * *aAccount)
   purpleAccount *account = purpleAccount::fromPurpleAccount(pAccount);
   NS_ENSURE_TRUE(account, NS_ERROR_FAILURE);
 
-  return account->GetConcreteAccount(aAccount);
+  return account->GetImAccount(aAccount);
 }
 
 /* readonly attribute AUTF8String name; */

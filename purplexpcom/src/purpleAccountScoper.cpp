@@ -51,11 +51,8 @@ PRUint32 purpleAccountScoper::sCurrentId = 0;
 purpleAccountScoper::purpleAccountScoper(purpleAccount *aAccount)
 {
   if (aAccount) {
-    PRUint32 id;
-    if (NS_SUCCEEDED(aAccount->GetNumericId(&id))) {
-      enterScope(id);
-      return;
-    }
+    enterScope(aAccount->ScopeId());
+    return;
   }
   mPreviousId = sCurrentId;
 }

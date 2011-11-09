@@ -110,7 +110,7 @@ static void disconnected(PurpleConnection *gc)
 static void disconnecting(PurpleConnection *gc)
 {
   IMPL_GET_ACCOUNT;
-  account->Disconnecting(purpleIAccount::NO_ERROR, EmptyCString());
+  account->Disconnecting(prplIAccount::NO_ERROR, EmptyCString());
 }
 static void report_disconnect_reason(PurpleConnection *gc,
                                      PurpleConnectionError reason,
@@ -295,19 +295,19 @@ static void set_account_int(PurpleAccount *aAccount,
                             const char *aName, int aValue)
 {
   IMPL_GET_ACCOUNT_FROM_UI_DATA(aAccount);
-  account->purpleAccountBase::SetInt(aName, aValue);
+  account->SetIntPref(aName, aValue);
 }
 static void set_account_string(PurpleAccount *aAccount,
                                const char *aName, const char *aValue)
 {
   IMPL_GET_ACCOUNT_FROM_UI_DATA(aAccount);
-  account->purpleAccountBase::SetString(aName, aValue ? aValue : "");
+  account->SetStringPref(aName, aValue ? aValue : "");
 }
 static void set_account_bool(PurpleAccount *aAccount,
                              const char *aName, gboolean aValue)
 {
   IMPL_GET_ACCOUNT_FROM_UI_DATA(aAccount);
-  account->purpleAccountBase::SetBool(aName, aValue);
+  account->SetBoolPref(aName, aValue);
 }
 
 static PurpleAccountUiOps account_uiops = {

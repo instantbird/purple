@@ -38,17 +38,14 @@
 #ifndef PURPLE_CORE_SERVICE_H_
 #define PURPLE_CORE_SERVICE_H_
 
-#include "purpleAccountsService.h"
-#include "purpleProtocol.h"
 #include "purpleProxy.h"
 #include "purpleProxyInfo.h"
-#include "purpleIAccount.h"
-#include "purpleIdle.h"
 #include "purpleICoreService.h"
 #include <nsIMutableArray.h>
 #include <nsCOMArray.h>
 #include <nsCOMPtr.h>
 #include <nsIPrefBranch2.h>
+#include <nsIObserver.h>
 
 #define PURPLE_ENSURE_INIT(x)                   \
   NS_ENSURE_TRUE(x, NS_ERROR_NOT_INITIALIZED)
@@ -62,35 +59,17 @@ public:
 
   purpleCoreService();
 
-  NS_FORWARD_SAFE_PURPLEIACCOUNTSSERVICE(mAccountsService);
-
 private:
   ~purpleCoreService();
-  void InitProtocols();
   nsresult InitProxies();
-  nsresult InitBuddyList();
-#ifdef MOZ_CRASHREPORTER
-  nsresult GetLastCrashTime(PRInt32 *aLastCrashTime);
-#endif
-  void InitAutoLoginStatus();
   nsCOMPtr<nsIPrefBranch> mPrefService;
   nsCOMPtr<nsIPrefBranch2> mPrefBranch2;
-  nsresult SetStatus(PurpleStatusPrimitive aStatus, const nsACString &aMessage);
-  nsresult addIdleObserver();
-  nsresult removeIdleObserver();
-  nsresult NotifyObservers(nsISupports *aObj, const char *aEvent,
-                           const PRUnichar *aData = nsnull);
 
 protected:
   PRBool mInitialized;
   PRBool mQuitting;
-  PRInt16 mAutoLoginStatus;
-  nsCOMArray<purpleIProtocol> mProtocols;
   nsCOMArray<purpleProxy> mProxies;
-  nsCOMPtr<purpleIAccountsService> mAccountsService;
   nsCOMPtr<purpleIProxyInfo> mGlobalProxy;
-  nsCOMPtr<purpleIdleObserver> mIdleObserver;
-  static PRUint32 sLastConversationId;
 };
 
 #define PURPLE_CORE_SERVICE_CID \
@@ -100,6 +79,6 @@ protected:
     }
 
 #define PURPLE_CORE_SERVICE_CONTRACTID \
-    "@instantbird.org/purple/core;1"
+    "@instantbird.org/libpurple/core;1"
 
 #endif /* !PURPLE_CORE_SERVICE_H_ */

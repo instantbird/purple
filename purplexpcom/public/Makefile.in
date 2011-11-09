@@ -45,13 +45,10 @@ MODULE		= purplexpcom
 XPIDL_MODULE	= purplexpcom
 
 XPIDLSRCS	= \
-		purpleIAccount.idl \
-		purpleIAccountsService.idl \
 		purpleICoreService.idl \
 		purpleIMessage.idl \
 		purpleIPlugin.idl \
 		purpleIPref.idl \
-		purpleIProtocol.idl \
 		purpleIProxy.idl \
 		purpleIRequest.idl \
 		purpleISocket.idl \

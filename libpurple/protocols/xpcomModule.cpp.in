@@ -47,6 +47,10 @@
 #define PURPLE_PROTOCOL_PLUGIN_ENTRY_VALUE "@PROTOCOL@ protocol"
 #define PURPLE_PROTOCOL_PLUGIN_CONTRACTID  "@instantbird.org/prpl-@PROTOCOL@;1"
 
+#define IM_PROTOCOL_PLUGIN_CATEGORY    "im-protocol-plugin"
+#define IM_PROTOCOL_PLUGIN_ENTRY_VALUE "@instantbird.org/purple/protocol;1"
+#define IM_PROTOCOL_PLUGIN_CONTRACTID  "prpl-@PROTOCOL@"
+
 extern "C" {
   gboolean purple_plugin_register_self();
 }
@@ -94,6 +98,9 @@ static const mozilla::Module::CategoryEntry kCategories[] = {
   { PURPLE_PROTOCOL_PLUGIN_CATEGORY,
     PURPLE_PROTOCOL_PLUGIN_CONTRACTID,
     PURPLE_PROTOCOL_PLUGIN_ENTRY_VALUE },
+  { IM_PROTOCOL_PLUGIN_CATEGORY,
+    IM_PROTOCOL_PLUGIN_CONTRACTID,
+    IM_PROTOCOL_PLUGIN_ENTRY_VALUE },
   { NULL }
 };
 

@@ -40,7 +40,6 @@
 #include "prefs.h"
 #include "privacy.h"
 #include "proxy.h"
-#include "savedstatuses.h"
 #include "signals.h"
 #include "smiley.h"
 #include "sslconn.h"
@@ -158,7 +157,6 @@ purple_core_init(const char *ui)
 	purple_connections_init();
 
 	purple_accounts_init();
-	purple_savedstatuses_init();
 	purple_notify_init();
 	purple_conversations_init();
 	purple_blist_init();
@@ -227,7 +225,6 @@ purple_core_quit(void)
 	purple_conversations_uninit();
 	purple_connections_uninit();
 	purple_buddy_icons_uninit();
-	purple_savedstatuses_uninit();
 	purple_status_uninit();
 	purple_accounts_uninit();
 	purple_xfers_uninit();

@@ -57,7 +57,7 @@ extern PRLogModuleInfo *gPurpleInitLog;
  * Used as handle to connect and then mass-disconnect the buddy list signals.
  * The value is 1 when the signals are connected, 0 when they are not.
  */
-static int blist_signals_handle = 0;
+int blist_signals_handle = 0;
 
 static void buddy_signals(PurpleBuddy *aBuddy, const char *aSignal)
 {
@@ -83,18 +83,27 @@ void buddy_availability_changed(PurpleBuddy *aBuddy)
 
 static void buddy_signed_on(PurpleBuddy *aBuddy, const char *aSignal)
 {
+  if (!blist_signals_handle)
+    return;
+
   buddy_availability_changed(aBuddy);
   buddy_signals(aBuddy, "account-buddy-signed-on");
 }
 
 static void buddy_signed_off(PurpleBuddy *aBuddy, const char *aSignal)
 {
+  if (!blist_signals_handle)
+    return;
+
   buddy_availability_changed(aBuddy);
   buddy_signals(aBuddy, "account-buddy-signed-off");
 }
 
 static void buddy_added(PurpleBuddy *aBuddy, void *null)
 {
+  if (!blist_signals_handle)
+    return;
+
   // This is the buddy-added purple signal. It is fired when a buddy
   // is added to the list or to a group.
 
@@ -113,6 +122,9 @@ static void buddy_added(PurpleBuddy *aBuddy, void *null)
 // This is still called even after signals have been removed.
 static void buddy_removed(PurpleBuddy *aBuddy, void *null)
 {
+  if (!blist_signals_handle)
+    return;
+
   // This is the buddy-removed purple signal. It is fired when a buddy
   // is removed permanenty (ie from the server list or if the user
   // request the deletion of a buddy in her list)
@@ -134,21 +146,33 @@ static void buddy_removed(PurpleBuddy *aBuddy, void *null)
 static void buddy_away(PurpleBuddy *aBuddy,
                        PurpleStatus *old_status, PurpleStatus *status)
 {
+  if (!blist_signals_handle)
+    return;
+
   buddy_availability_changed(aBuddy);
 }
 
 static void buddy_idle(PurpleBuddy *aBuddy, gboolean old_idle, gboolean idle)
 {
+  if (!blist_signals_handle)
+    return;
+
   buddy_availability_changed(aBuddy);
 }
 
 static void buddy_icon(PurpleBuddy *aBuddy)
 {
+  if (!blist_signals_handle)
+    return;
+
   buddy_signals(aBuddy, "account-buddy-icon-changed");
 }
 
 static void buddy_alias(PurpleBlistNode *aNode, const char *old_alias)
 {
+  if (!blist_signals_handle)
+    return;
+
   // We are only interested by buddy aliases
   if (!PURPLE_BLIST_NODE_IS_BUDDY(aNode))
     return;

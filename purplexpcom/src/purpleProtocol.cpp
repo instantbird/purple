@@ -37,13 +37,13 @@
 
 #include "purpleProtocol.h"
 #include "purpleAccount.h"
+#include "purpleCoreService.h"
 #include "purplePref.h"
 #include "purpleGListEnumerator.h"
 #include <nsIClassInfoImpl.h>
 #include <nsMemory.h>
 #include <nsCOMPtr.h>
 #include <nsComponentManagerUtils.h>
-#include <nsArrayEnumerator.h>
 #include <nsNetUtil.h>
 #include <nsIChromeRegistry.h>
 #include <nsIProgrammingLanguage.h>
@@ -111,7 +111,7 @@ PURPLE_IMPL_GETSPLITVALUE(PRBool *, Reverse, reverse, *)
 
 /* Implementation file */
 NS_IMPL_CLASSINFO(purpleProtocol, NULL, 0, PURPLE_PROTOCOL_CID)
-NS_IMPL_ISUPPORTS1_CI(purpleProtocol, purpleIProtocol)
+NS_IMPL_ISUPPORTS1_CI(purpleProtocol, prplIProtocol)
 
 purpleProtocol::purpleProtocol()
   :mInfo(nsnull)
@@ -124,11 +124,28 @@ purpleProtocol::purpleProtocol()
   LOG(("Creating protocol @%x", this));
 }
 
-void purpleProtocol::Init(PurplePluginInfo *aInfo)
+/* void init (in AUTF8String aId); */
+NS_IMETHODIMP purpleProtocol::Init(const nsACString& aId)
 {
-  mInfo = aInfo;
+  NS_ENSURE_TRUE(!mInfo, NS_ERROR_ALREADY_INITIALIZED);
+
+  // Ensure libpurple is initialized.
+  nsCOMPtr<purpleICoreService> pcs =
+    do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(pcs, NS_ERROR_FAILURE);
+
+  nsresult rv = pcs->Init();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PurplePlugin *prpl = purple_find_prpl(PromiseFlatCString(aId).get());
+  NS_ENSURE_TRUE(prpl, NS_ERROR_FAILURE);
+
+  mInfo = prpl->info;
+  NS_ENSURE_TRUE(mInfo, NS_ERROR_FAILURE);
   LOG(("Setting mInfo to @%x (%s, %s)",
        mInfo, mInfo->name, mInfo->id));
+
+  return NS_OK;
 }
 
 purpleProtocol::~purpleProtocol()
@@ -300,15 +317,14 @@ NS_IMETHODIMP purpleProtocol::GetUsePurpleProxy(PRBool *aUsePurpleProxy)
   return NS_OK;
 }
 
-/* purpleIAccount getAccount (in AUTF8String aName, in AUTF8String aKey); */
-NS_IMETHODIMP purpleProtocol::GetAccount(const nsACString & aKey,
-                                         const nsACString & aName,
-                                         purpleIAccount **aResult)
+/* prplIAccount getAccount (in imIAccount aImAccount); */
+NS_IMETHODIMP purpleProtocol::GetAccount(imIAccount *aImAccount,
+                                         prplIAccount **aResult)
 {
   purpleAccount *account = new purpleAccount();
   NS_ENSURE_TRUE(account, NS_ERROR_OUT_OF_MEMORY);
 
-  nsresult rv = account->Init(aKey, aName, this);
+  nsresult rv = account->Init(aImAccount, this);
   NS_ENSURE_SUCCESS(rv, rv);
 
   NS_ADDREF(*aResult = account);

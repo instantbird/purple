@@ -58,7 +58,7 @@ public:
   NS_SCRIPTABLE NS_IMETHOD GetNormalizedName(nsACString& aNormalizedName);
 
   // Forward most methods to purpleConversation
-  NS_SCRIPTABLE NS_IMETHOD GetAccount(purpleIAccount * *aAccount) {
+  NS_SCRIPTABLE NS_IMETHOD GetAccount(imIAccount * *aAccount) {
     return purpleConversation::GetAccount(aAccount);
   }
   NS_SCRIPTABLE NS_IMETHOD GetName(nsACString & aName) {
