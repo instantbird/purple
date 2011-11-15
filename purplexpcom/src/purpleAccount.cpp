@@ -729,7 +729,8 @@ NS_IMETHODIMP purpleAccount::SetProxyInfo(purpleIProxyInfo * aProxyInfo)
   nsCString key;
   nsresult rv = mProxy->GetKey(key);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = SetStringPref(PREF_PROXY, key.get());
+  NS_ENSURE_TRUE(mPrefBranch, NS_ERROR_NOT_INITIALIZED);
+  rv = mPrefBranch->SetCharPref(PREF_PROXY, key.get());
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Give it to libpurple;
