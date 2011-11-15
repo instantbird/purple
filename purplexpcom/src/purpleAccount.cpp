@@ -812,7 +812,7 @@ nsresult purpleAccount::Disconnecting(PRInt16 aConnectionErrorReason,
   // called from the libpurple report_disconnect_reason uiop and from
   // the signing-off signal handler.
   PRBool disconnecting;
-  if (NS_SUCCEEDED(mImAccount->GetDisconnected(&disconnecting)) &&
+  if (NS_SUCCEEDED(mImAccount->GetDisconnecting(&disconnecting)) &&
       disconnecting)
     return NS_OK;
 
