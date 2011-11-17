@@ -70,6 +70,9 @@ DEFINES		+= -DPACKAGE=\"$(PROTOCOL)\" -DVERSION=\"$(PURPLE_VERSION)\" -DDISPLAY_
 
 ifneq (,$(filter $(PROTOCOL),$(STATIC_PRPLS)))
 DEFINES += -DPURPLE_STATIC_PRPL
+ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
+DEFINES += -DGLIB_STATIC_COMPILATION
+endif
 endif
 
 GLOBAL_DEPS += $(srcdir)/../prpl.mk $(srcdir)/../prpl-rules.mk
