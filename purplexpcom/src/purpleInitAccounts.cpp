@@ -43,7 +43,7 @@
 #include "purpleAccount.h"
 #include <nsServiceManagerUtils.h>
 #include <nsCOMPtr.h>
-#include <nsIDOMWindowInternal.h>
+#include <nsIDOMWindow.h>
 #include <nsIPromptService.h>
 #include <nsIStringBundle.h>
 #include <nsThreadUtils.h>
@@ -248,7 +248,7 @@ NS_IMETHODIMP purpleAuthorizationRequest::Run()
 
   nsCOMPtr<nsIWindowMediator> wm = do_GetService(NS_WINDOWMEDIATOR_CONTRACTID);
   NS_ENSURE_TRUE(wm, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIDOMWindowInternal> window;
+  nsCOMPtr<nsIDOMWindow> window;
   wm->GetMostRecentWindow(NS_LITERAL_STRING("Messenger:blist").get(),
                           getter_AddRefs(window));
 
