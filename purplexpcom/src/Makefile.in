@@ -38,6 +38,8 @@ DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
+# relativesrcdir is needed for xpcshell_tests.
+relativesrcdir = purple/purplexpcom/src
 
 include $(DEPTH)/config/autoconf.mk
 
