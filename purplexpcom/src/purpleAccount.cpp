@@ -868,6 +868,13 @@ nsresult purpleAccount::Disconnected()
 /* readonly attribute boolean HTMLEnabled; */
 PURPLE_IMPL_GETFLAG(HTMLEnabled, HTML)
 
+/* readonly attribute boolean HTMLEscapePlainText; */
+NS_IMETHODIMP purpleAccount::GetHTMLEscapePlainText(PRBool *aHTMLEscapePlainText)
+{
+  *aHTMLEscapePlainText = PR_TRUE;
+  return NS_OK;
+}
+
 /* readonly attribute boolean noBackgroundColors; */
 PURPLE_IMPL_GETFLAG(NoBackgroundColors, NO_BGCOLOR)
 

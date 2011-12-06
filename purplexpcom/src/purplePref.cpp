@@ -188,3 +188,8 @@ NS_IMETHODIMP purplePref::GetList(nsISimpleEnumerator **_retval)
                                            purpleIKeyValuePair,
                                            PurpleKeyValuePair>);
     NS_ADDREF(*_retval = enumerator))
+
+/* AUTF8String getListDefault (); */
+NS_IMETHODIMP purplePref::GetListDefault(nsACString& _retval)
+  PURPLE_IMPL_PREF_GET_VALUE(typeList,
+    _retval = purple_account_option_get_default_list_value(mOpt))
