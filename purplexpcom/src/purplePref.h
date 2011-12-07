@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "purpleIPref.h"
+#include "prplIPref.h"
 #include <nsIClassInfo.h>
 
 #pragma GCC visibility push(default)
@@ -51,13 +51,13 @@
 #define PURPLE_PREF_CONTRACTID \
   "@instantbird.org/purple/pref;1"
 
-class purplePref : public purpleIPref,
+class purplePref : public prplIPref,
                    public nsIClassInfo
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSICLASSINFO
-  NS_DECL_PURPLEIPREF
+  NS_DECL_PRPLIPREF
 
   purplePref();
   void Init(PurpleAccountOption *aOpt);

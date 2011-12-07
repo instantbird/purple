@@ -38,7 +38,7 @@
 #ifndef PURPLE_TOOLTIP_INFO_H_
 # define PURPLE_TOOLTIP_INFO_H_
 
-#include "purpleITooltipInfo.h"
+#include "prplITooltipInfo.h"
 #include <nsCOMPtr.h>
 #include <nsStringAPI.h>
 #include <nsIClassInfo.h>
@@ -54,13 +54,13 @@
       { 0x8d, 0xf6, 0x08, 0xf8, 0x57, 0x7f, 0xe5, 0x2b }        \
   }
 
-class purpleTooltipInfo : public purpleITooltipInfo,
+class purpleTooltipInfo : public prplITooltipInfo,
                           public nsIClassInfo
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSICLASSINFO
-  NS_DECL_PURPLEITOOLTIPINFO
+  NS_DECL_PRPLITOOLTIPINFO
 
   purpleTooltipInfo();
   void Init(PurpleNotifyUserInfoEntry *aEntry);

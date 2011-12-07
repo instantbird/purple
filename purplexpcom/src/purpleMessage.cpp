@@ -54,7 +54,7 @@ static PRLogModuleInfo *gPurpleMessageLog = nsnull;
 #define LOG(args) PR_LOG(gPurpleMessageLog, PR_LOG_DEBUG, args)
 
 NS_IMPL_CLASSINFO(purpleMessage, NULL, 0, PURPLE_MESSAGE_CID)
-NS_IMPL_ISUPPORTS1_CI(purpleMessage, purpleIMessage)
+NS_IMPL_ISUPPORTS1_CI(purpleMessage, prplIMessage)
 
 PRUint32 purpleMessage::sLastId = 0;
 
@@ -160,8 +160,8 @@ NS_IMETHODIMP purpleMessage::GetIconURL(nsACString& aUserIconURL)
   return NS_OK;
 }
 
-/* readonly attribute purpleIConversation conversation; */
-NS_IMETHODIMP purpleMessage::GetConversation(purpleIConversation * *aConversation)
+/* readonly attribute prplIConversation conversation; */
+NS_IMETHODIMP purpleMessage::GetConversation(prplIConversation * *aConversation)
 {
   NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
 
@@ -228,9 +228,9 @@ PURPLE_IMPL_GETBOOL(Notification, NOTIFY)
 PURPLE_IMPL_GETBOOL(NoLinkification, NO_LINKIFY)
 
 /* void getActions ([optional] out unsigned long actionCount,
-                    [array, retval, size_is (actionCount)] out purpleIMessageAction actions); */
+                    [array, retval, size_is (actionCount)] out prplIMessageAction actions); */
 NS_IMETHODIMP purpleMessage::GetActions(PRUint32 *actionCount,
-                                        purpleIMessageAction ***actions)
+                                        prplIMessageAction ***actions)
 {
   *actionCount = 0;
   *actions = nsnull;

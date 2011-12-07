@@ -48,11 +48,11 @@
 
 #define PURPLE_CONV_IM_CONTRACTID     "@instantbird.org/purple/convim;1"
 
-class purpleConvIM : public purpleIConvIM, public purpleConversation
+class purpleConvIM : public prplIConvIM, public purpleConversation
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_PURPLEICONVIM
+  NS_DECL_PRPLICONVIM
 
   NS_SCRIPTABLE NS_IMETHOD GetIsChat(PRBool *aIsChat);
   NS_SCRIPTABLE NS_IMETHOD GetNormalizedName(nsACString& aNormalizedName);

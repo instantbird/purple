@@ -48,7 +48,7 @@
 
 NS_IMPL_CLASSINFO(purpleConvChatBuddy, NULL, 0, PURPLE_CONV_CHAT_BUDDY_CID)
 NS_IMPL_THREADSAFE_CI(purpleConvChatBuddy)
-NS_IMPL_ISUPPORTS1_CI(purpleConvChatBuddy, purpleIConvChatBuddy)
+NS_IMPL_ISUPPORTS1_CI(purpleConvChatBuddy, prplIConvChatBuddy)
 
 purpleConvChatBuddy::purpleConvChatBuddy()
   : mFlags(PURPLE_CBFLAGS_NONE)

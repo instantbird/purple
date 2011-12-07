@@ -113,9 +113,9 @@ NS_IMETHODIMP purpleCommand::GetPriority(PRInt32 *aPriority)
 }
 
 /* boolean run (in AUTF8String aMessage,
-                [optional] in purpleIConversation aConversation); */
+                [optional] in prplIConversation aConversation); */
 NS_IMETHODIMP purpleCommand::Run(const nsACString & aMessage,
-                                 purpleIConversation *aConversation,
+                                 prplIConversation *aConversation,
                                  PRBool *aResult NS_OUTPARAM)
 {
   // libpurple commands don't work without a conversation.

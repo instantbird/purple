@@ -288,7 +288,7 @@ NS_IMETHODIMP purpleAccountBuddy::GetTooltipInfo(nsISimpleEnumerator** aTooltipI
     purpleGListEnumerator *enumerator = new purpleGListEnumerator();
     enumerator->Init(purple_notify_user_info_get_entries(user_info),
                      purpleTypeToInterface<purpleTooltipInfo,
-                                           purpleITooltipInfo,
+                                           prplITooltipInfo,
                                            PurpleNotifyUserInfoEntry>,
                      CleanUserInfo, user_info);
     NS_ADDREF(*aTooltipInfo = enumerator);
@@ -336,8 +336,8 @@ nsresult purpleAccountBuddy::NotifyObservers(const char* aSignal,
   return mBuddy->Observe(this, aSignal, aData);
 }
 
-/* purpleIConversation createConversation (); */
-NS_IMETHODIMP purpleAccountBuddy::CreateConversation(purpleIConversation **aResult)
+/* prplIConversation createConversation (); */
+NS_IMETHODIMP purpleAccountBuddy::CreateConversation(prplIConversation **aResult)
 {
   NS_ENSURE_TRUE(mAccount && mPurpleBuddy, NS_ERROR_NOT_INITIALIZED);
 

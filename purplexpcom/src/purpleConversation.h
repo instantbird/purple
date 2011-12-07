@@ -38,7 +38,7 @@
 #ifndef PURPLE_CONVERSATION_H_
 #define PURPLE_CONVERSATION_H_
 
-#include "purpleIConversation.h"
+#include "prplIConversation.h"
 #include "nsCOMArray.h"
 
 #pragma GCC visibility push(default)
@@ -47,10 +47,10 @@
 
 class purpleAccount;
 
-class purpleConversation : public purpleIConversation
+class purpleConversation : public prplIConversation
 {
 public:
-  NS_DECL_PURPLEICONVERSATION
+  NS_DECL_PRPLICONVERSATION
   purpleConversation();
 
   void SetConv(PurpleConversation *aConv);

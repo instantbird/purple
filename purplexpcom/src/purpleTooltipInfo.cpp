@@ -48,7 +48,7 @@
 
 NS_IMPL_CLASSINFO(purpleTooltipInfo, NULL, 0, PURPLE_TOOLTIP_INFO_CID)
 NS_IMPL_THREADSAFE_CI(purpleTooltipInfo)
-NS_IMPL_ISUPPORTS1_CI(purpleTooltipInfo, purpleITooltipInfo)
+NS_IMPL_ISUPPORTS1_CI(purpleTooltipInfo, prplITooltipInfo)
 
 purpleTooltipInfo::purpleTooltipInfo()
 {

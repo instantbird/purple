@@ -38,18 +38,18 @@
 #ifndef PURPLE_CONV_CHAT_BUDDY_H_
 # define PURPLE_CONV_CHAT_BUDDY_H_
 
-#include "purpleIConversation.h"
+#include "prplIConversation.h"
 #include "purpleAccountBuddy.h"
 #include <nsStringAPI.h>
 #include <nsIClassInfo.h>
 
-class purpleConvChatBuddy : public purpleIConvChatBuddy,
+class purpleConvChatBuddy : public prplIConvChatBuddy,
                             public nsIClassInfo
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSICLASSINFO
-  NS_DECL_PURPLEICONVCHATBUDDY
+  NS_DECL_PRPLICONVCHATBUDDY
 
   purpleConvChatBuddy();
   void Init(PurpleConvChatBuddy *aBuddy);

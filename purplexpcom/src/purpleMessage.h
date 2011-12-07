@@ -38,7 +38,7 @@
 #ifndef PURPLE_MESSAGE_H_
 #define PURPLE_MESSAGE_H_
 
-#include "purpleIMessage.h"
+#include "prplIMessage.h"
 #pragma GCC visibility push(default)
 #include <libpurple/conversation.h>
 #pragma GCC visibility pop
@@ -53,11 +53,11 @@
 #define PURPLE_MESSAGE_CONTRACTID \
   "@instantbird.org/purple/message;1"
 
-class purpleMessage : public purpleIMessage
+class purpleMessage : public prplIMessage
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_PURPLEIMESSAGE
+  NS_DECL_PRPLIMESSAGE
 
   purpleMessage();
   nsresult Init(PurpleConversation *conv, const char *who, const char *alias,

@@ -560,7 +560,7 @@ static void *notify_userinfo(PurpleConnection *gc, const char *who,
   nsCOMPtr<purpleGListEnumerator> enumerator = new purpleGListEnumerator();
   enumerator->Init(purple_notify_user_info_get_entries(user_info),
                    purpleTypeToInterface<purpleTooltipInfo,
-                                         purpleITooltipInfo,
+                                         prplITooltipInfo,
                                          PurpleNotifyUserInfoEntry>);
 
   nsString wWho;

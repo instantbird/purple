@@ -46,13 +46,9 @@ XPIDL_MODULE	= purplexpcom
 
 XPIDLSRCS	= \
 		purpleICoreService.idl \
-		purpleIMessage.idl \
 		purpleIPlugin.idl \
-		purpleIPref.idl \
 		purpleIProxy.idl \
-		purpleIRequest.idl \
 		purpleISocket.idl \
-		purpleITooltipInfo.idl \
 		$(NULL)
 
 ifeq ($(OS_ARCH),Darwin)

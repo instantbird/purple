@@ -40,7 +40,7 @@
 
 #include "purpleProxyInfo.h"
 #include "prplIProtocol.h"
-#include "purpleIPref.h"
+#include "prplIPref.h"
 #pragma GCC visibility push(default)
 #include <libpurple/account.h>
 #pragma GCC visibility pop

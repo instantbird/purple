@@ -131,7 +131,7 @@ static void conv_add_chat_users(PurpleConversation *conv,
                                 GList *cbuddies,
                                 gboolean new_arrivals)
 {
-  nsCOMArray<purpleIConvChatBuddy> cBuddiesArray;
+  nsCOMArray<prplIConvChatBuddy> cBuddiesArray;
 
   while (cbuddies) {
     purpleConvChatBuddy *buddy = new purpleConvChatBuddy();
@@ -168,7 +168,7 @@ static void conv_update_chat_usr(PurpleConversation *conv, const char *user,
 
   purpleConvChatBuddy *buddy = new purpleConvChatBuddy();
   buddy->Init(prplBuddy);
-  notify_conv(conv, static_cast<purpleIConvChatBuddy *>(buddy),
+  notify_conv(conv, static_cast<prplIConvChatBuddy *>(buddy),
               "chat-buddy-update", aData);
 }
 

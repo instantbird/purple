@@ -53,19 +53,19 @@ extern PRLogModuleInfo *gPurpleConvLog;
 #endif
 #define LOG(args) PR_LOG(gPurpleConvLog, PR_LOG_DEBUG, args)
 
-//NS_IMPL_ISUPPORTS2_CI(purpleConvChat, purpleIConversation, purpleIConvChat)
+//NS_IMPL_ISUPPORTS2_CI(purpleConvChat, prplIConversation, prplIConvChat)
 NS_IMPL_CLASSINFO(purpleConvChat, NULL, 0, PURPLE_CONV_CHAT_CID)
 NS_INTERFACE_MAP_BEGIN(purpleConvChat)
-  NS_INTERFACE_MAP_ENTRY(purpleIConvChat)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(purpleIConversation, purpleConversation)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, purpleIConvChat)
+  NS_INTERFACE_MAP_ENTRY(prplIConvChat)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(prplIConversation, purpleConversation)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, prplIConvChat)
   NS_IMPL_QUERY_CLASSINFO(purpleConvChat)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(purpleConvChat)
 NS_IMPL_RELEASE(purpleConvChat)
 
-NS_IMPL_CI_INTERFACE_GETTER2(purpleConvChat, purpleIConversation, purpleIConvChat)
+NS_IMPL_CI_INTERFACE_GETTER2(purpleConvChat, prplIConversation, prplIConvChat)
 
 purpleConvChat::purpleConvChat()
 {
@@ -122,7 +122,7 @@ NS_IMETHODIMP purpleConvChat::GetParticipants(nsISimpleEnumerator **_retval NS_O
   purpleGListEnumerator *enumerator = new purpleGListEnumerator();
   enumerator->Init(purple_conv_chat_get_users(chat),
                    purpleTypeToInterface<purpleConvChatBuddy,
-                                         purpleIConvChatBuddy,
+                                         prplIConvChatBuddy,
                                          PurpleConvChatBuddy>);
   NS_ADDREF(*_retval = enumerator);
   return NS_OK;
