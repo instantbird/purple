@@ -1,0 +1,72 @@
+purple.jar:
+% skin prpl-aim classic/1.0 %skin/classic/prpl/aim/
+	skin/classic/prpl/aim/icon32.png	(icons/prpl-aim-32.png)
+	skin/classic/prpl/aim/icon48.png	(icons/prpl-aim-48.png)
+	skin/classic/prpl/aim/icon.png		(icons/prpl-aim.png)
+% skin prpl-gg classic/1.0 %skin/classic/prpl/gg/
+	skin/classic/prpl/gg/icon32.png		(icons/prpl-gg-32.png)
+	skin/classic/prpl/gg/icon48.png		(icons/prpl-gg-48.png)
+	skin/classic/prpl/gg/icon.png		(icons/prpl-gg.png)
+% skin prpl-icq classic/1.0 %skin/classic/prpl/icq/
+	skin/classic/prpl/icq/icon32.png	(icons/prpl-icq-32.png)
+	skin/classic/prpl/icq/icon48.png	(icons/prpl-icq-48.png)
+	skin/classic/prpl/icq/icon.png		(icons/prpl-icq.png)
+% skin prpl-irc classic/1.0 %skin/classic/prpl/irc/
+	skin/classic/prpl/irc/icon32.png	(icons/prpl-irc-32.png)
+	skin/classic/prpl/irc/icon48.png	(icons/prpl-irc-48.png)
+	skin/classic/prpl/irc/icon.png		(icons/prpl-irc.png)
+% skin prpl-jabber classic/1.0 %skin/classic/prpl/jabber/
+	skin/classic/prpl/jabber/icon32.png	(icons/prpl-jabber-32.png)
+	skin/classic/prpl/jabber/icon48.png	(icons/prpl-jabber-48.png)
+	skin/classic/prpl/jabber/icon.png	(icons/prpl-jabber.png)
+% skin prpl-msn classic/1.0 %skin/classic/prpl/msn/
+	skin/classic/prpl/msn/icon32.png	(icons/prpl-msn-32.png)
+	skin/classic/prpl/msn/icon48.png	(icons/prpl-msn-48.png)
+	skin/classic/prpl/msn/icon.png		(icons/prpl-msn.png)
+% skin prpl-myspace classic/1.0 %skin/classic/prpl/myspace/
+	skin/classic/prpl/myspace/icon32.png	(icons/prpl-myspace-32.png)
+	skin/classic/prpl/myspace/icon48.png	(icons/prpl-myspace-48.png)
+	skin/classic/prpl/myspace/icon.png	(icons/prpl-myspace.png)
+% skin prpl-novell classic/1.0 %skin/classic/prpl/novell/
+	skin/classic/prpl/novell/icon32.png	(icons/prpl-novell-32.png)
+	skin/classic/prpl/novell/icon48.png	(icons/prpl-novell-48.png)
+	skin/classic/prpl/novell/icon.png	(icons/prpl-novell.png)
+% skin prpl-qq classic/1.0 %skin/classic/prpl/qq/
+	skin/classic/prpl/qq/icon32.png		(icons/prpl-qq-32.png)
+	skin/classic/prpl/qq/icon48.png		(icons/prpl-qq-48.png)
+	skin/classic/prpl/qq/icon.png		(icons/prpl-qq.png)
+% skin prpl-meanwhile classic/1.0 %skin/classic/prpl/meanwhile/
+	skin/classic/prpl/meanwhile/icon32.png	(icons/prpl-meanwhile-32.png)
+	skin/classic/prpl/meanwhile/icon48.png	(icons/prpl-meanwhile-48.png)
+	skin/classic/prpl/meanwhile/icon.png	(icons/prpl-meanwhile.png)
+% skin prpl-simple classic/1.0 %skin/classic/prpl/simple/
+	skin/classic/prpl/simple/icon32.png	(icons/prpl-simple-32.png)
+	skin/classic/prpl/simple/icon48.png	(icons/prpl-simple-48.png)
+	skin/classic/prpl/simple/icon.png	(icons/prpl-simple.png)
+% skin prpl-yahoo classic/1.0 %skin/classic/prpl/yahoo/
+% skin prpl-yahoojp classic/1.0 %skin/classic/prpl/yahoo/
+	skin/classic/prpl/yahoo/icon32.png	(icons/prpl-yahoo-32.png)
+	skin/classic/prpl/yahoo/icon48.png	(icons/prpl-yahoo-48.png)
+	skin/classic/prpl/yahoo/icon.png	(icons/prpl-yahoo.png)
+% skin prpl-bilboed-netsoul classic/1.0 %skin/classic/prpl/bilboed-netsoul/
+	skin/classic/prpl/bilboed-netsoul/icon32.png	(icons/prpl-bilboed-netsoul-32.png)
+	skin/classic/prpl/bilboed-netsoul/icon48.png	(icons/prpl-bilboed-netsoul-48.png)
+	skin/classic/prpl/bilboed-netsoul/icon.png	(icons/prpl-bilboed-netsoul.png)
+#if 0
+% skin prpl-bonjour classic/1.0 %skin/classic/prpl/bonjour/
+	skin/classic/prpl/bonjour/icon32.png	(icons/prpl-bonjour-32.png)
+	skin/classic/prpl/bonjour/icon48.png	(icons/prpl-bonjour-48.png)
+	skin/classic/prpl/bonjour/icon.png	(icons/prpl-bonjour.png)
+% skin prpl-silc classic/1.0 %skin/classic/prpl/silc/
+	skin/classic/prpl/silc/icon32.png	(icons/prpl-silc-32.png)
+	skin/classic/prpl/silc/icon48.png	(icons/prpl-silc-48.png)
+	skin/classic/prpl/silc/icon.png		(icons/prpl-silc.png)
+% skin prpl-zephyr classic/1.0 %skin/classic/prpl/zephyr/
+	skin/classic/prpl/zephyr/icon32.png	(icons/prpl-zephyr-32.png)
+	skin/classic/prpl/zephyr/icon48.png	(icons/prpl-zephyr-48.png)
+	skin/classic/prpl/zephyr/icon.png	(icons/prpl-zephyr.png)
+#endif
+#ifdef DEBUG
+chat.jar:
+% skin prpl-null classic/1.0 %skin/classic/chat/prpl-generic/
+#endif

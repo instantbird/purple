@@ -204,7 +204,7 @@ NS_IMETHODIMP purpleProtocol::GetIconBaseURI(nsACString& aIconBaseURI)
     aIconBaseURI = spec;
   else {
     // this prpl doesn't provide icons, use the generic ones
-    aIconBaseURI = "chrome://instantbird/skin/prpl-generic/";
+    aIconBaseURI = "chrome://chat/skin/prpl-generic/";
   }
 
   return NS_OK;
