@@ -206,9 +206,6 @@ PURPLE_IMPL_GETBOOL(ContainsNick, NICK)
 /* readonly attribute boolean noLog; */
 PURPLE_IMPL_GETBOOL(NoLog, NO_LOG)
 
-/* readonly attribute boolean whispered; */
-PURPLE_IMPL_GETBOOL(Whispered, WHISPER)
-
 /* readonly attribute boolean error; */
 PURPLE_IMPL_GETBOOL(Error, ERROR)
 
