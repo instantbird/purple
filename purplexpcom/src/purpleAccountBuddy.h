@@ -63,7 +63,6 @@ public:
   NS_DECL_IMISTATUSINFO
 
   purpleAccountBuddy(PurpleBuddy *aPurpleBuddy, imIBuddy *aBuddy = nsnull);
-  void UnInit();
   static inline purpleAccountBuddy *fromPurpleBuddy(PurpleBuddy *aBuddy) {
     return static_cast<purpleAccountBuddy *>(GET_NODE_UI_DATA(aBuddy));
   }

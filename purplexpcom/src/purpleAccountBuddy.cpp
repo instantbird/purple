@@ -90,12 +90,16 @@ purpleAccountBuddy::~purpleAccountBuddy()
   mBuddy = NULL;
 }
 
-void purpleAccountBuddy::UnInit()
+/* void unInit (); */
+NS_IMETHODIMP purpleAccountBuddy::UnInit()
 {
   if (mPurpleBuddy) {
     purple_blist_node_set_ui_data(PURPLE_BLIST_NODE(mPurpleBuddy), nsnull);
     mPurpleBuddy = NULL;
   }
+  mAccount = nsnull;
+  mBuddy = nsnull;
+  return NS_OK;
 }
 
 /* attribute imIBuddy buddy; */
