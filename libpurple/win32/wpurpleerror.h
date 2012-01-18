@@ -25,9 +25,39 @@
 #ifndef _WPURPLEERROR_H
 #define _WPURPLEERROR_H
 
+#if defined(_MSC_VER) && _MSC_VER >= 1600
+/* libpurple expects errno to contain winsocks error codes rather than
+   the real errno values (which are defined in MSVC10). */
+
+#undef ENETDOWN
+#undef EAFNOSUPPORT
+#undef EINPROGRESS
+#undef ENOBUFS
+#undef EPROTONOSUPPORT
+#undef EPROTOTYPE
+#undef ESOCKTNOSUPPORT
+
+#undef EADDRINUSE
+#undef EALREADY
+#undef EADDRNOTAVAIL
+#undef ECONNREFUSED
+#undef EISCONN
+#undef ENETUNREACH
+#undef ENOTSOCK
+#undef ETIMEDOUT
+#undef EWOULDBLOCK
+
+#undef ENOTCONN
+#undef ENETRESET
+#undef EOPNOTSUPP
+#undef EMSGSIZE
+#undef ECONNABORTED
+#undef ECONNRESET
+#undef EHOSTUNREACH
+#endif
+
 /* Here we define unix socket errors as windows socket errors */
 
-#if !defined(_MSC_VER) || _MSC_VER < 1600
 #define ENETDOWN WSAENETDOWN
 #define EAFNOSUPPORT WSAEAFNOSUPPORT
 #define EINPROGRESS WSAEINPROGRESS
@@ -49,11 +79,10 @@
 #define ENOTCONN WSAENOTCONN
 #define ENETRESET WSAENETRESET
 #define EOPNOTSUPP WSAEOPNOTSUPP
+#define ESHUTDOWN WSAESHUTDOWN
 #define EMSGSIZE WSAEMSGSIZE
 #define ECONNABORTED WSAECONNABORTED
 #define ECONNRESET WSAECONNRESET
 #define EHOSTUNREACH WSAEHOSTUNREACH
-#endif
-#define ESHUTDOWN WSAESHUTDOWN
 
 #endif /* end _WPURPLEERROR_H */
