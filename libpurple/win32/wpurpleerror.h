@@ -29,6 +29,11 @@
 /* libpurple expects errno to contain winsocks error codes rather than
    the real errno values (which are defined in MSVC10). */
 
+/* Include the Microsoft errno.h before undefining the error codes, so
+   that it doesn't do anything if it is included later (avoid macro
+   redefinition warnings). */
+#include <errno.h>
+
 #undef ENETDOWN
 #undef EAFNOSUPPORT
 #undef EINPROGRESS
