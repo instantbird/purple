@@ -122,25 +122,28 @@ static void buddy_added(PurpleBuddy *aBuddy, void *null)
 // This is still called even after signals have been removed.
 static void buddy_removed(PurpleBuddy *aBuddy, void *null)
 {
-  if (!blist_signals_handle)
-    return;
-
   // This is the buddy-removed purple signal. It is fired when a buddy
   // is removed permanenty (ie from the server list or if the user
-  // request the deletion of a buddy in her list)
+  // request the deletion of a buddy in her list).
+  // It is also fired during shutdown when we uninitialize the
+  // accounts; in this case, even though the buddy isn't really
+  // removed, we still want to uninitialize its purpleAccountBuddy
+  // instance.
 
   purpleAccountBuddy *accountBuddy =
     purpleAccountBuddy::fromPurpleBuddy(aBuddy);
-  NS_ENSURE_TRUE(accountBuddy, );
 
   if (blist_signals_handle) {
+    NS_ENSURE_TRUE(accountBuddy, );
+
     nsCOMPtr<imIContactsService> contacts =
       do_GetService("@instantbird.org/purple/contacts-service;1");
     if (contacts)
       contacts->AccountBuddyRemoved(accountBuddy);
   }
 
-  accountBuddy->UnInit();
+  if (accountBuddy)
+    accountBuddy->UnInit();
 }
 
 static void buddy_away(PurpleBuddy *aBuddy,
