@@ -111,7 +111,7 @@ static void buddy_added(PurpleBuddy *aBuddy, void *null)
   // ui_data already set in this case?
 
   nsCOMPtr<imIContactsService> contacts =
-    do_GetService("@instantbird.org/purple/contacts-service;1");
+    do_GetService("@mozilla.org/chat/contacts-service;1");
   NS_ENSURE_TRUE(contacts, );
 
   nsCOMPtr<imIAccountBuddy> accountBuddy =
@@ -137,7 +137,7 @@ static void buddy_removed(PurpleBuddy *aBuddy, void *null)
     NS_ENSURE_TRUE(accountBuddy, );
 
     nsCOMPtr<imIContactsService> contacts =
-      do_GetService("@instantbird.org/purple/contacts-service;1");
+      do_GetService("@mozilla.org/chat/contacts-service;1");
     if (contacts)
       contacts->AccountBuddyRemoved(accountBuddy);
   }

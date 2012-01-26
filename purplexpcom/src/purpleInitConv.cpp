@@ -83,7 +83,7 @@ static void create_conv(PurpleConversation *aConv)
   conv->SetConv(aConv);
 
   nsCOMPtr<imIConversationsService> convs =
-    do_GetService("@instantbird.org/purple/conversations-service;1");
+    do_GetService("@mozilla.org/chat/conversations-service;1");
   NS_ENSURE_TRUE(convs, );
   convs->AddConversation(conv);
 }
@@ -98,7 +98,7 @@ static void destroy_conv(PurpleConversation *aConv)
   NS_ENSURE_TRUE(conversation,);
 
   nsCOMPtr<imIConversationsService> convs =
-    do_GetService("@instantbird.org/purple/conversations-service;1");
+    do_GetService("@mozilla.org/chat/conversations-service;1");
   NS_ENSURE_TRUE(convs, );
   convs->RemoveConversation(conversation);
 }

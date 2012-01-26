@@ -158,7 +158,7 @@ NS_IMETHODIMP purpleAccountBuddy::GetTag(imITag * *aTag)
   if (!tag) {
     // The group is new, create a tag for it, and set ui_data on the group node
     nsCOMPtr<imITagsService> its =
-      do_GetService("@instantbird.org/purple/tags-service;1");
+      do_GetService("@mozilla.org/chat/tags-service;1");
     NS_ENSURE_TRUE(its, NS_ERROR_UNEXPECTED);
 
     nsCString groupName(purple_group_get_name(group));
@@ -188,7 +188,7 @@ NS_IMETHODIMP purpleAccountBuddy::SetTag(imITag * aTag)
   purple_blist_add_contact(contact, group, NULL);
 
   nsCOMPtr<imIContactsService> contacts =
-    do_GetService("@instantbird.org/purple/contacts-service;1");
+    do_GetService("@mozilla.org/chat/contacts-service;1");
   NS_ENSURE_TRUE(contacts, NS_ERROR_UNEXPECTED);
 
   return contacts->AccountBuddyMoved(this, oldTag, aTag);
