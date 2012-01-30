@@ -67,10 +67,6 @@
 #include <nsAppDirectoryServiceDefs.h>
 #include <nsDirectoryServiceUtils.h>
 
-#ifdef MOZ_CRASHREPORTER
-#include <nsICrashReporter.h>
-#endif
-
 #ifdef PR_LOGGING
 #include <prprf.h>
 //
