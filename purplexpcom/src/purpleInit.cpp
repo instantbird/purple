@@ -45,7 +45,6 @@
 #include "purpleAccountBuddy.h"
 #include "purpleCoreService.h"
 #include "purpleGetText.h"
-#include "purpleGListEnumerator.h"
 #include "purpleTimer.h"
 #include "purpleTooltipInfo.h"
 #include "purpleSockets.h"
@@ -557,11 +556,25 @@ static void *notify_userinfo(PurpleConnection *gc, const char *who,
 {
   LOG(("purpleInit::notify_userinfo, who = %s", who));
 
-  nsCOMPtr<purpleGListEnumerator> enumerator = new purpleGListEnumerator();
-  enumerator->Init(purple_notify_user_info_get_entries(user_info),
-                   purpleTypeToInterface<purpleTooltipInfo,
-                                         prplITooltipInfo,
-                                         PurpleNotifyUserInfoEntry>);
+  nsCOMPtr<nsIMutableArray> array = do_CreateInstance(NS_ARRAY_CONTRACTID);
+  NS_ENSURE_TRUE(array, NULL);
+
+  GList *list = purple_notify_user_info_get_entries(user_info);
+  while (list) {
+    purpleTooltipInfo *entry = new purpleTooltipInfo();
+    NS_ENSURE_TRUE(entry, NULL);
+
+    entry->Init((PurpleNotifyUserInfoEntry *)list->data);
+    nsresult rv = array->AppendElement(static_cast<prplITooltipInfo *>(entry),
+                                       PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, NULL);
+
+    list = g_list_next(list);
+  }
+
+  nsCOMPtr<nsISimpleEnumerator> enumerator;
+  nsresult rv = array->Enumerate(getter_AddRefs(enumerator));
+  NS_ENSURE_SUCCESS(rv, NULL);
 
   nsString wWho;
   CopyUTF8toUTF16(nsDependentCString(who), wWho);
