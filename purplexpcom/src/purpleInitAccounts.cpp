@@ -41,9 +41,11 @@
 #pragma GCC visibility pop
 
 #include "purpleAccount.h"
+#include "prplIRequest.h"
 #include <nsServiceManagerUtils.h>
 #include <nsCOMPtr.h>
 #include <nsIDOMWindow.h>
+#include <nsIObserverService.h>
 #include <nsIPromptService.h>
 #include <nsIStringBundle.h>
 #include <nsThreadUtils.h>
@@ -171,108 +173,90 @@ static void connect_to_accounts_signals()
 
 
 /*** Account uiops ***/
-class purpleAuthorizationRequest : public nsIRunnable
+class purpleAuthorizationRequest : public prplIBuddyRequest
 {
   public:
     NS_DECL_ISUPPORTS
-    NS_DECL_NSIRUNNABLE
+    NS_DECL_PRPLIBUDDYREQUEST
 
-    purpleAuthorizationRequest(const char *remote_user,
+    purpleAuthorizationRequest(purpleAccount *aAccount,
+                               const char *remote_user,
                                PurpleAccountRequestAuthorizationCb authorize_cb,
                                PurpleAccountRequestAuthorizationCb deny_cb,
                                void *user_data);
-    void Cancel() {
-      mAuthorizeCb = NULL;
-      mDenyCb = NULL;
-      mUserData = NULL;
-    }
+    void Cancel();
+
 
   private:
+    nsCOMPtr<purpleAccount> mAccount;
+    nsCString mRemoteUser;
     PurpleAccountRequestAuthorizationCb mAuthorizeCb, mDenyCb;
-    nsString mRemoteUser;
     void *mUserData;
 };
 
-NS_IMPL_ISUPPORTS1(purpleAuthorizationRequest, nsIRunnable)
+NS_IMPL_ISUPPORTS1(purpleAuthorizationRequest, prplIBuddyRequest)
 
-purpleAuthorizationRequest::purpleAuthorizationRequest(const char *remote_user,
+purpleAuthorizationRequest::purpleAuthorizationRequest(purpleAccount *aAccount,
+                                                       const char *aRemoteUser,
                                                        PurpleAccountRequestAuthorizationCb authorize_cb,
                                                        PurpleAccountRequestAuthorizationCb deny_cb,
                                                        void *user_data)
-  : mAuthorizeCb(authorize_cb), mDenyCb(deny_cb), mUserData(user_data)
+  : mAccount(aAccount),
+    mRemoteUser(aRemoteUser),
+    mAuthorizeCb(authorize_cb),
+    mDenyCb(deny_cb),
+    mUserData(user_data)
 {
-  nsCString cRemoteUser(remote_user);
-  NS_CStringToUTF16(cRemoteUser, NS_CSTRING_ENCODING_UTF8, mRemoteUser);
-
-  NS_DispatchToMainThread(this);
+  nsCOMPtr<nsIObserverService> os =
+    do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+  if (NS_LIKELY(os))
+    os->NotifyObservers(this, "buddy-authorization-request", nsnull);
 }
 
-NS_IMETHODIMP purpleAuthorizationRequest::Run()
+void purpleAuthorizationRequest::Cancel()
 {
-  if (!mAuthorizeCb && !mDenyCb)
-    return NS_OK;
+  mAuthorizeCb = NULL;
+  mDenyCb = NULL;
+  mUserData = NULL;
 
-  nsresult rv;
-  nsCOMPtr<nsIPromptService> promptService =
-    do_GetService("@mozilla.org/embedcomp/prompt-service;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIObserverService> os =
+    do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+  if (NS_LIKELY(os))
+    os->NotifyObservers(this, "buddy-authorization-request-canceled", nsnull);
+}
 
-  nsCOMPtr<nsIStringBundleService> bundleService =
-    do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+/* readonly attribute imIAccount account; */
+NS_IMETHODIMP purpleAuthorizationRequest::GetAccount(imIAccount * *aAccount)
+{
+  NS_ENSURE_TRUE(mAccount, NS_ERROR_NOT_INITIALIZED);
 
-  nsCOMPtr<nsIStringBundle> stringBundle;
-  rv = bundleService->CreateBundle("chrome://instantbird/locale/accounts.properties",
-                                   getter_AddRefs(stringBundle));
-  NS_ENSURE_SUCCESS(rv, rv);
+  return mAccount->GetImAccount(aAccount);
+}
 
-  nsString title;
-  rv = stringBundle->GetStringFromName(NS_LITERAL_STRING("requestAuthorizeTitle").get(),
-                                       getter_Copies(title));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsString allow;
-  rv = stringBundle->GetStringFromName(NS_LITERAL_STRING("requestAuthorizeAllow").get(),
-                                       getter_Copies(allow));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsString deny;
-  rv = stringBundle->GetStringFromName(NS_LITERAL_STRING("requestAuthorizeDeny").get(),
-                                       getter_Copies(deny));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  const PRUnichar *whoFlat = mRemoteUser.get();
-  nsString msg;
-  rv = stringBundle->FormatStringFromName(NS_LITERAL_STRING("requestAuthorizeText").get(),
-                                          &whoFlat, 1, getter_Copies(msg));
-
-  nsCOMPtr<nsIWindowMediator> wm = do_GetService(NS_WINDOWMEDIATOR_CONTRACTID);
-  NS_ENSURE_TRUE(wm, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIDOMWindow> window;
-  wm->GetMostRecentWindow(NS_LITERAL_STRING("Messenger:blist").get(),
-                          getter_AddRefs(window));
-
-  PRInt32 result;
-  PRUint32 flags = (nsIPromptService::BUTTON_POS_0 +
-                    nsIPromptService::BUTTON_POS_1) *
-                   nsIPromptService::BUTTON_TITLE_IS_STRING;
-  promptService->ConfirmEx(window, title.get(), msg.get(), flags, allow.get(),
-                           deny.get(), nsnull, nsnull, nsnull, &result);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (result) {
-    // Index 1 means "deny"
-    if (mDenyCb)
-      mDenyCb(mUserData);
-  }
-  else {
-    if (mAuthorizeCb)
-      mAuthorizeCb(mUserData);
-    //FIXME Prompt to add to blist
-  }
-
+/* readonly attribute AUTF8String userName; */
+NS_IMETHODIMP purpleAuthorizationRequest::GetUserName(nsACString & aUserName)
+{
+  aUserName = mRemoteUser;
   return NS_OK;
 }
+
+/* void grant (); */
+NS_IMETHODIMP purpleAuthorizationRequest::Grant()
+{
+  if (mAuthorizeCb)
+    mAuthorizeCb(mUserData);
+  //TODO Prompt to add to blist
+  return NS_OK;
+}
+
+/* void deny (); */
+NS_IMETHODIMP purpleAuthorizationRequest::Deny()
+{
+  if (mDenyCb)
+    mDenyCb(mUserData);
+  return NS_OK;
+}
+
 
 static void *request_authorize(PurpleAccount *account, const char *remote_user,
                                const char *id, const char *alias,
@@ -281,7 +265,11 @@ static void *request_authorize(PurpleAccount *account, const char *remote_user,
                                PurpleAccountRequestAuthorizationCb deny_cb,
                                void *user_data)
 {
-  return new purpleAuthorizationRequest(remote_user, authorize_cb, deny_cb, user_data);
+  purpleAccount *pAccount = purpleAccount::fromPurpleAccount(account);
+  if (NS_UNLIKELY(!pAccount))
+    return NULL;
+  return new purpleAuthorizationRequest(pAccount, remote_user, authorize_cb,
+                                        deny_cb, user_data);
 }
 
 static void close_account_request(void *ui_handle)
