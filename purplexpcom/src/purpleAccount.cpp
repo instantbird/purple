@@ -744,23 +744,24 @@ NS_IMETHODIMP purpleAccount::SetProxyInfo(purpleIProxyInfo * aProxyInfo)
   return NS_OK;
 }
 
-#define PURPLE_IMPL_SET(prettyType, purpleType, PRType)       \
+#define PURPLE_IMPL_SET(prettyType, purpleType, PRType, val)            \
   NS_IMETHODIMP purpleAccount::Set##prettyType(const char *aName,       \
                                                PRType aVal)             \
   {                                                                     \
     PURPLE_ENSURE_INIT(mAccount);                                       \
                                                                         \
     /* Give that pref to libpurple */                                   \
-    purple_account_set_##purpleType(mAccount, aName, aVal);             \
+    purple_account_set_##purpleType(mAccount, aName, val);              \
     return NS_OK;                                                       \
   }
 
 /* void setBool (in string aName, in boolean aVal); */
-PURPLE_IMPL_SET(Bool, bool, PRBool)
+PURPLE_IMPL_SET(Bool, bool, PRBool, aVal)
 /* void setInt (in string aName, in long aVal); */
-PURPLE_IMPL_SET(Int, int, PRInt32)
-/* void setString (in string aName, in string aVal); */
-PURPLE_IMPL_SET(String, string, const char *)
+PURPLE_IMPL_SET(Int, int, PRInt32, aVal)
+/* void setString (in string aName, in AUTF8String aVal); */
+PURPLE_IMPL_SET(String, string, const nsACString &,
+                PromiseFlatCString(aVal).get())
 
 #define PURPLE_IMPL_SETPREF(prettyType, prefType, PRType)               \
   nsresult purpleAccount::Set##prettyType##Pref(const char *aName,      \
