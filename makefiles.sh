@@ -40,7 +40,6 @@ purple/locales/Makefile
 purple/libraries/xml2/Makefile
 purple/libraries/glib/Makefile
 purple/libpurple/Makefile
-purple/libpurple/protocols/irc/Makefile
 purple/libpurple/protocols/simple/Makefile
 purple/libpurple/protocols/qq/Makefile
 purple/libpurple/protocols/msn/Makefile

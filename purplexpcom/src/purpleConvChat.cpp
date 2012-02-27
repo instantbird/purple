@@ -93,7 +93,6 @@ NS_IMETHODIMP purpleConvChat::GetNormalizedName(nsACString& aNormalizedName)
 
   aNormalizedName = purple_normalize(purple_conversation_get_account(mConv),
                                      purple_conversation_get_name(mConv));
-  aNormalizedName.Append(".chat");
   return NS_OK;
 }
 

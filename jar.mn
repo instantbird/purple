@@ -11,10 +11,6 @@ purple.jar:
 	skin/classic/prpl/icq/icon32.png	(icons/prpl-icq-32.png)
 	skin/classic/prpl/icq/icon48.png	(icons/prpl-icq-48.png)
 	skin/classic/prpl/icq/icon.png		(icons/prpl-icq.png)
-% skin prpl-irc classic/1.0 %skin/classic/prpl/irc/
-	skin/classic/prpl/irc/icon32.png	(icons/prpl-irc-32.png)
-	skin/classic/prpl/irc/icon48.png	(icons/prpl-irc-48.png)
-	skin/classic/prpl/irc/icon.png		(icons/prpl-irc.png)
 % skin prpl-jabber classic/1.0 %skin/classic/prpl/jabber/
 	skin/classic/prpl/jabber/icon32.png	(icons/prpl-jabber-32.png)
 	skin/classic/prpl/jabber/icon48.png	(icons/prpl-jabber-48.png)

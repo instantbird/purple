@@ -2,7 +2,6 @@ category im-protocol-plugin prpl-aim @instantbird.org/purple/protocol;1
 category im-protocol-plugin prpl-gg @instantbird.org/purple/protocol;1
 category im-protocol-plugin prpl-novell @instantbird.org/purple/protocol;1
 category im-protocol-plugin prpl-icq @instantbird.org/purple/protocol;1
-category im-protocol-plugin prpl-irc @instantbird.org/purple/protocol;1
 category im-protocol-plugin prpl-msn @instantbird.org/purple/protocol;1
 category im-protocol-plugin prpl-myspace @instantbird.org/purple/protocol;1
 category im-protocol-plugin prpl-bilboed-netsoul @instantbird.org/purple/protocol;1

@@ -94,7 +94,6 @@ endif
 
 ifndef PURPLE_PLUGINS
 PROTOCOLS	= \
-		irc \
 		jabber \
 		gg \
 		oscar \

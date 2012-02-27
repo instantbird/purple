@@ -17,8 +17,6 @@
 	locale/@AB_CD@/myspace/prpl.properties	(%myspace.properties)
 % locale gg @AB_CD@ %locale/@AB_CD@/gg/
 	locale/@AB_CD@/gg/prpl.properties	(%gg.properties)
-% locale irc @AB_CD@ %locale/@AB_CD@/irc/
-	locale/@AB_CD@/irc/prpl.properties	(%irc.properties)
 % locale sametime @AB_CD@ %locale/@AB_CD@/sametime/
 	locale/@AB_CD@/sametime/prpl.properties	(%sametime.properties)
 % locale simple @AB_CD@ %locale/@AB_CD@/simple/
