@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*- 
+#-*- coding: utf-8 -*-
 
 import polib
 import re
@@ -25,8 +25,8 @@ comment_hashes = ['d83a1890eddfca574851f6d38fd6afe1',
                   'b1a2353732aa2ead4c2c0de5cc2452e2',
                   '3e434ef29c7dd8f8b6595481cb123b2d']
 
-prpl_dirs = ["gg", "irc", "jabber", "msn", "myspace", "novell", "oscar",
-             "qq", "sametime", "simple", "yahoo"]
+prpl_dirs = ["gg", "jabber", "msn", "myspace", "novell", "oscar", "qq",
+             "sametime", "simple", "yahoo"]
 
 # files['purple']['id1'] contains the number of strings in the package purple with the id id1 (if > 1, we have a collision and need to append a hash)
 files = {'purple': {}}
@@ -227,7 +227,7 @@ for lang in po_files:
             if msg in local_strings and local_strings[msg] != '':
                 fhandle.write(id + '=' + fix_multiline_string(local_strings[msg]) + '\n')
             else:
-#     When a string is not translated, don't put it in the locale file        
+#     When a string is not translated, don't put it in the locale file
 #                plural = allstrings[msg]['plural']
 #                if plural != '':
 #                    msg += ';' + plural
