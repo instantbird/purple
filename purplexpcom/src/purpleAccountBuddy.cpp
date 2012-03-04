@@ -48,6 +48,7 @@
 #include <prprf.h>
 
 #pragma GCC visibility push(default)
+#include <libpurple/core.h>
 #include <libpurple/status.h>
 #pragma GCC visibility pop
 
@@ -87,14 +88,14 @@ purpleAccountBuddy::~purpleAccountBuddy()
   /* destructor code */
   MOZ_COUNT_DTOR(purpleAccountBuddy);
   UnInit();
-  mBuddy = NULL;
 }
 
 /* void unInit (); */
 NS_IMETHODIMP purpleAccountBuddy::UnInit()
 {
   if (mPurpleBuddy) {
-    purple_blist_node_set_ui_data(PURPLE_BLIST_NODE(mPurpleBuddy), nsnull);
+    if (purple_get_core())
+      purple_blist_node_set_ui_data(PURPLE_BLIST_NODE(mPurpleBuddy), nsnull);
     mPurpleBuddy = NULL;
   }
   mAccount = nsnull;
