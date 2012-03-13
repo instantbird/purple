@@ -49,9 +49,3 @@ DEFINES += \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-libs-%: AB_CD=$*
-libs-%:
-	# XXX: it would be nice if we could just do nothing if no langpack is being done
-	#  currently, we just go and (re)build en-US if called with a non-supported locale
-	$(MAKE) libs AB_CD=$*
