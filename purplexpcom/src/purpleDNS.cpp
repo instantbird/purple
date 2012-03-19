@@ -181,7 +181,7 @@ nsresult purpleDNSRequest::OnLookupComplete(nsICancelable *request,
   }
 
   GSList *hosts = NULL;
-  PRBool more;
+  bool more;
   record->HasMore(&more);
   if (!more) {
     Failed("Not found\n");

@@ -54,7 +54,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_PRPLICONVIM
 
-  NS_SCRIPTABLE NS_IMETHOD GetIsChat(PRBool *aIsChat);
+  NS_SCRIPTABLE NS_IMETHOD GetIsChat(bool *aIsChat);
   NS_SCRIPTABLE NS_IMETHOD GetNormalizedName(nsACString& aNormalizedName);
 
   // Forward most methods to purpleConversation
@@ -96,7 +96,7 @@ private:
   ~purpleConvIM();
 
 protected:
-  PRBool mSentTyping;
+  bool mSentTyping;
 };
 
 #endif /* !PURPLE_CONV_IM_H_ */

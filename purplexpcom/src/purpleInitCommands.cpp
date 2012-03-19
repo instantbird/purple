@@ -116,7 +116,7 @@ NS_IMETHODIMP purpleCommand::GetPriority(PRInt32 *aPriority)
                 [optional] in prplIConversation aConversation); */
 NS_IMETHODIMP purpleCommand::Run(const nsACString & aMessage,
                                  prplIConversation *aConversation,
-                                 PRBool *aResult NS_OUTPARAM)
+                                 bool *aResult NS_OUTPARAM)
 {
   // libpurple commands don't work without a conversation.
   NS_ENSURE_TRUE(aConversation, NS_ERROR_INVALID_ARG);

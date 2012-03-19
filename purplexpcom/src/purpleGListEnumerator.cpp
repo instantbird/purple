@@ -82,7 +82,7 @@ NS_IMETHODIMP purpleGListEnumerator::GetNext(nsISupports **aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP purpleGListEnumerator::HasMoreElements(PRBool *aResult)
+NS_IMETHODIMP purpleGListEnumerator::HasMoreElements(bool *aResult)
 {
   if (!mGList) {
     Cleanup();

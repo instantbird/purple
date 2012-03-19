@@ -351,7 +351,7 @@ NS_IMETHODIMP purpleAccountBuddy::CreateConversation(prplIConversation **aResult
 }
 
 /* readonly attribute boolean canSendMessage; */
-NS_IMETHODIMP purpleAccountBuddy::GetCanSendMessage(PRBool *aCanSendMessage)
+NS_IMETHODIMP purpleAccountBuddy::GetCanSendMessage(bool *aCanSendMessage)
 {
   NS_ENSURE_TRUE(mPurpleBuddy, NS_ERROR_NOT_INITIALIZED);
 
@@ -391,7 +391,7 @@ NS_IMETHODIMP purpleAccountBuddy::GetStatusType(PRInt32 *aStatusType)
 }
 
 #define PURPLE_PRESENCE_GET_BOOL_IMPL(aName, aFctName)                        \
-  NS_IMETHODIMP purpleAccountBuddy::Get##aName(PRBool *a##aName)              \
+  NS_IMETHODIMP purpleAccountBuddy::Get##aName(bool *a##aName)                \
   {                                                                           \
     NS_ENSURE_TRUE(mAccount && mPurpleBuddy, NS_ERROR_NOT_INITIALIZED);       \
                                                                               \
@@ -411,7 +411,7 @@ PURPLE_PRESENCE_GET_BOOL_IMPL(Available, available)
 PURPLE_PRESENCE_GET_BOOL_IMPL(Idle, idle)
 
 /* readonly attribute boolean mobile; */
-NS_IMETHODIMP purpleAccountBuddy::GetMobile(PRBool *aMobile)
+NS_IMETHODIMP purpleAccountBuddy::GetMobile(bool *aMobile)
 {
   NS_ENSURE_TRUE(mBuddy, NS_ERROR_NOT_INITIALIZED);
 

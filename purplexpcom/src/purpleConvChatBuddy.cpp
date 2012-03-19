@@ -84,7 +84,7 @@ NS_IMETHODIMP purpleConvChatBuddy::GetAlias(nsACString & aAlias)
 }
 
 /* readonly attribute boolean buddy; */
-NS_IMETHODIMP purpleConvChatBuddy::GetBuddy(PRBool *aBuddy)
+NS_IMETHODIMP purpleConvChatBuddy::GetBuddy(bool *aBuddy)
 {
   *aBuddy = mBuddy;
   return NS_OK;
@@ -93,7 +93,7 @@ NS_IMETHODIMP purpleConvChatBuddy::GetBuddy(PRBool *aBuddy)
 
 /* Get flag from PurpleConvChatBuddyFlags */
 #define PURPLE_IMPL_GETFLAG(aName, aFlag)                               \
-  NS_IMETHODIMP purpleConvChatBuddy::Get##aName(PRBool *a##aName)       \
+  NS_IMETHODIMP purpleConvChatBuddy::Get##aName(bool *a##aName)         \
   {                                                                     \
     *a##aName = (mFlags & PURPLE_CBFLAGS_##aFlag) ? PR_TRUE : PR_FALSE; \
     return NS_OK;                                                       \

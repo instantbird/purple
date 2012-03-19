@@ -80,7 +80,7 @@ purpleConvIM::~purpleConvIM()
 }
 
 /* readonly attribute boolean isChat; */
-NS_IMETHODIMP purpleConvIM::GetIsChat(PRBool *aIsChat)
+NS_IMETHODIMP purpleConvIM::GetIsChat(bool *aIsChat)
 {
   *aIsChat = PR_FALSE;
   return NS_OK;

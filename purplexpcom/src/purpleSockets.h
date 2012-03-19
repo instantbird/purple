@@ -64,7 +64,7 @@ class purpleSocketInternal : public nsASocketHandler,
   void OnSocketDetached(PRFileDesc*);
   nsresult PostEvent();
   nsresult Cancel();
-  PRBool GetCanceled() { return mCanceled; }
+  bool GetCanceled() { return mCanceled; }
 #ifdef PR_LOGGING
   purpleSocketInternal(PRUint32 aId);
 #else
@@ -81,9 +81,9 @@ class purpleSocketInternal : public nsASocketHandler,
   PRFileDesc *mFd;
   PRInt16 mPollFlagsInternal;
   nsCOMPtr<purpleISocket> mProxy;
-  PRBool mAttached;
-  PRBool mDetached;
-  PRBool mCanceled;
+  bool mAttached;
+  bool mDetached;
+  bool mCanceled;
 };
 
 class purpleSocket : public purpleISocket

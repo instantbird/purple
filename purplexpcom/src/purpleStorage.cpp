@@ -79,7 +79,7 @@ nsresult purpleStorage::Init()
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mDBService->OpenDatabase(dbFile, getter_AddRefs(mDBConn));
   NS_ENSURE_SUCCESS(rv, rv);
-  PRBool ready;
+  bool ready;
   mDBConn->GetConnectionReady(&ready);
   NS_ENSURE_TRUE(ready, NS_ERROR_UNEXPECTED);
 

@@ -341,7 +341,7 @@ gboolean prefs_get_bool(const char *name)
 
   nsCOMPtr<nsIPrefBranch> prefs =
     do_GetService(NS_PREFSERVICE_CONTRACTID);
-  PRBool result = PR_FALSE;
+  bool result = false;
   prefs->GetBoolPref(mozName, &result);
   g_free(mozName);
   return result;
@@ -516,7 +516,7 @@ static void ui_register_plugins()
                                           getter_AddRefs(catEntries));
   NS_ENSURE_SUCCESS(rv, );
 
-  PRBool hasMore;
+  bool hasMore;
   while (NS_SUCCEEDED(catEntries->HasMoreElements(&hasMore)) && hasMore) {
     nsCOMPtr<nsISupports> elem;
     rv = catEntries->GetNext(getter_AddRefs(elem));

@@ -80,7 +80,7 @@ purpleConvChat::~purpleConvChat()
 }
 
 /* readonly attribute boolean isChat; */
-NS_IMETHODIMP purpleConvChat::GetIsChat(PRBool *aIsChat)
+NS_IMETHODIMP purpleConvChat::GetIsChat(bool *aIsChat)
 {
   *aIsChat = PR_TRUE;
   return NS_OK;
@@ -195,7 +195,7 @@ NS_IMETHODIMP purpleConvChat::GetTopicSetter(nsACString & aTopicSetter)
 }
 
 /* readonly attribute boolean topicSettable; */
-NS_IMETHODIMP purpleConvChat::GetTopicSettable(PRBool *aTopicSettable)
+NS_IMETHODIMP purpleConvChat::GetTopicSettable(bool *aTopicSettable)
 {
   NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
 
@@ -221,7 +221,7 @@ NS_IMETHODIMP purpleConvChat::GetNick(nsACString & aNick)
 }
 
 /* readonly attribute boolean left; */
-NS_IMETHODIMP purpleConvChat::GetLeft(PRBool *aLeft)
+NS_IMETHODIMP purpleConvChat::GetLeft(bool *aLeft)
 {
   NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
 

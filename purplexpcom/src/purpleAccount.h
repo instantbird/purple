@@ -68,7 +68,7 @@ public:
   nsresult Disconnected();
 
   // Called from purpleInitAccounts, to save a pref libpurple has changed.
-  nsresult SetBoolPref(const char *aName, PRBool aValue);
+  nsresult SetBoolPref(const char *aName, bool aValue);
   nsresult SetIntPref(const char *aName, PRInt32 aValue);
   nsresult SetStringPref(const char *aName, const char *aValue);
 

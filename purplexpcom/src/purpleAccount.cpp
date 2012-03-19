@@ -105,7 +105,7 @@ protected:
   PRInt32 mMin, mMax;
   nsCString mLabel;
   nsCString mIdentifier;
-  PRPackedBool mRequired;
+  bool mRequired;
 };
 
 // D36DC0D5-438F-4C65-865B-EDE5DB7906D5
@@ -134,7 +134,7 @@ PURPLE_IMPL_GETFIELDVALUE(nsACString &, Label, )
 PURPLE_IMPL_GETFIELDVALUE(nsACString &, Identifier, )
 
 /* readonly attribute boolean required; */
-PURPLE_IMPL_GETFIELDVALUE(PRBool *, Required, *)
+PURPLE_IMPL_GETFIELDVALUE(bool *, Required, *)
 
 /* readonly attribute short type; */
 PURPLE_IMPL_GETFIELDVALUE(PRInt16 *, Type, *)
@@ -377,7 +377,7 @@ nsresult purpleAccount::Init(imIAccount *aImAccount,
     nsCOMPtr<purpleICoreService> pcs = do_GetService(PURPLE_CORE_SERVICE_CONTRACTID);
     nsCOMPtr<nsISimpleEnumerator> proxies;
     rv = pcs->GetProxies(getter_AddRefs(proxies));
-    PRBool hasNext;
+    bool hasNext;
     if (NS_SUCCEEDED(rv)) {
       while (NS_SUCCEEDED(proxies->HasMoreElements(&hasNext)) && hasNext) {
         nsCOMPtr<purpleIProxy> proxy;
@@ -434,7 +434,7 @@ nsresult purpleAccount::Init(imIAccount *aImAccount,
       break;
     case nsIPrefBranch::PREF_BOOL:
       {
-        PRBool val;
+        bool val;
         rv = mPrefOptBranch->GetBoolPref(name, &val);
         if (NS_SUCCEEDED(rv))
           purple_account_set_bool(mAccount, name, val);
@@ -649,7 +649,7 @@ NS_IMETHODIMP purpleAccount::GetChatRoomFields(nsISimpleEnumerator **aResult)
 }
 
 /* readonly attribute boolean canJoinChat; */
-NS_IMETHODIMP purpleAccount::GetCanJoinChat(PRBool *aCanJoinChat)
+NS_IMETHODIMP purpleAccount::GetCanJoinChat(bool *aCanJoinChat)
 {
   PurplePluginProtocolInfo *prplInfo = GetPrplInfo();
   NS_ENSURE_TRUE(prplInfo, NS_ERROR_FAILURE);
@@ -709,7 +709,6 @@ NS_IMETHODIMP purpleAccount::GetNormalizedName(nsACString& aNormalizedName)
   return NS_OK;
 }
 
-
 /* attribute purpleIProxyInfo proxyInfo; */
 NS_IMETHODIMP purpleAccount::GetProxyInfo(purpleIProxyInfo * *aProxyInfo)
 {
@@ -756,7 +755,7 @@ NS_IMETHODIMP purpleAccount::SetProxyInfo(purpleIProxyInfo * aProxyInfo)
   }
 
 /* void setBool (in string aName, in boolean aVal); */
-PURPLE_IMPL_SET(Bool, bool, PRBool, aVal)
+PURPLE_IMPL_SET(Bool, bool, bool, aVal)
 /* void setInt (in string aName, in long aVal); */
 PURPLE_IMPL_SET(Int, int, PRInt32, aVal)
 /* void setString (in string aName, in AUTF8String aVal); */
@@ -772,8 +771,8 @@ PURPLE_IMPL_SET(String, string, const nsACString &,
     return mPrefOptBranch->Set##prefType##Pref(aName, aValue);          \
   }
 
-// nsresult purpleAccount::SetBoolPref(const char *aName, PRBool aValue)
-PURPLE_IMPL_SETPREF(Bool, Bool, PRBool)
+// nsresult purpleAccount::SetBoolPref(const char *aName, bool aValue)
+PURPLE_IMPL_SETPREF(Bool, Bool, bool)
 // nsresult purpleAccount::SetIntPref(const char *aName, PRInt32 aValue)
 PURPLE_IMPL_SETPREF(Int, Int, PRInt32)
 // nsresult purpleAccount::SetStringPref(const char *aName, const char *aValue)
@@ -781,7 +780,7 @@ PURPLE_IMPL_SETPREF(String, Char, const char *)
 
 nsresult purpleAccount::Connecting(const nsACString & aConnectionStateMessage)
 {
-  PRBool connecting = PR_FALSE;
+  bool connecting = PR_FALSE;
   mImAccount->GetConnecting(&connecting);
 
   if (!connecting)
@@ -812,7 +811,7 @@ nsresult purpleAccount::Disconnecting(PRInt16 aConnectionErrorReason,
   // When an account is disconnected because of an error, we get
   // called from the libpurple report_disconnect_reason uiop and from
   // the signing-off signal handler.
-  PRBool disconnecting;
+  bool disconnecting;
   if (NS_SUCCEEDED(mImAccount->GetDisconnecting(&disconnecting)) &&
       disconnecting)
     return NS_OK;
@@ -857,7 +856,7 @@ nsresult purpleAccount::Disconnected()
 
 /* Get flag from PurpleConnection->flags */
 #define PURPLE_IMPL_GETFLAG(aName, aFlag)                                 \
-  NS_IMETHODIMP purpleAccount::Get##aName(PRBool *a##aName)               \
+  NS_IMETHODIMP purpleAccount::Get##aName(bool *a##aName)                 \
   {                                                                       \
     PURPLE_ENSURE_INIT(mAccount);                                         \
     PURPLE_ENSURE_INIT(mAccount->gc);                                     \
@@ -870,7 +869,7 @@ nsresult purpleAccount::Disconnected()
 PURPLE_IMPL_GETFLAG(HTMLEnabled, HTML)
 
 /* readonly attribute boolean HTMLEscapePlainText; */
-NS_IMETHODIMP purpleAccount::GetHTMLEscapePlainText(PRBool *aHTMLEscapePlainText)
+NS_IMETHODIMP purpleAccount::GetHTMLEscapePlainText(bool *aHTMLEscapePlainText)
 {
   *aHTMLEscapePlainText = PR_TRUE;
   return NS_OK;
@@ -1084,7 +1083,7 @@ nsresult purpleAccount::ApplyCurrentUserIcon()
 
   nsCString format(prplInfo->icon_spec.format);
   char *tmp = format.BeginWriting();
-  PRBool found = PR_FALSE;
+  bool found = false;
   for (const char *token = NS_strtok(",", &tmp);
        token;
        token = NS_strtok(",", &tmp)) {

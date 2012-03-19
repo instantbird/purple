@@ -71,5 +71,5 @@ class purpleDebug : public nsIObserver
   nsCString mRepositoryBase;
   PRInt32 mBaseLength;
   PRInt32 mLogLevel;
-  PRBool mModifiedSources;
+  bool mModifiedSources;
 };

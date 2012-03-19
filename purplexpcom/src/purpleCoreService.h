@@ -66,8 +66,8 @@ private:
   nsCOMPtr<nsIPrefBranch2> mPrefBranch2;
 
 protected:
-  PRBool mInitialized;
-  PRBool mQuitting;
+  bool mInitialized;
+  bool mQuitting;
   nsCOMArray<purpleProxy> mProxies;
   nsCOMPtr<purpleIProxyInfo> mGlobalProxy;
 };

@@ -141,7 +141,7 @@ NS_IMETHODIMP purpleMessage::GetIconURL(nsACString& aUserIconURL)
   purpleConversation *conv = purpleConversation::fromPurpleConv(mConv);
   NS_ENSURE_TRUE(conv, NS_ERROR_NOT_INITIALIZED);
 
-  PRBool isChat = PR_TRUE;
+  bool isChat = true;
   nsresult rv = conv->GetIsChat(&isChat);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -182,7 +182,7 @@ NS_IMETHODIMP purpleMessage::SetColor(const nsACString & aColor)
 }
 
 #define PURPLE_IMPL_GETBOOL(aName, aFlag)                               \
-  NS_IMETHODIMP purpleMessage::Get##aName(PRBool *a##aName)             \
+  NS_IMETHODIMP purpleMessage::Get##aName(bool *a##aName)               \
   {                                                                     \
     *a##aName = (mFlags & PURPLE_MESSAGE_##aFlag) ? PR_TRUE : PR_FALSE; \
     return NS_OK;                                                       \

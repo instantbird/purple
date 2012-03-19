@@ -92,7 +92,7 @@ purpleNetworkObserver::IsNetworkAvailable()
     do_GetService(NS_NETWORK_LINK_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(networkLinkService, TRUE);
 
-  PRBool isUp;
+  bool isUp;
   nsresult rv = networkLinkService->GetIsLinkUp(&isUp);
   NS_ENSURE_SUCCESS(rv, TRUE);
   return isUp;

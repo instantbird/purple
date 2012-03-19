@@ -114,7 +114,7 @@ purpleDebug::PrepareFilePath(nsCString &aPath)
 #endif
     NS_ENSURE_SUCCESS(rv, );
 
-    PRBool exists = PR_FALSE;
+    bool exists = false;
     rv = localFile->Exists(&exists);
     NS_ENSURE_SUCCESS(rv, );
     if (exists) {

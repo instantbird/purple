@@ -152,7 +152,7 @@ NS_IMETHODIMP purplePref::GetType(PRInt16 *aType)
   PURPLE_IMPL_PREF_GETTER(*aType = purple_account_option_get_type(mOpt))
 
 /* readonly attribute boolean masked (); */
-NS_IMETHODIMP purplePref::GetMasked(PRBool *aMasked)
+NS_IMETHODIMP purplePref::GetMasked(bool *aMasked)
   PURPLE_IMPL_PREF_GETTER(*aMasked = purple_account_option_get_masked(mOpt))
 
 #define PURPLE_IMPL_PREF_GET_VALUE(aType, code)                             \
@@ -165,7 +165,7 @@ NS_IMETHODIMP purplePref::GetMasked(PRBool *aMasked)
   )
 
 /* boolean getBool (); */
-NS_IMETHODIMP purplePref::GetBool(PRBool *_retval)
+NS_IMETHODIMP purplePref::GetBool(bool *_retval)
   PURPLE_IMPL_PREF_GET_VALUE(typeBool,
     *_retval = purple_account_option_get_default_bool(mOpt))
 

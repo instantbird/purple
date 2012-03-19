@@ -60,7 +60,7 @@ private:
 protected:
   nsCString mName;
   nsCString mAlias;
-  PRBool mBuddy;
+  bool mBuddy;
   PurpleConvChatBuddyFlags mFlags;
 };
 

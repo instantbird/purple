@@ -126,7 +126,7 @@ PRUint32 purpleTimer::AddTimeout(PRUint32 aInterval,
   nsCOMPtr<nsIThreadManager> mgr = do_GetService(NS_THREADMANAGER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, 0);
 
-  PRBool isMainThread;
+  bool isMainThread;
   mgr->GetIsMainThread(&isMainThread);
   if (!isMainThread) {
     NS_ASSERTION(!aInterval, "attempting thread synchronisation with a non null timeout");

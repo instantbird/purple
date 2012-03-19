@@ -79,7 +79,7 @@ purpleConversation::~purpleConversation()
 }
 
 /* readonly attribute boolean isChat; */
-NS_IMETHODIMP purpleConversation::GetIsChat(PRBool *aIsChat)
+NS_IMETHODIMP purpleConversation::GetIsChat(bool *aIsChat)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

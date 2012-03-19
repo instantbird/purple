@@ -94,8 +94,8 @@ public:
 
   const nsCString& GetKey() { return mKey; }
 
-  PRBool Equals(PRInt16 aType, const nsACString& aHostname, PRUint32 aPort,
-                const nsACString& aUsername, const nsACString& aPassword);
+  bool Equals(PRInt16 aType, const nsACString& aHostname, PRUint32 aPort,
+              const nsACString& aUsername, const nsACString& aPassword);
 
 private:
   ~purpleProxy();

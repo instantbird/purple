@@ -106,8 +106,8 @@ PURPLE_IMPL_GETSPLITVALUE(nsACString &, DefaultValue, default_value, )
 /* readonly attribute char separator; */
 PURPLE_IMPL_GETSPLITVALUE(char *, Separator, separator, *)
 
-/* readonly attribute PRBool reverse; */
-PURPLE_IMPL_GETSPLITVALUE(PRBool *, Reverse, reverse, *)
+/* readonly attribute bool reverse; */
+PURPLE_IMPL_GETSPLITVALUE(bool *, Reverse, reverse, *)
 
 /* Implementation file */
 NS_IMPL_CLASSINFO(purpleProtocol, NULL, 0, PURPLE_PROTOCOL_CID)
@@ -212,7 +212,7 @@ NS_IMETHODIMP purpleProtocol::GetIconBaseURI(nsACString& aIconBaseURI)
 
 /* boolean accountExists (in AUTF8String aName); */
 NS_IMETHODIMP purpleProtocol::AccountExists(const nsACString& aName,
-                                            PRBool *aExists)
+                                            bool *aExists)
 {
   NS_ENSURE_TRUE(mInfo, NS_ERROR_NOT_INITIALIZED);
 
@@ -272,7 +272,7 @@ NS_IMETHODIMP purpleProtocol::GetUsernameEmptyText(nsACString &aUsernameEmptyTex
 }
 
 #define PURPLE_IMPL_GETBOOLOPT(aOpt, aConst)                            \
-  NS_IMETHODIMP purpleProtocol::Get##aOpt(PRBool *a##aOpt)              \
+  NS_IMETHODIMP purpleProtocol::Get##aOpt(bool *a##aOpt)                \
   {                                                                     \
     NS_ENSURE_TRUE(mInfo, NS_ERROR_NOT_INITIALIZED);                    \
                                                                         \
@@ -311,7 +311,7 @@ PURPLE_IMPL_GETBOOLOPT(RegisterNoScreenName, REGISTER_NOSCREENNAME)
 PURPLE_IMPL_GETBOOLOPT(SlashCommandsNative, SLASH_COMMANDS_NATIVE)
 
 /* readonly attribute boolean usePurpleProxy; */
-NS_IMETHODIMP purpleProtocol::GetUsePurpleProxy(PRBool *aUsePurpleProxy)
+NS_IMETHODIMP purpleProtocol::GetUsePurpleProxy(bool *aUsePurpleProxy)
 {
   *aUsePurpleProxy = PR_TRUE;
   return NS_OK;

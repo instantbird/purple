@@ -175,8 +175,8 @@ nsresult purpleProxy::Init(nsCString& aKey, PRInt16 aType,
   return NS_OK;
 }
 
-PRBool purpleProxy::Equals(PRInt16 aType, const nsACString& aHostname, PRUint32 aPort,
-                             const nsACString& aUsername, const nsACString& aPassword)
+bool purpleProxy::Equals(PRInt16 aType, const nsACString& aHostname, PRUint32 aPort,
+                         const nsACString& aUsername, const nsACString& aPassword)
 {
   return (aType == mType &&
           aPort == mPort &&

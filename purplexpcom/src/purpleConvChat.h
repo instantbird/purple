@@ -54,7 +54,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_PRPLICONVCHAT
 
-  NS_SCRIPTABLE NS_IMETHOD GetIsChat(PRBool *aIsChat);
+  NS_SCRIPTABLE NS_IMETHOD GetIsChat(bool *aIsChat);
   NS_SCRIPTABLE NS_IMETHOD GetNormalizedName(nsACString& aNormalizedName);
 
   // Forward most methods to purpleConversation

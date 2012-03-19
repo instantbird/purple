@@ -70,7 +70,7 @@ protected:
   purpleAccount *GetAccount();
   PurpleConversation *mConv;
   PRUint32 mId;
-  PRBool mUninitialized;
+  bool mUninitialized;
 };
 
 #endif /* !PURPLE_CONVERSATION_H_ */

@@ -340,7 +340,7 @@ NS_IMETHODIMP purpleCoreService::CreateProxy(PRInt16 aType, const nsACString & a
   /* Get a new unique proxy key */
   nsCString key;
   PRInt32 i = 1;
-  PRBool found = PR_FALSE;
+  bool found = false;
   do {
     key = PROXY_KEY;
     key.AppendInt(i);
