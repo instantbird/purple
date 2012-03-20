@@ -48,7 +48,6 @@ XPIDLSRCS	= \
 		purpleICoreService.idl \
 		purpleIPlugin.idl \
 		purpleIProxy.idl \
-		purpleISocket.idl \
 		$(NULL)
 
 ifeq ($(OS_ARCH),Darwin)

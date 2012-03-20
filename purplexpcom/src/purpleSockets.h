@@ -43,7 +43,6 @@
 #include <libpurple/eventloop.h>
 #pragma GCC visibility pop
 #include<nsStringAPI.h>
-#include"purpleISocket.h"
 
 #include<prio.h>
 #include<nsIRunnable.h>
@@ -59,7 +58,7 @@ class purpleSocketInternal : public nsASocketHandler,
   NS_DECL_ISUPPORTS
   NS_DECL_NSIRUNNABLE
 
-  nsresult Init(PRFileDesc *aFd, purpleISocket *aProxy, PRUint16 aPollFlags);
+  nsresult Init(PRFileDesc *aFd, nsIRunnable *aRunnable, PRUint16 aPollFlags);
   void OnSocketReady(PRFileDesc*, PRInt16);
   void OnSocketDetached(PRFileDesc*);
   nsresult PostEvent();
@@ -71,7 +70,6 @@ class purpleSocketInternal : public nsASocketHandler,
   purpleSocketInternal();
 #endif
   ~purpleSocketInternal();
-  nsresult SetPollFlags(PRInt16 aPollFlags);
 #ifdef PR_LOGGING
   PRUint32 mId;
 #endif
@@ -80,20 +78,27 @@ class purpleSocketInternal : public nsASocketHandler,
   nsresult OnAttach();
   PRFileDesc *mFd;
   PRInt16 mPollFlagsInternal;
-  nsCOMPtr<purpleISocket> mProxy;
+  nsCOMPtr<nsIRunnable> mRunnable;
   bool mAttached;
   bool mDetached;
   bool mCanceled;
 };
 
-class purpleSocket : public purpleISocket
+class purpleSocket : public nsIRunnable
 {
  public:
   NS_DECL_ISUPPORTS
-  NS_DECL_PURPLEISOCKET
+  NS_DECL_NSIRUNNABLE
 
   purpleSocket();
   ~purpleSocket();
+
+  nsresult Init(PurpleInputFunction aFunction, gpointer aData, PRInt32 aFd,
+                PurpleInputCondition aCondition, PRInt32 *aResultId);
+  void CallLibpurpleCallback();
+  void Cancel() { mInternal->Cancel(); }
+  PRUint32 GetId() { return mId; }
+  PRUint32 GetAccountId() { return mAccountId; }
 
  private:
   static PRUint32 sLastSocket;
@@ -121,7 +126,7 @@ class purpleSocketWatcher
   static void goingOffline();
 
  private:
-  static nsTArray<purpleISocket *> *sSockets;
+  static nsTArray<purpleSocket *> *sSockets;
   static nsCOMPtr<nsISocketTransportService> sSts;
   static nsCOMPtr<nsIObserver> sObserver;
 };

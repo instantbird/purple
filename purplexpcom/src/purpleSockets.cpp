@@ -40,7 +40,6 @@
 #include <private/pprio.h>
 #include <nsComponentManagerUtils.h>
 #include <nsServiceManagerUtils.h>
-#include <nsIProxyObjectManager.h>
 #include <nsIEventTarget.h>
 #include <nsIObserver.h>
 #include <nsIObserverService.h>
@@ -55,7 +54,7 @@ static PRLogModuleInfo *gPurpleSocketsLog = nsnull;
 #endif
 #define LOG(args) PR_LOG(gPurpleSocketsLog, PR_LOG_DEBUG, args)
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(purpleSocket, purpleISocket)
+NS_IMPL_THREADSAFE_ISUPPORTS1(purpleSocket, nsIRunnable)
 
 //export NSPR_LOG_MODULES="nsSocketTransport:5"
 
@@ -70,8 +69,7 @@ class purpleSocketNetworkStateObserver : public nsIObserver
 };
 
 purpleSocket::purpleSocket()
-  : mFunction(NULL),
-    mInternal(nsnull)
+  : mFunction(NULL)
 {
   LOG(("Creating purpleSocket @%x\n", this));
 }
@@ -82,10 +80,9 @@ purpleSocket::~purpleSocket()
   mFunction = NULL; // if we don't do this, C++ tries to delete the function
 }
 
-NS_IMETHODIMP purpleSocket::Init(PurpleInputFunction aFunction,
-                                 gpointer aData, PRInt32 aFd,
-                                 PurpleInputCondition aCondition,
-                                 PRInt32 *aResultId)
+nsresult purpleSocket::Init(PurpleInputFunction aFunction, gpointer aData,
+                            PRInt32 aFd, PurpleInputCondition aCondition,
+                            PRInt32 *aResultId)
 {
   mAccountId = purpleAccountScoper::GetCurrentAccountId();
   mId = ++sLastSocket;
@@ -103,64 +100,40 @@ NS_IMETHODIMP purpleSocket::Init(PurpleInputFunction aFunction,
     pollFlags |= (PR_POLL_WRITE | PR_POLL_EXCEPT);
   }
 
-  nsCOMPtr<nsIProxyObjectManager> pom = do_GetService("@mozilla.org/xpcomproxy;1");
-  nsCOMPtr<purpleISocket> proxy;
-  nsresult rv = pom->GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
-                                       NS_GET_IID(purpleISocket),
-                                       this,
-                                       NS_PROXY_ASYNC | NS_PROXY_ALWAYS,
-                                       getter_AddRefs(proxy));
-  NS_ENSURE_SUCCESS(rv, rv);
-
 #ifdef PR_LOGGING
   mInternal = new purpleSocketInternal(mId);
 #else
   mInternal = new purpleSocketInternal();
 #endif
-  return mInternal->Init(PR_CreateSocketPollFd(mFd), proxy, pollFlags);
+  return mInternal->Init(PR_CreateSocketPollFd(mFd), this, pollFlags);
 }
 
-NS_IMETHODIMP purpleSocket::GetId(PRUint32 *aId)
-{
-  *aId = mId;
-  return NS_OK;
-}
-
-NS_IMETHODIMP purpleSocket::GetAccountId(PRUint32 *aAccountId)
-{
-  *aAccountId = mAccountId;
-  return NS_OK;
-}
-
-NS_IMETHODIMP purpleSocket::Cancel()
-{
-  return mInternal->Cancel();
-}
-
-NS_IMETHODIMP purpleSocket::CallLibpurpleCallback()
+void purpleSocket::CallLibpurpleCallback()
 {
   LOG(("[%i] CallLibpurpleCallback (accountId = %u)\n", mId, mAccountId));
 
   purpleAccountScoper scoper(mAccountId);
   mFunction(mData, mFd, mCondition);
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP purpleSocket::NotifyLibPurple(PRInt16 aPollFlags)
+NS_IMETHODIMP purpleSocket::Run()
 {
-  LOG(("[%i] NotifyLibPurple\n", mId));
+  LOG(("[%i] purpleSocket::Run\n", mId));
   NS_ASSERTION(NS_IsMainThread(), "wrong thread");
 
   if (mInternal->GetCanceled()) {
-    // XXXFLo Need to make sure there can't be a race condition. Can
-    // the watch be canceled between our call to GetCanceled and when
-    // we return from mFunction?
-    LOG(("[%i] --> Canceling, leaving!\n", mId));
+    LOG(("[%i] --> already canceled before notifying libpurple, ignore!\n", mId));
     return NS_OK;
   }
+
   CallLibpurpleCallback();
-  return mInternal->SetPollFlags(aPollFlags);
+
+  if (mInternal->GetCanceled()) {
+    LOG(("[%i] --> the callback canceled the watcher, leaving!\n", mId));
+    return NS_OK;
+  }
+
+  return mInternal->PostEvent();
 }
 
 
@@ -188,11 +161,11 @@ purpleSocketInternal::~purpleSocketInternal()
   PR_DestroySocketPollFd(mFd);
 }
 
-nsresult purpleSocketInternal::Init(PRFileDesc *aFd, purpleISocket *aProxy,
+nsresult purpleSocketInternal::Init(PRFileDesc *aFd, nsIRunnable *aRunnable,
                                     PRUint16 aPollFlags)
 {
   mFd = aFd;
-  mProxy = aProxy;
+  mRunnable = aRunnable;
   mPollFlagsInternal = aPollFlags;
   return PostEvent();
 }
@@ -211,7 +184,8 @@ nsresult purpleSocketInternal::Cancel()
 nsresult purpleSocketInternal::PostEvent()
 {
   nsresult rv;
-  nsCOMPtr<nsIEventTarget> eventTarget = do_QueryInterface(purpleSocketWatcher::getSts(), &rv);
+  nsCOMPtr<nsIEventTarget> eventTarget =
+    do_QueryInterface(purpleSocketWatcher::getSts(), &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = eventTarget->Dispatch(this, NS_DISPATCH_NORMAL);
@@ -234,25 +208,25 @@ void purpleSocketInternal::OnSocketReady(PRFileDesc* fd, PRInt16 outFlags)
 //     return;
 //   }
 
-  PRInt16 pollFlags = mPollFlags;
+  mPollFlagsInternal = mPollFlags;
   mPollFlags = 0;
 
   NS_ASSERTION(!NS_IsMainThread(), "wrong thread");
 
-  if (!mProxy) {
-    LOG(("[%i]   mProxy is NULL\n", mId));
+  if (!mRunnable) {
+    LOG(("[%i]   mRunnable is NULL\n", mId));
     return;
   }
-  mProxy->NotifyLibPurple(pollFlags);
+  NS_DispatchToMainThread(mRunnable);
 }
 
 void purpleSocketInternal::OnSocketDetached(PRFileDesc*)
 {
   LOG(("[%i]  OnSocketDetached\n", mId));
-  mProxy = nsnull;
+  mRunnable = nsnull;
 }
 
-nsresult purpleSocketInternal::Run()
+NS_IMETHODIMP purpleSocketInternal::Run()
 {
   LOG(("[%i]  Run called: ", mId));
 
@@ -283,9 +257,9 @@ nsresult purpleSocketInternal::Run()
       // The watch on this socket has been canceled before we had
       // enought time to attach it. |OnSocketDetached| will never be
       // called because the socket hasn't been attached. We should
-      // release the proxy to ensure this object can be deleted.
-      mProxy = nsnull;
-      LOG(("removed useless proxy\n"));
+      // release the runnable to ensure it can be deleted.
+      mRunnable = nsnull;
+      LOG(("removed useless runnable\n"));
       return NS_OK;
     }
     mAttached = PR_TRUE;
@@ -310,19 +284,8 @@ nsresult purpleSocketInternal::OnAttach()
   return rv;
 }
 
-nsresult purpleSocketInternal::SetPollFlags(PRInt16 aPollFlags)
-{
-  LOG(("[%i]  trying to set pollflags to %i\n", mId, aPollFlags));
-  if (mCanceled) {
-    LOG(("[%i]  --> canceling, leaving!\n", mId));
-    return NS_OK;
-  }
-  mPollFlagsInternal = aPollFlags;
-  return PostEvent();
-}
-
 /* Init static members */
-nsTArray<purpleISocket *> *purpleSocketWatcher::sSockets = nsnull;
+nsTArray<purpleSocket *> *purpleSocketWatcher::sSockets = nsnull;
 nsCOMPtr<nsISocketTransportService> purpleSocketWatcher::sSts;
 nsCOMPtr<nsIObserver> purpleSocketWatcher::sObserver;
 
@@ -332,7 +295,7 @@ void purpleSocketWatcher::init()
   if (!gPurpleSocketsLog)
     gPurpleSocketsLog = PR_NewLogModule("purpleSockets");
 #endif
-  sSockets = new nsTArray<purpleISocket *>();
+  sSockets = new nsTArray<purpleSocket *>();
   sObserver = new purpleSocketNetworkStateObserver();
   nsCOMPtr<nsIObserverService> observerService =
     do_GetService("@mozilla.org/observer-service;1");
@@ -352,7 +315,7 @@ void purpleSocketWatcher::goingOffline()
   // can cancel some watchers so the length of the array may change
   // during the loop. See bug 158
   for (PRInt32 i = sSockets->Length(); i; i = sSockets->Length()) {
-    nsCOMPtr<purpleISocket> socket = (*sSockets)[i - 1];
+    nsCOMPtr<purpleSocket> socket = (*sSockets)[i - 1];
     sSockets->RemoveElementAt(i - 1);
     socket->CallLibpurpleCallback();
     socket->Cancel();
@@ -403,7 +366,7 @@ PRUint32 purpleSocketWatcher::AddWatch(gint aFd, PurpleInputCondition aCondition
   NS_ENSURE_TRUE(!NS_IsOffline(), 0);
 
   nsresult rv;
-  purpleISocket *socket = new purpleSocket();
+  purpleSocket *socket = new purpleSocket();
   NS_ENSURE_TRUE(socket, 0);
 
   PRInt32 id;
@@ -423,8 +386,7 @@ gboolean purpleSocketWatcher::CancelWatch(PRUint32 aId)
   NS_ENSURE_TRUE(sSockets, FALSE);
 
   for (PRUint32 i = 0; i < sSockets->Length(); ++i) {
-    PRUint32 id;
-    (*sSockets)[i]->GetId(&id);
+    PRUint32 id = (*sSockets)[i]->GetId();
     if (id == aId) {
       (*sSockets)[i]->Cancel();
       sSockets->RemoveElementAt(i);
@@ -443,8 +405,7 @@ nsresult purpleSocketWatcher::CancelWatchFromAccountId(PRUint32 aAccountId)
   NS_ENSURE_TRUE(sSockets, NS_ERROR_FAILURE);
 
   for (PRInt32 i = sSockets->Length() - 1; i >= 0; --i) {
-    PRUint32 accountId;
-    (*sSockets)[i]->GetAccountId(&accountId);
+    PRUint32 accountId = (*sSockets)[i]->GetAccountId();
     if (accountId == aAccountId) {
       (*sSockets)[i]->Cancel();
       sSockets->RemoveElementAt(i);
