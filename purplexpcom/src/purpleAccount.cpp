@@ -1149,7 +1149,7 @@ nsresult purpleAccount::ApplyCurrentUserIcon()
     // scale and recompress
     nsCOMPtr<nsIInputStream> iconStream;
     rv = imgtool->EncodeScaledImage(image, nsDependentCString(newMimeType),
-                                    newWidth, newHeight,
+                                    newWidth, newHeight, EmptyString(),
                                     getter_AddRefs(iconStream));
     if (NS_FAILED(rv))
       continue;
