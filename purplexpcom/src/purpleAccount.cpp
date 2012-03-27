@@ -268,22 +268,31 @@ purpleAccount::~purpleAccount()
     UnInit();
 }
 
+/* void remove (); */
+NS_IMETHODIMP purpleAccount::Remove()
+{
+  if (mAccount) {
+    LOG(("Removing purpleAccount @%x\n", this));
+    purple_accounts_delete(mAccount);
+    mAccount = NULL;
+  }
+  return NS_OK;
+}
+
 /* void unInit (); */
 NS_IMETHODIMP purpleAccount::UnInit()
 {
-  NS_PRECONDITION(mAccount,
+  NS_PRECONDITION(mImAccount,
                   "Uninitializing uninitialized purpleAccount\n");
-  NS_ENSURE_TRUE(mAccount, NS_ERROR_NOT_INITIALIZED);
+  NS_ENSURE_TRUE(mImAccount, NS_ERROR_NOT_INITIALIZED);
 
   if (!purple_get_core())
     mAccount = NULL;
 
 #ifdef DEBUG
   nsCString protoId;
-  nsresult rv = NS_ERROR_FAILURE;
   nsCOMPtr<prplIProtocol> proto;
-  if (mImAccount)
-    rv = mImAccount->GetProtocol(getter_AddRefs(proto));
+  nsresult rv = mImAccount->GetProtocol(getter_AddRefs(proto));
   if (proto)
     rv = proto->GetId(protoId);
   LOG(("uninitializing purpleAccount %s (%s)\n",
@@ -299,13 +308,7 @@ NS_IMETHODIMP purpleAccount::UnInit()
     // This will call purple_proxy_info_destroy if there was a proxy
     purple_account_set_proxy_info(mAccount, NULL);
 
-    // Prevent the cached account icons from being uncached while
-    // uninitializing the accounts.
-    gboolean caching = purple_buddy_icons_is_caching();
-    purple_buddy_icons_set_caching(FALSE);
-    purple_accounts_delete(mAccount);
-    purple_buddy_icons_set_caching(caching);
-
+    purple_account_destroy(mAccount);
     mAccount = NULL;
   }
   mImAccount = nsnull;
