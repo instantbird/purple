@@ -25,6 +25,7 @@
  */
 #include "internal.h"
 #include "eventloop.h"
+#include "debug.h"
 
 static PurpleEventLoopUiOps *eventloop_ui_ops = NULL;
 
@@ -56,17 +57,29 @@ purple_timeout_remove(guint tag)
 }
 
 guint
-purple_input_add(int source, PurpleInputCondition condition, PurpleInputFunction func, gpointer user_data)
+purple_input_add_with_location(int source, PurpleInputCondition condition,
+			       PurpleInputFunction func, gpointer user_data,
+			       const char *file, int line, const char *function)
 {
 	PurpleEventLoopUiOps *ops = purple_eventloop_get_ui_ops();
 
+	purple_debug_with_location(PURPLE_DEBUG_MISC, "eventloop",
+				   file, line, function,
+				   "purple_input_add, fd = %i", source);
 	return ops->input_add(source, condition, func, user_data);
 }
 
+
+
 gboolean
-purple_input_remove(guint tag)
+purple_input_remove_with_location(guint tag, const char *file, int line,
+				  const char *function)
 {
 	PurpleEventLoopUiOps *ops = purple_eventloop_get_ui_ops();
+
+	purple_debug_with_location(PURPLE_DEBUG_MISC, "eventloop",
+				   file, line, function,
+				   "purple_input_remove, handle = %i", tag);
 
 	return ops->input_remove(tag);
 }

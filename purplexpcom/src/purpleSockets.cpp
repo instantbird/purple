@@ -188,8 +188,13 @@ nsresult purpleSocketInternal::PostEvent()
     do_QueryInterface(purpleSocketWatcher::getSts(), &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
+#ifdef DEBUG
+  // 'this' may be released and freed on the socket thread before we
+  // return from the Dispatch call, so cache the value of mId.
+  PRUint32 id = mId;
+#endif
   rv = eventTarget->Dispatch(this, NS_DISPATCH_NORMAL);
-  LOG(("[%i]  Dispatch %s\n", mId, NS_FAILED(rv) ? "Failed!!!" : "OK"));
+  LOG(("[%i]  Dispatch %s\n", id, NS_FAILED(rv) ? "Failed!!!" : "OK"));
   return rv;
 }
 
@@ -374,8 +379,19 @@ PRUint32 purpleSocketWatcher::AddWatch(gint aFd, PurpleInputCondition aCondition
   NS_ENSURE_SUCCESS(rv, 0);
 
   sSockets->AppendElement(socket);
-  LOG(("[%i]SOCKETADD fd = %i, accountId = %u\n",
-       id, aFd, purpleAccountScoper::GetCurrentAccountId()));
+
+#ifdef DEBUG
+  const char *mode = "none";
+  if ((aCondition & PURPLE_INPUT_READ) && (aCondition & PURPLE_INPUT_WRITE))
+    mode = "read/write";
+  else if (aCondition & PURPLE_INPUT_READ)
+    mode = "read";
+  else if (aCondition & PURPLE_INPUT_WRITE)
+    mode = "write";
+
+  LOG(("[%i]SOCKETADD fd = %i, accountId = %u, mode = %s\n",
+       id, aFd, purpleAccountScoper::GetCurrentAccountId(), mode));
+#endif
 
   return id;
 }

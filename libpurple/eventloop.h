@@ -217,8 +217,17 @@ gboolean purple_timeout_remove(guint handle);
  * @return The resulting handle (will be greater than 0).
  * @see g_io_add_watch_full
  */
-guint purple_input_add(int fd, PurpleInputCondition cond,
-                       PurpleInputFunction func, gpointer user_data);
+/* guint purple_input_add(int fd, PurpleInputCondition cond,
+                       PurpleInputFunction func, gpointer user_data); */
+guint purple_input_add_with_location(int fd, PurpleInputCondition cond,
+				     PurpleInputFunction func,
+				     gpointer user_data,
+				     const char *file, int line,
+				     const char *function);
+
+#define purple_input_add(fd, cond, func, user_data)		      \
+  purple_input_add_with_location(fd, cond, func, user_data, __FILE__, \
+				 __LINE__, __FUNCTION__)
 
 /**
  * Removes an input handler.
@@ -226,7 +235,12 @@ guint purple_input_add(int fd, PurpleInputCondition cond,
  * @param handle The handle of the input handler. Note that this is the return
  *               value from purple_input_add(), <i>not</i> the file descriptor.
  */
-gboolean purple_input_remove(guint handle);
+/* gboolean purple_input_remove(guint handle); */
+gboolean purple_input_remove_with_location(guint handle, const char *file,
+					   int line, const char *function);
+
+#define purple_input_remove(handle)					     \
+  purple_input_remove_with_location(handle, __FILE__, __LINE__, __FUNCTION__)
 
 /**
  * Get the current error status for an input.
