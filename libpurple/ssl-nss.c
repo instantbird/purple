@@ -497,6 +497,11 @@ ssl_nss_read(PurpleSslConnection *gsc, void *data, size_t len)
 	PRInt32 ret;
 	PurpleSslNssData *nss_data = PURPLE_SSL_NSS_DATA(gsc);
 
+	if (nss_data->handshake_handler != 0) {
+		purple_debug_error("nss", "attempting to read from an ssl socket before the end of the handshake\n");
+		return -1;
+	}
+
 	ret = PR_Read(nss_data->in, data, len);
 
 	if (ret == -1)
@@ -513,6 +518,11 @@ ssl_nss_write(PurpleSslConnection *gsc, const void *data, size_t len)
 
 	if(!nss_data)
 		return 0;
+
+	if (nss_data->handshake_handler != 0) {
+		purple_debug_error("nss", "attempting to write to an ssl socket before the end of the handshake\n");
+		return -1;
+	}
 
 	ret = PR_Write(nss_data->in, data, len);
 
