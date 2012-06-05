@@ -62,11 +62,6 @@ CPPSRCS		= \
 		purpleTooltipInfo.cpp \
 		$(NULL)
 
-ifeq ($(OS_ARCH),Darwin)
-CMMSRCS		+= nsDockTile.mm
-OS_LIBS		+= -framework Carbon
-endif
-
 ifdef PURPLE_PLUGINS
 DEFINES 	+= -DPURPLE_PLUGINS
 endif

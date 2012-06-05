@@ -13,9 +13,6 @@
 #include "purpleMessage.h"
 #include "purpleProxy.h"
 #include "purpleProxyInfo.h"
-#ifdef XP_MACOSX
-# include "nsDockTile.h"
-#endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleConvChat)
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleConvIM)
@@ -24,9 +21,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(purpleMessage)
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleProtocol)
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleProxy)
 NS_GENERIC_FACTORY_CONSTRUCTOR(purpleProxyInfo)
-#ifdef XP_MACOSX
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDockTile)
-#endif
 
 NS_DEFINE_NAMED_CID(PURPLE_CONV_CHAT_CID);
 NS_DEFINE_NAMED_CID(PURPLE_CONV_IM_CID);
@@ -35,9 +29,6 @@ NS_DEFINE_NAMED_CID(PURPLE_MESSAGE_CID);
 NS_DEFINE_NAMED_CID(PURPLE_PROTOCOL_CID);
 NS_DEFINE_NAMED_CID(PURPLE_PROXY_CID);
 NS_DEFINE_NAMED_CID(PURPLE_PROXY_INFO_CID);
-#ifdef XP_MACOSX
-NS_DEFINE_NAMED_CID(NSDOCKBADGESERVICE_CID);
-#endif
 
 static const mozilla::Module::CIDEntry kPurpleCIDs[] = {
   { &kPURPLE_CONV_CHAT_CID, false, NULL, purpleConvChatConstructor },
@@ -47,9 +38,6 @@ static const mozilla::Module::CIDEntry kPurpleCIDs[] = {
   { &kPURPLE_PROTOCOL_CID, false, NULL, purpleProtocolConstructor },
   { &kPURPLE_PROXY_CID, false, NULL, purpleProxyConstructor },
   { &kPURPLE_PROXY_INFO_CID, false, NULL, purpleProxyInfoConstructor },
-#ifdef XP_MACOSX
-  { &kNSDOCKBADGESERVICE_CID, true, NULL, nsDockTileConstructor },
-#endif
   { NULL }
 };
 
@@ -61,9 +49,6 @@ static const mozilla::Module::ContractIDEntry kPurpleContracts[] = {
   { PURPLE_PROTOCOL_CONTRACTID, &kPURPLE_PROTOCOL_CID },
   { PURPLE_PROXY_CONTRACTID, &kPURPLE_PROXY_CID },
   { PURPLE_PROXY_INFO_CONTRACTID, &kPURPLE_PROXY_INFO_CID },
-#ifdef XP_MACOSX
-  { NSDOCKBADGESERVICE_CONTRACTID, &kNSDOCKBADGESERVICE_CID },
-#endif
   { NULL }
 };
 
