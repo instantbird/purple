@@ -207,33 +207,30 @@ NS_IMETHODIMP purpleSocketInternal::Run()
     return NS_OK;
   }
 
-  if (mPollFlagsInternal) {
-    if (mCanceled) {
-      LOG(("already canceling, leaving!\n"));
-      mPollFlagsInternal = 0;
-      return NS_OK;
-    }
-    mPollFlags = mPollFlagsInternal;
-    mPollFlagsInternal = 0;
-    LOG(("pollFlags set\n"));
-  }
-  else if (mAttached) {
-    mCondition = NS_ERROR_UNEXPECTED;
-    mDetached = PR_TRUE;
-    LOG(("detach requested\n"));
-    return NS_OK;
-  }
-
-  if (!mAttached) {
-    if (mCanceled) {
+  if (mCanceled) {
+    if (!mAttached) {
       // The watch on this socket has been canceled before we had
       // enought time to attach it. |OnSocketDetached| will never be
       // called because the socket hasn't been attached. We should
       // release the runnable to ensure it can be deleted.
       mRunnable = nsnull;
       LOG(("removed useless runnable\n"));
-      return NS_OK;
     }
+    else {
+      mCondition = NS_ERROR_UNEXPECTED;
+      LOG(("detach requested\n"));
+    }
+    mDetached = PR_TRUE;
+    return NS_OK;
+  }
+
+  if (mPollFlagsInternal) {
+    mPollFlags = mPollFlagsInternal;
+    mPollFlagsInternal = 0;
+    LOG(("pollFlags set\n"));
+  }
+
+  if (!mAttached) {
     mAttached = PR_TRUE;
     LOG(("attach requested\n"));
     return OnAttach();
