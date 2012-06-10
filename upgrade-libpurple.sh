@@ -32,12 +32,12 @@ getversion() {
 }
 
 pruneunused() {
-  rm -rf $1/{finch,pidgin,configure,po,doc}
+  rm -rf $1/{finch,pidgin,configure,doc}
   rm -rf $1/{ChangeLog*,config*,compile,AUTHORS,COPYRIGHT,NEWS,aclocal.m4,depcomp,install-sh,intltool*,missing,pidgin.*,ltmain.sh}
   find . -name 'Makefile.*' -exec rm -r {} \;
   mv $1/libpurple/plugins/ssl/ssl-nss.c $1/libpurple
   rm -rf $1/libpurple/{plugins,gconf,example,tests}
-  rm -rf $1/libpurple/protocols/{bonjour,irc,msnp9,silc,silc10,toc,zephyr}
+  rm -rf $1/libpurple/protocols/{bonjour,irc,msnp9,mxit,silc,silc10,toc,zephyr}
   rm -rf $1/libpurple/protocols/jabber/jingle
   rm -f $1/libpurple/purple-*
   rm -f $1/libpurple/dbus-{a,b,d,p,s,t,u}*
