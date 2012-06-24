@@ -29,8 +29,8 @@ comment_hashes = ['d83a1890eddfca574851f6d38fd6afe1',
                   'b1a2353732aa2ead4c2c0de5cc2452e2',
                   '3e434ef29c7dd8f8b6595481cb123b2d']
 
-prpl_dirs = ["gg", "jabber", "msn", "myspace", "novell", "oscar", "qq",
-             "sametime", "simple", "yahoo"]
+prpl_dirs = ["bonjour", "gg", "jabber", "msn", "myspace", "novell", "oscar",
+             "qq", "sametime", "simple", "yahoo"]
 
 # files['purple']['id1'] contains the number of strings in the package purple with the id id1 (if > 1, we have a collision and need to append a hash)
 files = {'purple': {}}
