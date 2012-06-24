@@ -40,7 +40,7 @@ pruneunused() {
   find . -name 'Makefile.*' -exec rm -r {} \;
   mv $1/libpurple/plugins/ssl/ssl-nss.c $1/libpurple
   rm -rf $1/libpurple/{plugins,gconf,example,tests}
-  rm -rf $1/libpurple/protocols/{bonjour,irc,msnp9,mxit,silc,silc10,toc,zephyr}
+  rm -rf $1/libpurple/protocols/{irc,msnp9,mxit,silc,silc10,toc,zephyr}
   rm -rf $1/libpurple/protocols/jabber/jingle
   rm -f $1/libpurple/purple-*
   rm -f $1/libpurple/dbus-{a,b,d,p,s,t,u}*

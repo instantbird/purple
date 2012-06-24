@@ -44,6 +44,10 @@ ifeq ($(OS_ARCH),WINCE)
 EXTRA_LIBS	+= ws2.lib
 endif
 
+ifdef PURPLE_BONJOUR
+EXTRA_LIBS	+= netapi32.lib
+endif
+
 DSO_LDOPTS	+= -DEF:purple.def
 else
 ifeq ($(OS_ARCH),Darwin)
@@ -74,6 +78,10 @@ PROTOCOLS	= \
 		yahoo \
 		netsoul \
 		$(NULL)
+
+ifdef PURPLE_BONJOUR
+PROTOCOLS	+= bonjour
+endif
 
 ifdef MOZ_DEBUG
 PROTOCOLS	+= null
