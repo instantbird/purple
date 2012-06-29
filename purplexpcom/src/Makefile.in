@@ -21,7 +21,7 @@ MODULE_NAME	= purplexpcom
 
 ifneq (,$(filter-out WINNT WINCE Darwin,$(OS_ARCH)))
 LOCAL_INCLUDES	= $(GLIB_CFLAGS)
-EXTRA_LIBS	= $(GLIB_LIBS) -lgmodule-2.0 $(DIST)/lib/libpurple.so -lz -lxml2
+EXTRA_LIBS	= $(GLIB_LIBS) $(GLIB_GMODULE_LIBS) $(DIST)/lib/libpurple.so -lz $(LIBXML2_LIBS)
 else
 LOCAL_INCLUDES  += -I$(DIST)/include/glib
 EXTRA_LIBS	= -L$(DIST)/lib -lpurple -lz

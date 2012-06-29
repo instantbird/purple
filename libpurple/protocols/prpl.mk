@@ -19,7 +19,7 @@ LOCAL_INCLUDES = -I$(DIST)/include/libpurple
 
 ifneq (,$(filter-out WINNT WINCE Darwin,$(OS_ARCH)))
 LOCAL_INCLUDES	+= $(GLIB_CFLAGS)
-EXTRA_LIBS	= ../../libpurple.so $(GLIB_LIBS) -lgmodule-2.0 -lxml2 -lz
+EXTRA_LIBS	= ../../libpurple.so $(GLIB_LIBS) $(GLIB_GMODULE_LIBS) $(LIBXML2_LIBS) -lz
 else
 LOCAL_INCLUDES  += -I$(DIST)/include/glib
 EXTRA_LIBS	= -L../.. -lpurple -L$(DIST)/lib -lz

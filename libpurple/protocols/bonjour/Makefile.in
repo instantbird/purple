@@ -35,8 +35,8 @@ endif
 else
 # Linux uses libavahi instead of Bonjour.
 CSRCS	+= mdns_avahi.c
-LOCAL_INCLUDES	+= -I/usr/include/libxml2 -I/usr/local/include/libxml2/
-EXTRA_LIBS	+= @AVAHI_LIBS@
+LOCAL_INCLUDES	+= $(LIBXML2_CFLAGS) $(AVAHI_CFLAGS)
+EXTRA_LIBS	+= $(LIBXML2_LIBS) $(AVAHI_LIBS)
 endif
 
 include $(srcdir)/../prpl-rules.mk

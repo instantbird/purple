@@ -56,7 +56,7 @@ EXTRA_LIBS	= -liconv -lz
 SHARED_LIBRARY_LIBS += $(foreach lib,glib xml2,../libraries/$(lib)/$(LIB_PREFIX)$(lib).$(LIB_SUFFIX))
 else
 # Other Unix
-EXTRA_LIBS	= $(GLIB_LIBS) -lgmodule-2.0 -lxml2 -lz
+EXTRA_LIBS	= $(GLIB_LIBS) $(GLIB_GMODULE_LIBS) $(LIBXML2_LIBS) -lz
 endif
 ifneq ($(OS_ARCH),FreeBSD)
 EXTRA_LIBS	+= -lresolv
