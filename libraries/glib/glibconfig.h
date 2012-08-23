@@ -50,38 +50,44 @@ typedef unsigned int guint32;
 #define G_GUINT32_FORMAT "u"
 #define G_HAVE_GINT64 1          /* deprecated, always true */
 
-#ifndef _MSC_VER
-G_GNUC_EXTENSION typedef signed long long gint64;
-G_GNUC_EXTENSION typedef unsigned long long guint64;
-#else /* _MSC_VER */
+#ifdef _MSC_VER
 typedef signed __int64 gint64;
 typedef unsigned __int64 guint64;
-#endif /* _MSC_VER */
 
-#ifndef _MSC_VER
-#define G_GINT64_CONSTANT(val)	(G_GNUC_EXTENSION (val##LL))
-#else /* _MSC_VER */
 #define G_GINT64_CONSTANT(val)	(val##i64)
-#endif /* _MSC_VER */
-#ifndef _MSC_VER
-#define G_GUINT64_CONSTANT(val)	(G_GNUC_EXTENSION (val##ULL))
-#else /* _MSC_VER */
 #define G_GUINT64_CONSTANT(val)	(val##Ui64)
-#endif /* _MSC_VER */
-
-#ifndef XP_MACOSX
 #define G_GINT64_MODIFIER "I64"
 #define G_GINT64_FORMAT "I64i"
 #define G_GUINT64_FORMAT "I64u"
+#elifdef __x86_64__
+typedef signed long gint64;
+typedef unsigned long guint64;
+
+#define G_GINT64_CONSTANT(val)	(val##L)
+#define G_GUINT64_CONSTANT(val)	(val##UL)
+#define G_GINT64_MODIFIER "l"
+#define G_GINT64_FORMAT "li"
+#define G_GUINT64_FORMAT "lu"
 #else
+G_GNUC_EXTENSION typedef signed long long gint64;
+G_GNUC_EXTENSION typedef unsigned long long guint64;
+
+#define G_GINT64_CONSTANT(val)	(G_GNUC_EXTENSION (val##LL))
+#define G_GUINT64_CONSTANT(val)	(G_GNUC_EXTENSION (val##ULL))
 #define G_GINT64_MODIFIER "ll"
 #define G_GINT64_FORMAT "lli"
 #define G_GUINT64_FORMAT "llu"
 #endif
 
+#ifdef __x86_64__
+#define GLIB_SIZEOF_VOID_P 8
+#define GLIB_SIZEOF_LONG   8
+#define GLIB_SIZEOF_SIZE_T 8
+#else
 #define GLIB_SIZEOF_VOID_P 4
 #define GLIB_SIZEOF_LONG   4
 #define GLIB_SIZEOF_SIZE_T 4
+#endif
 
 #ifndef XP_MACOSX
 typedef signed int gssize;
@@ -110,11 +116,19 @@ typedef gint64 goffset;
 #define G_MAXOFFSET	G_MAXINT64
 
 
+#ifdef __x86_64__
+#define GPOINTER_TO_INT(p)	((gint)  (glong) (p))
+#define GPOINTER_TO_UINT(p)	((guint) (gulong) (p))
+
+#define GINT_TO_POINTER(i)	((gpointer) (glong) (i))
+#define GUINT_TO_POINTER(u)	((gpointer) (gulong) (u))
+#else
 #define GPOINTER_TO_INT(p)	((gint)   (p))
 #define GPOINTER_TO_UINT(p)	((guint)  (p))
 
 #define GINT_TO_POINTER(i)	((gpointer)  (i))
 #define GUINT_TO_POINTER(u)	((gpointer)  (u))
+#endif
 
 #ifdef NeXT /* @#%@! NeXTStep */
 # define g_ATEXIT(proc)	(!atexit (proc))
@@ -136,7 +150,11 @@ typedef gint64 goffset;
 #endif
 
 #ifndef _MSC_VER
+#ifdef __x86_64__
+#define G_VA_COPY_AS_ARRAY 1
+#else
 #define G_VA_COPY	va_copy
+#endif
 #endif /* not _MSC_VER */
 
 #ifdef	__cplusplus
@@ -189,13 +207,21 @@ struct _GStaticMutex
 {
   struct _GMutex *runtime_mutex;
   union {
+#ifdef __x86_64__
+    char   pad[64];
+#else
     char   pad[44];
+#endif
     double dummy_double;
     void  *dummy_pointer;
     long   dummy_long;
   } static_mutex;
 };
+#ifdef __x86_64__
+#define	G_STATIC_MUTEX_INIT	{ NULL, { { -89,-85,-86,50,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0} } }
+#else
 #define	G_STATIC_MUTEX_INIT	{ NULL, { { -89,-85,-86,50,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0} } }
+#endif
 #define	g_static_mutex_get_mutex(mutex) \
   (g_thread_use_default_impl ? ((GMutex*) ((mutex)->static_mutex.pad)) : \
    g_static_mutex_get_mutex_impl_shortcut (&((mutex)->runtime_mutex)))
@@ -213,7 +239,11 @@ typedef struct _GMutex* GStaticMutex;
 typedef union _GSystemThread GSystemThread;
 union _GSystemThread
 {
+#ifdef __x86_64__
+  char   data[8];
+#else
   char   data[4];
+#endif
   double dummy_double;
   void  *dummy_pointer;
   long   dummy_long;
@@ -246,10 +276,17 @@ union _GSystemThread
 #define GINT64_TO_BE(val)	((gint64) GUINT64_SWAP_LE_BE (val))
 #define GUINT64_TO_BE(val)	(GUINT64_SWAP_LE_BE (val))
 #endif
+#ifdef __x86_64__
+#define GLONG_TO_LE(val)	((glong) GINT64_TO_LE (val))
+#define GULONG_TO_LE(val)	((gulong) GUINT64_TO_LE (val))
+#define GLONG_TO_BE(val)	((glong) GINT64_TO_BE (val))
+#define GULONG_TO_BE(val)	((gulong) GUINT64_TO_BE (val))
+#else
 #define GLONG_TO_LE(val)	((glong) GINT32_TO_LE (val))
 #define GULONG_TO_LE(val)	((gulong) GUINT32_TO_LE (val))
 #define GLONG_TO_BE(val)	((glong) GINT32_TO_BE (val))
 #define GULONG_TO_BE(val)	((gulong) GUINT32_TO_BE (val))
+#endif
 #define GINT_TO_LE(val)		((gint) GINT32_TO_LE (val))
 #define GUINT_TO_LE(val)	((guint) GUINT32_TO_LE (val))
 #define GINT_TO_BE(val)		((gint) GINT32_TO_BE (val))
