@@ -59,7 +59,7 @@ typedef unsigned __int64 guint64;
 #define G_GINT64_MODIFIER "I64"
 #define G_GINT64_FORMAT "I64i"
 #define G_GUINT64_FORMAT "I64u"
-#elifdef __x86_64__
+#elif defined(__x86_64__)
 typedef signed long gint64;
 typedef unsigned long guint64;
 
