@@ -19,17 +19,30 @@ FORCE_SHARED_LIB = 1
 MODULE_NAME	= purplexpcom
 #NO_DIST_INSTALL	= 1
 
-ifneq (,$(filter-out WINNT WINCE Darwin,$(OS_ARCH)))
+SHARED_LIBRARY_LIBS += ../../libpurple/$(LIB_PREFIX)purple.$(LIB_SUFFIX)
+
+ifeq (,$(filter WINNT Darwin,$(OS_ARCH)))
 LOCAL_INCLUDES	= $(GLIB_CFLAGS)
-EXTRA_LIBS	= $(GLIB_LIBS) $(GLIB_GMODULE_LIBS) $(DIST)/lib/libpurple.so -lz $(LIBXML2_LIBS)
+EXTRA_LIBS	= $(GLIB_LIBS) $(GLIB_GMODULE_LIBS) -lz $(LIBXML2_LIBS)
+ifneq ($(OS_ARCH),FreeBSD)
+EXTRA_LIBS	+= -lresolv
+endif
 else
 LOCAL_INCLUDES  += -I$(DIST)/include/glib
-EXTRA_LIBS	= -L$(DIST)/lib -lpurple -lz
+EXTRA_LIBS	= -lz -liconv
+ifeq ($(OS_ARCH),WINNT)
+DEFINES += -DGLIB_STATIC_COMPILATION
+EXTRA_LIBS	+= ws2_32.lib
+
+ifdef PURPLE_BONJOUR
+EXTRA_LIBS	+= netapi32.lib
 endif
 
-ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
-EXTRA_LIBS	= $(DIST)/lib/purple.lib
+DSO_LDOPTS	+= -DEF:../../libpurple/purple.def
 endif
+endif
+
+EXTRA_LIBS	+= $(NSS_LIBS) $(NSPR_LIBS)
 
 CPPSRCS		= \
 		purpleAccount.cpp \
@@ -66,8 +79,6 @@ ifdef PURPLE_PLUGINS
 DEFINES 	+= -DPURPLE_PLUGINS
 endif
 
-EXTRA_DSO_LDOPTS += $(XPCOM_GLUE_LDOPTS) $(MOZ_COMPONENT_NSPR_LIBS)
-
 EXTRA_COMPONENTS = prpl.manifest
 
 ifdef ENABLE_TESTS
@@ -76,9 +87,25 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
-CXXFLAGS	+= -wd4624 -wd4068
+ifeq ($(OS_ARCH),Darwin)
+EXTRA_DSO_LDOPTS = -dynamiclib -install_name @executable_path/components/$(SHARED_LIBRARY)
 endif
+EXTRA_DSO_LDOPTS += $(XPCOM_GLUE_LDOPTS) $(MOZ_COMPONENT_NSPR_LIBS)
+
+ifeq ($(OS_ARCH),WINNT)
+CXXFLAGS	+= -wd4624 -wd4068
+
+module.ver: module.ver.in $(GLOBAL_DEPS)
+	sed 's/@''PURPLE_MAJOR_VERSION@/$(PURPLE_MAJOR_VERSION)/;s/@''PURPLE_MINOR_VERSION@/$(PURPLE_MINOR_VERSION)/;s/@''PURPLE_MICRO_VERSION@/$(PURPLE_MICRO_VERSION)/' $< > $@
+
+_RC_STRING += -SRCDIR .
+module.rc: module.ver
+
+GARBAGE += module.ver
+endif
+
+libs:: $(SHARED_LIBRARY)
+	$(call SUBMAKE,dynamic-prpls,../../libpurple)
 
 #libs:: $(SHARED_LIBRARY)
 #	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(FINAL_TARGET)/libraries

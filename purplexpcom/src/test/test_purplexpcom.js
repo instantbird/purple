@@ -54,5 +54,14 @@ function run_test() {
   core.init();
   do_check_true(core.getProtocols().hasMoreElements());
 
-  core.quit();
+  try {
+    for each (let prplId in ["aim", "msn", "jabber", "yahoo"]) {
+      let id = "prpl-" + prplId;
+      let proto = core.getProtocolById(id);
+      do_check_true(proto instanceof Ci.prplIProtocol);
+      do_check_eq(proto.id, id);
+    }
+  } finally {
+    core.quit();
+  }
 }

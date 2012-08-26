@@ -12,56 +12,22 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= libpurple
 EXPORTS_NAMESPACES= libpurple
 LIBRARY_NAME	= purple
-FORCE_SHARED_LIB= 1
+FORCE_STATIC_LIB= 1
 LIB_IS_C_ONLY	= 1
 #NO_DIST_INSTALL	= 1
 
 VISIBILITY_FLAGS=
 
-ifneq (,$(filter-out WINNT WINCE Darwin,$(OS_ARCH)))
-LOCAL_INCLUDES	= $(GLIB_CFLAGS) -I/usr/include/libxml2/ -I/usr/local/include/libxml2/
+ifeq (,$(filter WINNT Darwin,$(OS_ARCH)))
+LOCAL_INCLUDES	= $(GLIB_CFLAGS) $(LIBXML2_CFLAGS)
 else
 LOCAL_INCLUDES  = -I$(DIST)/include/glib
-
-ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
-LOCAL_INCLUDES += -I$(srcdir)/win32
-endif
-endif
-
-ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
-EXTRA_LIBS	= \
-		$(DIST)/lib/nss3.lib \
-		$(DIST)/lib/nspr4.lib \
-		$(DIST)/lib/ssl3.lib \
-		$(NULL)
 SHARED_LIBRARY_LIBS += $(foreach lib,glib xml2,../libraries/$(lib)/$(LIB_PREFIX)$(lib).$(LIB_SUFFIX))
-DEFINES += -DGLIB_STATIC_COMPILATION
 
 ifeq ($(OS_ARCH),WINNT)
-EXTRA_LIBS	+= ws2_32.lib
+LOCAL_INCLUDES += -I$(srcdir)/win32
+DEFINES += -DGLIB_STATIC_COMPILATION
 endif
-ifeq ($(OS_ARCH),WINCE)
-EXTRA_LIBS	+= ws2.lib
-endif
-
-ifdef PURPLE_BONJOUR
-EXTRA_LIBS	+= netapi32.lib
-endif
-
-DSO_LDOPTS	+= -DEF:purple.def
-else
-ifeq ($(OS_ARCH),Darwin)
-# Mac
-EXTRA_LIBS	= -liconv -lz
-SHARED_LIBRARY_LIBS += $(foreach lib,glib xml2,../libraries/$(lib)/$(LIB_PREFIX)$(lib).$(LIB_SUFFIX))
-else
-# Other Unix
-EXTRA_LIBS	= $(GLIB_LIBS) $(GLIB_GMODULE_LIBS) $(LIBXML2_LIBS) -lz
-endif
-ifneq ($(OS_ARCH),FreeBSD)
-EXTRA_LIBS	+= -lresolv
-endif
-EXTRA_LIBS	+= $(NSS_LIBS) $(NSPR_LIBS)
 endif
 
 ifndef PURPLE_PLUGINS
@@ -89,7 +55,7 @@ endif
 
 STATIC_PROTO_libs = $(foreach proto,$(STATIC_PRPLS),protocols/$(proto)_libs)
 
-PARALLEL_DIRS = $(foreach proto,$(PROTOCOLS),protocols/$(proto))
+PARALLEL_DIRS = $(foreach proto,$(STATIC_PRPLS),protocols/$(proto))
 ifneq (,$(STATIC_PRPLS))
 STATIC_PRPL_LIBS = $(foreach proto,$(STATIC_PRPLS),protocols/$(proto)/$(LIB_PREFIX)$(proto).$(LIB_SUFFIX))
 SHARED_LIBRARY_LIBS += $(STATIC_PRPL_LIBS)
@@ -156,7 +122,7 @@ EXPORTS_libpurple = \
 		$(NULL)
 #		certificate.h
 
-ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
+ifeq ($(OS_ARCH),WINNT)
 EXPORTS_libpurple += \
 		win32/win32dep.h \
 		win32/wpurpleerror.h \
@@ -228,7 +194,7 @@ GARBAGE		+= static_proto_init.c
 endif
 endif
 
-ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
+ifeq ($(OS_ARCH),WINNT)
 CSRCS		+= \
 		win32/libc_interface.c \
 		win32/win32dep.c \
@@ -237,7 +203,7 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
+ifeq ($(OS_ARCH),WINNT)
 export::
 	mkdir -p win32
 endif
@@ -256,9 +222,11 @@ static_proto_init.c: $(GLOBAL_DEPS)
 	echo >> $@ '}'
 endif
 
-# the dynamic protocols depend on the final libpurple.so
-$(filter-out $(STATIC_PROTO_libs),$(PARALLEL_DIRS_libs)): $(SHARED_LIBRARY)
+# the dynamic protocols are built after purplexpcom is linked
+dynamic-prpls:
+	$(foreach proto,$(filter-out $(STATIC_PRPLS),$(PROTOCOLS)),$(call SUBMAKE,libs,protocols/$(proto)))
 
+ifeq ($(OS_ARCH),WINNT)
 purple.def: ../libraries/glib/glib.def $(EXPORTS_libpurple) $(GLOBAL_DEPS)
 	cat ../libraries/glib/glib.def > purple.def
 	(cd $(srcdir); cat $(EXPORTS_libpurple)) |egrep '^[a-zA-Z].* \*?w?purple_[a-z_0-9]+\(' |sed -e 's/(.*//' -e 's/.* \*\?//' |sort |uniq >> purple.def
@@ -267,15 +235,12 @@ purple.def: ../libraries/glib/glib.def $(EXPORTS_libpurple) $(GLOBAL_DEPS)
 	cat $(srcdir)/signals.h |egrep 'void purple_marshal_[A-Z_]+\(' |sed -e 's/(.*//' -e 's/.* \*\?//' |sort |uniq >> purple.def
 	cat $(srcdir)/xmlnode.h |egrep '^[a-zA-Z].* \*?xmlnode_[a-z_]+\(' |sed -e 's/(.*//' -e 's/.* \*\?//' |sort |uniq >> purple.def
 
-purple.dll: purple.def
+$(LIBRARY): purple.def
+
+GARBAGE += purple.def
+endif
 
 version.h: version.h.in $(GLOBAL_DEPS)
 	sed 's/@''PURPLE_MAJOR_VERSION@/$(PURPLE_MAJOR_VERSION)/;s/@''PURPLE_MINOR_VERSION@/$(PURPLE_MINOR_VERSION)/;s/@''PURPLE_MICRO_VERSION@/$(PURPLE_MICRO_VERSION)/' $< > $@
 
-module.ver: module.ver.in $(GLOBAL_DEPS)
-	sed 's/@''PURPLE_MAJOR_VERSION@/$(PURPLE_MAJOR_VERSION)/;s/@''PURPLE_MINOR_VERSION@/$(PURPLE_MINOR_VERSION)/;s/@''PURPLE_MICRO_VERSION@/$(PURPLE_MICRO_VERSION)/' $< > $@
-
-_RC_STRING += -SRCDIR .
-module.rc: module.ver
-
-GARBAGE += purple.def version.h module.ver
+GARBAGE += version.h
