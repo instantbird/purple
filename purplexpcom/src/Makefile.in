@@ -24,9 +24,6 @@ SHARED_LIBRARY_LIBS += ../../libpurple/$(LIB_PREFIX)purple.$(LIB_SUFFIX)
 ifeq (,$(filter WINNT Darwin,$(OS_ARCH)))
 LOCAL_INCLUDES	= $(GLIB_CFLAGS)
 EXTRA_LIBS	= $(GLIB_LIBS) $(GLIB_GMODULE_LIBS) -lz $(LIBXML2_LIBS)
-ifneq ($(OS_ARCH),FreeBSD)
-EXTRA_LIBS	+= -lresolv
-endif
 else
 LOCAL_INCLUDES  += -I$(DIST)/include/glib
 EXTRA_LIBS	= -lz -liconv
@@ -43,6 +40,10 @@ endif
 endif
 
 EXTRA_LIBS	+= $(NSS_LIBS) $(NSPR_LIBS)
+
+ifeq (,$(filter WINNT FreeBSD,$(OS_ARCH)))
+EXTRA_LIBS	+= -lresolv
+endif
 
 CPPSRCS		= \
 		purpleAccount.cpp \
