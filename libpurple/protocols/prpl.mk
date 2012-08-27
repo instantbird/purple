@@ -16,7 +16,11 @@ IS_COMPONENT	= 1
 VISIBILITY_FLAGS=
 
 LOCAL_INCLUDES = -I$(DIST)/include/libpurple
+ifeq ($(OS_ARCH),WINNT)
+EXTRA_LIBS	= ../../../purplexpcom/src/$(LIB_PREFIX)purplexpcom.$(LIB_SUFFIX)
+else
 EXTRA_LIBS	= ../../../purplexpcom/src/$(DLL_PREFIX)purplexpcom$(DLL_SUFFIX) -lz
+endif
 
 ifeq (,$(filter WINNT Darwin,$(OS_ARCH)))
 LOCAL_INCLUDES	+= $(GLIB_CFLAGS)

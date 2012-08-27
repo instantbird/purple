@@ -26,10 +26,11 @@ LOCAL_INCLUDES	= $(GLIB_CFLAGS)
 EXTRA_LIBS	= $(GLIB_LIBS) $(GLIB_GMODULE_LIBS) -lz $(LIBXML2_LIBS)
 else
 LOCAL_INCLUDES  += -I$(DIST)/include/glib
+ifneq ($(OS_ARCH),WINNT)
 EXTRA_LIBS	= -lz -liconv
-ifeq ($(OS_ARCH),WINNT)
+else
 DEFINES += -DGLIB_STATIC_COMPILATION
-EXTRA_LIBS	+= ws2_32.lib
+EXTRA_LIBS	= ws2_32.lib
 
 ifdef PURPLE_BONJOUR
 EXTRA_LIBS	+= netapi32.lib
@@ -90,7 +91,9 @@ include $(topsrcdir)/config/rules.mk
 
 ifeq ($(OS_ARCH),Darwin)
 EXTRA_DSO_LDOPTS = -dynamiclib -install_name @executable_path/components/$(SHARED_LIBRARY)
-else ifneq ($(OS_ARCH),WINNT)
+else ifeq ($(OS_ARCH),WINNT)
+DELETE_AFTER_LINK =
+else
 # Export more than just the NSModule symbol
 MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS =
 endif
@@ -109,6 +112,9 @@ GARBAGE += module.ver
 endif
 
 libs:: $(SHARED_LIBRARY)
+ifeq ($(OS_ARCH),WINNT)
+	mv fake.lib $(LIBRARY_NAME).$(LIB_SUFFIX)
+endif
 	$(call SUBMAKE,dynamic-prpls,../../libpurple)
 
 #libs:: $(SHARED_LIBRARY)
