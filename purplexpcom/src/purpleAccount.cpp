@@ -854,9 +854,6 @@ PURPLE_IMPL_GETFLAG(AutoResponses, AUTO_RESP)
 /* readonly attribute boolean singleFormatting; */
 PURPLE_IMPL_GETFLAG(SingleFormatting, FORMATTING_WBFO)
 
-/* readonly attribute boolean noNewlines; */
-PURPLE_IMPL_GETFLAG(NoNewlines, NO_NEWLINES)
-
 /* readonly attribute boolean noFontSizes; */
 PURPLE_IMPL_GETFLAG(NoFontSizes, NO_FONTSIZE)
 
