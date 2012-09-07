@@ -113,7 +113,7 @@ endif
 
 libs:: $(SHARED_LIBRARY)
 ifeq ($(OS_ARCH),WINNT)
-	mv fake.lib $(LIBRARY_NAME).$(LIB_SUFFIX)
+	-mv fake.lib $(LIBRARY_NAME).$(LIB_SUFFIX)
 endif
 	$(call SUBMAKE,dynamic-prpls,../../libpurple)
 
