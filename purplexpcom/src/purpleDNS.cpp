@@ -21,12 +21,12 @@
 //
 // NSPR_LOG_MODULES=purpleDNS:5
 //
-static PRLogModuleInfo *gPurpleDNSLog = nsnull;
+static PRLogModuleInfo *gPurpleDNSLog = nullptr;
 #endif
 #define LOG(args) PR_LOG(gPurpleDNSLog, PR_LOG_DEBUG, args)
 
 /* Init static members */
-nsCOMArray<purpleDNSRequest> *purpleDNS::sRequests = nsnull;
+nsCOMArray<purpleDNSRequest> *purpleDNS::sRequests = nullptr;
 
 void purpleDNS::init()
 {
@@ -44,7 +44,7 @@ void purpleDNS::unInit()
   for (PRInt32 i = 0; i < sRequests->Count(); ++i)
     (*sRequests)[i]->asyncResolv->Cancel(NS_ERROR_FAILURE);
   delete sRequests;
-  sRequests = nsnull;
+  sRequests = nullptr;
 }
 
 gboolean purpleDNS::Resolve(PurpleDnsQueryData *query_data,

@@ -16,7 +16,7 @@
 //
 // NSPR_LOG_MODULES=purpleMessage:5
 //
-static PRLogModuleInfo *gPurpleMessageLog = nsnull;
+static PRLogModuleInfo *gPurpleMessageLog = nullptr;
 #endif
 #define LOG(args) PR_LOG(gPurpleMessageLog, PR_LOG_DEBUG, args)
 
@@ -197,6 +197,6 @@ NS_IMETHODIMP purpleMessage::GetActions(PRUint32 *actionCount,
                                         prplIMessageAction ***actions)
 {
   *actionCount = 0;
-  *actions = nsnull;
+  *actions = nullptr;
   return NS_OK;
 }

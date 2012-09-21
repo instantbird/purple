@@ -16,11 +16,11 @@
 //
 // NSPR_LOG_MODULES=purpleGetText:5
 //
-static PRLogModuleInfo *gPurpleGetTextLog = nsnull;
+static PRLogModuleInfo *gPurpleGetTextLog = nullptr;
 #endif
 #define LOG(args) PR_LOG(gPurpleGetTextLog, PR_LOG_DEBUG, args)
 
-purpleGetText *purpleGetText::sInstance = nsnull;
+purpleGetText *purpleGetText::sInstance = nullptr;
 
 NS_IMPL_ISUPPORTS1(purpleGetText, nsIObserver)
 
@@ -108,19 +108,19 @@ const purpleGetText::PluralRule *purpleGetText::GetPluralRule()
   nsresult rv;
   nsCOMPtr<nsIStringBundleService> stringService =
      do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  NS_ENSURE_SUCCESS(rv, nullptr);
 
   nsCOMPtr<nsIStringBundle> bundle;
   rv = stringService->CreateBundle("chrome://global/locale/intl.properties",
                                    getter_AddRefs(bundle));
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  NS_ENSURE_SUCCESS(rv, nullptr);
 
   nsString result;
   rv = bundle->GetStringFromName(NS_LITERAL_STRING("pluralRule").get(), getter_Copies(result));
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  NS_ENSURE_SUCCESS(rv, nullptr);
 
   PRInt32 ruleNumber = strtol(NS_ConvertUTF16toUTF8(result).get(), NULL, 10);
-  NS_ENSURE_TRUE(ruleNumber >= 0 && ruleNumber < PLURAL_RULES_COUNT, nsnull);
+  NS_ENSURE_TRUE(ruleNumber >= 0 && ruleNumber < PLURAL_RULES_COUNT, nullptr);
 
   return mPluralRule = pluralRules + ruleNumber;
 }
@@ -204,7 +204,7 @@ nsCString *purpleGetText::GetStringFromProperties(const char *package,
   nsresult rv;
   nsCOMPtr<nsIStringBundleService> stringService =
      do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  NS_ENSURE_SUCCESS(rv, nullptr);
 
   nsCString propFileName("chrome://");
   propFileName.Append(package);
@@ -214,7 +214,7 @@ nsCString *purpleGetText::GetStringFromProperties(const char *package,
 
   nsCOMPtr<nsIStringBundle> bundle;
   rv = stringService->CreateBundle(propFileName.get(), getter_AddRefs(bundle));
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  NS_ENSURE_SUCCESS(rv, nullptr);
 
   nsString result;
   rv = bundle->GetStringFromName(NS_ConvertUTF8toUTF16(ident).get(),
@@ -223,7 +223,7 @@ nsCString *purpleGetText::GetStringFromProperties(const char *package,
   // it's ok to have a string not found in the bundle, we will retry
   // with the hash of the string
   if (NS_FAILED(rv))
-    return nsnull;
+    return nullptr;
 
   nsCString *cResult = new nsCString();
   CopyUTF16toUTF8(result, *cResult);
@@ -248,17 +248,17 @@ nsCString *purpleGetText::GetString(const char *package,
   }
 
   nsCOMPtr<nsICryptoHash> hash = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID);
-  NS_ENSURE_TRUE(hash, nsnull);
+  NS_ENSURE_TRUE(hash, nullptr);
 
   nsresult rv = hash->Init(nsICryptoHash::MD5);
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  NS_ENSURE_SUCCESS(rv, nullptr);
 
   rv = hash->Update(reinterpret_cast<const PRUint8*>(string), strlen(string));
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  NS_ENSURE_SUCCESS(rv, nullptr);
 
   nsCAutoString hashed;
   rv = hash->Finish(PR_FALSE, hashed);
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  NS_ENSURE_SUCCESS(rv, nullptr);
 
 #define NB_HEXA_DIGIT 4
   PRUint8 buf[NB_HEXA_DIGIT];
@@ -348,7 +348,7 @@ const char *purpleGetText::GetText(const char *package,
     return string;
 
   // check if we can get it from the hashtable
-  nsTArray<nsCString> *array = nsnull;
+  nsTArray<nsCString> *array = nullptr;
   nsDependentCString cString(string);
   if (sInstance->mStringCache[packageIndex].table.Get(cString, &array)) {
     // Check if we cached that the string is missing
@@ -360,7 +360,7 @@ const char *purpleGetText::GetText(const char *package,
   nsCString *result = sInstance->GetString(package, string);
   // If the localized string doesn't exist, store this info in the hashtable
   if (!result) {
-    sInstance->mStringCache[packageIndex].table.Put(cString, nsnull);
+    sInstance->mStringCache[packageIndex].table.Put(cString, nullptr);
 #ifdef DEBUG
     nsCString warning(NS_LITERAL_CSTRING("caching the missingness of "));
     warning.Append(package);
@@ -465,7 +465,7 @@ purpleGetText::Observe(nsISupports *aSubject,
 
 purpleGetText::purpleGetText()
   : mStringCache(10),
-    mPluralRule(nsnull)
+    mPluralRule(nullptr)
 {
 }
 
@@ -514,8 +514,8 @@ void purpleGetText::unInit()
   LOG(("purpleGetText::unInit\n"));
   for (PRUint32 i = 0; i < sInstance->mStringCache.Length(); ++i)
     if (sInstance->mStringCache[i].table.IsInitialized())
-      sInstance->mStringCache[i].table.Enumerate(deleteEnumerator, nsnull);
+      sInstance->mStringCache[i].table.Enumerate(deleteEnumerator, nullptr);
 
   NS_RELEASE(sInstance);
-  sInstance = nsnull;
+  sInstance = nullptr;
 }

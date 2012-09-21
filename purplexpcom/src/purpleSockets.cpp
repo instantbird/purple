@@ -17,7 +17,7 @@
 //
 // NSPR_LOG_MODULES=purpleSockets:5
 //
-static PRLogModuleInfo *gPurpleSocketsLog = nsnull;
+static PRLogModuleInfo *gPurpleSocketsLog = nullptr;
 #endif
 #define LOG(args) PR_LOG(gPurpleSocketsLog, PR_LOG_DEBUG, args)
 
@@ -195,7 +195,7 @@ void purpleSocketInternal::OnSocketReady(PRFileDesc* fd, PRInt16 outFlags)
 void purpleSocketInternal::OnSocketDetached(PRFileDesc*)
 {
   LOG(("[%i]  OnSocketDetached\n", mId));
-  mRunnable = nsnull;
+  mRunnable = nullptr;
 }
 
 NS_IMETHODIMP purpleSocketInternal::Run()
@@ -213,7 +213,7 @@ NS_IMETHODIMP purpleSocketInternal::Run()
       // enought time to attach it. |OnSocketDetached| will never be
       // called because the socket hasn't been attached. We should
       // release the runnable to ensure it can be deleted.
-      mRunnable = nsnull;
+      mRunnable = nullptr;
       LOG(("removed useless runnable\n"));
     }
     else {
@@ -254,7 +254,7 @@ nsresult purpleSocketInternal::OnAttach()
 }
 
 /* Init static members */
-nsTArray<purpleSocket *> *purpleSocketWatcher::sSockets = nsnull;
+nsTArray<purpleSocket *> *purpleSocketWatcher::sSockets = nullptr;
 nsCOMPtr<nsISocketTransportService> purpleSocketWatcher::sSts;
 nsCOMPtr<nsIObserver> purpleSocketWatcher::sObserver;
 
@@ -290,7 +290,7 @@ void purpleSocketWatcher::goingOffline()
     socket->Cancel();
   }
 
-  sSts = nsnull;
+  sSts = nullptr;
 }
 
 void purpleSocketWatcher::unInit()
@@ -303,7 +303,7 @@ void purpleSocketWatcher::unInit()
                                       NS_IOSERVICE_GOING_OFFLINE_TOPIC);
     }
 
-    sObserver = nsnull;
+    sObserver = nullptr;
   }
 
   LOG(("purpleSocketWatcher:unInit: Removing %i leftover watchers",
@@ -311,9 +311,9 @@ void purpleSocketWatcher::unInit()
   for (PRUint32 i = 0; i < sSockets->Length(); ++i)
     (*sSockets)[i]->Cancel();
   delete sSockets;
-  sSockets = nsnull;
+  sSockets = nullptr;
 
-  sSts = nsnull;
+  sSts = nullptr;
 }
 
 nsISocketTransportService *purpleSocketWatcher::getSts()

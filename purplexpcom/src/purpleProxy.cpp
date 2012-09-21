@@ -15,9 +15,9 @@ NS_IMPL_ISUPPORTS2_CI(purpleProxy, purpleIProxy, purpleIProxyInfo)
 
 purpleProxy::purpleProxy()
   : mType(0),
-  mHostname(nsnull), mPort(0),
-  mUsername(nsnull), mPassword(nsnull),
-  mKey(nsnull)
+  mHostname(nullptr), mPort(0),
+  mUsername(nullptr), mPassword(nullptr),
+  mKey(nullptr)
 {
   /* member initializers and constructor code */
 }

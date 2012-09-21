@@ -38,7 +38,7 @@
 //
 // NSPR_LOG_MODULES=purpleCoreService:5
 //
-static PRLogModuleInfo *gPurpleCoreServiceLog = nsnull;
+static PRLogModuleInfo *gPurpleCoreServiceLog = nullptr;
 #endif
 #define LOG(args) PR_LOG(gPurpleCoreServiceLog, PR_LOG_DEBUG, args)
 
@@ -57,7 +57,7 @@ extern void disconnect_blist_signals();
 purpleCoreService::purpleCoreService()
   :mInitialized(PR_FALSE),
    mQuitting(PR_FALSE),
-   mProxies(nsnull)
+   mProxies(nullptr)
 {
 #ifdef PR_LOGGING
   if (!gPurpleCoreServiceLog)

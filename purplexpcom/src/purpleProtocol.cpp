@@ -19,7 +19,7 @@
 //
 // NSPR_LOG_MODULES=purpleProtocol:5
 //
-static PRLogModuleInfo *gPurpleProtocolLog = nsnull;
+static PRLogModuleInfo *gPurpleProtocolLog = nullptr;
 #endif
 #define LOG(args) PR_LOG(gPurpleProtocolLog, PR_LOG_DEBUG, args)
 
@@ -81,7 +81,7 @@ NS_IMPL_CLASSINFO(purpleProtocol, NULL, 0, PURPLE_PROTOCOL_CID)
 NS_IMPL_ISUPPORTS1_CI(purpleProtocol, prplIProtocol)
 
 purpleProtocol::purpleProtocol()
-  :mInfo(nsnull)
+  :mInfo(nullptr)
 {
   /* member initializers and constructor code */
 #ifdef PR_LOGGING

@@ -33,7 +33,7 @@ static void create_conv(PurpleConversation *aConv)
 
   nsCOMPtr<purpleConversation> conv;
   PurpleConversationType type = purple_conversation_get_type(aConv);
-  const char *contractid = nsnull;
+  const char *contractid = nullptr;
   switch (type) {
     case PURPLE_CONV_TYPE_IM:
       contractid = "@instantbird.org/purple/convim;1";
@@ -71,7 +71,7 @@ static void destroy_conv(PurpleConversation *aConv)
 }
 
 static void notify_conv(PurpleConversation *aConv, nsISupports *aSubject,
-                        const char *aTopic, const PRUnichar *aData = nsnull)
+                        const char *aTopic, const PRUnichar *aData = nullptr)
 {
   NS_ENSURE_TRUE(aConv,);
 
@@ -128,7 +128,7 @@ static void conv_remove_chat_users(PurpleConversation *conv,
 }
 
 static void conv_update_chat_usr(PurpleConversation *conv, const char *user,
-                                 const PRUnichar *aData = nsnull)
+                                 const PRUnichar *aData = nullptr)
 {
   PurpleConvChatBuddy *prplBuddy = purple_conv_chat_cb_find(PURPLE_CONV_CHAT(conv), user);
   NS_ENSURE_TRUE(prplBuddy,);
@@ -141,7 +141,7 @@ static void conv_update_chat_usr(PurpleConversation *conv, const char *user,
 
 static void conv_update_chat_user(PurpleConversation *conv, const char *user)
 {
-  conv_update_chat_usr(conv, user, nsnull);
+  conv_update_chat_usr(conv, user, nullptr);
 }
 
 static void conv_rename_chat_user(PurpleConversation *conv, const char *old_name,
@@ -175,14 +175,14 @@ static void update_chat_topic(PurpleConversation *aConv,
                               const char *aWho,
                               const char *aNew)
 {
-  notify_conv(aConv, nsnull, "chat-update-topic");
+  notify_conv(aConv, nullptr, "chat-update-topic");
 }
 
 static void conversation_updated(PurpleConversation *aConv, PurpleConvUpdateType aType)
 {
   switch (aType) {
     case PURPLE_CONV_UPDATE_TYPING:
-      notify_conv(aConv, nsnull, "update-typing");
+      notify_conv(aConv, nullptr, "update-typing");
       break;
 
     case PURPLE_CONV_UPDATE_TITLE:
@@ -190,7 +190,7 @@ static void conversation_updated(PurpleConversation *aConv, PurpleConvUpdateType
       // calling purple_conversation_autoset_title before the
       // create_conversation uiop.
       if (aConv && aConv->ui_data)
-        notify_conv(aConv, nsnull, "update-conv-title");
+        notify_conv(aConv, nullptr, "update-conv-title");
       break;
 
     case PURPLE_CONV_UPDATE_CHATLEFT:
@@ -200,9 +200,9 @@ static void conversation_updated(PurpleConversation *aConv, PurpleConvUpdateType
         nsCOMPtr<nsIObserverService> os =
           do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
         if (conversation && os)
-          os->NotifyObservers(conversation, "conversation-left-chat", nsnull);
+          os->NotifyObservers(conversation, "conversation-left-chat", nullptr);
       }
-      notify_conv(aConv, nsnull, "update-conv-chatleft");
+      notify_conv(aConv, nullptr, "update-conv-chatleft");
       break;
 
     default:

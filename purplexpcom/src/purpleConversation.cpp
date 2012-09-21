@@ -23,7 +23,7 @@
 //
 // NSPR_LOG_MODULES=purpleConversation:5
 //
-PRLogModuleInfo *gPurpleConvLog = nsnull;
+PRLogModuleInfo *gPurpleConvLog = nullptr;
 #endif
 #define LOG(args) PR_LOG(gPurpleConvLog, PR_LOG_DEBUG, args)
 
@@ -74,10 +74,10 @@ NS_IMETHODIMP purpleConversation::UnInit()
 
 purpleAccount *purpleConversation::GetAccount()
 {
-  NS_ENSURE_TRUE(mConv, nsnull);
+  NS_ENSURE_TRUE(mConv, nullptr);
 
   PurpleAccount *pAccount = purple_conversation_get_account(mConv);
-  NS_ENSURE_TRUE(pAccount, nsnull);
+  NS_ENSURE_TRUE(pAccount, nullptr);
 
   return purpleAccount::fromPurpleAccount(pAccount);
 }
@@ -168,7 +168,7 @@ NS_IMETHODIMP purpleConversation::Close()
     do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  os->NotifyObservers(this, "closing-conversation", nsnull);
+  os->NotifyObservers(this, "closing-conversation", nullptr);
 
   if (!mUninitialized) {
     purpleAccountScoper scoper(GetAccount());

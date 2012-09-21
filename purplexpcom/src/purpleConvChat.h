@@ -21,48 +21,48 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_PRPLICONVCHAT
 
-  NS_SCRIPTABLE NS_IMETHOD GetIsChat(bool *aIsChat);
-  NS_SCRIPTABLE NS_IMETHOD GetNormalizedName(nsACString& aNormalizedName);
+  NS_IMETHOD GetIsChat(bool *aIsChat);
+  NS_IMETHOD GetNormalizedName(nsACString& aNormalizedName);
 
   // Forward most methods to purpleConversation
-  NS_SCRIPTABLE NS_IMETHOD GetAccount(imIAccount * *aAccount) {
+  NS_IMETHOD GetAccount(imIAccount * *aAccount) {
     return purpleConversation::GetAccount(aAccount);
   }
-  NS_SCRIPTABLE NS_IMETHOD GetName(nsACString & aName) {
+  NS_IMETHOD GetName(nsACString & aName) {
     return purpleConversation::GetName(aName);
   }
-  NS_SCRIPTABLE NS_IMETHOD GetTitle(nsACString & aTitle) {
+  NS_IMETHOD GetTitle(nsACString & aTitle) {
     return purpleConversation::GetTitle(aTitle);
   }
-  NS_SCRIPTABLE NS_IMETHOD GetStartDate(PRTime *aStartDate) {
+  NS_IMETHOD GetStartDate(PRTime *aStartDate) {
     return purpleConversation::GetStartDate(aStartDate);
   }
-  NS_SCRIPTABLE NS_IMETHOD GetId(PRUint32 *aId) {
+  NS_IMETHOD GetId(PRUint32 *aId) {
     return purpleConversation::GetId(aId);
   }
-  NS_SCRIPTABLE NS_IMETHOD SetId(PRUint32 aId) {
+  NS_IMETHOD SetId(PRUint32 aId) {
     return purpleConversation::SetId(aId);
   }
 
-  NS_SCRIPTABLE NS_IMETHODIMP SendTyping(PRUint32 aLength) {
+  NS_IMETHODIMP SendTyping(PRUint32 aLength) {
     return purpleConversation::SendTyping(aLength);
   }
 
-  NS_SCRIPTABLE NS_IMETHOD UnInit(void) {
+  NS_IMETHOD UnInit(void) {
     return purpleConversation::UnInit();
   }
-  NS_SCRIPTABLE NS_IMETHOD Close(void) {
+  NS_IMETHOD Close(void) {
     return purpleConversation::Close();
   }
-  NS_SCRIPTABLE NS_IMETHOD AddObserver(nsIObserver *aObserver) {
+  NS_IMETHOD AddObserver(nsIObserver *aObserver) {
     return purpleConversation::AddObserver(aObserver);
   }
-  NS_SCRIPTABLE NS_IMETHOD RemoveObserver(nsIObserver *aObserver) {
+  NS_IMETHOD RemoveObserver(nsIObserver *aObserver) {
     return purpleConversation::RemoveObserver(aObserver);
   }
 
   // Keep the SendMsg method here
-  NS_SCRIPTABLE NS_IMETHOD SendMsg(const nsACString & aMsg);
+  NS_IMETHOD SendMsg(const nsACString & aMsg);
 
   purpleConvChat();
 

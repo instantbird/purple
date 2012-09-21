@@ -26,7 +26,7 @@ NS_IMPL_ISUPPORTS1_CI(purpleAccountBuddy, imIAccountBuddy)
 //
 // NSPR_LOG_MODULES=purpleAccountBuddy:5
 //
-static PRLogModuleInfo *gPurpleAccountBuddyLog = nsnull;
+static PRLogModuleInfo *gPurpleAccountBuddyLog = nullptr;
 #endif
 #define LOG(args) PR_LOG(gPurpleAccountBuddyLog, PR_LOG_DEBUG, args)
 
@@ -62,11 +62,11 @@ NS_IMETHODIMP purpleAccountBuddy::UnInit()
 {
   if (mPurpleBuddy) {
     if (purple_get_core())
-      purple_blist_node_set_ui_data(PURPLE_BLIST_NODE(mPurpleBuddy), nsnull);
+      purple_blist_node_set_ui_data(PURPLE_BLIST_NODE(mPurpleBuddy), nullptr);
     mPurpleBuddy = NULL;
   }
-  mAccount = nsnull;
-  mBuddy = nsnull;
+  mAccount = nullptr;
+  mBuddy = nullptr;
   return NS_OK;
 }
 
@@ -231,14 +231,14 @@ NS_IMETHODIMP purpleAccountBuddy::GetTooltipInfo(nsISimpleEnumerator** aTooltipI
   PurpleAccount *pAccount = purple_buddy_get_account(mPurpleBuddy);
   NS_ENSURE_TRUE(pAccount, NS_ERROR_NOT_INITIALIZED);
   if (!purple_account_is_connected(pAccount)) {
-    *aTooltipInfo = nsnull;
+    *aTooltipInfo = nullptr;
     return NS_OK;
   }
 
   purpleAccount *account = purpleAccount::fromPurpleAccount(pAccount);
   NS_ENSURE_TRUE(account, NS_ERROR_NOT_INITIALIZED);
 
-  *aTooltipInfo = nsnull;
+  *aTooltipInfo = nullptr;
   PurplePluginProtocolInfo *prpl_info = account->GetPrplInfo();
   if (prpl_info && prpl_info->tooltip_text) {
     PurpleNotifyUserInfo *user_info = purple_notify_user_info_new();

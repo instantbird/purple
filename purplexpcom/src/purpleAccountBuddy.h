@@ -29,7 +29,7 @@ public:
   NS_DECL_IMIACCOUNTBUDDY
   NS_DECL_IMISTATUSINFO
 
-  purpleAccountBuddy(PurpleBuddy *aPurpleBuddy, imIBuddy *aBuddy = nsnull);
+  purpleAccountBuddy(PurpleBuddy *aPurpleBuddy, imIBuddy *aBuddy = nullptr);
   static inline purpleAccountBuddy *fromPurpleBuddy(PurpleBuddy *aBuddy) {
     return static_cast<purpleAccountBuddy *>(GET_NODE_UI_DATA(aBuddy));
   }
@@ -39,7 +39,7 @@ public:
   }
   static PurpleGroup *GetPurpleGroupForTag(imITag *aTag);
   nsresult NotifyObservers(const char *aSignal,
-                           const PRUnichar *aData = nsnull);
+                           const PRUnichar *aData = nullptr);
 
 private:
   ~purpleAccountBuddy();

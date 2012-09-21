@@ -94,7 +94,7 @@ NS_IMETHODIMP purpleConvIM::GetBuddy(imIAccountBuddy * *aBuddy)
     purple_find_buddy(purple_conversation_get_account(mConv),
                       purple_conversation_get_name(mConv));
   if (!buddy) {
-    *aBuddy = nsnull;
+    *aBuddy = nullptr;
     return NS_OK;
   }
 

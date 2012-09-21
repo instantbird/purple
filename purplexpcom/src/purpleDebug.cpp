@@ -23,11 +23,11 @@
 //
 // NSPR_LOG_MODULES=purpleDebug:5
 //
-static PRLogModuleInfo *gPurpleDebugLog = nsnull;
+static PRLogModuleInfo *gPurpleDebugLog = nullptr;
 #endif
 #define LOG(args) PR_LOG(gPurpleDebugLog, PR_LOG_DEBUG, args)
 
-purpleDebug *purpleDebug::sInstance = nsnull;
+purpleDebug *purpleDebug::sInstance = nullptr;
 
 NS_IMPL_ISUPPORTS1(purpleDebug, nsIObserver)
 

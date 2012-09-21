@@ -177,7 +177,7 @@ purpleAuthorizationRequest::purpleAuthorizationRequest(purpleAccount *aAccount,
   nsCOMPtr<nsIObserverService> os =
     do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
   if (NS_LIKELY(os))
-    os->NotifyObservers(this, "buddy-authorization-request", nsnull);
+    os->NotifyObservers(this, "buddy-authorization-request", nullptr);
 }
 
 void purpleAuthorizationRequest::Cancel()
@@ -189,7 +189,7 @@ void purpleAuthorizationRequest::Cancel()
   nsCOMPtr<nsIObserverService> os =
     do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
   if (NS_LIKELY(os))
-    os->NotifyObservers(this, "buddy-authorization-request-canceled", nsnull);
+    os->NotifyObservers(this, "buddy-authorization-request-canceled", nullptr);
 }
 
 /* readonly attribute imIAccount account; */

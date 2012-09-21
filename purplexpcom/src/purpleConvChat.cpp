@@ -77,7 +77,7 @@ NS_IMETHODIMP purpleConvChat::SendMsg(const nsACString& aMsg)
 }
 
 /* nsISimpleEnumerator GetParticipants (); */
-NS_IMETHODIMP purpleConvChat::GetParticipants(nsISimpleEnumerator **_retval NS_OUTPARAM)
+NS_IMETHODIMP purpleConvChat::GetParticipants(nsISimpleEnumerator **_retval)
 {
   NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
   LOG(("GetParticipants of conversation with id %i", mId));

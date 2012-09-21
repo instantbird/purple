@@ -46,7 +46,7 @@ public:
   PurplePluginProtocolInfo *GetPrplInfo();
   inline PRUint32 ScopeId() { return mId; }
   inline void EnterScope() { mScoper = new purpleAccountScoper(mId); }
-  inline void ExitScope() { delete mScoper; mScoper = nsnull; }
+  inline void ExitScope() { delete mScoper; mScoper = nullptr; }
 
 private:
   ~purpleAccount();

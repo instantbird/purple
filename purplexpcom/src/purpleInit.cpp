@@ -45,7 +45,7 @@ extern void init_libxml2_memory_reporter();
 //
 // NSPR_LOG_MODULES=purpleInit:5
 //
-PRLogModuleInfo *gPurpleInitLog = nsnull;
+PRLogModuleInfo *gPurpleInitLog = nullptr;
 #endif
 #define LOG(args) PR_LOG(gPurpleInitLog, PR_LOG_DEBUG, args)
 
@@ -391,7 +391,7 @@ void prefs_save()
   nsCOMPtr<nsIPrefService> prefs =
     do_GetService(NS_PREFSERVICE_CONTRACTID);
   NS_ENSURE_TRUE(prefs, );
-  prefs->SavePrefFile(nsnull);
+  prefs->SavePrefFile(nullptr);
 }
 
 PurplePrefsUiOps prefs_uiops = {

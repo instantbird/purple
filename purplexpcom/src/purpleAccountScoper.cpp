@@ -9,7 +9,7 @@
 //
 // NSPR_LOG_MODULES=purpleAccountScoper:5
 //
-static PRLogModuleInfo *gPurpleAccountScoperLog = nsnull;
+static PRLogModuleInfo *gPurpleAccountScoperLog = nullptr;
 #endif
 #define LOG(args) PR_LOG(gPurpleAccountScoperLog, PR_LOG_DEBUG, args)
 

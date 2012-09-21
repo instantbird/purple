@@ -14,7 +14,7 @@
 #include <libpurple/network.h>
 #pragma GCC visibility pop
 
-purpleNetworkObserver *purpleNetworkObserver::mInstance = nsnull;
+purpleNetworkObserver *purpleNetworkObserver::mInstance = nullptr;
 
 NS_IMPL_ISUPPORTS1(purpleNetworkObserver, nsIObserver)
 
@@ -49,7 +49,7 @@ purpleNetworkObserver::unInit()
     do_GetService("@mozilla.org/observer-service;1");
   observerService->RemoveObserver(mInstance, NS_NETWORK_LINK_TOPIC);
 
-  mInstance = nsnull;
+  mInstance = nullptr;
 }
 
 gboolean

@@ -35,7 +35,7 @@
 //
 // NSPR_LOG_MODULES=purpleAccount:5
 //
-static PRLogModuleInfo *gPurpleAccountLog = nsnull;
+static PRLogModuleInfo *gPurpleAccountLog = nullptr;
 #endif
 #define LOG(args) PR_LOG(gPurpleAccountLog, PR_LOG_DEBUG, args)
 
@@ -207,7 +207,7 @@ NS_IMPL_CLASSINFO(purpleAccount, NULL, 0, PURPLE_ACCOUNT_CID)
 NS_IMPL_ISUPPORTS1_CI(purpleAccount, prplIAccount)
 
 purpleAccount::purpleAccount()
-  : mScoper(nsnull),
+  : mScoper(nullptr),
     mAccount(NULL),
     mConnectionErrorReason(NO_ERROR),
     mStatus(PURPLE_STATUS_AVAILABLE)
@@ -271,7 +271,7 @@ NS_IMETHODIMP purpleAccount::UnInit()
     purple_account_destroy(mAccount);
     mAccount = NULL;
   }
-  mImAccount = nsnull;
+  mImAccount = nullptr;
 
   return NS_OK;
 }
@@ -747,7 +747,7 @@ nsresult purpleAccount::Connecting(const nsACString & aConnectionStateMessage)
   mImAccount->GetConnecting(&connecting);
 
   if (!connecting)
-    mImAccount->Observe(this, "account-connecting", nsnull);
+    mImAccount->Observe(this, "account-connecting", nullptr);
 
   if (aConnectionStateMessage.IsEmpty())
     return NS_OK;
@@ -758,7 +758,7 @@ nsresult purpleAccount::Connecting(const nsACString & aConnectionStateMessage)
 
 nsresult purpleAccount::Connected()
 {
-  return mImAccount->Observe(this, "account-connected", nsnull);
+  return mImAccount->Observe(this, "account-connected", nullptr);
 }
 
 /* readonly attribute short connectionErrorReason; */
@@ -814,7 +814,7 @@ nsresult purpleAccount::Disconnected()
   purpleSocketWatcher::CancelWatchFromAccountId(mId);
   purpleTimer::CancelTimerFromAccountId(mId);
 
-  return mImAccount->Observe(this, "account-disconnected", nsnull);
+  return mImAccount->Observe(this, "account-disconnected", nullptr);
 }
 
 /* Get flag from PurpleConnection->flags */
@@ -996,7 +996,7 @@ nsresult purpleAccount::ApplyCurrentUserIcon()
   rv = channel->Open(getter_AddRefs(stream));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRUint32 available;
+  uint64_t available;
   rv = stream->Available(&available);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(available != 0, NS_ERROR_FAILURE);
@@ -1116,7 +1116,7 @@ nsresult purpleAccount::ApplyCurrentUserIcon()
 
     // Read the stream into a new buffer.
     nsCString newBuffer;
-    PRUint32 avail;
+    uint64_t avail;
     iconStream->Available(&avail);
     newBuffer.SetLength(avail);
     PRUint32 length;

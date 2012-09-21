@@ -17,7 +17,7 @@
 //
 // NSPR_LOG_MODULES=purplePref:5
 //
-static PRLogModuleInfo *gPurplePrefLog = nsnull;
+static PRLogModuleInfo *gPurplePrefLog = nullptr;
 #endif
 #define LOG(args) PR_LOG(gPurplePrefLog, PR_LOG_DEBUG, args)
 

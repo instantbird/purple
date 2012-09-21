@@ -16,13 +16,13 @@
 //
 // NSPR_LOG_MODULES=purpleTimer:5
 //
-static PRLogModuleInfo *gPurpleTimerLog = nsnull;
+static PRLogModuleInfo *gPurpleTimerLog = nullptr;
 #endif
 #define LOG(args) PR_LOG(gPurpleTimerLog, PR_LOG_DEBUG, args)
 
 /* Init static members */
 PRUint32 purpleTimer::sLastTimer = 0;
-nsTArray<purpleTimeout *> *purpleTimer::sTimeouts = nsnull;
+nsTArray<purpleTimeout *> *purpleTimer::sTimeouts = nullptr;
 
 void purpleTimer::init()
 {
@@ -45,7 +45,7 @@ void purpleTimer::unInit()
   }
 
   delete sTimeouts;
-  sTimeouts = nsnull;
+  sTimeouts = nullptr;
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(purpleTimeout, nsIRunnable)
