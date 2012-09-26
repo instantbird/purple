@@ -35,6 +35,8 @@
 #include <nsAppDirectoryServiceDefs.h>
 #include <nsDirectoryServiceDefs.h>
 
+extern void init_glib_memory_reporter();
+
 #define PURPLE_PROTOCOL_PLUGIN_CATEGORY   "purple-protocol-plugin"
 
 
@@ -567,6 +569,13 @@ init_libpurple()
   /* Attempt to put libpurple symbols in the global namespace, and
      ignore failures... */
   open_libpurple();
+
+#if defined(XP_WIN) || defined(XP_MACOSX)
+  // Replace the glib allocator with custom functions so that we can
+  // count the allocated memory and report it for about:memory.
+  // We don't do this on Linux as the GTK UI also uses glib.
+  init_glib_memory_reporter();
+#endif
 
   /* First initialize the translation stuff, it can probably be
      needed early be potential error messages */

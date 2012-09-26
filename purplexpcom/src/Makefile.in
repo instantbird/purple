@@ -77,6 +77,10 @@ CPPSRCS		= \
 		purpleTooltipInfo.cpp \
 		$(NULL)
 
+ifneq (,$(filter WINNT Darwin,$(OS_ARCH)))
+CPPSRCS		+= purpleMemory.cpp
+endif
+
 ifdef PURPLE_PLUGINS
 DEFINES 	+= -DPURPLE_PLUGINS
 endif
