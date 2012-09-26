@@ -126,6 +126,7 @@ public:
     mHashTable(aHashTable),
     mKeyCount(0) {
   }
+  inline GHashTable *GetHashTable() { return mHashTable; }
 
 private:
   ~purpleChatRoomFieldValues() {
@@ -193,14 +194,6 @@ purpleChatRoomFieldValues::SetValue(const nsACString & aIdentifier,
   }
   g_hash_table_insert(mHashTable, key, value);
 
-  return NS_OK;
-}
-
-/* [noscript] readonly attribute GHashTablePtr hashTable; */
-NS_IMETHODIMP
-purpleChatRoomFieldValues::GetHashTable(GHashTable * *aHashTable)
-{
-  *aHashTable = mHashTable;
   return NS_OK;
 }
 
@@ -661,9 +654,9 @@ NS_IMETHODIMP purpleAccount::JoinChat(prplIChatRoomFieldValues *aComponents)
   PurpleConnection *gc = purple_account_get_connection(mAccount);
   NS_ENSURE_TRUE(gc, NS_ERROR_FAILURE);
 
-  GHashTable *components;
-  nsresult rv = aComponents->GetHashTable(&components);
-  NS_ENSURE_SUCCESS(rv, rv);
+  GHashTable *components =
+    static_cast<purpleChatRoomFieldValues *>(aComponents)->GetHashTable();
+  NS_ENSURE_TRUE(components, NS_ERROR_FAILURE);
 
   serv_join_chat(gc, components);
   return NS_OK;
