@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <glib.h>
+#include <libxml/xmlmemory.h>
 #include <mozilla/mozalloc.h>
 #include <nsCOMPtr.h>
 #include <nsIMemoryReporter.h>
@@ -80,5 +81,55 @@ void init_glib_memory_reporter()
   if (mgr) {
     if (NS_SUCCEEDED(mgr->RegisterReporter(new NS_MEMORY_REPORTER_NAME(glib))))
       g_mem_set_vtable(&allocator);
+  }
+}
+
+
+static size_t allocated_xml_size = 0;
+
+static void moz_xml_free(void *mem)
+{
+  allocated_xml_size -= moz_malloc_usable_size(mem);
+  moz_free(mem);
+}
+
+static void *moz_xml_malloc(size_t size)
+{
+  void *mem = moz_malloc(size);
+  allocated_xml_size += moz_malloc_usable_size(mem);
+  return mem;
+}
+
+static void *moz_xml_realloc(void *mem, size_t size)
+{
+  allocated_xml_size -= moz_malloc_usable_size(mem);
+  mem = moz_realloc(mem, size);
+  allocated_xml_size += moz_malloc_usable_size(mem);
+  return mem;
+}
+
+static char *moz_xml_strdup(const char *str)
+{
+  char *dup = moz_strdup(str);
+  allocated_xml_size += moz_malloc_usable_size(dup);
+  return dup;
+}
+
+static int64_t getAllocatedXMLMemory()
+{
+  return allocated_xml_size;
+}
+
+NS_MEMORY_REPORTER_IMPLEMENT(xml2, "explicit/purple/libraries/xml2",
+                             KIND_HEAP, UNITS_BYTES, getAllocatedXMLMemory,
+                             "Memory allocated by libxml2 for libpurple.");
+
+void init_libxml2_memory_reporter()
+{
+  nsCOMPtr<nsIMemoryReporterManager> mgr =
+    do_GetService("@mozilla.org/memory-reporter-manager;1");
+  if (mgr) {
+    if (NS_SUCCEEDED(mgr->RegisterReporter(new NS_MEMORY_REPORTER_NAME(xml2))))
+      xmlMemSetup(moz_xml_free, moz_xml_malloc, moz_xml_realloc, moz_xml_strdup);
   }
 }
