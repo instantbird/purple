@@ -237,7 +237,7 @@ find_valid_emoticon(PurpleAccount *account, const char *path)
 {
 	GList *smileys;
 
-	if (!purple_account_get_bool(account, "custom_smileys", TRUE))
+	if (!purple_account_get_bool(account, "custom_smileys", FALSE))
 		return NULL;
 
 	smileys = purple_smileys_get_all();

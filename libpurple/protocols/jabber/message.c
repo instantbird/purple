@@ -603,7 +603,7 @@ void jabber_message_parse(JabberStream *js, xmlnode *packet)
 				GList *smiley_refs = NULL;
 				gchar *reformatted_xhtml;
 
-				if (purple_account_get_bool(account, "custom_smileys", TRUE)) {
+				if (purple_account_get_bool(account, "custom_smileys", FALSE)) {
 					/* find a list of smileys ("cid" and "alt" text pairs)
 					  occuring in the message */
 					smiley_refs = jabber_message_get_refs_from_xmlnode(child);
@@ -1304,5 +1304,5 @@ gboolean jabber_custom_smileys_isenabled(JabberStream *js, const gchar *namespac
 	const PurpleConnection *gc = js->gc;
 	PurpleAccount *account = purple_connection_get_account(gc);
 
-	return purple_account_get_bool(account, "custom_smileys", TRUE);
+	return purple_account_get_bool(account, "custom_smileys", FALSE);
 }

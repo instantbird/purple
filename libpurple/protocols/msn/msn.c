@@ -3041,11 +3041,6 @@ init_plugin(PurplePlugin *plugin)
 	prpl_info.protocol_options = g_list_append(prpl_info.protocol_options,
 											   option);
 
-	option = purple_account_option_bool_new(_("Show custom smileys"),
-										  "custom_smileys", TRUE);
-	prpl_info.protocol_options = g_list_append(prpl_info.protocol_options,
-											   option);
-
 	option = purple_account_option_bool_new(_("Allow direct connections"),
 										  "direct_connect", TRUE);
 	prpl_info.protocol_options = g_list_append(prpl_info.protocol_options,
