@@ -7,7 +7,6 @@
 #include "purpleDNS.h"
 #include "purpleGetText.h"
 #include "purpleNetwork.h"
-#include "purpleStorage.h"
 #include "purpleSockets.h"
 #include "purpleTimer.h"
 #include "imICommandsService.h"
@@ -187,7 +186,6 @@ NS_IMETHODIMP purpleCoreService::Quit()
   mInitialized = PR_FALSE;
   purple_core_quit();
   LOG(("purple_core_quit"));
-  purpleStorage::unInit();
   purpleSocketWatcher::unInit();
   purpleNetworkObserver::unInit();
   purpleDNS::unInit();
