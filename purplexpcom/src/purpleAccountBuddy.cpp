@@ -195,8 +195,8 @@ NS_IMETHODIMP purpleAccountBuddy::GetBuddyIconFilename(nsACString& aBuddyIconFil
     return NS_OK;
   }
 
-  // Create a nsILocalFile and then a nsIFileURI from that.
-  nsCOMPtr <nsILocalFile> iconFile;
+  // Create a nsIFile and then a nsIFileURI from that.
+  nsCOMPtr <nsIFile> iconFile;
   nsresult rv = NS_NewLocalFile(NS_ConvertUTF8toUTF16(fname), PR_TRUE,
                                 getter_AddRefs(iconFile));
   g_free(fname);
