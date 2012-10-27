@@ -70,9 +70,9 @@ static int64_t getAllocatedMemory()
   return allocated_size;
 }
 
-NS_MEMORY_REPORTER_IMPLEMENT(glib, "explicit/purple/libraries/glib",
-                             KIND_HEAP, UNITS_BYTES, getAllocatedMemory,
-                             "Memory allocated by glib and libpurple.");
+NS_THREADSAFE_MEMORY_REPORTER_IMPLEMENT(glib, "explicit/purple/libraries/glib",
+                                        KIND_HEAP, UNITS_BYTES, getAllocatedMemory,
+                                        "Memory allocated by glib and libpurple.");
 
 void init_glib_memory_reporter()
 {
@@ -120,9 +120,9 @@ static int64_t getAllocatedXMLMemory()
   return allocated_xml_size;
 }
 
-NS_MEMORY_REPORTER_IMPLEMENT(xml2, "explicit/purple/libraries/xml2",
-                             KIND_HEAP, UNITS_BYTES, getAllocatedXMLMemory,
-                             "Memory allocated by libxml2 for libpurple.");
+NS_THREADSAFE_MEMORY_REPORTER_IMPLEMENT(xml2, "explicit/purple/libraries/xml2",
+                                        KIND_HEAP, UNITS_BYTES, getAllocatedXMLMemory,
+                                        "Memory allocated by libxml2 for libpurple.");
 
 void init_libxml2_memory_reporter()
 {

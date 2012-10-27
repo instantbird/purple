@@ -33,6 +33,7 @@ class purpleTimer
  public:
   static void init();
   static void unInit();
+  static bool initialized() { return !!sTimeouts; }
 
   static PRUint32 AddTimeout(PRUint32 aInterval,
                              GSourceFunc aFunction,

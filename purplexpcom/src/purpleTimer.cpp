@@ -57,6 +57,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(purpleTimeout, nsIRunnable)
 NS_IMETHODIMP purpleTimeout::Run()
 {
   NS_ASSERTION(NS_IsMainThread(), "wrong thread");
+  NS_ENSURE_TRUE(purpleTimer::initialized(), NS_ERROR_UNEXPECTED);
 
   mFunction(mData);
   return NS_OK;
@@ -67,7 +68,7 @@ PRUint32 purpleTimer::AddTimeout(PRUint32 aInterval,
                                  GSourceFunc aFunction,
                                  gpointer aData)
 {
-  NS_ENSURE_TRUE(sTimeouts, 0);
+  NS_ENSURE_TRUE(initialized(), 0);
 
   /* FIXME This is an horrible hack to prevent libpurple from writting
      prefs.xml, blist.xml, status.xml and pounces.xml
@@ -125,7 +126,7 @@ void purpleTimer::ExecTimer(nsITimer *aTimer, void *aTimerClosure)
 {
   // just make sure we never call a callback of a timer after
   // libpurple has been uninitialized
-  NS_ENSURE_TRUE(sTimeouts, );
+  NS_ENSURE_TRUE(initialized(), );
 
   purpleTimeout *timeout = (purpleTimeout *)aTimerClosure;
 
@@ -143,7 +144,7 @@ void purpleTimer::ExecTimer(nsITimer *aTimer, void *aTimerClosure)
 
 gboolean purpleTimer::CancelTimer(PRUint32 aId)
 {
-  NS_ENSURE_TRUE(sTimeouts, FALSE);
+  NS_ENSURE_TRUE(initialized(), FALSE);
 
   LOG(("Trying to cancel timeout with id %i", aId));
   for (PRUint32 i = 0; i < sTimeouts->Length(); ++i) {
@@ -164,7 +165,7 @@ gboolean purpleTimer::CancelTimer(PRUint32 aId)
 nsresult purpleTimer::CancelTimerFromAccountId(PRUint32 aAccountId)
 {
   LOG(("Checking if timers from account %u remain", aAccountId));
-  NS_ENSURE_TRUE(sTimeouts, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(initialized(), NS_ERROR_FAILURE);
 
   for (PRInt32 i = sTimeouts->Length() - 1; i >= 0; --i) {
     if ((*sTimeouts)[i]->mAccountId == aAccountId) {

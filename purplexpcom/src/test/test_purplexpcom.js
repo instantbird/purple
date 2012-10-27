@@ -53,12 +53,6 @@ function run_test() {
                        .getService(Components.interfaces.imICoreService);
   core.init();
 
-  if ('@mozilla.org/windows-registry-key;1' in Components.classes) {
-    //FIXME Initializing libpurple in xpcshell crashes on Windows.
-    core.quit();
-    return;
-  }
-
   do_check_true(core.getProtocols().hasMoreElements());
 
   try {
