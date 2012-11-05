@@ -7,7 +7,6 @@
 #include <glib.h>
 #include <nsITimer.h>
 
-#ifdef XP_WIN
 #include <nsIRunnable.h>
 class purpleTimeout: public nsIRunnable
 {
@@ -17,10 +16,6 @@ class purpleTimeout: public nsIRunnable
 
   purpleTimeout() {}
   ~purpleTimeout() {}
-#else
-struct purpleTimeout
-{
-#endif
   PRUint32 mAccountId;
   PRUint32 mId;
   nsCOMPtr<nsITimer> mTimer;

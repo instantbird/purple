@@ -6,14 +6,11 @@
 #include "purpleAccountScoper.h"
 #include <prlog.h>
 #include <nsComponentManagerUtils.h>
-
-#ifdef XP_WIN
 #include <nsServiceManagerUtils.h>
 #include <nsIThreadManager.h>
 #include <nsIEventTarget.h>
 #include <nsThreadUtils.h>
 #include <nsXPCOMCIDInternal.h>
-#endif
 
 #ifdef PR_LOGGING
 //
@@ -51,7 +48,6 @@ void purpleTimer::unInit()
   sTimeouts = nsnull;
 }
 
-#ifdef XP_WIN
 NS_IMPL_THREADSAFE_ISUPPORTS1(purpleTimeout, nsIRunnable)
 
 NS_IMETHODIMP purpleTimeout::Run()
@@ -62,7 +58,6 @@ NS_IMETHODIMP purpleTimeout::Run()
   mFunction(mData);
   return NS_OK;
 }
-#endif
 
 PRUint32 purpleTimer::AddTimeout(PRUint32 aInterval,
                                  GSourceFunc aFunction,
@@ -89,7 +84,6 @@ PRUint32 purpleTimer::AddTimeout(PRUint32 aInterval,
   timer->mFunction = aFunction;
   timer->mData = aData;
 
-#ifdef XP_WIN
   nsresult rv;
   nsCOMPtr<nsIThreadManager> mgr = do_GetService(NS_THREADMANAGER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, 0);
@@ -108,7 +102,6 @@ PRUint32 purpleTimer::AddTimeout(PRUint32 aInterval,
     // when the timer is used for thread synchronisation
     return 0;
   }
-#endif
 
   timer->mId = ++sLastTimer;
   timer->mAccountId = purpleAccountScoper::GetCurrentAccountId();
