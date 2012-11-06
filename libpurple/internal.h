@@ -102,8 +102,6 @@
 #include <langinfo.h>
 #endif
 
-#include <glib/gutils.h>
-
 #ifdef PURPLE_PLUGINS
 # include <gmodule.h>
 # ifdef HAVE_DLFCN_H

@@ -29,7 +29,7 @@
 #ifndef _PURPLE_PLUGIN_H_
 #define _PURPLE_PLUGIN_H_
 
-#include <glib/glist.h>
+#include <glib.h>
 #ifdef PURPLE_PLUGINS
 # include <gmodule.h>
 #endif

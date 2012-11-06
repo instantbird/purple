@@ -215,7 +215,7 @@ ifneq (,$(STATIC_PRPLS))
 $(STATIC_PRPL_LIBS):: $(STATIC_PROTO_libs)
 
 static_proto_init.c: $(GLOBAL_DEPS)
-	echo >  $@ '#include <glib/gtypes.h>'
+	echo >  $@ '#include <glib.h>'
 	echo >> $@ '$(foreach proto,$(STATIC_PRPLS),extern gboolean purple_init_$(proto)_plugin();)'
 	echo >> $@ 'void static_proto_init(void) {'
 	echo >> $@ '$(foreach proto,$(STATIC_PRPLS),purple_init_$(proto)_plugin();)'
