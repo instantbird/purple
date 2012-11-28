@@ -3,6 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "purpleDebug.h"
+#include "purpleAccountScoper.h"
+#include <imIAccountsService.h>
 #include <nsComponentManagerUtils.h>
 #include <nsDirectoryServiceUtils.h>
 #include <nsDirectoryServiceDefs.h>
@@ -101,24 +103,10 @@ purpleDebug::ReportMessageWithLocation(PurpleDebugLevel level,
                                        const char *function,
                                        const char *arg)
 {
-  NS_ENSURE_TRUE(Enabled(level, category), );
+  LOG(("pp-%s: %s, in %s, file: %s:%i", category, arg, function, file, line));
 
   nsCString cFile(file);
   sInstance->PrepareFilePath(cFile);
-
-  if (level == PURPLE_DEBUG_INFO && sInstance->mLogLevel == level) {
-    nsCString cInfo(arg);
-    cInfo.AppendLiteral("Location: ");
-    cInfo.Append(function);
-    cInfo.AppendLiteral(", file: ");
-    cInfo.Append(cFile);
-    cInfo.AppendLiteral(", line: ");
-    cInfo.AppendInt(line);
-    ReportMessage(level, category, cInfo.get());
-    return;
-  }
-
-  LOG(("pp-%s: %s, in %s, file: %s:%i", category, arg, function, file, line));
 
   nsString sourceName;
   NS_CStringToUTF16(cFile, NS_CSTRING_ENCODING_UTF8, sourceName);
@@ -151,11 +139,41 @@ purpleDebug::ReportMessageWithLocation(PurpleDebugLevel level,
               flags,
               category); // Not sure what this is used for, if used at all...
 
-  nsCOMPtr<nsIConsoleService> consoleService =
-    do_GetService(NS_CONSOLESERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(consoleService, );
+  if (Enabled(level, category)) {
+    if (level == PURPLE_DEBUG_INFO && sInstance->mLogLevel == level) {
+      nsCString cInfo(arg);
+      cInfo.AppendLiteral("Location: ");
+      cInfo.Append(function);
+      cInfo.AppendLiteral(", file: ");
+      cInfo.Append(cFile);
+      cInfo.AppendLiteral(", line: ");
+      cInfo.AppendInt(line);
+      ReportMessage(level, category, cInfo.get());
+    }
+    else {
+      nsCOMPtr<nsIConsoleService> consoleService =
+        do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+      NS_ENSURE_TRUE(consoleService, );
 
-  consoleService->LogMessage(error);
+      consoleService->LogMessage(error);
+    }
+  }
+
+  PRUint32 accountId = purpleAccountScoper::GetCurrentAccountId();
+  if (!accountId)
+    return;
+
+  nsCOMPtr<imIAccountsService> accountsService =
+    do_GetService("@mozilla.org/chat/accounts-service;1");
+  NS_ENSURE_TRUE(accountsService, );
+
+  nsCOMPtr<imIAccount> account;
+  nsresult rv = accountsService->GetAccountByNumericId(accountId,
+                                                       getter_AddRefs(account));
+  NS_ENSURE_SUCCESS(rv, );
+
+  rv = account->LogDebugMessage(error, level);
+  NS_ENSURE_SUCCESS(rv, );
 }
 
 gboolean
