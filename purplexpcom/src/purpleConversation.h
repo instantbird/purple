@@ -37,6 +37,7 @@ protected:
   purpleAccount *GetAccount();
   PurpleConversation *mConv;
   PRUint32 mId;
+  PRTime mStartDate;
   bool mUninitialized;
 };
 

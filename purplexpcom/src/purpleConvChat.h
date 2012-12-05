@@ -34,6 +34,9 @@ public:
   NS_SCRIPTABLE NS_IMETHOD GetTitle(nsACString & aTitle) {
     return purpleConversation::GetTitle(aTitle);
   }
+  NS_SCRIPTABLE NS_IMETHOD GetStartDate(PRTime *aStartDate) {
+    return purpleConversation::GetStartDate(aStartDate);
+  }
   NS_SCRIPTABLE NS_IMETHOD GetId(PRUint32 *aId) {
     return purpleConversation::GetId(aId);
   }

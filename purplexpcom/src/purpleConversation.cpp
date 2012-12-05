@@ -29,6 +29,7 @@ PRLogModuleInfo *gPurpleConvLog = nsnull;
 
 purpleConversation::purpleConversation()
   : mId(0),
+    mStartDate(PR_Now()),
     mUninitialized(PR_FALSE)
 {
   /* member initializers and constructor code */
@@ -118,6 +119,13 @@ NS_IMETHODIMP purpleConversation::GetTitle(nsACString& aTitle)
   NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
 
   aTitle = purple_conversation_get_title(mConv);
+  return NS_OK;
+}
+
+/* readonly attribute PRTime startDate; */
+NS_IMETHODIMP purpleConversation::GetStartDate(PRTime *aStartDate)
+{
+  *aStartDate = mStartDate;
   return NS_OK;
 }
 
