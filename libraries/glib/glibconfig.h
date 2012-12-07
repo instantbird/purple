@@ -249,20 +249,6 @@ union _GSystemThread
   long   dummy_long;
 };
 
-#ifdef __ppc__
-#define GINT16_TO_BE(val)	((gint16) (val))
-#define GUINT16_TO_BE(val)	((guint16) (val))
-#define GINT16_TO_LE(val)	((gint16) GUINT16_SWAP_LE_BE (val))
-#define GUINT16_TO_LE(val)	(GUINT16_SWAP_LE_BE (val))
-#define GINT32_TO_BE(val)	((gint32) (val))
-#define GUINT32_TO_BE(val)	((guint32) (val))
-#define GINT32_TO_LE(val)	((gint32) GUINT32_SWAP_LE_BE (val))
-#define GUINT32_TO_LE(val)	(GUINT32_SWAP_LE_BE (val))
-#define GINT64_TO_BE(val)	((gint64) (val))
-#define GUINT64_TO_BE(val)	((guint64) (val))
-#define GINT64_TO_LE(val)	((gint64) GUINT64_SWAP_LE_BE (val))
-#define GUINT64_TO_LE(val)	(GUINT64_SWAP_LE_BE (val))
-#else
 #define GINT16_TO_LE(val)	((gint16) (val))
 #define GUINT16_TO_LE(val)	((guint16) (val))
 #define GINT16_TO_BE(val)	((gint16) GUINT16_SWAP_LE_BE (val))
@@ -275,7 +261,6 @@ union _GSystemThread
 #define GUINT64_TO_LE(val)	((guint64) (val))
 #define GINT64_TO_BE(val)	((gint64) GUINT64_SWAP_LE_BE (val))
 #define GUINT64_TO_BE(val)	(GUINT64_SWAP_LE_BE (val))
-#endif
 #ifdef __x86_64__
 #define GLONG_TO_LE(val)	((glong) GINT64_TO_LE (val))
 #define GULONG_TO_LE(val)	((gulong) GUINT64_TO_LE (val))
@@ -291,11 +276,7 @@ union _GSystemThread
 #define GUINT_TO_LE(val)	((guint) GUINT32_TO_LE (val))
 #define GINT_TO_BE(val)		((gint) GINT32_TO_BE (val))
 #define GUINT_TO_BE(val)	((guint) GUINT32_TO_BE (val))
-#ifdef __ppc__
-#define G_BYTE_ORDER G_BIG_ENDIAN
-#else
 #define G_BYTE_ORDER G_LITTLE_ENDIAN
-#endif
 
 #define GLIB_SYSDEF_POLLIN =1
 #define GLIB_SYSDEF_POLLOUT =4
