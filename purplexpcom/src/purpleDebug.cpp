@@ -171,6 +171,7 @@ purpleDebug::ReportMessageWithLocation(PurpleDebugLevel level,
   nsresult rv = accountsService->GetAccountByNumericId(accountId,
                                                        getter_AddRefs(account));
   NS_ENSURE_SUCCESS(rv, );
+  NS_ENSURE_TRUE(account, );
 
   rv = account->LogDebugMessage(error, level);
   NS_ENSURE_SUCCESS(rv, );
