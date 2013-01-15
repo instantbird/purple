@@ -253,6 +253,11 @@ nsresult purpleSocketInternal::OnAttach()
   return rv;
 }
 
+void purpleSocketInternal::IsLocal(bool *aIsLocal)
+{
+  *aIsLocal = false;
+}
+
 /* Init static members */
 nsTArray<purpleSocket *> *purpleSocketWatcher::sSockets = nullptr;
 nsCOMPtr<nsISocketTransportService> purpleSocketWatcher::sSts;

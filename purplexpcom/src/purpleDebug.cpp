@@ -108,18 +108,9 @@ purpleDebug::ReportMessageWithLocation(PurpleDebugLevel level,
   nsCString cFile(file);
   sInstance->PrepareFilePath(cFile);
 
-  nsString sourceName;
-  NS_CStringToUTF16(cFile, NS_CSTRING_ENCODING_UTF8, sourceName);
-
-  nsString msg;
-  nsDependentCString message(arg);
-  NS_CStringToUTF16(message, NS_CSTRING_ENCODING_UTF8, msg);
-
-  nsString sourceLine;
   nsDependentCString cSourceLine(category);
   cSourceLine.Append(": ");
   cSourceLine.Append(function);
-  NS_CStringToUTF16(cSourceLine, NS_CSTRING_ENCODING_UTF8, sourceLine);
 
   PRUint32 flags = 0;
   if (level < PURPLE_DEBUG_ERROR)
@@ -131,9 +122,9 @@ purpleDebug::ReportMessageWithLocation(PurpleDebugLevel level,
     do_CreateInstance(NS_SCRIPTERROR_CONTRACTID);
   NS_ENSURE_TRUE(error, );
 
-  error->Init(msg.get(),
-              sourceName.get(),
-              sourceLine.get(), // let's use the function name as the code line
+  error->Init(NS_ConvertUTF8toUTF16(arg),
+              NS_ConvertUTF8toUTF16(cFile),
+              NS_ConvertUTF8toUTF16(cSourceLine), // let's use the function name as the code line
               line,
               0, // No column info, use 0
               flags,

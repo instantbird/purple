@@ -28,6 +28,7 @@ class purpleSocketInternal : public nsASocketHandler,
   nsresult Init(PRFileDesc *aFd, nsIRunnable *aRunnable, PRUint16 aPollFlags);
   void OnSocketReady(PRFileDesc*, PRInt16);
   void OnSocketDetached(PRFileDesc*);
+  void IsLocal(bool*);
   nsresult PostEvent();
   nsresult Cancel();
   bool GetCanceled() { return mCanceled; }

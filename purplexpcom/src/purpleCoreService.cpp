@@ -56,8 +56,7 @@ extern void disconnect_blist_signals();
 
 purpleCoreService::purpleCoreService()
   :mInitialized(PR_FALSE),
-   mQuitting(PR_FALSE),
-   mProxies(nullptr)
+   mQuitting(PR_FALSE)
 {
 #ifdef PR_LOGGING
   if (!gPurpleCoreServiceLog)
@@ -214,7 +213,7 @@ nsresult purpleCoreService::InitProxies()
 
   nsCOMPtr<purpleProxy> proxy;
   char *newStr = proxyList.BeginWriting();
-  nsCAutoString key;
+  nsAutoCString key;
   for (char *token = NS_strtok(",", &newStr);
        token;
        token = NS_strtok(",", &newStr)) {

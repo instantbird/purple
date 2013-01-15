@@ -256,7 +256,7 @@ nsCString *purpleGetText::GetString(const char *package,
   rv = hash->Update(reinterpret_cast<const PRUint8*>(string), strlen(string));
   NS_ENSURE_SUCCESS(rv, nullptr);
 
-  nsCAutoString hashed;
+  nsAutoCString hashed;
   rv = hash->Finish(PR_FALSE, hashed);
   NS_ENSURE_SUCCESS(rv, nullptr);
 
