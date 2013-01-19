@@ -142,7 +142,7 @@ static void recv_channelCreate(struct mwServiceFileTransfer *srvc,
   mwString_get(b, &fnm); /* offered filename */
   mwString_get(b, &txt); /* offering message */
   guint32_get(b, &size); /* size of offered file */
-  guint32_get(b, &junk); /* unknown */
+  /* guint32_get(b, &junk); */ /* unknown */
   /* and we just skip an unknown guint16 at the end */
 
   b_err = mwGetBuffer_error(b);
