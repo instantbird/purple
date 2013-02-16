@@ -4972,7 +4972,7 @@ static const char *mw_prpl_normalize(const PurpleAccount *account,
      data. wtf? */
 
   static char buf[BUF_LEN];
-  strncpy(buf, id, sizeof(buf));
+  g_strlcpy(buf, id, sizeof(buf));
   return buf;
 }
 
