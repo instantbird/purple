@@ -17,7 +17,7 @@
 #include <nsIStringBundle.h>
 #include <nsThreadUtils.h>
 #include <nsIWindowMediator.h>
-
+#include "mozilla/Likely.h"
 
 #ifdef PR_LOGGING
 //
@@ -176,7 +176,7 @@ purpleAuthorizationRequest::purpleAuthorizationRequest(purpleAccount *aAccount,
 {
   nsCOMPtr<nsIObserverService> os =
     do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
-  if (NS_LIKELY(os))
+  if (MOZ_LIKELY(os))
     os->NotifyObservers(this, "buddy-authorization-request", nullptr);
 }
 
@@ -188,7 +188,7 @@ void purpleAuthorizationRequest::Cancel()
 
   nsCOMPtr<nsIObserverService> os =
     do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
-  if (NS_LIKELY(os))
+  if (MOZ_LIKELY(os))
     os->NotifyObservers(this, "buddy-authorization-request-canceled", nullptr);
 }
 
@@ -233,7 +233,7 @@ static void *request_authorize(PurpleAccount *account, const char *remote_user,
                                void *user_data)
 {
   purpleAccount *pAccount = purpleAccount::fromPurpleAccount(account);
-  if (NS_UNLIKELY(!pAccount))
+  if (MOZ_UNLIKELY(!pAccount))
     return NULL;
   return new purpleAuthorizationRequest(pAccount, remote_user, authorize_cb,
                                         deny_cb, user_data);

@@ -26,6 +26,7 @@
 #include <nsStringStream.h>
 #include <prplIProtocol.h>
 #include <prprf.h>
+#include "mozilla/Likely.h"
 
 #define PREF_PREFIX             "messenger.account."
 #define PREF_OPTIONS            "options."
@@ -130,7 +131,7 @@ public:
 
 private:
   ~purpleChatRoomFieldValues() {
-    if (NS_LIKELY(mHashTable))
+    if (MOZ_LIKELY(mHashTable))
       g_hash_table_destroy(mHashTable);
 
     while (mKeyCount)
@@ -161,7 +162,7 @@ NS_IMETHODIMP
 purpleChatRoomFieldValues::GetValue(const nsACString & aIdentifier,
                                     nsACString & aResult)
 {
-  if (NS_UNLIKELY(!mHashTable)) {
+  if (MOZ_UNLIKELY(!mHashTable)) {
     aResult.Truncate();
     return NS_OK;
   }
@@ -177,7 +178,7 @@ NS_IMETHODIMP
 purpleChatRoomFieldValues::SetValue(const nsACString & aIdentifier,
                                     const nsACString & aValue)
 {
-  if (NS_UNLIKELY(!mHashTable)) {
+  if (MOZ_UNLIKELY(!mHashTable)) {
     mHashTable = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, g_free);
   }
 

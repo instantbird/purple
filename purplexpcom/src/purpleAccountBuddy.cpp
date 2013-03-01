@@ -13,6 +13,7 @@
 #include <nsMemory.h>
 #include <nsNetUtil.h>
 #include <prprf.h>
+#include "mozilla/Likely.h"
 
 #pragma GCC visibility push(default)
 #include <libpurple/core.h>
@@ -45,7 +46,7 @@ purpleAccountBuddy::purpleAccountBuddy(PurpleBuddy *aPurpleBuddy,
   purple_blist_node_set_ui_data(PURPLE_BLIST_NODE(aPurpleBuddy), this);
   PurpleAccount *account = purple_buddy_get_account(aPurpleBuddy);
   purpleAccount *pAccount = purpleAccount::fromPurpleAccount(account);
-  if (NS_LIKELY(pAccount))
+  if (MOZ_LIKELY(pAccount))
     pAccount->GetImAccount(getter_AddRefs(mAccount));
   NS_ASSERTION(mAccount, "Failed to get the account from a PurpleBuddy");
 }
