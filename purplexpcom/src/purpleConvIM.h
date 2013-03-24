@@ -58,7 +58,7 @@ public:
 
   // Keep the SendMsg and SendTyping methods here.
   NS_IMETHOD SendMsg(const nsACString & aMsg);
-  NS_IMETHODIMP SendTyping(PRUint32 aLength);
+  NS_IMETHODIMP SendTyping(const nsACString & aString, int32_t *_retval);
 
   purpleConvIM();
 

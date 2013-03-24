@@ -44,8 +44,8 @@ public:
     return purpleConversation::SetId(aId);
   }
 
-  NS_IMETHODIMP SendTyping(PRUint32 aLength) {
-    return purpleConversation::SendTyping(aLength);
+  NS_IMETHODIMP SendTyping(const nsACString & aString, int32_t *_retval) {
+    return purpleConversation::SendTyping(aString, _retval);
   }
 
   NS_IMETHOD UnInit(void) {

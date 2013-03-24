@@ -151,8 +151,9 @@ NS_IMETHODIMP purpleConversation::SendMsg(const nsACString& aMsg)
 }
 
 /* void sendTyping (in unsigned long aLength); */
-NS_IMETHODIMP purpleConversation::SendTyping(PRUint32 aLength)
+NS_IMETHODIMP purpleConversation::SendTyping(const nsACString & aString, int32_t *_retval)
 {
+  *_retval = purpleConversation::NO_TYPING_LIMIT;
   return NS_OK;
 }
 

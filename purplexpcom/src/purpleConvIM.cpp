@@ -117,9 +117,10 @@ NS_IMETHODIMP purpleConvIM::GetTypingState(PRInt16 *aTypingState)
   return NS_OK;
 }
 
-/* void sendTyping (in unsigned long aLength); */
-NS_IMETHODIMP purpleConvIM::SendTyping(PRUint32 aLength)
+/* long sendTyping (in AUTF8String aString); */
+NS_IMETHODIMP purpleConvIM::SendTyping(const nsACString & aString, int32_t *_retval)
 {
+  *_retval = purpleConversation::NO_TYPING_LIMIT;
   NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
 
   if (!purple_prefs_get_bool("/purple/conversations/im/send_typing"))
@@ -128,13 +129,13 @@ NS_IMETHODIMP purpleConvIM::SendTyping(PRUint32 aLength)
   PurpleConvIm *im = PURPLE_CONV_IM(mConv);
   NS_ENSURE_TRUE(im, NS_ERROR_UNEXPECTED);
 
-  LOG(("purpleConvIM::SendTyping Length = %u", aLength));
+  LOG(("purpleConvIM::SendTyping Length = %u", aString.Length()));
   purpleAccountScoper scoper(purpleConversation::GetAccount());
 
   // First, stop the typed timeout
   purple_conv_im_stop_send_typed_timeout(im);
 
-  if (!aLength) {
+  if (aString.IsEmpty()) {
     if (!mSentTyping)
       return NS_OK;
 

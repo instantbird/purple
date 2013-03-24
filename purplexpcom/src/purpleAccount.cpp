@@ -857,13 +857,6 @@ PURPLE_IMPL_GETFLAG(NoUrlDesc, NO_URLDESC)
 /* readonly attribute boolean noImages; */
 PURPLE_IMPL_GETFLAG(NoImages, NO_IMAGES)
 
-/* readonly attribute PRInt32 maxMessageLength; */
-NS_IMETHODIMP purpleAccount::GetMaxMessageLength(PRInt32 *aMaxMessageLength)
-{
-  *aMaxMessageLength = 0;
-  return NS_OK;
-}
-
 NS_IMETHODIMP purpleAccount::Observe(nsISupports *aSubject,
                                      const char *aTopic,
                                      const PRUnichar *aData)
