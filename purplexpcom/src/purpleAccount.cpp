@@ -769,6 +769,13 @@ NS_IMETHODIMP purpleAccount::GetConnectionErrorReason(PRInt16 *aConnectionErrorR
   return NS_OK;
 }
 
+/* readonly attribute string connectionTarget; */
+NS_IMETHODIMP purpleAccount::GetConnectionTarget(nsACString & aConnectionTarget)
+{
+  aConnectionTarget.Truncate();
+  return NS_OK;
+}
+
 nsresult purpleAccount::Disconnecting(PRInt16 aConnectionErrorReason,
                                       const nsACString & aConnectionErrorMessage)
 {
