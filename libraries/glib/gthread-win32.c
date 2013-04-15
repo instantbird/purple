@@ -40,12 +40,6 @@
 #define _WIN32_WINDOWS 0x0401 /* to get IsDebuggerPresent */
 #include <windows.h>
 #undef STRICT
-#ifdef WINCE
-# define IsDebuggerPresent() 0
-# ifndef TLS_OUT_OF_INDEXES
-#  define TLS_OUT_OF_INDEXES 0xffffffff
-# endif
-#endif
 
 #include <process.h>
 #include <stdlib.h>
@@ -336,9 +330,7 @@ g_private_new_win32_impl (GDestroyNotify destructor)
       sprintf (buf,
 	       "Too many GPrivate allocated. Their number is limited to %d.",
 	       G_PRIVATE_MAX);
-#ifndef WINCE
       MessageBox (NULL, buf, NULL, MB_ICONERROR|MB_SETFOREGROUND);
-#endif
       if (IsDebuggerPresent ())
 	G_BREAKPOINT ();
       abort ();
@@ -473,11 +465,7 @@ g_thread_exit_win32_impl (void)
       win32_check_for_error (TlsSetValue (g_cond_event_tls, NULL));
     }
 
-#ifndef WINCE
   _endthreadex (0);
-#else
-  ExitThread (0);
-#endif
 }
 
 static guint __stdcall
@@ -562,14 +550,8 @@ g_thread_gettime_impl (void)
 {
   guint64 v;
 
-#ifdef WINCE
-  SYSTEMTIME st;
-  GetSystemTime (&st);
-  SystemTimeToFileTime (&st, (FILETIME *)&v);
-#else
   /* Returns 100s of nanoseconds since start of 1601 */
   GetSystemTimeAsFileTime ((FILETIME *)&v);
-#endif
 
   /* Offset to Unix epoch */
   v -= G_GINT64_CONSTANT (116444736000000000);
@@ -629,7 +611,7 @@ g_thread_impl_init ()
    * sections instead of mutexes. See
    * http://world.std.com/~jmhart/csmutx.htm for some discussion.
    */
-  kernel32 = GetModuleHandleW (L"KERNEL32.DLL");
+  kernel32 = GetModuleHandle ("KERNEL32.DLL");
   if (kernel32)
     {
       try_enter_critical_section = (GTryEnterCriticalSectionFunc)

@@ -170,13 +170,11 @@ purple_core_init(const char *ui)
 	purple_xfers_init();
 	purple_idle_init();
 	purple_smileys_init();
-#ifndef WINCE
 	/*
 	 * Call this early on to try to auto-detect our IP address and
 	 * hopefully save some time later.
 	 */
 	purple_network_get_my_ip(-1);
-#endif
 
 	if (ops != NULL && ops->ui_init != NULL)
 		ops->ui_init();

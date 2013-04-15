@@ -23,9 +23,7 @@
 #ifndef _LIBC_INTERNAL_
 #define _LIBC_INTERNAL_
 #include <glib.h>
-#ifdef WINCE
-# include <glib/wince.h>
-#endif
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -131,7 +129,7 @@ struct timezone {
 #else
 #    include <sys/time.h>
 #endif
-/* int wpurple_gettimeofday(struct timeval *p, struct timezone *z); */
+int wpurple_gettimeofday(struct timeval *p, struct timezone *z);
 
 /* time.h */
 struct tm *wpurple_localtime_r(const time_t *time, struct tm *resultp);

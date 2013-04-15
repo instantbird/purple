@@ -38,9 +38,7 @@ extern "C" {
 #define S_IWUSR S_IWRITE
 #define S_IXUSR S_IEXEC
 
-#ifndef S_ISDIR
 #define S_ISDIR(m)	 (((m)&S_IFDIR)==S_IFDIR)
-#endif
 
 #define F_OK 0
 #endif
@@ -111,11 +109,9 @@ wpurple_strerror( errornum )
 wpurple_strerror( errornum )
 
 /* unistd.h */
-#undef read
 #define read( fd, buf, buflen ) \
 wpurple_read( fd, buf, buflen )
 
-#undef write
 #define write( socket, buf, buflen ) \
 wpurple_write( socket, buf, buflen )
 
@@ -133,7 +129,7 @@ wpurple_gethostname( name, size )
 
 /* sys/time.h */
 #define gettimeofday( timeval, timezone ) \
-  g_get_current_time( timeval )
+wpurple_gettimeofday( timeval, timezone )
 
 /* stdio.h */
 #undef snprintf

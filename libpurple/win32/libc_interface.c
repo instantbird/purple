@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
+#include <sys/timeb.h>
 #include <sys/stat.h>
 #include <time.h>
 #include <glib.h>
@@ -487,6 +488,27 @@ int wpurple_gethostname(char *name, size_t size) {
 			return -1;
         }
         return 0;
+}
+
+/* sys/time.h */
+
+int wpurple_gettimeofday(struct timeval *p, struct timezone *z) {
+	int res = 0;
+	struct _timeb timebuffer;
+
+	if (z != 0) {
+		_tzset();
+		z->tz_minuteswest = _timezone/60;
+		z->tz_dsttime = _daylight;
+	}
+
+	if (p != 0) {
+		_ftime(&timebuffer);
+		p->tv_sec = timebuffer.time;			/* seconds since 1-1-1970 */
+		p->tv_usec = timebuffer.millitm*1000; 	/* microseconds */
+	}
+
+	return res;
 }
 
 /* stdio.h */

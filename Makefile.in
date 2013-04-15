@@ -9,7 +9,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifneq (,$(filter WINNT WINCE Darwin,$(OS_ARCH)))
+ifneq (,$(filter WINNT Darwin,$(OS_ARCH)))
 PARALLEL_DIRS	= \
 		libraries/xml2 \
 		libraries/glib \

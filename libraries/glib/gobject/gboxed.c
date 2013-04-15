@@ -156,7 +156,6 @@ g_value_array_get_type (void)
   return type_id;
 }
 
-#if 0
 static gpointer
 gdate_copy (gpointer boxed)
 {
@@ -176,7 +175,6 @@ g_date_get_type (void)
 					    (GBoxedFreeFunc) g_date_free);
   return type_id;
 }
-#endif
 
 GType
 g_strv_get_type (void)

@@ -40,9 +40,6 @@
 #ifdef G_OS_WIN32
 #include <windows.h>
 #include <process.h>
-#ifdef WINCE
-#define getpid GetCurrentProcessId
-#endif
 #endif
 
 #include <stdio.h>              /* fputs/fprintf */

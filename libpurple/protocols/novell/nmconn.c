@@ -27,10 +27,9 @@
 #include <ctype.h>
 #include <time.h>
 #include "nmconn.h"
-#include "sslconn.h"
 
 #ifdef _WIN32
-#include <win32dep.h>
+#include <windows.h>
 #endif
 
 #define NO_ESCAPE(ch) ((ch == 0x20) || (ch >= 0x30 && ch <= 0x39) || \
@@ -190,6 +189,10 @@ void nm_release_conn(NMConn *conn)
 		}
 		g_slist_free(conn->requests);
 		conn->requests = NULL;
+		if (conn->ssl_conn) {
+			g_free(conn->ssl_conn);
+			conn->ssl_conn = NULL;
+		}
 		g_free(conn->addr);
 		conn->addr = NULL;
 		g_free(conn);
@@ -204,8 +207,8 @@ nm_tcp_write(NMConn * conn, const void *buff, int len)
 
 	if (!conn->use_ssl)
 		return (write(conn->fd, buff, len));
-	else if (conn->ssl_conn)
-		return (purple_ssl_write(conn->ssl_conn, buff, len));
+	else if (conn->ssl_conn && conn->ssl_conn->write)
+		return (conn->ssl_conn->write(conn->ssl_conn->data, buff, len));
 	else
 		return -1;
 }
@@ -218,8 +221,8 @@ nm_tcp_read(NMConn * conn, void *buff, int len)
 
 	if (!conn->use_ssl)
 		return (read(conn->fd, buff, len));
-	else if (conn->ssl_conn)
-		return (purple_ssl_read(conn->ssl_conn, buff, len));
+	else if (conn->ssl_conn && conn->ssl_conn->read)
+		return ((conn->ssl_conn->read)(conn->ssl_conn->data, buff, len));
 	else
 		return -1;
 }

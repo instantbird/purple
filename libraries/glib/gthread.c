@@ -166,7 +166,7 @@ g_thread_init_glib (void)
   _g_rand_thread_init ();
   _g_main_thread_init ();
   _g_utils_thread_init ();
-#if 0
+#ifdef G_OS_WIN32
   _g_win32_thread_init ();
 #endif
 }
@@ -599,14 +599,8 @@ gettime (void)
 #ifdef G_OS_WIN32
   guint64 v;
 
-#ifdef WINCE
-  SYSTEMTIME st;
-  GetSystemTime (&st);
-  SystemTimeToFileTime (&st, (FILETIME *)&v);
-#else
   /* Returns 100s of nanoseconds since start of 1601 */
   GetSystemTimeAsFileTime ((FILETIME *)&v);
-#endif
 
   /* Offset to Unix epoch */
   v -= G_GINT64_CONSTANT (116444736000000000);

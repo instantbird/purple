@@ -48,10 +48,6 @@
 #error Please port this to your operating system
 #endif
 
-#ifdef WINCE
-# include "wince.h"
-#endif
-
 
 /**
  * g_access:
@@ -356,7 +352,6 @@ g_mkdir (const gchar *filename,
 #endif
 }
 
-#if 0
 /**
  * g_chdir: 
  * @path: a pathname in the GLib file name encoding (UTF-8 on Windows)
@@ -395,7 +390,6 @@ g_chdir (const gchar *path)
   return chdir (path);
 #endif
 }
-#endif
 
 /**
  * g_stat: 
@@ -526,7 +520,6 @@ g_unlink (const gchar *filename)
 #endif
 }
 
-#if 0
 /**
  * g_remove:
  * @filename: a pathname in the GLib file name encoding (UTF-8 on Windows)
@@ -621,7 +614,6 @@ g_rmdir (const gchar *filename)
   return rmdir (filename);
 #endif
 }
-#endif
 
 /**
  * g_fopen:

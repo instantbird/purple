@@ -53,10 +53,6 @@
 
 #ifdef G_OS_WIN32
 #include <process.h>		/* For getpid() */
-#ifdef WINCE
-#include <windows.h>
-#define getpid GetCurrentProcessId
-#endif
 #endif
 
 G_LOCK_DEFINE_STATIC (global_random);

@@ -901,7 +901,6 @@ rename_file (const char *old_name,
   return TRUE;
 }
 
-#if 0
 static gchar *
 write_to_temp_file (const gchar *contents,
 		    gssize length,
@@ -1132,7 +1131,6 @@ g_file_set_contents (const gchar *filename,
   g_free (tmp_filename);
   return retval;
 }
-#endif
 
 /*
  * create_temp_file based on the mkstemp implementation from the GNU C library.
@@ -1225,7 +1223,7 @@ g_mkstemp (gchar *tmpl)
   return create_temp_file (tmpl, 0600);
 }
 
-#if 0
+#ifdef G_OS_WIN32
 
 #undef g_mkstemp
 

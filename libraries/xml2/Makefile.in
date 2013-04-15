@@ -74,9 +74,4 @@ CSRCS		= \
 		xmlstring.c \
 		$(NULL)
 
-ifeq ($(OS_ARCH),WINCE)
-EXPORTS		+= wincecompat.h
-CSRCS		+= wincecompat.c
-endif
-
 include $(topsrcdir)/config/rules.mk

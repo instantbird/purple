@@ -58,7 +58,7 @@
 #include <sys/cygwin.h>
 #endif
 
-#if 0
+#ifndef G_WITH_CYGWIN
 
 gint
 g_win32_ftruncate (gint  fd,
@@ -96,11 +96,6 @@ g_win32_getlocale (void)
   gint primary, sub;
   char iso639[10];
   char iso3166[10];
-#ifdef WINCE
-  wchar_t wiso639[10];
-  wchar_t wiso3166[10];
-  char *tmp;
-#endif
   const gchar *script = NULL;
 
   /* Let the user override the system settings through environment
@@ -113,26 +108,11 @@ g_win32_getlocale (void)
       || ((ev = getenv ("LANG")) != NULL && ev[0] != '\0'))
     return g_strdup (ev);
 
-#ifndef WINCE
   lcid = GetThreadLocale ();
 
   if (!GetLocaleInfo (lcid, LOCALE_SISO639LANGNAME, iso639, sizeof (iso639)) ||
       !GetLocaleInfo (lcid, LOCALE_SISO3166CTRYNAME, iso3166, sizeof (iso3166)))
     return g_strdup ("C");
-#else
-  lcid = GetUserDefaultLCID ();
-
-  if (!GetLocaleInfo (lcid, LOCALE_SISO639LANGNAME, wiso639, sizeof (iso639)) ||
-      !GetLocaleInfo (lcid, LOCALE_SISO3166CTRYNAME, wiso3166, sizeof (iso3166)))
-    return g_strdup ("C");
-
-  tmp = g_utf16_to_utf8(wiso639, 10, NULL, NULL, NULL);
-  strncpy(iso639, tmp, 10);
-  g_free(tmp);
-  tmp = g_utf16_to_utf8(wiso3166, 10, NULL, NULL, NULL);
-  strncpy(iso3166, tmp, 10);
-  g_free(tmp);
-#endif
   
   /* Strip off the sorting rules, keep only the language part.  */
   langid = LANGIDFROMLCID (lcid);
@@ -552,7 +532,6 @@ g_win32_get_package_installation_subdirectory (const gchar *package,
   return dirname;
 }
 
-#if 0
 static guint windows_version;
 
 static void 
@@ -655,7 +634,6 @@ g_win32_locale_filename_from_utf8 (const gchar *utf8filename)
     }
   return retval;
 }
-#endif
 
 #define __G_WIN32_C__
 #include "galiasdef.c"
