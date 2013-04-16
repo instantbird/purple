@@ -29,6 +29,8 @@ class purpleSocketInternal : public nsASocketHandler,
   void OnSocketReady(PRFileDesc*, PRInt16);
   void OnSocketDetached(PRFileDesc*);
   void IsLocal(bool*);
+  uint64_t ByteCountSent() { return 0; }
+  uint64_t ByteCountReceived() { return 0; }
   nsresult PostEvent();
   nsresult Cancel();
   bool GetCanceled() { return mCanceled; }
