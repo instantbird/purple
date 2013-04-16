@@ -4,6 +4,7 @@
 
 #include "purpleDNS.h"
 #include "purpleAccountScoper.h"
+#include "mozilla/net/DNS.h"
 #include <nsComponentManagerUtils.h>
 #include <nsServiceManagerUtils.h>
 #include <nsNetUtil.h>
@@ -13,6 +14,9 @@
 #include <prio.h>
 #ifdef XP_WIN
 #include <winsock2.h>
+#include <ws2tcpip.h>
+#else
+#include <sys/un.h>
 #endif
 
 #ifdef PR_LOGGING
@@ -160,34 +164,49 @@ nsresult purpleDNSRequest::OnLookupComplete(nsICancelable *request,
     return NS_OK;
   }
 
-  union PRNetAddr addr;
+  mozilla::net::NetAddr netAddr;
   while (more)
   {
-    record->GetNextAddr(purple_dnsquery_get_port(query_data), &addr);
+    unsigned short port = purple_dnsquery_get_port(query_data);
+    if (NS_FAILED(record->GetNextAddr(port, &netAddr))) {
+      Failed("GetNextAddr failed\n");
+      return NS_OK;
+    }
 
-    size_t size =
-      (addr.raw.family == PR_AF_INET  ? sizeof(addr.inet) :
-#ifdef XP_UNIX
-       addr.raw.family == PR_AF_LOCAL ? sizeof(addr.local) :
-#endif
-                                        sizeof(addr.ipv6));
-    hosts = g_slist_append(hosts, GINT_TO_POINTER(size));
+    socklen_t addrlen;
+    struct sockaddr *addr;
 
-    struct sockaddr *addr2 =
-      (struct sockaddr *)g_malloc0(MAX(size, sizeof(struct sockaddr)));
-    memcpy(addr2, &addr, size);
-#ifdef XP_MACOSX
-    addr2->sa_len = size;
-    addr2->sa_family = addr.raw.family;
-#endif
-    hosts = g_slist_append(hosts, addr2);
-
-#ifdef PR_LOGGING
-    char ipaddr[64];
-    if (PR_NetAddrToString(&addr, ipaddr, sizeof(ipaddr)) == PR_SUCCESS) {
-      LOG(("Found ip: %s", ipaddr));
+    if (netAddr.raw.family == AF_INET) {
+      addrlen = sizeof(struct sockaddr_in);
+      struct sockaddr_in *s_in = (struct sockaddr_in *)g_malloc0(addrlen);
+      s_in->sin_port = netAddr.inet.port;
+      memcpy(&s_in->sin_addr, &netAddr.inet.ip, sizeof(netAddr.inet.ip));
+      addr = (struct sockaddr *)s_in;
+      LOG(("Found ip v4 address"));
+    }
+    else if (netAddr.raw.family == AF_INET6) {
+      addrlen = sizeof(struct sockaddr_in6);
+      struct sockaddr_in6 *s_in6 = (struct sockaddr_in6 *)g_malloc0(addrlen);
+      s_in6->sin6_port = netAddr.inet6.port;
+      s_in6->sin6_flowinfo = netAddr.inet6.flowinfo;
+      memcpy(&s_in6->sin6_addr, &netAddr.inet6.ip, sizeof(netAddr.inet6.ip.u8));
+      s_in6->sin6_scope_id = netAddr.inet6.scope_id;
+      addr = (struct sockaddr *)s_in6;
+      LOG(("Found ip v6 address"));
+    }
+#ifndef XP_WIN
+    else if (netAddr.raw.family == AF_LOCAL) {
+      addrlen = sizeof(struct sockaddr_un);
+      struct sockaddr_un *s_un = (struct sockaddr_un *)g_malloc0(addrlen);
+      memcpy(&s_un->sun_path, netAddr.local.path, sizeof(netAddr.local.path));
+      addr = (struct sockaddr *)s_un;
+      LOG(("Found local address"));
     }
 #endif
+    addr->sa_family = netAddr.raw.family;
+
+    hosts = g_slist_append(hosts, GINT_TO_POINTER(addrlen));
+    hosts = g_slist_append(hosts, addr);
 
     record->HasMore(&more);
   }
