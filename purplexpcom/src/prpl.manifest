@@ -8,6 +8,4 @@ category im-protocol-plugin prpl-bilboed-netsoul @instantbird.org/purple/protoco
 category im-protocol-plugin prpl-qq @instantbird.org/purple/protocol;1
 category im-protocol-plugin prpl-simple @instantbird.org/purple/protocol;1
 category im-protocol-plugin prpl-meanwhile @instantbird.org/purple/protocol;1
-category im-protocol-plugin prpl-yahoo @instantbird.org/purple/protocol;1
-category im-protocol-plugin prpl-yahoojp @instantbird.org/purple/protocol;1
 category im-protocol-plugin prpl-bonjour @instantbird.org/purple/protocol;1
