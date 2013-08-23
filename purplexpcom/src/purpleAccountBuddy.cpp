@@ -191,8 +191,7 @@ NS_IMETHODIMP purpleAccountBuddy::GetBuddyIconFilename(nsACString& aBuddyIconFil
   char *fname;
 
   if (!icon || !(fname = purple_buddy_icon_get_full_path(icon))) {
-    // set it to NULL
-    aBuddyIconFilename.SetIsVoid(true);
+    aBuddyIconFilename.Truncate();
     return NS_OK;
   }
 
