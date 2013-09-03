@@ -592,6 +592,19 @@ NS_IMETHODIMP purpleAccount::RequestBuddyInfo(const nsACString & aBuddyName)
   return NS_OK;
 }
 
+/* void requestRoomInfo (in prplIRoomInfoCallback aCallback); */
+NS_IMETHODIMP purpleAccount::RequestRoomInfo(prplIRoomInfoCallback *aCallback)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* readonly attribute boolean isRoomInfoStale; */
+NS_IMETHODIMP purpleAccount::GetIsRoomInfoStale(bool *aIsRoomInfoStale)
+{
+  *aIsRoomInfoStale = false;
+  return NS_OK;
+}
+
 /* nsISimpleEnumerator getChatRoomFields (); */
 NS_IMETHODIMP purpleAccount::GetChatRoomFields(nsISimpleEnumerator **aResult)
 {
