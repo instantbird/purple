@@ -207,11 +207,11 @@ include $(topsrcdir)/config/rules.mk
 
 export::
 	mkdir -p libcharset gobject
-ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
+ifeq ($(OS_ARCH),WINNT)
 	mkdir -p gnulib
 endif
 
-ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
+ifeq ($(OS_ARCH),WINNT)
 libs:: glib.def
 
 glib.def: $(srcdir)/glib.symbols $(srcdir)/gobject.symbols $(GLOBAL_DEPS)
