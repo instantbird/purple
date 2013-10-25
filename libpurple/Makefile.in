@@ -31,31 +31,8 @@ endif
 endif
 
 ifndef PURPLE_PLUGINS
-PROTOCOLS	= \
-		jabber \
-		gg \
-		oscar \
-		msn \
-		myspace \
-		novell \
-		qq \
-		sametime \
-		simple \
-		yahoo \
-		netsoul \
-		$(NULL)
-
-ifdef PURPLE_BONJOUR
-PROTOCOLS	+= bonjour
-endif
-
-ifdef MOZ_DEBUG
-PROTOCOLS	+= null
-endif
-
 STATIC_PROTO_libs = $(foreach proto,$(STATIC_PRPLS),protocols/$(proto)_libs)
 
-PARALLEL_DIRS = $(foreach proto,$(STATIC_PRPLS),protocols/$(proto))
 ifneq (,$(STATIC_PRPLS))
 STATIC_PRPL_LIBS = $(foreach proto,$(STATIC_PRPLS),protocols/$(proto)/$(LIB_PREFIX)$(proto).$(LIB_SUFFIX))
 SHARED_LIBRARY_LIBS += $(STATIC_PRPL_LIBS)
@@ -222,9 +199,11 @@ static_proto_init.c: $(GLOBAL_DEPS)
 	echo >> $@ '}'
 endif
 
+DYNAMIC_PRPLS = $(foreach proto,$(filter-out $(foreach proto,$(STATIC_PRPLS),protocols/$(proto)),$(PARALLEL_DIRS)),$(proto))
+
 # the dynamic protocols are built after purplexpcom is linked
 dynamic-prpls:
-	$(foreach proto,$(filter-out $(STATIC_PRPLS),$(PROTOCOLS)),$(call SUBMAKE,libs,protocols/$(proto)))
+	$(foreach proto,$(DYNAMIC_PRPLS),$(call SUBMAKE,PURPLEXPCOM=1 libs,$(proto)))
 
 ifeq ($(OS_ARCH),WINNT)
 purple.def: ../libraries/glib/glib.def $(EXPORTS_libpurple) $(GLOBAL_DEPS)

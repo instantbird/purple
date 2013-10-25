@@ -9,18 +9,4 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifneq (,$(filter WINNT Darwin,$(OS_ARCH)))
-PARALLEL_DIRS	= \
-		libraries/xml2 \
-		libraries/glib \
-		$(NULL)
-endif
-
-DIRS		+= \
-		libpurple \
-		purplexpcom/public \
-		purplexpcom/src \
-		locales \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
