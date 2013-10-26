@@ -19,8 +19,6 @@ LIB_IS_C_ONLY	= 1
 VISIBILITY_FLAGS=
 
 EXPORTS_libxml	= \
-		config.h \
-		libxml.h \
 		elfgcchack.h \
 		xmlerror.h \
 		xmlversion.h \

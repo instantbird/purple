@@ -94,7 +94,6 @@ EXPORTS_glib	= \
 		gtestutils.h \
 		gslice.h \
 		gunidecomp.h \
-		config.h \
 		glibconfig.h \
 		glib-object.h \
 		$(NULL)

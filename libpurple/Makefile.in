@@ -44,7 +44,7 @@ DEFINES		+= -DPURPLE_PLUGINS -DLIBDIR=\"$(libdir)/purple-$(PURPLE_MAJOR_VERSION)
 endif
 
 PURPLE_VERSION	= $(PURPLE_MAJOR_VERSION).$(PURPLE_MINOR_VERSION).$(PURPLE_MICRO_VERSION)
-DEFINES		+= -DPACKAGE=\"purple\" -DVERSION=\"$(PURPLE_VERSION)\"
+DEFINES		+= -DHAVE_CONFIG_H -DPACKAGE=\"purple\" -DVERSION=\"$(PURPLE_VERSION)\"
 
 PREF_JS_EXPORTS = $(srcdir)/purple-prefs.js
 
@@ -56,6 +56,7 @@ EXPORTS_libpurple = \
 		cipher.h \
 		circbuffer.h \
 		cmds.h \
+		config.h \
 		connection.h \
 		conversation.h \
 		core.h \

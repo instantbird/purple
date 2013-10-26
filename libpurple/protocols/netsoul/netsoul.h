@@ -24,10 +24,6 @@
 #ifndef _NETSOUL_H_
 #define _NETSOUL_H_
 
-#ifdef HAVE_CONFIG_H
-# include "../netsoul_config.h"
-#endif
-
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
