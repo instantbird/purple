@@ -111,7 +111,7 @@ void purpleDNS::Cancel(PurpleDnsQueryData *query_data)
   LOG(("Canceling by query_data: not found"));
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(purpleDNSRequest, nsIDNSListener)
+NS_IMPL_ISUPPORTS1(purpleDNSRequest, nsIDNSListener)
 
 purpleDNSRequest::purpleDNSRequest()
 {

@@ -22,7 +22,7 @@ class purpleSocketInternal : public nsASocketHandler,
   public nsIRunnable
 {
  public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
 
   nsresult Init(PRFileDesc *aFd, nsIRunnable *aRunnable, PRUint16 aPollFlags);
@@ -57,7 +57,7 @@ class purpleSocketInternal : public nsASocketHandler,
 class purpleSocket : public nsIRunnable
 {
  public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
 
   purpleSocket();

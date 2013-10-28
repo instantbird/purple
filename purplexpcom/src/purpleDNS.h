@@ -14,9 +14,9 @@
 #include <nsIDNSRecord.h>
 #include <nsIDNSListener.h>
 
-struct purpleDNSRequest: nsIDNSListener
+class purpleDNSRequest: public nsIDNSListener
 {
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIDNSLISTENER
 
   purpleDNSRequest();
