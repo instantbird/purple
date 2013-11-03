@@ -92,25 +92,16 @@ static void buddy_removed(PurpleBuddy *aBuddy, void *null)
   // This is the buddy-removed purple signal. It is fired when a buddy
   // is removed permanenty (ie from the server list or if the user
   // request the deletion of a buddy in her list).
-  // It is also fired during shutdown when we uninitialize the
-  // accounts; in this case, even though the buddy isn't really
-  // removed, we still want to uninitialize its purpleAccountBuddy
-  // instance.
 
   purpleAccountBuddy *accountBuddy =
     purpleAccountBuddy::fromPurpleBuddy(aBuddy);
+  NS_ENSURE_TRUE(accountBuddy, );
 
-  if (blist_signals_handle) {
-    NS_ENSURE_TRUE(accountBuddy, );
-
-    nsCOMPtr<imIContactsService> contacts =
-      do_GetService("@mozilla.org/chat/contacts-service;1");
-    if (contacts)
-      contacts->AccountBuddyRemoved(accountBuddy);
-  }
-
-  if (accountBuddy)
-    accountBuddy->UnInit();
+  nsCOMPtr<imIContactsService> contacts =
+    do_GetService("@mozilla.org/chat/contacts-service;1");
+  if (contacts)
+    contacts->AccountBuddyRemoved(accountBuddy);
+  accountBuddy->UnInit();
 }
 
 static void buddy_away(PurpleBuddy *aBuddy,
@@ -189,30 +180,32 @@ disconnect_blist_signals()
 {
   purple_signals_disconnect_by_handle(&blist_signals_handle);
   blist_signals_handle = 0;
-
-  // Reconnect the buddy-removed handler so that we can still properly
-  // unInit the purpleAccountBuddy instances.
-  void *instance = purple_blist_get_handle();
-  PURPLE_CONNECT_BUDDY_SIGNAL_HANDLER("buddy-removed", buddy_removed);
 }
 
 static void remove_blist_node(PurpleBuddyList *aList, PurpleBlistNode *aNode)
 {
-  // Ignore this ui ops if buddy list signals are not connected:
-  if (!blist_signals_handle)
-    return;
-
   // This is the removed blist uiop. It is fired when a possibly
   // visible element of the buddy list is removed (because the account
-  // got disconnected)
+  // got disconnected). This is a status change for us.
+  // It is also fired during shutdown when we uninitialize the accounts;
+  // in this case, we want to uninitialize its purpleAccountBuddy instance.
 
   // For now, we are only interested by buddy removal
   if (!PURPLE_BLIST_NODE_IS_BUDDY(aNode))
     return;
 
   PurpleBuddy *buddy = (PurpleBuddy *) aNode;
-  LOG(("purple uiop : remove_blist_node, name = %s", buddy->name));
-  buddy_availability_changed(buddy);
+
+  if (blist_signals_handle) {
+    LOG(("purple uiop : remove_blist_node, name = %s", buddy->name));
+    buddy_availability_changed(buddy);
+  }
+  else {
+    purpleAccountBuddy *accountBuddy =
+      purpleAccountBuddy::fromPurpleBuddy(buddy);
+    if (accountBuddy)
+      accountBuddy->UnInit();
+  }
 }
 
 static PurpleBlistUiOps blist_uiops = {
