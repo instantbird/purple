@@ -18,6 +18,7 @@
 #include <nsIDocument.h>
 #include <nsIDOMDocument.h>
 #include <nsIObserverService.h>
+#include <prtime.h> // for PR_Now
 
 #ifdef PR_LOGGING
 //
