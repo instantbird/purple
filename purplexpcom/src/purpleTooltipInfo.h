@@ -21,8 +21,8 @@
       { 0x8d, 0xf6, 0x08, 0xf8, 0x57, 0x7f, 0xe5, 0x2b }        \
   }
 
-class purpleTooltipInfo : public prplITooltipInfo,
-                          public nsIClassInfo
+class purpleTooltipInfo MOZ_FINAL : public prplITooltipInfo,
+                                    public nsIClassInfo
 {
 public:
   NS_DECL_ISUPPORTS

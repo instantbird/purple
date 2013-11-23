@@ -21,8 +21,8 @@ static PRLogModuleInfo *gPurplePrefLog = nullptr;
 #endif
 #define LOG(args) PR_LOG(gPurplePrefLog, PR_LOG_DEBUG, args)
 
-class purpleKeyValuePair : public prplIKeyValuePair,
-                           public nsIClassInfo
+class purpleKeyValuePair MOZ_FINAL : public prplIKeyValuePair,
+                                     public nsIClassInfo
 {
 public:
   NS_DECL_ISUPPORTS

@@ -27,7 +27,7 @@
 #define PROXY_KEY_NONE   "none"
 #define PROXY_KEY_ENVVAR "envvar"
 
-class purpleProxyInfo : public purpleIProxyInfo
+class purpleProxyInfo MOZ_FINAL : public purpleIProxyInfo
 {
 public:
   NS_DECL_ISUPPORTS

@@ -5,7 +5,7 @@
 #include <nsIObserver.h>
 #include <glib.h>
 
-class purpleNetworkObserver : public nsIObserver
+class purpleNetworkObserver MOZ_FINAL : public nsIObserver
 {
  public:
   NS_DECL_ISUPPORTS

@@ -14,7 +14,7 @@
 #include <nsIDNSRecord.h>
 #include <nsIDNSListener.h>
 
-class purpleDNSRequest: public nsIDNSListener
+class purpleDNSRequest MOZ_FINAL : public nsIDNSListener
 {
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIDNSLISTENER

@@ -23,8 +23,8 @@ static PRLogModuleInfo *gPurpleProtocolLog = nullptr;
 #endif
 #define LOG(args) PR_LOG(gPurpleProtocolLog, PR_LOG_DEBUG, args)
 
-class purpleUsernameSplit : public prplIUsernameSplit,
-                            public nsIClassInfo
+class purpleUsernameSplit MOZ_FINAL : public prplIUsernameSplit,
+                                      public nsIClassInfo
 {
 public:
   NS_DECL_ISUPPORTS

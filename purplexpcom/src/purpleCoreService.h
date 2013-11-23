@@ -17,7 +17,8 @@
 #define PURPLE_ENSURE_INIT(x)                   \
   NS_ENSURE_TRUE(x, NS_ERROR_NOT_INITIALIZED)
 
-class purpleCoreService : public purpleICoreService, public nsIObserver
+class purpleCoreService MOZ_FINAL : public purpleICoreService,
+                                    public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS

@@ -140,7 +140,7 @@ static void connect_to_accounts_signals()
 
 
 /*** Account uiops ***/
-class purpleAuthorizationRequest : public prplIBuddyRequest
+class purpleAuthorizationRequest MOZ_FINAL : public prplIBuddyRequest
 {
   public:
     NS_DECL_ISUPPORTS

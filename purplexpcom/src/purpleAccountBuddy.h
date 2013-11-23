@@ -22,7 +22,7 @@
 #define GET_NODE_UI_DATA(aNode)                                 \
   purple_blist_node_get_ui_data(PURPLE_BLIST_NODE(aNode))
 
-class purpleAccountBuddy : public imIAccountBuddy
+class purpleAccountBuddy MOZ_FINAL : public imIAccountBuddy
 {
 public:
   NS_DECL_ISUPPORTS

@@ -18,7 +18,7 @@
 
 class nsIObserver;
 
-class purpleSocketInternal : public nsASocketHandler,
+class purpleSocketInternal MOZ_FINAL : public nsASocketHandler,
   public nsIRunnable
 {
  public:
@@ -54,7 +54,7 @@ class purpleSocketInternal : public nsASocketHandler,
   bool mCanceled;
 };
 
-class purpleSocket : public nsIRunnable
+class purpleSocket MOZ_FINAL : public nsIRunnable
 {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS

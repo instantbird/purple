@@ -21,7 +21,7 @@
 #define PURPLE_PROTOCOL_CONTRACTID \
     "@instantbird.org/purple/protocol;1"
 
-class purpleProtocol : public prplIProtocol
+class purpleProtocol MOZ_FINAL : public prplIProtocol
 {
 public:
   NS_DECL_ISUPPORTS

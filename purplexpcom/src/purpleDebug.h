@@ -9,7 +9,7 @@
 #include <libpurple/debug.h>
 #pragma GCC visibility pop
 
-class purpleDebug : public nsIObserver
+class purpleDebug MOZ_FINAL : public nsIObserver
 {
  public:
   NS_DECL_ISUPPORTS

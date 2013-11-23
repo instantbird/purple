@@ -25,7 +25,7 @@ extern PRLogModuleInfo *gPurpleInitLog;
 NS_DEFINE_NAMED_CID(PURPLE_CONV_CHAT_CID);
 NS_DEFINE_NAMED_CID(PURPLE_CONV_IM_CID);
 
-class purpleCommand : public imICommand
+class purpleCommand MOZ_FINAL : public imICommand
 {
 public:
   NS_DECL_ISUPPORTS

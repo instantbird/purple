@@ -10,8 +10,8 @@
 #include <nsStringAPI.h>
 #include <nsIClassInfo.h>
 
-class purpleConvChatBuddy : public prplIConvChatBuddy,
-                            public nsIClassInfo
+class purpleConvChatBuddy MOZ_FINAL : public prplIConvChatBuddy,
+                                      public nsIClassInfo
 {
 public:
   NS_DECL_ISUPPORTS

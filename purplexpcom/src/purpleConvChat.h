@@ -15,7 +15,7 @@
 
 #define PURPLE_CONV_CHAT_CONTRACTID     "@instantbird.org/purple/convchat;1"
 
-class purpleConvChat : public prplIConvChat, public purpleConversation
+class purpleConvChat MOZ_FINAL : public prplIConvChat, public purpleConversation
 {
 public:
   NS_DECL_ISUPPORTS

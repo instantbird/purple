@@ -8,7 +8,7 @@
 # include <glib.h>
 # include "nsISimpleEnumerator.h"
 
-class purpleGListEnumerator : public nsISimpleEnumerator
+class purpleGListEnumerator MOZ_FINAL : public nsISimpleEnumerator
 {
 public:
   NS_DECL_ISUPPORTS

@@ -20,7 +20,7 @@
 #define PURPLE_MESSAGE_CONTRACTID \
   "@instantbird.org/purple/message;1"
 
-class purpleMessage : public prplIMessage
+class purpleMessage MOZ_FINAL : public prplIMessage
 {
 public:
   NS_DECL_ISUPPORTS

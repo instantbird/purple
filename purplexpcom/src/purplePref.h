@@ -18,8 +18,8 @@
 #define PURPLE_PREF_CONTRACTID \
   "@instantbird.org/purple/pref;1"
 
-class purplePref : public prplIPref,
-                   public nsIClassInfo
+class purplePref MOZ_FINAL : public prplIPref,
+                             public nsIClassInfo
 {
 public:
   NS_DECL_ISUPPORTS
