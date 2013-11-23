@@ -1062,11 +1062,11 @@ nsresult purpleAccount::ApplyCurrentUserIcon()
        token;
        token = NS_strtok(",", &tmp)) {
     // Possible types in libpurple: png,gif,jpeg,bmp,ico
-    if (!strcmp(token, "png") && mimeType.Equals("image/png") ||
-        !strcmp(token, "gif") && mimeType.Equals("image/gif") ||
-        !strcmp(token, "jpeg") && mimeType.Equals("image/jpeg") ||
-        !strcmp(token, "bmp") && mimeType.Equals("image/bmp") ||
-        !strcmp(token, "ico") && mimeType.Equals("image/x-icon")) {
+    if ((!strcmp(token, "png") && mimeType.Equals("image/png")) ||
+        (!strcmp(token, "gif") && mimeType.Equals("image/gif")) ||
+        (!strcmp(token, "jpeg") && mimeType.Equals("image/jpeg")) ||
+        (!strcmp(token, "bmp") && mimeType.Equals("image/bmp")) ||
+        (!strcmp(token, "ico") && mimeType.Equals("image/x-icon"))) {
       found = PR_TRUE;
       LOG(("  current file is of acceptable type: %s", token));
       break;

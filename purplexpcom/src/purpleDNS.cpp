@@ -165,7 +165,7 @@ nsresult purpleDNSRequest::OnLookupComplete(nsICancelable *request,
   }
 
   mozilla::net::NetAddr netAddr;
-  while (more)
+  for (; more; record->HasMore(&more))
   {
     unsigned short port = purple_dnsquery_get_port(query_data);
     if (NS_FAILED(record->GetNextAddr(port, &netAddr))) {
@@ -203,12 +203,15 @@ nsresult purpleDNSRequest::OnLookupComplete(nsICancelable *request,
       LOG(("Found local address"));
     }
 #endif
+    else {
+      NS_NOTREACHED("Unknown address type...");
+      continue;
+    }
+
     addr->sa_family = netAddr.raw.family;
 
     hosts = g_slist_append(hosts, GINT_TO_POINTER(addrlen));
     hosts = g_slist_append(hosts, addr);
-
-    record->HasMore(&more);
   }
   LOG(("DNS resolution done"));
   resolved_cb(query_data, hosts);
