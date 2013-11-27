@@ -686,6 +686,15 @@ NS_IMETHODIMP purpleAccount::GetNormalizedName(nsACString& aNormalizedName)
   return NS_OK;
 }
 
+/* AUTF8String normalize(in AUTF8String aName); */
+NS_IMETHODIMP purpleAccount::Normalize(const nsACString & aName, nsACString & aNormalizedName)
+{
+  NS_ENSURE_TRUE(mAccount, NS_ERROR_NOT_INITIALIZED);
+
+  aNormalizedName = purple_normalize(mAccount, PromiseFlatCString(aName).get());
+  return NS_OK;
+}
+
 /* attribute purpleIProxyInfo proxyInfo; */
 NS_IMETHODIMP purpleAccount::GetProxyInfo(purpleIProxyInfo * *aProxyInfo)
 {
