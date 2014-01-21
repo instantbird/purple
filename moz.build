@@ -15,3 +15,5 @@ DIRS += [
     'purplexpcom/src',
     'locales'
 ]
+
+JAR_MANIFESTS += ['jar.mn']
