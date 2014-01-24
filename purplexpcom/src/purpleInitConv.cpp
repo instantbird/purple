@@ -71,7 +71,7 @@ static void destroy_conv(PurpleConversation *aConv)
 }
 
 static void notify_conv(PurpleConversation *aConv, nsISupports *aSubject,
-                        const char *aTopic, const PRUnichar *aData = nullptr)
+                        const char *aTopic, const char16_t *aData = nullptr)
 {
   NS_ENSURE_TRUE(aConv,);
 
@@ -128,7 +128,7 @@ static void conv_remove_chat_users(PurpleConversation *conv,
 }
 
 static void conv_update_chat_usr(PurpleConversation *conv, const char *user,
-                                 const PRUnichar *aData = nullptr)
+                                 const char16_t *aData = nullptr)
 {
   PurpleConvChatBuddy *prplBuddy = purple_conv_chat_cb_find(PURPLE_CONV_CHAT(conv), user);
   NS_ENSURE_TRUE(prplBuddy,);

@@ -407,7 +407,7 @@ NS_IMPL_ISUPPORTS1(purpleSocketNetworkStateObserver, nsIObserver)
 NS_IMETHODIMP
 purpleSocketNetworkStateObserver::Observe(nsISupports *aSubject,
                                           const char *aTopic,
-                                          const PRUnichar *aData)
+                                          const char16_t *aData)
 {
   LOG(("Got notified of %s", aTopic));
   purpleSocketWatcher::goingOffline();

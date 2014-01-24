@@ -24,7 +24,7 @@ public:
   PurpleConversation *GetConv() { return mConv; };
   void NotifyObservers(nsISupports *aSubject,
                        const char *aTopic,
-                       const PRUnichar *aData);
+                       const char16_t *aData);
   static inline purpleConversation *fromPurpleConv(PurpleConversation *aConv) {
     return static_cast<purpleConversation *>(aConv->ui_data);
   }

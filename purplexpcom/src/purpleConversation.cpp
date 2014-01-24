@@ -207,7 +207,7 @@ NS_IMETHODIMP purpleConversation::RemoveObserver(nsIObserver *aObserver)
 
 void purpleConversation::NotifyObservers(nsISupports *aSubject,
                                          const char *aTopic,
-                                         const PRUnichar *aData)
+                                         const char16_t *aData)
 {
   LOG(("purpleConversation(mId = %i)::NotifyObservers(@%x, topic = %s)",
        mId, aSubject, aTopic));

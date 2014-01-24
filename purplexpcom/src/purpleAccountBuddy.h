@@ -39,7 +39,7 @@ public:
   }
   static PurpleGroup *GetPurpleGroupForTag(imITag *aTag);
   nsresult NotifyObservers(const char *aSignal,
-                           const PRUnichar *aData = nullptr);
+                           const char16_t *aData = nullptr);
 
 private:
   ~purpleAccountBuddy();

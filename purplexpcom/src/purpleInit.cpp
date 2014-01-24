@@ -134,7 +134,7 @@ NS_IMPL_ISUPPORTS1(prefsObserver, nsIObserver)
 
 NS_IMETHODIMP prefsObserver::Observe(nsISupports *aSubject,
                                      const char *aTopic,
-                                     const PRUnichar *someData)
+                                     const char16_t *someData)
 {
   LOG(("prefsObserver::Observe topic = %s\n", aTopic));
   purple_prefs_observe(callback);

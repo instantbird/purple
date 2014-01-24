@@ -888,7 +888,7 @@ PURPLE_IMPL_GETFLAG(NoImages, NO_IMAGES)
 
 NS_IMETHODIMP purpleAccount::Observe(nsISupports *aSubject,
                                      const char *aTopic,
-                                     const PRUnichar *aData)
+                                     const char16_t *aData)
 {
   NS_ENSURE_TRUE(mAccount, NS_ERROR_NOT_INITIALIZED);
 

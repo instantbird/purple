@@ -300,7 +300,7 @@ NS_IMETHODIMP purpleAccountBuddy::SetServerAlias(const nsACString& aServerAlias)
 }
 
 nsresult purpleAccountBuddy::NotifyObservers(const char* aSignal,
-                                             const PRUnichar *aData)
+                                             const char16_t *aData)
 {
   NS_ENSURE_ARG(aSignal);
   NS_ENSURE_TRUE(mBuddy, NS_ERROR_NOT_INITIALIZED);

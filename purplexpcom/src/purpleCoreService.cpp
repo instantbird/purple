@@ -79,7 +79,7 @@ purpleCoreService::~purpleCoreService()
 /* nsIObserver implementation */
 NS_IMETHODIMP purpleCoreService::Observe(nsISupports *aSubject,
                                          const char *aTopic,
-                                         const PRUnichar *aData)
+                                         const char16_t *aData)
 {
   NS_ASSERTION(mInitialized, "Observing notification after uninitialization");
 

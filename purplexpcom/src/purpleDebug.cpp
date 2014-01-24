@@ -181,7 +181,7 @@ purpleDebug::Enabled(PurpleDebugLevel level,
 NS_IMETHODIMP
 purpleDebug::Observe(nsISupports *aSubject,
                      const char *aTopic,
-                     const PRUnichar *aSomeData)
+                     const char16_t *aSomeData)
 {
   LOG(("purpleDebug::Observer(%s)", aTopic));
 

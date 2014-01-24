@@ -68,7 +68,7 @@ purpleNetworkObserver::IsNetworkAvailable()
 NS_IMETHODIMP
 purpleNetworkObserver::Observe(nsISupports *aSubject,
                                const char *aTopic,
-                               const PRUnichar *aData)
+                               const char16_t *aData)
 {
   purple_network_configuration_changed();
 

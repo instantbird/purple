@@ -456,7 +456,7 @@ const char *purpleGetText::GetPluralText(const char *package,
 NS_IMETHODIMP
 purpleGetText::Observe(nsISupports *aSubject,
                        const char *aTopic,
-                       const PRUnichar *aSomeData)
+                       const char16_t *aSomeData)
 {
   LOG(("purpleGetText::Observer(%s)\n", aTopic));
   unInit();
