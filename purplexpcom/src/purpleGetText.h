@@ -37,7 +37,7 @@ class purpleGetText MOZ_FINAL : public nsIObserver
 
   struct LangStringCache {
     nsCString packageName;
-    nsDataHashtable<nsCStringHashKey, nsTArray<nsCString> *> table;
+    nsAutoPtr<nsDataHashtable<nsCStringHashKey, nsTArray<nsCString> *> > table;
   };
 
   nsTArray<LangStringCache> mStringCache;

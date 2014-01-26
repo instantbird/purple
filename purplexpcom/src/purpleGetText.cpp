@@ -287,7 +287,7 @@ PRInt32 purpleGetText::GetPackageIndex(const char *package)
       // it means that the translation bundle for this package is
       // missing. The error value will make the translation code
       // return early.
-      if (!mStringCache[i].table.IsInitialized())
+      if (!mStringCache[i].table)
         return -1;
       return i;
     }
@@ -327,7 +327,7 @@ PRInt32 purpleGetText::GetPackageIndex(const char *package)
   }
 
   // The translation file exists, init the hashtable and return the new index
-  pack->table.Init();
+  pack->table = new nsDataHashtable<nsCStringHashKey, nsTArray<nsCString> *>();
   return mStringCache.Length() - 1;
 }
 
@@ -350,7 +350,7 @@ const char *purpleGetText::GetText(const char *package,
   // check if we can get it from the hashtable
   nsTArray<nsCString> *array = nullptr;
   nsDependentCString cString(string);
-  if (sInstance->mStringCache[packageIndex].table.Get(cString, &array)) {
+  if (sInstance->mStringCache[packageIndex].table->Get(cString, &array)) {
     // Check if we cached that the string is missing
     if (!array)
       return string;
@@ -360,7 +360,7 @@ const char *purpleGetText::GetText(const char *package,
   nsCString *result = sInstance->GetString(package, string);
   // If the localized string doesn't exist, store this info in the hashtable
   if (!result) {
-    sInstance->mStringCache[packageIndex].table.Put(cString, nullptr);
+    sInstance->mStringCache[packageIndex].table->Put(cString, nullptr);
 #ifdef DEBUG
     nsCString warning(NS_LITERAL_CSTRING("caching the missingness of "));
     warning.Append(package);
@@ -381,7 +381,7 @@ const char *purpleGetText::GetText(const char *package,
   }
 
   array->AppendElement(*result);
-  sInstance->mStringCache[packageIndex].table.Put(cString, array);
+  sInstance->mStringCache[packageIndex].table->Put(cString, array);
   delete result;
 
   return (*array)[0].get();
@@ -419,7 +419,7 @@ const char *purpleGetText::GetPluralText(const char *package,
   // check if we can get it from the hashtable
   nsTArray<nsCString> *array;
   nsDependentCString cString(singular);
-  if (sInstance->mStringCache[packageIndex].table.Get(cString, &array)) {
+  if (sInstance->mStringCache[packageIndex].table->Get(cString, &array)) {
     // Check if we cached that the string is missing
     if (!array)
       return defaultResult;
@@ -449,7 +449,7 @@ const char *purpleGetText::GetPluralText(const char *package,
     return defaultResult;
   }
 
-  sInstance->mStringCache[packageIndex].table.Put(cString, array);
+  sInstance->mStringCache[packageIndex].table->Put(cString, array);
   return (*array)[form].get();
 }
 
@@ -513,8 +513,8 @@ void purpleGetText::unInit()
 
   LOG(("purpleGetText::unInit\n"));
   for (PRUint32 i = 0; i < sInstance->mStringCache.Length(); ++i)
-    if (sInstance->mStringCache[i].table.IsInitialized())
-      sInstance->mStringCache[i].table.Enumerate(deleteEnumerator, nullptr);
+    if (sInstance->mStringCache[i].table)
+      sInstance->mStringCache[i].table->Enumerate(deleteEnumerator, nullptr);
 
   NS_RELEASE(sInstance);
   sInstance = nullptr;
