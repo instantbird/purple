@@ -65,23 +65,14 @@ static GMemVTable allocator =
   g_moz_try_realloc
 };
 
-static int64_t getAllocatedMemory()
+int64_t getAllocatedGLibMemory()
 {
   return allocated_size;
 }
 
-NS_THREADSAFE_MEMORY_REPORTER_IMPLEMENT(glib, "explicit/purple/libraries/glib",
-                                        KIND_HEAP, UNITS_BYTES, getAllocatedMemory,
-                                        "Memory allocated by glib and libpurple.");
-
 void init_glib_memory_reporter()
 {
-  nsCOMPtr<nsIMemoryReporterManager> mgr =
-    do_GetService("@mozilla.org/memory-reporter-manager;1");
-  if (mgr) {
-    if (NS_SUCCEEDED(mgr->RegisterReporter(new NS_MEMORY_REPORTER_NAME(glib))))
-      g_mem_set_vtable(&allocator);
-  }
+  g_mem_set_vtable(&allocator);
 }
 
 
@@ -115,21 +106,12 @@ static char *moz_xml_strdup(const char *str)
   return dup;
 }
 
-static int64_t getAllocatedXMLMemory()
+int64_t getAllocatedXMLMemory()
 {
   return allocated_xml_size;
 }
 
-NS_THREADSAFE_MEMORY_REPORTER_IMPLEMENT(xml2, "explicit/purple/libraries/xml2",
-                                        KIND_HEAP, UNITS_BYTES, getAllocatedXMLMemory,
-                                        "Memory allocated by libxml2 for libpurple.");
-
 void init_libxml2_memory_reporter()
 {
-  nsCOMPtr<nsIMemoryReporterManager> mgr =
-    do_GetService("@mozilla.org/memory-reporter-manager;1");
-  if (mgr) {
-    if (NS_SUCCEEDED(mgr->RegisterReporter(new NS_MEMORY_REPORTER_NAME(xml2))))
-      xmlMemSetup(moz_xml_free, moz_xml_malloc, moz_xml_realloc, moz_xml_strdup);
-  }
+  xmlMemSetup(moz_xml_free, moz_xml_malloc, moz_xml_realloc, moz_xml_strdup);
 }

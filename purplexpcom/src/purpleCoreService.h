@@ -9,6 +9,7 @@
 #include "purpleProxyInfo.h"
 #include "purpleICoreService.h"
 #include <nsIMutableArray.h>
+#include <nsIMemoryReporter.h>
 #include <nsCOMArray.h>
 #include <nsCOMPtr.h>
 #include <nsIPrefBranch2.h>
@@ -18,11 +19,13 @@
   NS_ENSURE_TRUE(x, NS_ERROR_NOT_INITIALIZED)
 
 class purpleCoreService MOZ_FINAL : public purpleICoreService,
+                                    public nsIMemoryReporter,
                                     public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
+  NS_DECL_NSIMEMORYREPORTER
   NS_DECL_PURPLEICORESERVICE
 
   purpleCoreService();

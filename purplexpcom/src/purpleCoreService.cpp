@@ -44,7 +44,8 @@ static PRLogModuleInfo *gPurpleCoreServiceLog = nullptr;
 
 NS_IMPL_CLASSINFO(purpleCoreService, NULL, nsIClassInfo::SINGLETON,
                   PURPLE_CORE_SERVICE_CID)
-NS_IMPL_ISUPPORTS2_CI(purpleCoreService, purpleICoreService, nsIObserver)
+NS_IMPL_ISUPPORTS3_CI(purpleCoreService, purpleICoreService, nsIObserver,
+                      nsIMemoryReporter)
 
 extern nsresult init_libpurple();
 extern void init_libpurple_accounts();
@@ -53,6 +54,9 @@ extern void init_libpurple_commands();
 extern void init_libpurple_conversations();
 extern void connect_to_blist_signals();
 extern void disconnect_blist_signals();
+extern int64_t getAllocatedGLibMemory();
+extern int64_t getAllocatedXMLMemory();
+
 
 purpleCoreService::purpleCoreService()
   :mInitialized(PR_FALSE),
@@ -90,6 +94,22 @@ NS_IMETHODIMP purpleCoreService::Observe(nsISupports *aSubject,
   return NS_ERROR_UNEXPECTED;
 }
 
+
+NS_IMETHODIMP
+purpleCoreService::CollectReports(nsIHandleReportCallback* aHandleReport,
+                                  nsISupports* aData)
+{
+  MOZ_COLLECT_REPORT(
+    "explicit/purple/libraries/glib", KIND_HEAP, UNITS_BYTES,
+    getAllocatedGLibMemory(),
+    "Memory allocated by glib and libpurple.");
+
+  return MOZ_COLLECT_REPORT(
+    "explicit/purple/libraries/xml2", KIND_HEAP, UNITS_BYTES,
+    getAllocatedXMLMemory(),
+    "Memory allocated by libxml2 for libpurple.");
+}
+
 /* boolean Init (); */
 NS_IMETHODIMP purpleCoreService::Init()
 {
@@ -123,6 +143,11 @@ NS_IMETHODIMP purpleCoreService::Init()
   /* Init the core of libpurple */
   rv = init_libpurple();
   NS_ENSURE_SUCCESS(rv, rv);
+
+#if defined(XP_WIN) || defined(XP_MACOSX)
+  // We don't have count of memory used by glib and libxml2 on Linux.
+  mozilla::RegisterWeakMemoryReporter(this);
+#endif
 
   /* Init libpurple subsystems */
   init_libpurple_conversations();
@@ -185,6 +210,11 @@ NS_IMETHODIMP purpleCoreService::Quit()
   mInitialized = PR_FALSE;
   purple_core_quit();
   LOG(("purple_core_quit"));
+#if defined(XP_WIN) || defined(XP_MACOSX)
+  // We don't have count of memory used by glib and libxml2 on Linux.
+  mozilla::UnregisterWeakMemoryReporter(this);
+#endif
+
   purpleSocketWatcher::unInit();
   purpleNetworkObserver::unInit();
   purpleDNS::unInit();
