@@ -2,3 +2,61 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+SOURCES += [
+    'chvalid.c',
+    'dict.c',
+    'encoding.c',
+    'entities.c',
+    'error.c',
+    'globals.c',
+    'hash.c',
+    'list.c',
+    'parser.c',
+    'parserInternals.c',
+    'SAX2.c',
+    'threads.c',
+    'tree.c',
+    'uri.c',
+    'valid.c',
+    'xmlIO.c',
+    'xmlmemory.c',
+    'xmlstring.c',
+]
+
+EXPORTS.libxml += [
+    'chvalid.h',
+    'debugXML.h',
+    'dict.h',
+    'elfgcchack.h',
+    'encoding.h',
+    'entities.h',
+    'globals.h',
+    'hash.h',
+    'HTMLparser.h',
+    'HTMLtree.h',
+    'list.h',
+    'nanoftp.h',
+    'nanohttp.h',
+    'parser.h',
+    'parserInternals.h',
+    'SAX.h',
+    'SAX2.h',
+    'threads.h',
+    'tree.h',
+    'uri.h',
+    'valid.h',
+    'xlink.h',
+    'xmlautomata.h',
+    'xmlerror.h',
+    'xmlexports.h',
+    'xmlIO.h',
+    'xmlmemory.h',
+    'xmlregexp.h',
+    'xmlstring.h',
+    'xmlversion.h',
+]
+
+FINAL_LIBRARY = 'purplexpcom'
+
+LIBRARY_NAME = 'xml2'
