@@ -127,3 +127,5 @@ echo "and finally: patch -p0 <diff-update-to-$latest.patch"
 
 echo "also run: echo $latest > config/version.txt"
 echo "don't forget to update purple-prefs.js and the translations"
+
+echo "remember to update libpurple/version.h"
