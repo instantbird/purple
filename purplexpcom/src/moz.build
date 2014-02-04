@@ -2,3 +2,46 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell.ini']
+
+SOURCES += [
+    'purpleAccount.cpp',
+    'purpleAccountBuddy.cpp',
+    'purpleAccountScoper.cpp',
+    'purpleConvChat.cpp',
+    'purpleConvChatBuddy.cpp',
+    'purpleConversation.cpp',
+    'purpleConvIM.cpp',
+    'purpleCoreService.cpp',
+    'purpleDebug.cpp',
+    'purpleDNS.cpp',
+    'purpleGetText.cpp',
+    'purpleGListEnumerator.cpp',
+    'purpleInit.cpp',
+    'purpleInitAccounts.cpp',
+    'purpleInitCommands.cpp',
+    'purpleInitContacts.cpp',
+    'purpleInitConv.cpp',
+    'purpleMessage.cpp',
+    'purpleModule.cpp',
+    'purpleNetwork.cpp',
+    'purplePref.cpp',
+    'purpleProtocol.cpp',
+    'purpleProxy.cpp',
+    'purpleProxyInfo.cpp',
+    'purpleSockets.cpp',
+    'purpleTimer.cpp',
+    'purpleTooltipInfo.cpp',
+]
+
+if CONFIG['OS_ARCH'] == 'WINNT' or CONFIG['OS_ARCH'] == 'Darwin':
+    SOURCES += ['purpleMemory.cpp']
+
+EXTRA_COMPONENTS += ['prpl.manifest']
+
+IS_COMPONENT = True
+
+LIBRARY_NAME = 'purplexpcom'
+
+FORCE_SHARED_LIB = True

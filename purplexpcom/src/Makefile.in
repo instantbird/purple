@@ -11,16 +11,6 @@ relativesrcdir = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= purplexpcom
-LIBRARY_NAME	= purplexpcom
-#EXPORT_LIBRARY	= 1
-IS_COMPONENT	= 1
-FORCE_SHARED_LIB = 1
-MODULE_NAME	= purplexpcom
-#NO_DIST_INSTALL	= 1
-
-SHARED_LIBRARY_LIBS += ../../libpurple/$(LIB_PREFIX)purple.$(LIB_SUFFIX)
-
 ifeq (,$(filter WINNT Darwin,$(OS_ARCH)))
 LOCAL_INCLUDES	= $(GLIB_CFLAGS)
 EXTRA_LIBS	= $(GLIB_LIBS) $(GLIB_GMODULE_LIBS) -lz $(LIBXML2_LIBS)
@@ -46,48 +36,8 @@ ifeq (,$(filter WINNT FreeBSD,$(OS_ARCH)))
 EXTRA_LIBS	+= -lresolv
 endif
 
-CPPSRCS		= \
-		purpleAccount.cpp \
-		purpleAccountBuddy.cpp \
-		purpleAccountScoper.cpp \
-		purpleConversation.cpp \
-		purpleConvIM.cpp \
-		purpleConvChat.cpp \
-		purpleConvChatBuddy.cpp \
-		purpleCoreService.cpp \
-		purpleDebug.cpp \
-		purpleDNS.cpp \
-		purpleInit.cpp \
-		purpleInitAccounts.cpp \
-		purpleInitCommands.cpp \
-		purpleInitContacts.cpp \
-		purpleInitConv.cpp \
-		purpleGetText.cpp \
-		purpleGListEnumerator.cpp \
-		purpleMessage.cpp \
-		purpleModule.cpp \
-		purpleNetwork.cpp \
-		purplePref.cpp \
-		purpleProtocol.cpp \
-		purpleProxy.cpp \
-		purpleProxyInfo.cpp \
-		purpleSockets.cpp \
-		purpleTimer.cpp \
-		purpleTooltipInfo.cpp \
-		$(NULL)
-
-ifneq (,$(filter WINNT Darwin,$(OS_ARCH)))
-CPPSRCS		+= purpleMemory.cpp
-endif
-
 ifdef PURPLE_PLUGINS
 DEFINES 	+= -DPURPLE_PLUGINS
-endif
-
-EXTRA_COMPONENTS = prpl.manifest
-
-ifdef ENABLE_TESTS
-XPCSHELL_TESTS = test
 endif
 
 include $(topsrcdir)/config/rules.mk
