@@ -12,31 +12,6 @@ include $(srcdir)/../prpl.mk
 
 LOCAL_INCLUDES	+= -I$(srcdir)/lib
 
-CSRCS		= \
-		lib/common.c \
-		lib/dcc7.c \
-		lib/debug.c \
-		lib/deflate.c \
-		lib/encoding.c \
-		lib/events.c \
-		lib/handlers.c \
-		lib/http.c \
-		lib/libgadu.c \
-		lib/message.c \
-		lib/obsolete.c \
-		lib/pubdir.c \
-		lib/pubdir50.c \
-		lib/resolver.c \
-		lib/sha1.c \
-		buddylist.c \
-		confer.c \
-		gg.c \
-		search.c \
-		gg-utils.c \
-		$(NULL)
-
-
-
 include $(srcdir)/../prpl-rules.mk
 
 export::

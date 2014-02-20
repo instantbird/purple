@@ -10,31 +10,17 @@ PROTOCOL	= bonjour
 
 include $(srcdir)/../prpl.mk
 
-CSRCS		= \
-		bonjour.c \
-		buddy.c \
-		jabber.c \
-		mdns_common.c \
-		parser.c \
-		bonjour_ft.c \
-		$(NULL)
-
 ifeq (,$(filter-out WINNT Darwin,$(OS_ARCH)))
-# We have Bonjour on both Windows and Mac and libpurple does not include a Mac
-# specific file, but it uses the same API as Windows.
-CSRCS += mdns_win32.c
 ifeq ($(OS_ARCH),Darwin)
 # On Mac, the library is always available in the system, so link it directly.
 DEFINES += -DLINK_DNS_SD_DIRECTLY
 else
-CSRCS += dns_sd_proxy.c
 # Include the Bonjour SDK headers (distributed with Instantbird).
 LOCAL_INCLUDES += -I$(srcdir)/win32
 EXTRA_LIBS += netapi32.lib ws2_32.lib
 endif
 else
 # Linux uses libavahi instead of Bonjour.
-CSRCS	+= mdns_avahi.c
 LOCAL_INCLUDES	+= $(LIBXML2_CFLAGS) $(AVAHI_CFLAGS)
 EXTRA_LIBS	+= $(LIBXML2_LIBS) $(AVAHI_LIBS)
 endif

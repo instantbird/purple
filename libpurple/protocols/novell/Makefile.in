@@ -10,18 +10,4 @@ PROTOCOL	= novell
 
 include $(srcdir)/../prpl.mk
 
-CSRCS		= \
-		nmfield.c \
-		nmconn.c \
-		nmconference.c \
-		nmcontact.c \
-		nmevent.c \
-		nmmessage.c \
-		nmrequest.c \
-		nmrtf.c \
-		nmuser.c \
-		nmuserrecord.c \
-		novell.c \
-		$(NULL)
-
 include $(srcdir)/../prpl-rules.mk

@@ -14,45 +14,6 @@ ifeq (,$(filter WINNT Darwin,$(OS_ARCH)))
 LOCAL_INCLUDES	+= $(LIBXML2_CFLAGS)
 endif
 
-CSRCS		= \
-		auth.c \
-		auth_digest_md5.c \
-		auth_plain.c \
-		auth_scram.c \
-		buddy.c \
-		bosh.c \
-		chat.c \
-		disco.c \
-		data.c \
-		google/gmail.c \
-		google/google.c \
-		google/google_presence.c \
-		google/google_roster.c \
-		google/google_session.c \
-		google/jingleinfo.c \
-		google/relay.c \
-		ibb.c \
-		iq.c \
-		jabber.c \
-		jutil.c \
-		message.c \
-		oob.c \
-		parser.c \
-		ping.c \
-		presence.c \
-		roster.c \
-		si.c \
-		xdata.c \
-		caps.c \
-		adhoccommands.c \
-		pep.c \
-		useravatar.c \
-		usermood.c \
-		usernick.c \
-		usertune.c \
-		libxmpp.c \
-		$(NULL)
-
 include $(srcdir)/../prpl-rules.mk
 
 export::

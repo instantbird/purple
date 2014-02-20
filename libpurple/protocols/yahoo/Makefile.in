@@ -10,20 +10,4 @@ PROTOCOL	= yahoo
 
 include $(srcdir)/../prpl.mk
 
-CSRCS		= \
-		util.c \
-		libyahoo.c \
-		libyahoojp.c \
-		libymsg.c \
-		yahoochat.c \
-		yahoo_aliases.c \
-		yahoo_doodle.c \
-		yahoo_filexfer.c \
-		yahoo_friend.c \
-		yahoo_packet.c \
-		yahoo_picture.c \
-		yahoo_profile.c \
-		ycht.c \
-		$(NULL)
-
 include $(srcdir)/../prpl-rules.mk

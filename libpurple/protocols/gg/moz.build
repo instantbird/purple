@@ -2,3 +2,26 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+SOURCES += [
+    'buddylist.c',
+    'confer.c',
+    'gg-utils.c',
+    'gg.c',
+    'lib/common.c',
+    'lib/dcc7.c',
+    'lib/debug.c',
+    'lib/deflate.c',
+    'lib/encoding.c',
+    'lib/events.c',
+    'lib/handlers.c',
+    'lib/http.c',
+    'lib/libgadu.c',
+    'lib/message.c',
+    'lib/obsolete.c',
+    'lib/pubdir.c',
+    'lib/pubdir50.c',
+    'lib/resolver.c',
+    'lib/sha1.c',
+    'search.c',
+]

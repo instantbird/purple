@@ -10,9 +10,4 @@ PROTOCOL	= simple
 
 include $(srcdir)/../prpl.mk
 
-CSRCS		= \
-		simple.c \
-		sipmsg.c \
-		$(NULL)
-
 include $(srcdir)/../prpl-rules.mk

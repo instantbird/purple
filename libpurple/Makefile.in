@@ -9,10 +9,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= libpurple
-EXPORTS_NAMESPACES= libpurple
-LIBRARY_NAME	= purple
-FORCE_STATIC_LIB= 1
 LIB_IS_C_ONLY	= 1
 #NO_DIST_INSTALL	= 1
 
@@ -22,7 +18,6 @@ ifeq (,$(filter WINNT Darwin,$(OS_ARCH)))
 LOCAL_INCLUDES	= $(GLIB_CFLAGS) $(LIBXML2_CFLAGS)
 else
 LOCAL_INCLUDES  = -I$(DIST)/include/glib
-SHARED_LIBRARY_LIBS += $(foreach lib,glib xml2,../libraries/$(lib)/$(LIB_PREFIX)$(lib).$(LIB_SUFFIX))
 
 ifeq ($(OS_ARCH),WINNT)
 LOCAL_INCLUDES += -I$(srcdir)/win32
@@ -48,135 +43,10 @@ DEFINES		+= -DHAVE_CONFIG_H -DPACKAGE=\"purple\" -DVERSION=\"$(PURPLE_VERSION)\"
 
 PREF_JS_EXPORTS = $(srcdir)/purple-prefs.js
 
-EXPORTS_libpurple = \
-		account.h \
-		accountopt.h \
-		blist.h \
-		buddyicon.h \
-		cipher.h \
-		circbuffer.h \
-		cmds.h \
-		config.h \
-		connection.h \
-		conversation.h \
-		core.h \
-		dbus-maybe.h \
-		debug.h \
-		eventloop.h \
-		ft.h \
-		gettext.h \
-		idle.h \
-		imgstore.h \
-		log.h \
-		mime.h \
-		nat-pmp.h \
-		network.h \
-		notify.h \
-		ntlm.h \
-		plugin.h \
-		pluginpref.h \
-		prefs.h \
-		privacy.h \
-		proxy.h \
-		prpl.h \
-		request.h \
-		roomlist.h \
-		server.h \
-		signals.h \
-		dnsquery.h \
-		dnssrv.h \
-		smiley.h \
-		status.h \
-		stringref.h \
-		stun.h \
-		sslconn.h \
-		upnp.h \
-		util.h \
-		value.h \
-		xmlnode.h \
-		whiteboard.h \
-		internal.h \
-		version.h \
-		$(NULL)
-#		certificate.h
-
-ifeq ($(OS_ARCH),WINNT)
-EXPORTS_libpurple += \
-		win32/win32dep.h \
-		win32/wpurpleerror.h \
-		win32/libc_interface.h \
-		win32/libc_internal.h \
-		$(NULL)
-endif
-
-CSRCS		= \
-		account.c \
-		accountopt.c \
-		blist.c \
-		buddyicon.c \
-		cipher.c \
-		ciphers/des.c \
-		ciphers/gchecksum.c \
-		ciphers/hmac.c \
-		ciphers/md4.c \
-		ciphers/md5.c \
-		ciphers/rc4.c \
-		ciphers/sha1.c \
-		ciphers/sha256.c \
-		circbuffer.c \
-		cmds.c \
-		connection.c \
-		conversation.c \
-		core.c \
-		debug.c \
-		eventloop.c \
-		ft.c \
-		gettext.c \
-		idle.c \
-		imgstore.c \
-		mime.c \
-		nat-pmp.c \
-		network.c \
-		ntlm.c \
-		notify.c \
-		plugin.c \
-		pluginpref.c \
-		prefs.c \
-		privacy.c \
-		proxy.c \
-		prpl.c \
-		request.c \
-		roomlist.c \
-		server.c \
-		signals.c \
-		dnsquery.c \
-		dnssrv.c \
-		smiley.c \
-		status.c \
-		stringref.c \
-		stun.c \
-		sslconn.c \
-		upnp.c \
-		util.c \
-		value.c \
-		version.c \
-		xmlnode.c \
-		whiteboard.c \
-		ssl-nss.c \
-		$(NULL)
-
 ifndef PURPLE_PLUGINS
 ifneq (,$(STATIC_PRPLS))
-CSRCS		+= static_proto_init.c
 GARBAGE		+= static_proto_init.c
 endif
-endif
-
-ifeq ($(OS_ARCH),WINNT)
-CSRCS		+= \
-		win32/libc_interface.c \
-		win32/win32dep.c \
-		$(NULL)
 endif
 
 include $(topsrcdir)/config/rules.mk

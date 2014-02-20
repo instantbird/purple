@@ -10,13 +10,4 @@ PROTOCOL	= myspace
 
 include $(srcdir)/../prpl.mk
 
-CSRCS		= \
-		markup.c \
-		message.c \
-		myspace.c \
-		session.c \
-		user.c \
-		zap.c \
-		$(NULL)
-
 include $(srcdir)/../prpl-rules.mk

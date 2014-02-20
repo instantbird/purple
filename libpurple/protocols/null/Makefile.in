@@ -10,6 +10,4 @@ PROTOCOL	= null
 
 include $(srcdir)/../prpl.mk
 
-CSRCS		= nullprpl.c
-
 include $(srcdir)/../prpl-rules.mk

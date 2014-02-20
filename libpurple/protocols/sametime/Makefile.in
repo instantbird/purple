@@ -12,29 +12,6 @@ include $(srcdir)/../prpl.mk
 
 LOCAL_INCLUDES	+= -I$(srcdir)/meanwhile -I$(srcdir)/meanwhile/mpi
 
-CSRCS		= \
-		meanwhile/mpi/mpi.c \
-		meanwhile/channel.c \
-		meanwhile/cipher.c \
-		meanwhile/common.c \
-		meanwhile/error.c \
-		meanwhile/message.c \
-		meanwhile/service.c \
-		meanwhile/session.c \
-		meanwhile/srvc_aware.c \
-		meanwhile/srvc_conf.c \
-		meanwhile/srvc_dir.c \
-		meanwhile/srvc_ft.c \
-		meanwhile/srvc_im.c \
-		meanwhile/srvc_place.c \
-		meanwhile/srvc_resolve.c \
-		meanwhile/srvc_store.c \
-		meanwhile/st_list.c \
-		meanwhile/mw_debug.c \
-		meanwhile/mw_util.c \
-		sametime.c \
-		$(NULL)
-
 include $(srcdir)/../prpl-rules.mk
 
 export::

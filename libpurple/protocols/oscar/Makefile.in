@@ -10,44 +10,4 @@ PROTOCOL	= oscar
 
 include $(srcdir)/../prpl.mk
 
-CSRCS		=                   \
-		authorization.c     \
-		bstream.c           \
-		clientlogin.c       \
-		encoding.c          \
-		family_admin.c      \
-		family_alert.c      \
-		family_auth.c       \
-		family_bart.c       \
-		family_bos.c        \
-		family_buddy.c      \
-		family_chat.c       \
-		family_chatnav.c    \
-		family_icq.c        \
-		family_icbm.c       \
-		family_locate.c     \
-		family_oservice.c   \
-		family_popup.c      \
-		family_feedbag.c    \
-		family_stats.c      \
-		family_userlookup.c \
-		flap_connection.c   \
-		misc.c              \
-		msgcookie.c         \
-		odc.c               \
-		oft.c               \
-		oscar.c             \
-		oscar_data.c        \
-		peer.c              \
-		peer_proxy.c        \
-		rxhandlers.c        \
-		snac.c              \
-		tlv.c               \
-		userinfo.c          \
-		util.c              \
-		visibility.c        \
-		libaim.c            \
-		libicq.c            \
-		$(NULL)
-
 include $(srcdir)/../prpl-rules.mk

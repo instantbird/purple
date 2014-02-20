@@ -2,3 +2,29 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+SOURCES += [
+    'buddy_info.c',
+    'buddy_list.c',
+    'buddy_memo.c',
+    'buddy_opt.c',
+    'char_conv.c',
+    'file_trans.c',
+    'group.c',
+    'group_im.c',
+    'group_info.c',
+    'group_internal.c',
+    'group_join.c',
+    'group_opt.c',
+    'im.c',
+    'packet_parse.c',
+    'qq.c',
+    'qq_base.c',
+    'qq_crypt.c',
+    'qq_define.c',
+    'qq_network.c',
+    'qq_process.c',
+    'qq_trans.c',
+    'send_file.c',
+    'utils.c',
+]

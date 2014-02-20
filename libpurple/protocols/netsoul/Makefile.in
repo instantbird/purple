@@ -10,14 +10,4 @@ PROTOCOL	= netsoul
 
 include $(srcdir)/../prpl.mk
 
-CSRCS		= \
-		netsoul.c \
-		ns_buddy.c \
-		ns_chat.c \
-		ns_connection.c \
-		ns_listen.c \
-		ns_output.c \
-		ns_utils.c \
-		$(NULL)
-
 include $(srcdir)/../prpl-rules.mk
