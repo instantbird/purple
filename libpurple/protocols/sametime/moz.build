@@ -25,3 +25,7 @@ SOURCES += [
     'meanwhile/st_list.c',
     'sametime.c',
 ]
+
+protocol = 'sametime'
+
+include('../prpl.py')

@@ -7,3 +7,7 @@ SOURCES += [
     'simple.c',
     'sipmsg.c',
 ]
+
+protocol = 'simple'
+
+include('../prpl.py')

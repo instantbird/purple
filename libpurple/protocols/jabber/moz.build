@@ -41,3 +41,7 @@ SOURCES += [
     'usertune.c',
     'xdata.c',
 ]
+
+protocol = 'jabber'
+
+include('../prpl.py')

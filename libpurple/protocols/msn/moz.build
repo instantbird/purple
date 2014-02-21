@@ -39,3 +39,7 @@ SOURCES += [
     'userlist.c',
     'xfer.c',
 ]
+
+protocol = 'msn'
+
+include('../prpl.py')

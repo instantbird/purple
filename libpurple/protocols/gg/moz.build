@@ -25,3 +25,7 @@ SOURCES += [
     'lib/sha1.c',
     'search.c',
 ]
+
+protocol = 'gg'
+
+include('../prpl.py')

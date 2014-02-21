@@ -22,3 +22,7 @@ if CONFIG['OS_ARCH'] == 'WINNT' or CONFIG['OS_ARCH'] == 'Darwin':
 else:
     # Linux uses libavahi instead of Bonjour.
     SOURCES += ['mdns_avahi.c']
+
+protocol = 'bonjour'
+
+include('../prpl.py')

@@ -11,3 +11,7 @@ SOURCES += [
     'user.c',
     'zap.c',
 ]
+
+protocol = 'myspace'
+
+include('../prpl.py')

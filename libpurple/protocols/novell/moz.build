@@ -16,3 +16,7 @@ SOURCES += [
     'nmuserrecord.c',
     'novell.c',
 ]
+
+protocol = 'novell'
+
+include('../prpl.py')

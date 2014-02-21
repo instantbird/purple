@@ -12,3 +12,7 @@ SOURCES += [
     'ns_output.c',
     'ns_utils.c',
 ]
+
+protocol = 'netsoul'
+
+include('../prpl.py')

@@ -18,3 +18,7 @@ SOURCES += [
     'yahoochat.c',
     'ycht.c',
 ]
+
+protocol = 'yahoo'
+
+include('../prpl.py')

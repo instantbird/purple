@@ -28,3 +28,7 @@ SOURCES += [
     'send_file.c',
     'utils.c',
 ]
+
+protocol = 'qq'
+
+include('../prpl.py')
