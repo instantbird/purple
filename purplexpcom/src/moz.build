@@ -5,6 +5,19 @@
 
 XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell.ini']
 
+prpls = ['jabber', 'gg', 'oscar', 'msn', 'myspace', 'novell',
+         'qq', 'sametime', 'simple', 'yahoo', 'netsoul']
+
+if CONFIG['PURPLE_BONJOUR']:
+    prpls += ['bonjour']
+
+if CONFIG['MOZ_DEBUG']:
+    prpls += ['null']
+
+for prpl in prpls:
+    if not prpl in CONFIG['STATIC_PRPLS'].split(" "):
+        PARALLEL_DIRS += ['../../libpurple/protocols/' + prpl]
+
 SOURCES += [
     'purpleAccount.cpp',
     'purpleAccountBuddy.cpp',

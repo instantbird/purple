@@ -26,11 +26,8 @@ endif
 endif
 
 ifndef PURPLE_PLUGINS
-STATIC_PROTO_libs = $(foreach proto,$(STATIC_PRPLS),protocols/$(proto)_libs)
 
 ifneq (,$(STATIC_PRPLS))
-STATIC_PRPL_LIBS = $(foreach proto,$(STATIC_PRPLS),protocols/$(proto)/$(LIB_PREFIX)$(proto).$(LIB_SUFFIX))
-SHARED_LIBRARY_LIBS += $(STATIC_PRPL_LIBS)
 DEFINES += -DSTATIC_PROTO_INIT='extern void static_proto_init(void);'
 endif
 else
@@ -60,8 +57,6 @@ export::
 	mkdir -p ciphers
 
 ifneq (,$(STATIC_PRPLS))
-$(STATIC_PRPL_LIBS):: $(STATIC_PROTO_libs)
-
 static_proto_init.c: $(GLOBAL_DEPS)
 	echo >  $@ '#include <glib.h>'
 	echo >> $@ '$(foreach proto,$(STATIC_PRPLS),extern gboolean purple_init_$(proto)_plugin();)'
@@ -69,12 +64,6 @@ static_proto_init.c: $(GLOBAL_DEPS)
 	echo >> $@ '$(foreach proto,$(STATIC_PRPLS),purple_init_$(proto)_plugin();)'
 	echo >> $@ '}'
 endif
-
-DYNAMIC_PRPLS = $(foreach proto,$(filter-out $(foreach proto,$(STATIC_PRPLS),protocols/$(proto)),$(PARALLEL_DIRS)),$(proto))
-
-# the dynamic protocols are built after purplexpcom is linked
-dynamic-prpls:
-	$(foreach proto,$(DYNAMIC_PRPLS),$(call SUBMAKE,PURPLEXPCOM=1 libs,$(proto)))
 
 ifeq ($(OS_ARCH),WINNT)
 purple.def: ../libraries/glib/glib.def $(EXPORTS_libpurple) $(GLOBAL_DEPS)

@@ -3,15 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-PARALLEL_DIRS += ['protocols/' + proto for proto in ['jabber', 'gg', 'oscar',
-                                                     'msn', 'myspace', 'novell',
-                                                     'qq', 'sametime', 'simple',
-                                                     'yahoo', 'netsoul']]
-if CONFIG['PURPLE_BONJOUR']:
-    PARALLEL_DIRS += ['protocols/bonjour']
-
-if CONFIG['MOZ_DEBUG']:
-    PARALLEL_DIRS += ['protocols/null']
+PARALLEL_DIRS += ['protocols/' + proto for proto in CONFIG['STATIC_PRPLS'].split(" ")]
 
 SOURCES += [
     'account.c',
