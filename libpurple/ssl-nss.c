@@ -28,7 +28,15 @@
 
 #define SSL_NSS_PLUGIN_ID "ssl-nss"
 
+#ifdef _WIN32
+# ifndef HAVE_LONG_LONG
+#define HAVE_LONG_LONG
+# endif
+#else
+/* TODO: Why is this done?
+ * This is probably being overridden by <nspr.h> (prcpucfg.h) on *nix OSes */
 #undef HAVE_LONG_LONG /* Make Mozilla less angry. If angry, Mozilla SMASH! */
+#endif
 
 #include <nspr.h>
 #include <nss.h>
@@ -148,74 +156,24 @@ ssl_nss_init_nss(void)
 }
 
 static SECStatus
-ssl_auth_cert(void *arg, PRFileDesc *socket, PRBool checksig,
-			  PRBool is_server)
+ssl_auth_cert(void *arg, PRFileDesc *socket, PRBool checksig, PRBool is_server)
 {
+	/* We just skip cert verification here, and will verify the whole chain
+	 * in ssl_nss_handshake_cb, after the handshake is complete.
+	 *
+	 * The problem is, purple_certificate_verify is asynchronous and
+	 * ssl_auth_cert should return the result synchronously (it may ask the
+	 * user, if an unknown certificate should be trusted or not).
+	 *
+	 * Ideally, SSL_AuthCertificateHook/ssl_auth_cert should decide
+	 * immediately, if the certificate chain is already trusted and possibly
+	 * SSL_BadCertHook to deal with unknown certificates.
+	 *
+	 * Current implementation may not be ideal, but is no less secure in
+	 * terms of MITM attack.
+	 */
 	return SECSuccess;
-
-#if 0
-	CERTCertificate *cert;
-	void *pinArg;
-	SECStatus status;
-
-	cert = SSL_PeerCertificate(socket);
-	pinArg = SSL_RevealPinArg(socket);
-
-	status = CERT_VerifyCertNow((CERTCertDBHandle *)arg, cert, checksig,
-								certUsageSSLClient, pinArg);
-
-	if (status != SECSuccess) {
-		purple_debug_error("nss", "CERT_VerifyCertNow failed\n");
-		CERT_DestroyCertificate(cert);
-		return status;
-	}
-
-	CERT_DestroyCertificate(cert);
-	return SECSuccess;
-#endif
 }
-
-#if 0
-static SECStatus
-ssl_bad_cert(void *arg, PRFileDesc *socket)
-{
-	SECStatus status = SECFailure;
-	PRErrorCode err;
-
-	if (arg == NULL)
-		return status;
-
-	*(PRErrorCode *)arg = err = PORT_GetError();
-
-	switch (err)
-	{
-		case SEC_ERROR_INVALID_AVA:
-		case SEC_ERROR_INVALID_TIME:
-		case SEC_ERROR_BAD_SIGNATURE:
-		case SEC_ERROR_EXPIRED_CERTIFICATE:
-		case SEC_ERROR_UNKNOWN_ISSUER:
-		case SEC_ERROR_UNTRUSTED_CERT:
-		case SEC_ERROR_CERT_VALID:
-		case SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE:
-		case SEC_ERROR_CRL_EXPIRED:
-		case SEC_ERROR_CRL_BAD_SIGNATURE:
-		case SEC_ERROR_EXTENSION_VALUE_INVALID:
-		case SEC_ERROR_CA_CERT_INVALID:
-		case SEC_ERROR_CERT_USAGES_INVALID:
-		case SEC_ERROR_UNKNOWN_CRITICAL_EXTENSION:
-			status = SECSuccess;
-			break;
-
-		default:
-			status = SECFailure;
-			break;
-	}
-
-	purple_debug_error("nss", "Bad certificate: %d\n", err);
-
-	return status;
-}
-#endif
 
 static gboolean
 ssl_nss_init(void)
@@ -362,7 +320,10 @@ ssl_nss_handshake_cb(gpointer data, int fd, PurpleInputCondition cond)
 		purple_certificate_destroy_list(peers);
 	} else {
 		/* Otherwise, just call the "connection complete"
-		   callback */
+		 * callback. The verification was already done with
+		 * SSL_AuthCertificate, the default verifier
+		 * (SSL_AuthCertificateHook was not called in ssl_nss_connect).
+		 */
 		gsc->connect_cb(gsc->connect_cb_data, gsc, cond);
 	}
 #endif
@@ -429,14 +390,10 @@ ssl_nss_connect(PurpleSslConnection *gsc)
 	SSL_OptionSet(nss_data->in, SSL_HANDSHAKE_AS_CLIENT, PR_TRUE);
 	SSL_OptionSet(nss_data->in, SSL_ENABLE_SESSION_TICKETS, PR_FALSE);
 
-	if (!purple_prefs_get_bool("/purple/ssl/check_certificates"))
-		SSL_AuthCertificateHook(nss_data->in,
-							(SSLAuthCertificate)ssl_auth_cert,
-							(void *)CERT_GetDefaultCertDB());
-#if 0
-	/* No point in hooking BadCert, since ssl_auth_cert always succeeds */
-	SSL_BadCertHook(nss_data->in, (SSLBadCertHandler)ssl_bad_cert, NULL);
-#endif
+	/* If we have our internal verifier set up, use it. Otherwise,
+	 * use default. */
+	if (gsc->verifier != NULL && !purple_prefs_get_bool("/purple/ssl/check_certificates"))
+		SSL_AuthCertificateHook(nss_data->in, ssl_auth_cert, NULL);
 
 	if(gsc->host)
 		SSL_SetURL(nss_data->in, gsc->host);
@@ -780,7 +737,7 @@ x509_signed_by(PurpleCertificate * crt,
 	subjectCert = X509_NSS_DATA(crt);
 	g_return_val_if_fail(subjectCert, FALSE);
 
-	if (subjectCert->issuerName == NULL
+	if (subjectCert->issuerName == NULL || issuerCert->subjectName == NULL
 			|| PORT_Strcmp(subjectCert->issuerName, issuerCert->subjectName) != 0)
 		return FALSE;
 	st = CERT_VerifySignedData(&subjectCert->signatureWrap, issuerCert, PR_Now(), NULL);
@@ -934,11 +891,49 @@ x509_times (PurpleCertificate *crt, time_t *activation, time_t *expiration)
 	/* NSS's native PRTime type *almost* corresponds to time_t; however,
 	   it measures *microseconds* since the epoch, not seconds. Hence
 	   the funny conversion. */
+	nss_activ = nss_activ / 1000000;
+	nss_expir = nss_expir / 1000000;
+
 	if (activation) {
-		*activation = nss_activ / 1000000;
+		*activation = nss_activ;
+#if SIZEOF_TIME_T == 4
+		/** Hack to deal with dates past the 32-bit barrier.
+		    Handling is different for signed vs unsigned 32-bit types.
+		 */
+		if (*activation != nss_activ) {
+		       	if (nss_activ < 0) {
+				purple_debug_warning("nss",
+					"Setting Activation Date to epoch to handle pre-epoch value\n");
+				*activation = 0;
+			} else {
+				purple_debug_error("nss",
+					"Activation date past 32-bit barrier, forcing invalidity\n");
+				return FALSE;
+			}
+		}
+#endif
 	}
 	if (expiration) {
-		*expiration = nss_expir / 1000000;
+		*expiration = nss_expir;
+#if SIZEOF_TIME_T == 4
+		if (*expiration != nss_expir) {
+			if (*expiration < nss_expir) {
+				if (*expiration < 0) {
+					purple_debug_warning("nss",
+						"Setting Expiration Date to 32-bit signed max\n");
+					*expiration = PR_INT32_MAX;
+				} else {
+					purple_debug_warning("nss",
+						"Setting Expiration Date to 32-bit unsigned max\n");
+					*expiration = PR_UINT32_MAX;
+				}
+			} else {
+				purple_debug_error("nss",
+					"Expiration date prior to unix epoch, forcing invalidity\n");
+				return FALSE;
+			}
+		}
+#endif
 	}
 
 	return TRUE;
