@@ -99,6 +99,7 @@ NS_IMETHODIMP
 purpleCoreService::CollectReports(nsIHandleReportCallback* aHandleReport,
                                   nsISupports* aData)
 {
+#if defined(XP_WIN) || defined(XP_MACOSX)
   MOZ_COLLECT_REPORT(
     "explicit/purple/libraries/glib", KIND_HEAP, UNITS_BYTES,
     getAllocatedGLibMemory(),
@@ -108,6 +109,9 @@ purpleCoreService::CollectReports(nsIHandleReportCallback* aHandleReport,
     "explicit/purple/libraries/xml2", KIND_HEAP, UNITS_BYTES,
     getAllocatedXMLMemory(),
     "Memory allocated by libxml2 for libpurple.");
+#else
+  return NS_OK;
+#endif
 }
 
 /* boolean Init (); */
