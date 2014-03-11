@@ -80,9 +80,11 @@ NS_IMETHODIMP purpleCommand::GetPriority(PRInt32 *aPriority)
 }
 
 /* boolean run (in AUTF8String aMessage,
-                [optional] in prplIConversation aConversation); */
+                [optional] in prplIConversation aConversation,
+                [optional] out prplIConversation aReturnedConv); */
 NS_IMETHODIMP purpleCommand::Run(const nsACString & aMessage,
                                  prplIConversation *aConversation,
+                                 prplIConversation * *aReturnedConv,
                                  bool *aResult)
 {
   // libpurple commands don't work without a conversation.
@@ -92,6 +94,9 @@ NS_IMETHODIMP purpleCommand::Run(const nsACString & aMessage,
   nsresult rv;
   nsCOMPtr<nsIClassInfo> convCI = do_QueryInterface(aConversation, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aReturnedConv)
+    *aReturnedConv = nullptr;
 
   nsCID cid;
   rv = convCI->GetClassIDNoAlloc(&cid);
