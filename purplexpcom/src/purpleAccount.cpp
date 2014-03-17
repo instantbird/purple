@@ -344,10 +344,11 @@ nsresult purpleAccount::Init(imIAccount *aImAccount,
     bool hasNext;
     if (NS_SUCCEEDED(rv)) {
       while (NS_SUCCEEDED(proxies->HasMoreElements(&hasNext)) && hasNext) {
-        nsCOMPtr<purpleIProxy> proxy;
-        rv = proxies->GetNext(getter_AddRefs(proxy));
+        nsCOMPtr<nsISupports> supports;
+        rv = proxies->GetNext(getter_AddRefs(supports));
+        nsCOMPtr<purpleIProxy> proxy = do_QueryInterface(supports);
         nsCString tmpKey;
-        if (NS_SUCCEEDED(rv) &&
+        if (NS_SUCCEEDED(rv) && proxy &&
             NS_SUCCEEDED(proxy->GetKey(tmpKey)) && tmpKey.Equals(proxyKey)) {
           mProxy = proxy;
           break;
