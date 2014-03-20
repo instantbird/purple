@@ -1,0 +1,11 @@
+syntax:glob
+cache
+extract
+po/POTFILES.in
+*~
+*.rej
+*.orig
+*.patch
+*.diff
+*.pyc
+attachment.cgi\?id=*
