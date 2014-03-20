@@ -4,7 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-(cd ../../purple &&
+(cd ../.. &&
  mkdir -p po &&
  echo '[encoding: UTF-8]' > po/POTFILES.in &&
  find libpurple -name '*.[ch]' >> po/POTFILES.in &&
@@ -12,4 +12,4 @@
  intltool-update -p)
 
 mkdir -p po
-mv ../../purple/po/untitled.pot po/pidgin.pot
+mv ../../po/untitled.pot po/pidgin.pot
