@@ -66,6 +66,11 @@ static_proto_init.c: $(GLOBAL_DEPS)
 endif
 
 ifeq ($(OS_ARCH),WINNT)
+# This is a dirty hack since EXPORTS_libpurple is now in moz.build land and is
+# not accessible to make anymore. Luckily all the .h files in the moz.build file
+# are part of EXPORTS_libpurple.
+EXPORTS_libpurple := $(shell egrep '.+\.h' '$(srcdir)/moz.build' |egrep -v '^\#' |cut -d "'" -f 2)
+
 purple.def: ../libraries/glib/glib.def $(EXPORTS_libpurple) $(GLOBAL_DEPS)
 	cat ../libraries/glib/glib.def > purple.def
 	(cd $(srcdir); cat $(EXPORTS_libpurple)) |egrep '^[a-zA-Z].* \*?w?purple_[a-z_0-9]+\(' |sed -e 's/(.*//' -e 's/.* \*\?//' |sort |uniq >> purple.def
