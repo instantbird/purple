@@ -4,6 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 SOURCES += [
+    'c14n.c',
     'chvalid.c',
     'dict.c',
     'encoding.c',
@@ -17,14 +18,17 @@ SOURCES += [
     'SAX2.c',
     'threads.c',
     'tree.c',
+    'trionan.c',
     'uri.c',
     'valid.c',
     'xmlIO.c',
     'xmlmemory.c',
     'xmlstring.c',
+    'xpath.c',
 ]
 
 EXPORTS.libxml += [
+    'c14n.h',
     'chvalid.h',
     'debugXML.h',
     'dict.h',
@@ -44,6 +48,8 @@ EXPORTS.libxml += [
     'SAX2.h',
     'threads.h',
     'tree.h',
+    'triodef.h',
+    'trionan.h',
     'uri.h',
     'valid.h',
     'xlink.h',
@@ -55,6 +61,8 @@ EXPORTS.libxml += [
     'xmlregexp.h',
     'xmlstring.h',
     'xmlversion.h',
+    'xpath.h',
+    'xpathInternals.h',
 ]
 
 FINAL_LIBRARY = 'purplexpcom'

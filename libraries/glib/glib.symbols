@@ -108,7 +108,6 @@ g_on_error_stack_trace
 #endif
 #endif
 
-#if 0
 #if IN_HEADER(__G_BASE64_H__)
 #if IN_FILE(__G_BASE64_C__)
 g_base64_encode_step
@@ -116,7 +115,6 @@ g_base64_encode_close
 g_base64_encode G_GNUC_MALLOC
 g_base64_decode_step
 g_base64_decode G_GNUC_MALLOC
-#endif
 #endif
 #endif
 
@@ -1159,14 +1157,12 @@ g_dpgettext
 #endif
 #endif
 
-#if 0
 #if IN_HEADER(__G_URI_FUNCS_H__)
 #if IN_FILE(__G_URI_FUNCS_C__)
 g_uri_unescape_string 
 g_uri_unescape_segment 
 g_uri_parse_scheme 
 g_uri_escape_string 
-#endif
 #endif
 #endif
 
@@ -1289,14 +1285,16 @@ g_thread_pool_set_sort_function
 #endif
 #endif
 
-#if 0
 #if IN_HEADER(__G_TEST_UTILS_H__)
 #if IN_FILE(__G_TEST_UTILS_C__)
+#if 0
 g_assertion_message G_GNUC_NORETURN
 g_assertion_message_cmpnum G_GNUC_NORETURN
 g_assertion_message_cmpstr G_GNUC_NORETURN
 g_assertion_message_expr G_GNUC_NORETURN
+#endif
 g_strcmp0
+#if 0
 g_test_add_data_func
 g_test_add_func
 g_test_add_vtable
@@ -1337,9 +1335,9 @@ g_test_trap_reached_timeout
 #endif
 #endif
 
-#if 0
 #if IN_HEADER(__G_TIMER_H__)
 #if IN_FILE(__G_TIMER_C__)
+#if 0
 g_timer_continue
 g_timer_destroy
 g_timer_elapsed
@@ -1348,8 +1346,10 @@ g_timer_reset
 g_timer_start
 g_timer_stop
 g_time_val_add
+#endif
 g_time_val_from_iso8601
 g_time_val_to_iso8601 G_GNUC_MALLOC
+#if 0
 g_usleep
 #endif
 #endif

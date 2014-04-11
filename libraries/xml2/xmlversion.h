@@ -111,9 +111,7 @@ XMLPUBFUN void XMLCALL xmlCheckVersion(int version);
  *
  * Whether the serialization/saving support is configured in
  */
-#if 0
 #define LIBXML_OUTPUT_ENABLED
-#endif
 
 /**
  * LIBXML_PUSH_ENABLED:
@@ -210,9 +208,7 @@ XMLPUBFUN void XMLCALL xmlCheckVersion(int version);
  *
  * Whether the Canonicalization support is configured in
  */
-#if 0
 #define LIBXML_C14N_ENABLED
-#endif
 
 /**
  * LIBXML_CATALOG_ENABLED:
@@ -237,9 +233,7 @@ XMLPUBFUN void XMLCALL xmlCheckVersion(int version);
  *
  * Whether XPath is configured in
  */
-#if 0
 #define LIBXML_XPATH_ENABLED
-#endif
 
 /**
  * LIBXML_XPTR_ENABLED:
@@ -370,7 +364,7 @@ XMLPUBFUN void XMLCALL xmlCheckVersion(int version);
  *
  * the string suffix used by dynamic modules (usually shared libraries)
  */
-#define LIBXML_MODULE_EXTENSION "" 
+#define LIBXML_MODULE_EXTENSION ""
 #endif
 
 /**
@@ -402,5 +396,3 @@ XMLPUBFUN void XMLCALL xmlCheckVersion(int version);
 }
 #endif /* __cplusplus */
 #endif
-
-
