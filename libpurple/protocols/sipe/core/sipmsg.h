@@ -28,6 +28,14 @@
  * <glib.h>
  */
 
+/* Avoid conflicting with functions defined in simple to statically link SIPE. */
+#define sipmsg_parse_msg sipemsg_parse_msg
+#define sipmsg_parse_header sipemsg_parse_header
+#define sipmsg_free sipemsg_free
+#define sipmsg_find_header sipemsg_find_header
+#define sipmsg_add_header sipemsg_add_header
+#define sipmsg_to_string sipemsg_to_string
+
 #define SIPMSG_BODYLEN_CHUNKED -1
 
 struct sipmsg {

@@ -1896,6 +1896,7 @@ void sipe_core_buddy_new_chat(struct sipe_core_public *sipe_public,
 void sipe_core_buddy_send_email(struct sipe_core_public *sipe_public,
 				const gchar *who)
 {
+#if 0
 	sipe_backend_buddy buddy = sipe_backend_buddy_find(sipe_public,
 							   who,
 							   NULL);
@@ -1922,6 +1923,7 @@ void sipe_core_buddy_send_email(struct sipe_core_public *sipe_public,
 		SIPE_DEBUG_INFO("sipe_core_buddy_send_email: no email address stored for buddy=%s",
 				who);
 	}
+#endif
 }
 
 /* Buddy menu */

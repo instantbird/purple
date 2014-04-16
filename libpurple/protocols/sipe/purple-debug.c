@@ -27,6 +27,8 @@
 
 #include "sipe-backend.h"
 
+#define purple_debug_is_enabled() 0
+
 void sipe_backend_debug_literal(sipe_debug_level level,
 				const gchar *msg)
 {

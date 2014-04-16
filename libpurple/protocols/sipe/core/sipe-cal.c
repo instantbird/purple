@@ -51,6 +51,9 @@
 #endif
 #include "sipe-ews.h"
 
+#define g_setenv /* No op */
+#define g_unsetenv /* No op */
+
 #define TIME_NULL   (time_t)-1
 #define IS(time)    (time != TIME_NULL)
 

@@ -23,7 +23,9 @@
 #include <glib.h>
 
 #include "account.h"
+#if 0
 #include "savedstatuses.h"
+#endif
 
 #include "sipe-backend.h"
 #include "sipe-core.h"
@@ -42,6 +44,9 @@ gboolean sipe_backend_status_changed(struct sipe_core_public *sipe_public,
 				     guint activity,
 				     const gchar *message)
 {
+#if 0
+/* This is only used by sipe_backend_status_and_note and requires savedstatus.h,
+   which is Pidgin specific. */
 	struct sipe_backend_private *purple_private = sipe_public->backend_private;
 	PurpleStatus *status = purple_account_get_active_status(purple_private->account);
 	const gchar *status_id = sipe_purple_activity_to_token(activity);
@@ -60,6 +65,9 @@ gboolean sipe_backend_status_changed(struct sipe_core_public *sipe_public,
 	}
 
 	return(changed);
+#else
+	return FALSE;
+#endif
 }
 
 /**
@@ -75,6 +83,8 @@ void sipe_backend_status_and_note(struct sipe_core_public *sipe_public,
 				  guint activity,
 				  const gchar *message)
 {
+#if 0
+/* Don't allow a prpl to update the host status. */
 	struct sipe_backend_private *purple_private = sipe_public->backend_private;
 	PurpleAccount *account = purple_private->account;
 	const gchar *status_id = sipe_purple_activity_to_token(activity);
@@ -108,6 +118,7 @@ void sipe_backend_status_and_note(struct sipe_core_public *sipe_public,
 
 	/* Set the status for each account */
 	purple_savedstatus_activate(saved_status);
+#endif
 }
 
 void sipe_purple_set_status(PurpleAccount *account,

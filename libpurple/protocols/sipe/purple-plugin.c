@@ -35,12 +35,17 @@
 #ifndef PURPLE_PLUGINS
 #define PURPLE_PLUGINS
 #endif
+#undef PURPLE_PLUGINS
 
 /* for LOCALEDIR
  * as it's determined on runtime, as Pidgin installation can be anywhere.
  */
+#if 0
 #ifdef _WIN32
 #include "win32/win32dep.h"
+#endif
+#else
+#define LOCALEDIR ""
 #endif
 
 #include "accountopt.h"

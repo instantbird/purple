@@ -37,6 +37,8 @@
  ***************** !!! IMPORTANT NOTE FOR BACKEND CODERS !!! *****************
  */
 
+#define g_usleep /* no op */
+
 #ifdef __cplusplus
 extern "C" {
 #endif

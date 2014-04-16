@@ -147,7 +147,7 @@ static gchar *sign_cert_or_certreq(CERTCertificate *cert,
 				   CERTCertificateRequest *certreq,
 				   SECKEYPrivateKey *private)
 {
-	PRArenaPool *arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+	PLArenaPool *arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
 	gchar *base64 = NULL;
 
 	if (arena) {
