@@ -18,6 +18,11 @@ else
 LOCAL_INCLUDES  += -I$(DIST)/include/glib
 ifneq ($(OS_ARCH),WINNT)
 EXTRA_LIBS	= -lz -liconv
+
+# For SIPE.
+ifdef GSSAPI
+EXTRA_LIBS	+= $(KRB5_LIBS)
+endif
 else
 DEFINES += -DGLIB_STATIC_COMPILATION
 EXTRA_LIBS	= ws2_32.lib

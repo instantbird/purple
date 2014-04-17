@@ -1,0 +1,52 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH		= @DEPTH@
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+PROTOCOL	= sipe
+
+include $(srcdir)/../prpl.mk
+
+# Include the API directory & the libpurple directory.
+LOCAL_INCLUDES	+= -I$(srcdir)/api -I$(srcdir)/../..
+
+ifeq (,$(filter WINNT Darwin,$(OS_ARCH)))
+LOCAL_INCLUDES	+= $(LIBXML2_CFLAGS)
+endif
+
+DEFINES += \
+    -DPACKAGE_BUGREPORT=\"https://bugzilla.mozilla.org\" \
+    -DPACKAGE_NAME=\"pidgin-sipe\" \
+    -DPACKAGE_URL=\"http://www.instantbird.org/\" \
+    -DPACKAGE_VERSION=\"$(VERSION)\" \
+    -DSIPE_TRANSLATIONS_URL=\"https://www.transifex.net/projects/p/pidgin-sipe/r/mob/\" \
+    $(NULL)
+
+EXTRA_LIBS += $(NSS_LIBS) $(NSPR_LIBS)
+
+# On Windows, use native SSPI security package (Kerberos, NTLM; SSO).
+# Otherwise use SIPE custom NTLMv2 implementation only (No Kerberos; No
+# SSO).
+ifeq (WINNT,$(OS_ARCH))
+DEFINES += -DHAVE_SSPI=1 -DSECURITY_WIN32=1
+endif
+
+# If gssapi was found, enable Kerberos.
+ifdef GSSAPI
+DEFINES += -DHAVE_GSSAPI_GSSAPI_H=1
+LOCAL_INCLUDES	+= $(KRB5_CFLAGS)
+EXTRA_LIBS	+= $(KRB5_LIBS)
+ifdef GSSAPI_ONLY
+DEFINES += -DHAVE_GSSAPI_ONLY=1
+endif
+# TODO Figure out HAVE_GSSAPI_PASSWORD_SUPPORT
+endif
+
+include $(srcdir)/../prpl-rules.mk
+
+export::
+	mkdir -p api
+	mkdir -p core

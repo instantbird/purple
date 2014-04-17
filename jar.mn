@@ -47,6 +47,10 @@ purple.jar:
 	skin/classic/prpl/bilboed-netsoul/icon32.png	(icons/prpl-bilboed-netsoul-32.png)
 	skin/classic/prpl/bilboed-netsoul/icon48.png	(icons/prpl-bilboed-netsoul-48.png)
 	skin/classic/prpl/bilboed-netsoul/icon.png	(icons/prpl-bilboed-netsoul.png)
+% skin prpl-sipe classic/1.0 %skin/classic/prpl/sipe/
+	skin/classic/prpl/sipe/icon32.png	(icons/prpl-sipe-32.png)
+	skin/classic/prpl/sipe/icon48.png	(icons/prpl-sipe-48.png)
+	skin/classic/prpl/sipe/icon.png		(icons/prpl-sipe.png)
 #if 0
 % skin prpl-silc classic/1.0 %skin/classic/prpl/silc/
 	skin/classic/prpl/silc/icon32.png	(icons/prpl-silc-32.png)

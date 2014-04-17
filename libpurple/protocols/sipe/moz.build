@@ -2,3 +2,89 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+SOURCES += [
+    'core/sip-csta.c',
+    'core/sip-sec-basic.c',
+    'core/sip-sec-digest.c',
+    'core/sip-sec-tls-dsk.c',
+    'core/sip-sec.c',
+    'core/sip-soap.c',
+    'core/sip-transport.c',
+    'core/sipe-buddy.c',
+    'core/sipe-cal.c',
+    'core/sipe-cert-crypto-nss.c',
+    'core/sipe-certificate.c',
+    'core/sipe-chat.c',
+    'core/sipe-conf.c',
+    'core/sipe-core.c',
+    'core/sipe-crypt-nss.c',
+    'core/sipe-dialog.c',
+    'core/sipe-digest-nss.c',
+    'core/sipe-ews-autodiscover.c',
+    'core/sipe-ews.c',
+    'core/sipe-ft-tftp.c',
+    'core/sipe-ft.c',
+    'core/sipe-group.c',
+    'core/sipe-groupchat.c',
+    'core/sipe-http-request.c',
+    'core/sipe-http-transport.c',
+    'core/sipe-http.c',
+    'core/sipe-im.c',
+    'core/sipe-incoming.c',
+    'core/sipe-notify.c',
+    'core/sipe-ocs2005.c',
+    'core/sipe-ocs2007.c',
+    'core/sipe-schedule.c',
+    'core/sipe-session.c',
+    'core/sipe-sign.c',
+    'core/sipe-status.c',
+    'core/sipe-subscriptions.c',
+    'core/sipe-svc.c',
+    'core/sipe-tls.c',
+    'core/sipe-ucs.c',
+    'core/sipe-user.c',
+    'core/sipe-utils.c',
+    'core/sipe-webticket.c',
+    'core/sipe-xml.c',
+    'core/sipmsg.c',
+    'core/uuid.c',
+    'purple-buddy.c',
+    'purple-chat.c',
+    'purple-connection.c',
+    'purple-debug.c',
+    'purple-dnsquery.c',
+    'purple-ft.c',
+    'purple-groupchat.c',
+    'purple-im.c',
+    'purple-markup.c',
+    'purple-mime.c',
+    'purple-network.c',
+    'purple-notify.c',
+    'purple-plugin.c',
+    'purple-schedule.c',
+    'purple-search.c',
+    'purple-setting.c',
+    'purple-status.c',
+    'purple-transport.c',
+    'purple-user.c',
+]
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    SOURCES += [
+        'core/sip-sec-sspi.c',
+        'core/sipe-domino.c',
+        'core/sipe-win32dep.c',
+    ]
+elif CONFIG['GSSAPI']:
+    SOURCES += ['core/sip-sec-gssapi.c']
+    if not CONFIG['GSSAPI_ONLY']:
+        SOURCES += [
+            'core/md4.c',
+            'core/sip-sec-negotiate.c',
+            'core/sip-sec-ntlm.c',
+        ]
+
+protocol = 'sipe'
+
+include('../prpl.py')

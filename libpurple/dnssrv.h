@@ -200,7 +200,7 @@ void purple_txt_response_destroy(PurpleTxtResponse *response);
  * @param query_data The SRV/TXT query to cancel.  This data structure
  *        is freed by this function.
  */
-/* void purple_srv_txt_query_destroy(PurpleSrvTxtQueryData *query_data);*/
+void purple_srv_txt_query_destroy(PurpleSrvTxtQueryData *query_data);
 
 /**
  * Sets the UI operations structure to be used when doing a SRV/TXT

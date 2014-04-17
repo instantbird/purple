@@ -222,4 +222,59 @@ if test "$PURPLE_BONJOUR"; then
             ;;
     esac
 fi
+
+dnl =========================================================
+dnl = Microsoft Office Communicator (SIPE)
+dnl =========================================================
+case "$OS_TARGET" in
+    WINNT)
+        dnl =========================================================
+        dnl = Windows does not use GSSAPI, it uses Windows libraries.
+        dnl =========================================================
+        STATIC_PRPLS="$STATIC_PRPLS sipe"
+
+        GSSAPI=
+        ;;
+    Darwin)
+        dnl =========================================================
+        dnl = Mac OS X comes with Kerberos, but we need to add the
+        dnl = packages.
+        dnl =========================================================
+        STATIC_PRPLS="$STATIC_PRPLS sipe"
+
+        GSSAPI=1
+
+        KRB5_LIBS="`krb5-config --libs gssapi`"
+        KRB5_CFLAGS="-I${MACOS_SDK_DIR}/usr/include"
+
+        # Mac OS X does not have the NTLM headers, the SIPE internal
+        # version must be used.
+        GSSAPI_ONLY=
+        ;;
+    *)
+        GSSAPI=1
+        MOZ_ARG_DISABLE_BOOL(gssapi,
+        [  --disable-gssapi          Disable GSSAPI support for SIPE protocol],
+            GSSAPI=)
+
+        if test "$GSSAPI"; then
+            dnl =========================================================
+            dnl = Attempt to autodetect krb5
+            dnl =========================================================
+            AC_PATH_PROG([KRB5_CONFIG], krb5-config, , $PATH:/usr/kerberos/bin)
+
+            if test -z "$KRB5_CONFIG"; then
+                AC_MSG_ERROR([Could not find krb5. To build without Kerberos, reconfigure with --disable-kerberos.])
+            fi
+
+            KRB5_LIBS="`${KRB5_CONFIG} --libs gssapi`"
+            KRB5_CFLAGS="`${KRB5_CONFIG} --cflags gssapi`"
+        fi
+        ;;
+esac
+AC_SUBST(GSSAPI)
+AC_SUBST(KRB5_CFLAGS)
+AC_SUBST(KRB5_LIBS)
+AC_SUBST(GSSAPI_ONLY)
+
 AC_SUBST(STATIC_PRPLS)
