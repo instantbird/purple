@@ -19,7 +19,7 @@ extern PRLogModuleInfo *gPurpleConvLog;
 #endif
 #define LOG(args) PR_LOG(gPurpleConvLog, PR_LOG_DEBUG, args)
 
-//NS_IMPL_ISUPPORTS2_CI(purpleConvIM, prplIConversation, prplIConvIM)
+//NS_IMPL_ISUPPORTS_CI(purpleConvIM, prplIConversation, prplIConvIM)
 NS_IMPL_CLASSINFO(purpleConvIM, NULL, 0, PURPLE_CONV_IM_CID)
 NS_INTERFACE_MAP_BEGIN(purpleConvIM)
   NS_INTERFACE_MAP_ENTRY(prplIConvIM)
@@ -31,7 +31,7 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF(purpleConvIM)
 NS_IMPL_RELEASE(purpleConvIM)
 
-NS_IMPL_CI_INTERFACE_GETTER2(purpleConvIM, prplIConversation, prplIConvIM)
+NS_IMPL_CI_INTERFACE_GETTER(purpleConvIM, prplIConversation, prplIConvIM)
 
 purpleConvIM::purpleConvIM()
   : mSentTyping(PR_FALSE)

@@ -29,7 +29,7 @@ static PRLogModuleInfo *gPurpleDebugLog = nullptr;
 
 purpleDebug *purpleDebug::sInstance = nullptr;
 
-NS_IMPL_ISUPPORTS1(purpleDebug, nsIObserver)
+NS_IMPL_ISUPPORTS(purpleDebug, nsIObserver)
 
 void purpleDebug::ReportMessage(PurpleDebugLevel level, const char *category,
                                 const char *arg)

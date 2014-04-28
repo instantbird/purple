@@ -84,7 +84,7 @@ protected:
 
 NS_IMPL_CLASSINFO(purpleChatRoomField, NULL, 0, PURPLE_CHAT_ROOM_FIELD_CID)
 NS_IMPL_THREADSAFE_CI(purpleChatRoomField)
-NS_IMPL_ISUPPORTS1_CI(purpleChatRoomField, prplIChatRoomField)
+NS_IMPL_ISUPPORTS_CI(purpleChatRoomField, prplIChatRoomField)
 
 #define PURPLE_IMPL_GETFIELDVALUE(aType, aName, aStar)                  \
   NS_IMETHODIMP purpleChatRoomField::Get##aName(aType a##aName)         \
@@ -155,7 +155,7 @@ protected:
 NS_IMPL_CLASSINFO(purpleChatRoomFieldValues, NULL, 0,
                   PURPLE_CHAT_ROOM_FIELD_VALUE_CID)
 NS_IMPL_THREADSAFE_CI(purpleChatRoomFieldValues)
-NS_IMPL_ISUPPORTS1_CI(purpleChatRoomFieldValues, prplIChatRoomFieldValues)
+NS_IMPL_ISUPPORTS_CI(purpleChatRoomFieldValues, prplIChatRoomFieldValues)
 
 /* AUTF8String getValue (in AUTF8String aIdentifier); */
 NS_IMETHODIMP
@@ -205,7 +205,7 @@ purpleChatRoomFieldValues::SetValue(const nsACString & aIdentifier,
   }
 
 NS_IMPL_CLASSINFO(purpleAccount, NULL, 0, PURPLE_ACCOUNT_CID)
-NS_IMPL_ISUPPORTS1_CI(purpleAccount, prplIAccount)
+NS_IMPL_ISUPPORTS_CI(purpleAccount, prplIAccount)
 
 purpleAccount::purpleAccount()
   : mScoper(nullptr),

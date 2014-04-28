@@ -49,7 +49,7 @@ private:
   PurpleCmd *mCmdData;
 };
 
-NS_IMPL_ISUPPORTS1(purpleCommand, imICommand)
+NS_IMPL_ISUPPORTS(purpleCommand, imICommand)
 
 /* readonly attribute AUTF8String name; */
 NS_IMETHODIMP purpleCommand::GetName(nsACString & aName)

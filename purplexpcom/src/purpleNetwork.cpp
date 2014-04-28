@@ -16,7 +16,7 @@
 
 purpleNetworkObserver *purpleNetworkObserver::mInstance = nullptr;
 
-NS_IMPL_ISUPPORTS1(purpleNetworkObserver, nsIObserver)
+NS_IMPL_ISUPPORTS(purpleNetworkObserver, nsIObserver)
 
 purpleNetworkObserver::purpleNetworkObserver()
 {

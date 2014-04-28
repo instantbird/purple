@@ -22,7 +22,7 @@ static PRLogModuleInfo *gPurpleGetTextLog = nullptr;
 
 purpleGetText *purpleGetText::sInstance = nullptr;
 
-NS_IMPL_ISUPPORTS1(purpleGetText, nsIObserver)
+NS_IMPL_ISUPPORTS(purpleGetText, nsIObserver)
 
 #define IMPL_PLURAL_RULE(aNumber, aRule)                        \
   static PRUint32 plural_rule_##aNumber(unsigned long int n)    \

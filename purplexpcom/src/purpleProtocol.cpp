@@ -53,7 +53,7 @@ protected:
 
 NS_IMPL_CLASSINFO(purpleUsernameSplit, NULL, 0, PURPLE_USERNAME_SPLIT_CID)
 NS_IMPL_THREADSAFE_CI(purpleUsernameSplit)
-NS_IMPL_ISUPPORTS1_CI(purpleUsernameSplit, prplIUsernameSplit)
+NS_IMPL_ISUPPORTS_CI(purpleUsernameSplit, prplIUsernameSplit)
 
 #define PURPLE_IMPL_GETSPLITVALUE(aType, aName, aPurpleName, aStar)           \
   NS_IMETHODIMP purpleUsernameSplit::Get##aName(aType a##aName)               \
@@ -78,7 +78,7 @@ PURPLE_IMPL_GETSPLITVALUE(bool *, Reverse, reverse, *)
 
 /* Implementation file */
 NS_IMPL_CLASSINFO(purpleProtocol, NULL, 0, PURPLE_PROTOCOL_CID)
-NS_IMPL_ISUPPORTS1_CI(purpleProtocol, prplIProtocol)
+NS_IMPL_ISUPPORTS_CI(purpleProtocol, prplIProtocol)
 
 purpleProtocol::purpleProtocol()
   :mInfo(nullptr)

@@ -21,7 +21,7 @@ static PRLogModuleInfo *gPurpleSocketsLog = nullptr;
 #endif
 #define LOG(args) PR_LOG(gPurpleSocketsLog, PR_LOG_DEBUG, args)
 
-NS_IMPL_ISUPPORTS1(purpleSocket, nsIRunnable)
+NS_IMPL_ISUPPORTS(purpleSocket, nsIRunnable)
 
 //export NSPR_LOG_MODULES="nsSocketTransport:5"
 
@@ -104,7 +104,7 @@ NS_IMETHODIMP purpleSocket::Run()
 }
 
 
-NS_IMPL_ISUPPORTS2(purpleSocketInternal, nsASocketHandler, nsIRunnable)
+NS_IMPL_ISUPPORTS(purpleSocketInternal, nsASocketHandler, nsIRunnable)
 
 #ifdef PR_LOGGING
 purpleSocketInternal::purpleSocketInternal(PRUint32 aId)
@@ -402,7 +402,7 @@ nsresult purpleSocketWatcher::CancelWatchFromAccountId(PRUint32 aAccountId)
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(purpleSocketNetworkStateObserver, nsIObserver)
+NS_IMPL_ISUPPORTS(purpleSocketNetworkStateObserver, nsIObserver)
 
 NS_IMETHODIMP
 purpleSocketNetworkStateObserver::Observe(nsISupports *aSubject,

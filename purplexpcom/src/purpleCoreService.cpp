@@ -44,8 +44,8 @@ static PRLogModuleInfo *gPurpleCoreServiceLog = nullptr;
 
 NS_IMPL_CLASSINFO(purpleCoreService, NULL, nsIClassInfo::SINGLETON,
                   PURPLE_CORE_SERVICE_CID)
-NS_IMPL_ISUPPORTS3_CI(purpleCoreService, purpleICoreService, nsIObserver,
-                      nsIMemoryReporter)
+NS_IMPL_ISUPPORTS_CI(purpleCoreService, purpleICoreService, nsIObserver,
+                     nsIMemoryReporter)
 
 extern nsresult init_libpurple();
 extern void init_libpurple_accounts();

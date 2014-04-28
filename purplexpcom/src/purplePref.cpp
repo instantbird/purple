@@ -55,7 +55,7 @@ protected:
 
 NS_IMPL_CLASSINFO(purpleKeyValuePair, NULL, 0, PURPLE_KEY_VALUE_PAIR_CID)
 NS_IMPL_THREADSAFE_CI(purpleKeyValuePair)
-NS_IMPL_ISUPPORTS1_CI(purpleKeyValuePair, prplIKeyValuePair)
+NS_IMPL_ISUPPORTS_CI(purpleKeyValuePair, prplIKeyValuePair)
 
 /* readonly attribute AUTF8String name; */
 NS_IMETHODIMP purpleKeyValuePair::GetName(nsACString & aName)
@@ -73,7 +73,7 @@ NS_IMETHODIMP purpleKeyValuePair::GetValue(nsACString & aValue)
 
 NS_IMPL_CLASSINFO(purplePref, NULL, 0, PURPLE_PREF_CID)
 NS_IMPL_THREADSAFE_CI(purplePref)
-NS_IMPL_ISUPPORTS1_CI(purplePref, prplIPref)
+NS_IMPL_ISUPPORTS_CI(purplePref, prplIPref)
 
 purplePref::purplePref()
 {

@@ -20,7 +20,7 @@ extern PRLogModuleInfo *gPurpleConvLog;
 #endif
 #define LOG(args) PR_LOG(gPurpleConvLog, PR_LOG_DEBUG, args)
 
-//NS_IMPL_ISUPPORTS2_CI(purpleConvChat, prplIConversation, prplIConvChat)
+//NS_IMPL_ISUPPORTS_CI(purpleConvChat, prplIConversation, prplIConvChat)
 NS_IMPL_CLASSINFO(purpleConvChat, NULL, 0, PURPLE_CONV_CHAT_CID)
 NS_INTERFACE_MAP_BEGIN(purpleConvChat)
   NS_INTERFACE_MAP_ENTRY(prplIConvChat)
@@ -32,7 +32,7 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF(purpleConvChat)
 NS_IMPL_RELEASE(purpleConvChat)
 
-NS_IMPL_CI_INTERFACE_GETTER2(purpleConvChat, prplIConversation, prplIConvChat)
+NS_IMPL_CI_INTERFACE_GETTER(purpleConvChat, prplIConversation, prplIConvChat)
 
 purpleConvChat::purpleConvChat()
 {

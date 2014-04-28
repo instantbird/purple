@@ -161,7 +161,7 @@ class purpleAuthorizationRequest MOZ_FINAL : public prplIBuddyRequest
     void *mUserData;
 };
 
-NS_IMPL_ISUPPORTS1(purpleAuthorizationRequest, prplIBuddyRequest)
+NS_IMPL_ISUPPORTS(purpleAuthorizationRequest, prplIBuddyRequest)
 
 purpleAuthorizationRequest::purpleAuthorizationRequest(purpleAccount *aAccount,
                                                        const char *aRemoteUser,

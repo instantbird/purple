@@ -4,7 +4,7 @@
 
 #include "purpleGListEnumerator.h"
 
-NS_IMPL_ISUPPORTS1(purpleGListEnumerator, nsISimpleEnumerator)
+NS_IMPL_ISUPPORTS(purpleGListEnumerator, nsISimpleEnumerator)
 
 purpleGListEnumerator::purpleGListEnumerator()
 {

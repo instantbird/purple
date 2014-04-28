@@ -11,7 +11,7 @@
 
 NS_IMPL_CLASSINFO(purpleProxyInfo, NULL, 0, PURPLE_PROXY_INFO_CID)
 NS_IMPL_THREADSAFE_CI(purpleProxyInfo)
-NS_IMPL_ISUPPORTS1_CI(purpleProxyInfo, purpleIProxyInfo)
+NS_IMPL_ISUPPORTS_CI(purpleProxyInfo, purpleIProxyInfo)
 
 purpleProxyInfo::purpleProxyInfo()
   : mType(-2)

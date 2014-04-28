@@ -21,7 +21,7 @@
 #pragma GCC visibility pop
 
 NS_IMPL_CLASSINFO(purpleAccountBuddy, NULL, 0, PURPLE_ACCOUNTBUDDY_CID)
-NS_IMPL_ISUPPORTS1_CI(purpleAccountBuddy, imIAccountBuddy)
+NS_IMPL_ISUPPORTS_CI(purpleAccountBuddy, imIAccountBuddy)
 
 #ifdef PR_LOGGING
 //
