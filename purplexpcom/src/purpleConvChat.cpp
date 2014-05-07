@@ -198,3 +198,12 @@ NS_IMETHODIMP purpleConvChat::GetLeft(bool *aLeft)
   *aLeft = purple_conv_chat_has_left(chat);
   return NS_OK;
 }
+
+/* readonly attribute boolean joining; */
+NS_IMETHODIMP purpleConvChat::GetJoining(bool *aJoining)
+{
+  NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
+
+  *aJoining = PR_FALSE;
+  return NS_OK;
+}
