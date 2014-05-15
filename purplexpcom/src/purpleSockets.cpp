@@ -289,7 +289,7 @@ void purpleSocketWatcher::goingOffline()
   // can cancel some watchers so the length of the array may change
   // during the loop. See bug 158
   for (PRInt32 i = sSockets->Length(); i; i = sSockets->Length()) {
-    nsCOMPtr<purpleSocket> socket = (*sSockets)[i - 1];
+    nsRefPtr<purpleSocket> socket = (*sSockets)[i - 1];
     sSockets->RemoveElementAt(i - 1);
     socket->CallLibpurpleCallback();
     socket->Cancel();

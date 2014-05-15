@@ -64,7 +64,7 @@ gboolean purpleDNS::Resolve(PurpleDnsQueryData *query_data,
   nsCOMPtr<nsIDNSRecord> record;
   nsCOMPtr<nsICancelable> cancelable;
   nsCOMPtr<nsIThread> thread = do_GetMainThread();
-  nsCOMPtr<purpleDNSRequest> listener;
+  nsRefPtr<purpleDNSRequest> listener;
   listener = new purpleDNSRequest();
   listener->mAccountId = purpleAccountScoper::GetCurrentAccountId();
   listener->query_data = query_data;

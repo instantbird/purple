@@ -155,7 +155,7 @@ class purpleAuthorizationRequest MOZ_FINAL : public prplIBuddyRequest
 
 
   private:
-    nsCOMPtr<purpleAccount> mAccount;
+    nsRefPtr<purpleAccount> mAccount;
     nsCString mRemoteUser;
     PurpleAccountRequestAuthorizationCb mAuthorizeCb, mDenyCb;
     void *mUserData;

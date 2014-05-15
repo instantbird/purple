@@ -9,6 +9,7 @@
 #include "purpleAccountBuddy.h"
 #include <imIContactsService.h>
 #include <nsServiceManagerUtils.h>
+#include <nsAutoPtr.h> // for nsRefPtr
 #include <nsCOMPtr.h>
 #include <nsStringAPI.h>
 
@@ -34,7 +35,7 @@ static void buddy_signals(PurpleBuddy *aBuddy, const char *aSignal)
   LOG(("Attempting to send %s signal, group = %s, buddy = %s", aSignal,
        purple_group_get_name(purple_buddy_get_group(aBuddy)), aBuddy->name));
 
-  nsCOMPtr<purpleAccountBuddy> pab =
+  nsRefPtr<purpleAccountBuddy> pab =
     purpleAccountBuddy::fromPurpleBuddy(aBuddy);
   NS_ENSURE_TRUE(pab, );
 
