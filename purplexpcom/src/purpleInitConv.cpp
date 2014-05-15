@@ -7,6 +7,8 @@
 #pragma GCC visibility pop
 
 #include "purpleConversation.h"
+#include "purpleConvChat.h"
+#include "purpleConvIM.h"
 #include "purpleConvChatBuddy.h"
 #include "purpleMessage.h"
 #include "imIConversationsService.h"
@@ -31,27 +33,24 @@ static void create_conv(PurpleConversation *aConv)
 {
   LOG(("Create conversation with name: %s", purple_conversation_get_name(aConv)));
 
-  nsCOMPtr<purpleConversation> conv;
+  nsCOMPtr<imIConversationsService> convs =
+    do_GetService("@mozilla.org/chat/conversations-service;1");
+  NS_ENSURE_TRUE(convs, );
+
+  purpleConversation *conv;
   PurpleConversationType type = purple_conversation_get_type(aConv);
-  const char *contractid = nullptr;
   switch (type) {
     case PURPLE_CONV_TYPE_IM:
-      contractid = "@instantbird.org/purple/convim;1";
+      conv = new purpleConvIM();
       break;
     case PURPLE_CONV_TYPE_CHAT:
-      contractid = "@instantbird.org/purple/convchat;1";
+      conv = new purpleConvChat();
       break;
     default:
       NS_WARNING("purpleInit: create_conv, Unknown conversation type\n");
       return;
   }
-  conv = do_CreateInstance(contractid);
-  NS_ENSURE_TRUE(conv, );
   conv->SetConv(aConv);
-
-  nsCOMPtr<imIConversationsService> convs =
-    do_GetService("@mozilla.org/chat/conversations-service;1");
-  NS_ENSURE_TRUE(convs, );
   convs->AddConversation(conv);
 }
 
@@ -85,10 +84,7 @@ static void write_conv(PurpleConversation *conv, const char *who,
                        const char *alias, const char *message,
                        PurpleMessageFlags flags, time_t mtime)
 {
-  nsresult rv;
-  nsCOMPtr<purpleMessage> msg =
-    do_CreateInstance(PURPLE_MESSAGE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv,);
+  purpleMessage *msg = new purpleMessage();
 
   msg->Init(conv, who, alias, message, flags, mtime);
   notify_conv(conv, msg, "new-text");

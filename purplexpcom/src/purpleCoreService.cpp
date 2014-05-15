@@ -245,7 +245,7 @@ nsresult purpleCoreService::InitProxies()
 
   LOG(("InitProxies list = %s", proxyList.get()));
 
-  nsCOMPtr<purpleProxy> proxy;
+  nsRefPtr<purpleProxy> proxy;
   char *newStr = proxyList.BeginWriting();
   nsAutoCString key;
   for (char *token = NS_strtok(",", &newStr);
@@ -261,7 +261,7 @@ nsresult purpleCoreService::InitProxies()
     LOG(("Creating proxy %s", key.get()));
 
     /* create the purpleProxy object */
-    proxy = do_CreateInstance(PURPLE_PROXY_CONTRACTID);
+    proxy = new purpleProxy();
     NS_ENSURE_TRUE(proxy, NS_ERROR_OUT_OF_MEMORY);
 
     LOG(("Creating proxy %s", key.get()));
@@ -351,7 +351,7 @@ NS_IMETHODIMP purpleCoreService::CreateProxy(PRInt16 aType, const nsACString & a
   } while (found);
 
   /* Actually create the new proxy */
-  nsCOMPtr<purpleProxy> proxy = do_CreateInstance(PURPLE_PROXY_CONTRACTID);
+  nsRefPtr<purpleProxy> proxy = new purpleProxy();
   rv = proxy->Init(key, aType, aHost, aPort, aUsername, aPassword);
   NS_ENSURE_SUCCESS(rv, rv);
 

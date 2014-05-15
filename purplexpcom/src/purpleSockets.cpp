@@ -104,7 +104,7 @@ NS_IMETHODIMP purpleSocket::Run()
 }
 
 
-NS_IMPL_ISUPPORTS(purpleSocketInternal, nsASocketHandler, nsIRunnable)
+NS_IMPL_ISUPPORTS(purpleSocketInternal, nsIRunnable)
 
 #ifdef PR_LOGGING
 purpleSocketInternal::purpleSocketInternal(PRUint32 aId)
