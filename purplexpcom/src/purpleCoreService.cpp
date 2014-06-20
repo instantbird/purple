@@ -97,7 +97,7 @@ NS_IMETHODIMP purpleCoreService::Observe(nsISupports *aSubject,
 
 NS_IMETHODIMP
 purpleCoreService::CollectReports(nsIHandleReportCallback* aHandleReport,
-                                  nsISupports* aData)
+                                  nsISupports* aData, bool aAnonymize)
 {
 #if defined(XP_WIN) || defined(XP_MACOSX)
   MOZ_COLLECT_REPORT(
