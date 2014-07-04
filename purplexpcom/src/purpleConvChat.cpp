@@ -207,3 +207,15 @@ NS_IMETHODIMP purpleConvChat::GetJoining(bool *aJoining)
   *aJoining = PR_FALSE;
   return NS_OK;
 }
+
+/* readonly attribute prplIChatRoomFieldValues chatRoomFields; */
+NS_IMETHODIMP purpleConvChat::GetChatRoomFields(prplIChatRoomFieldValues **aComponents)
+{
+  NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
+
+  /* TODO: No prplConvChat instance exists at the time joinChat returns
+     where we could easily store the chatRoomFieldValues, but we could
+     try and store them somewhere else. */
+  *aComponents = nullptr;
+  return NS_OK;
+}
