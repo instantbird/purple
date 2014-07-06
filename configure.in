@@ -5,7 +5,7 @@ dnl License, v. 2.0. If a copy of the MPL was not distributed with this
 dnl file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 dnl Get version of libpurple from the version files.
-purpledir=$topsrcdir/extensions/purple
+purpledir=$srcdir/extensions/purple
 PURPLE_MAJOR_VERSION=`cat $purpledir/config/version.txt |cut -d '.' -f 1`
 PURPLE_MINOR_VERSION=`cat $purpledir/config/version.txt |cut -d '.' -f 2`
 PURPLE_MICRO_VERSION=`cat $purpledir/config/version.txt |cut -d '.' -f 3`
