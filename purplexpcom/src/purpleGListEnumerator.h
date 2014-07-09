@@ -17,9 +17,6 @@ public:
   // Ctor
   purpleGListEnumerator();
 
-  // Dtor
-  ~purpleGListEnumerator();
-
   typedef nsISupports* (*converterCallback) (void *);
   typedef void (*cleanupCallback) (void *);
 
@@ -28,6 +25,9 @@ public:
                 void *aCleanupData = NULL);
 
 private:
+  // Dtor
+  ~purpleGListEnumerator();
+
   void Cleanup();
 
   GList *mGList;

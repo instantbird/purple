@@ -39,12 +39,12 @@ class purpleSocketInternal MOZ_FINAL : public nsASocketHandler,
 #else
   purpleSocketInternal();
 #endif
-  ~purpleSocketInternal();
 #ifdef PR_LOGGING
   PRUint32 mId;
 #endif
 
  private:
+  ~purpleSocketInternal();
   nsresult OnAttach();
   PRFileDesc *mFd;
   PRInt16 mPollFlagsInternal;
@@ -61,7 +61,6 @@ class purpleSocket MOZ_FINAL : public nsIRunnable
   NS_DECL_NSIRUNNABLE
 
   purpleSocket();
-  ~purpleSocket();
 
   nsresult Init(PurpleInputFunction aFunction, gpointer aData, PRInt32 aFd,
                 PurpleInputCondition aCondition, PRInt32 *aResultId);
@@ -71,6 +70,7 @@ class purpleSocket MOZ_FINAL : public nsIRunnable
   PRUint32 GetAccountId() { return mAccountId; }
 
  private:
+  ~purpleSocket();
   static PRUint32 sLastSocket;
   PRUint32 mAccountId;
   PRUint32 mId;

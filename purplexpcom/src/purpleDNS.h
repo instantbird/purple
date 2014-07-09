@@ -20,7 +20,6 @@ class purpleDNSRequest MOZ_FINAL : public nsIDNSListener
   NS_DECL_NSIDNSLISTENER
 
   purpleDNSRequest();
-  ~purpleDNSRequest();
   PRUint32 mAccountId;
   PurpleDnsQueryData *query_data;
   PurpleDnsQueryResolvedCallback resolved_cb;
@@ -28,6 +27,7 @@ class purpleDNSRequest MOZ_FINAL : public nsIDNSListener
   nsCOMPtr<nsICancelable> asyncResolv;
 
  private:
+  ~purpleDNSRequest();
   inline void Failed(const char *aMsg);
 };
 

@@ -33,6 +33,9 @@ class purpleSocketNetworkStateObserver MOZ_FINAL : public nsIObserver
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
+
+ private:
+  ~purpleSocketNetworkStateObserver() {}
 };
 
 purpleSocket::purpleSocket()

@@ -30,6 +30,7 @@ class purpleDebug MOZ_FINAL : public nsIObserver
  private:
   static nsresult init();
   purpleDebug(); // can only be called by init()
+  ~purpleDebug() {}
   void PrepareFilePath(nsCString &aPath);
   nsresult InitRepositoryInfo();
 

@@ -22,7 +22,7 @@ static PRLogModuleInfo *gPurpleTimerLog = nullptr;
 
 /* Init static members */
 PRUint32 purpleTimer::sLastTimer = 0;
-nsTArray<purpleTimeout *> *purpleTimer::sTimeouts = nullptr;
+nsCOMArray<purpleTimeout> *purpleTimer::sTimeouts = nullptr;
 
 void purpleTimer::init()
 {
@@ -30,7 +30,7 @@ void purpleTimer::init()
   if (!gPurpleTimerLog)
     gPurpleTimerLog = PR_NewLogModule("purpleTimer");
 #endif
-  sTimeouts = new nsTArray<purpleTimeout *>();
+  sTimeouts = new nsCOMArray<purpleTimeout>();
 }
 
 void purpleTimer::unInit()
@@ -41,7 +41,6 @@ void purpleTimer::unInit()
   for (PRUint32 i = 0; i < sTimeouts->Length(); ++i) {
     purpleTimeout *timeout = (*sTimeouts)[i];
     timeout->mTimer->Cancel();
-    delete timeout;
   }
 
   delete sTimeouts;
@@ -144,7 +143,6 @@ gboolean purpleTimer::CancelTimer(PRUint32 aId)
     if ((*sTimeouts)[i]->mId == aId) {
       purpleTimeout *timeout = (*sTimeouts)[i];
       timeout->mTimer->Cancel();
-      delete timeout;
       sTimeouts->RemoveElementAt(i);
       LOG(("Timeout elt found at index %i; canceled and removed", i));
       return TRUE;
@@ -164,7 +162,6 @@ nsresult purpleTimer::CancelTimerFromAccountId(PRUint32 aAccountId)
     if ((*sTimeouts)[i]->mAccountId == aAccountId) {
       purpleTimeout *timeout = (*sTimeouts)[i];
       timeout->mTimer->Cancel();
-      delete timeout;
       sTimeouts->RemoveElementAt(i);
       LOG(("Timeout elt found at index %i; canceled and removed", i));
       NS_WARNING("Found timer for disconnected account");

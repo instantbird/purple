@@ -127,6 +127,7 @@ class prefsObserver MOZ_FINAL : public nsIObserver
     prefsObserver(void *aCallback) : callback(aCallback) {}
 
   private:
+    ~prefsObserver() {}
     gpointer callback;
 };
 

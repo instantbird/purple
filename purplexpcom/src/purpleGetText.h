@@ -32,6 +32,7 @@ class purpleGetText MOZ_FINAL : public nsIObserver
  private:
   // can only be called by init();
   purpleGetText();
+  ~purpleGetText() {}
 
   static purpleGetText *sInstance;
 

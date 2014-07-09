@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include<nsCOMPtr.h>
-#include "nsTArray.h"
+#include "nsCOMArray.h"
 #include <glib.h>
 #include <nsITimer.h>
 
@@ -15,12 +15,14 @@ class purpleTimeout MOZ_FINAL : public nsIRunnable
   NS_DECL_NSIRUNNABLE
 
   purpleTimeout() {}
-  ~purpleTimeout() {}
   PRUint32 mAccountId;
   PRUint32 mId;
   nsCOMPtr<nsITimer> mTimer;
   GSourceFunc mFunction;
   gpointer mData;
+
+ private:
+  ~purpleTimeout() {}
 };
 
 class purpleTimer
@@ -38,6 +40,6 @@ class purpleTimer
   static nsresult CancelTimerFromAccountId(PRUint32 aAccountId);
 
  private:
-  static nsTArray<purpleTimeout *> *sTimeouts;
+  static nsCOMArray<purpleTimeout> *sTimeouts;
   static PRUint32 sLastTimer;
 };
