@@ -25,10 +25,11 @@ extern "C" {
 class @PROTOCOL@: public purpleIPlugin {
 public:
   @PROTOCOL@();
-  virtual ~@PROTOCOL@();
-
   NS_DECL_ISUPPORTS
   NS_DECL_PURPLEIPLUGIN
+
+private:
+  virtual ~@PROTOCOL@();
 };
 
 @PROTOCOL@::@PROTOCOL@()
