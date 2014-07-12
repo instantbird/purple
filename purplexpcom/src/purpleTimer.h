@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include<nsCOMPtr.h>
-#include "nsCOMArray.h"
+#include <nsCOMPtr.h>
+#include "nsTArray.h"
 #include <glib.h>
 #include <nsITimer.h>
 
@@ -40,6 +40,6 @@ class purpleTimer
   static nsresult CancelTimerFromAccountId(PRUint32 aAccountId);
 
  private:
-  static nsCOMArray<purpleTimeout> *sTimeouts;
+  static nsTArray<nsRefPtr<purpleTimeout> > *sTimeouts;
   static PRUint32 sLastTimer;
 };
