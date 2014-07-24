@@ -59,12 +59,16 @@ include $(topsrcdir)/config/rules.mk
 EXTRA_DSO_LDOPTS := $(subst -bundle,-dynamiclib -install_name @executable_path/components/$(SHARED_LIBRARY),$(EXTRA_DSO_LDOPTS))
 else
 
+ifneq ($(OS_ARCH),WINNT)
+# Export more than just the NSModule symbol, so that dynamic prpls can
+# use libpurple symbols. This needs to be done before rules.mk freezes
+# the EXTRA_DSO_LDOPTS variable.
+MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS =
+endif
+
 include $(topsrcdir)/config/rules.mk
 
-ifneq ($(OS_ARCH),WINNT)
-# Export more than just the NSModule symbol
-MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS =
-else
+ifeq ($(OS_ARCH),WINNT)
 DELETE_AFTER_LINK =
 
 CXXFLAGS	+= -wd4624 -wd4068
