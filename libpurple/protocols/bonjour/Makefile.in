@@ -17,7 +17,7 @@ DEFINES += -DLINK_DNS_SD_DIRECTLY
 else
 # Include the Bonjour SDK headers (distributed with Instantbird).
 LOCAL_INCLUDES += -I$(srcdir)/win32
-EXTRA_LIBS += netapi32.lib ws2_32.lib
+OS_LIBS += netapi32.lib ws2_32.lib
 endif
 else
 # Linux uses libavahi instead of Bonjour.

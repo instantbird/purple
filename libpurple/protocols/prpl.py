@@ -6,7 +6,12 @@ if protocol in CONFIG['STATIC_PRPLS'].split(" "):
     FINAL_LIBRARY = 'purplexpcom'
 else:
     GENERATED_SOURCES += ['xpcomModule.cpp']
-    FORCE_SHARED_LIB = True
     IS_COMPONENT = True
+    USE_LIBS += [
+        'mozalloc',
+        'xpcomglue_s',
+        'xul',
+    ]
 
 LIBRARY_NAME = protocol
+

@@ -45,19 +45,28 @@ ifdef PURPLE_PLUGINS
 DEFINES 	+= -DPURPLE_PLUGINS
 endif
 
+ifeq ($(OS_ARCH),Darwin)
+# On Mac we need to hack EXTRA_DSO_LDOPTS to replace -bundle with -dynamiclib
+# so that dynamic prpls can load libpurple symbols from libpurplexpcom.dylib.
+# For that, we need to hack around config.mk's freezing of the variables.
+EXTERNALLY_MANAGED_MAKE_FILE := 1
+include $(topsrcdir)/config/config.mk
+GLOBAL_DEPS += backend.mk
+include backend.mk
+
 include $(topsrcdir)/config/rules.mk
 
-ifeq ($(OS_ARCH),Darwin)
-EXTRA_DSO_LDOPTS = -dynamiclib -install_name @executable_path/components/$(SHARED_LIBRARY)
-else ifeq ($(OS_ARCH),WINNT)
-DELETE_AFTER_LINK =
+EXTRA_DSO_LDOPTS := $(subst -bundle,-dynamiclib -install_name @executable_path/components/$(SHARED_LIBRARY),$(EXTRA_DSO_LDOPTS))
 else
+
+include $(topsrcdir)/config/rules.mk
+
+ifneq ($(OS_ARCH),WINNT)
 # Export more than just the NSModule symbol
 MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS =
-endif
-EXTRA_DSO_LDOPTS += $(XPCOM_GLUE_LDOPTS) $(MOZ_COMPONENT_NSPR_LIBS)
+else
+DELETE_AFTER_LINK =
 
-ifeq ($(OS_ARCH),WINNT)
 CXXFLAGS	+= -wd4624 -wd4068
 
 module.ver: module.ver.in $(GLOBAL_DEPS)
@@ -67,6 +76,7 @@ _RC_STRING += -SRCDIR .
 module.rc: module.ver
 
 GARBAGE += module.ver
+endif
 endif
 
 libs:: $(SHARED_LIBRARY)

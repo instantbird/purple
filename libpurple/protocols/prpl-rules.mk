@@ -5,7 +5,7 @@
 include $(topsrcdir)/config/rules.mk
 
 ifeq (,$(filter $(PROTOCOL),$(STATIC_PRPLS)))
-EXTRA_DSO_LDOPTS += $(XPCOM_GLUE_LDOPTS) $(MOZ_COMPONENT_NSPR_LIBS)
+EXTRA_LIBS += $(NSPR_LIBS)
 
 _RC_STRING += -SRCDIR .
 
