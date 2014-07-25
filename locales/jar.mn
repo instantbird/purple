@@ -17,8 +17,6 @@
 	locale/@AB_CD@/msn/prpl.properties	(%msn.properties)
 % locale yahoo @AB_CD@ %locale/@AB_CD@/yahoo/
 	locale/@AB_CD@/yahoo/prpl.properties	(%yahoo.properties)
-% locale qq @AB_CD@ %locale/@AB_CD@/qq/
-	locale/@AB_CD@/qq/prpl.properties	(%qq.properties)
 % locale myspace @AB_CD@ %locale/@AB_CD@/myspace/
 	locale/@AB_CD@/myspace/prpl.properties	(%myspace.properties)
 % locale gg @AB_CD@ %locale/@AB_CD@/gg/

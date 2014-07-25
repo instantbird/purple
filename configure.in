@@ -182,7 +182,7 @@ if test "${OS_TARGET}" = "Linux"; then
     PKG_CHECK_MODULES(LIBXML2, libxml-2.0)
 fi
 
-STATIC_PRPLS="jabber gg oscar msn myspace novell qq sametime simple yahoo netsoul"
+STATIC_PRPLS="jabber gg oscar msn myspace novell sametime simple yahoo netsoul"
 
 MOZ_ARG_ENABLE_BOOL(purple-plugins,
 [  --enable-purple-plugins      Enable usage of system libpurple plugins],

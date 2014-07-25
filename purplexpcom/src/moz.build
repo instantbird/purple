@@ -6,7 +6,7 @@
 XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell.ini']
 
 prpls = ['jabber', 'gg', 'oscar', 'msn', 'myspace', 'novell',
-         'qq', 'sametime', 'simple', 'yahoo', 'netsoul', 'sipe']
+         'sametime', 'simple', 'yahoo', 'netsoul', 'sipe']
 
 if CONFIG['PURPLE_BONJOUR']:
     prpls += ['bonjour']

@@ -31,10 +31,6 @@ purple.jar:
 	skin/classic/prpl/novell/icon32.png	(icons/prpl-novell-32.png)
 	skin/classic/prpl/novell/icon48.png	(icons/prpl-novell-48.png)
 	skin/classic/prpl/novell/icon.png	(icons/prpl-novell.png)
-% skin prpl-qq classic/1.0 %skin/classic/prpl/qq/
-	skin/classic/prpl/qq/icon32.png		(icons/prpl-qq-32.png)
-	skin/classic/prpl/qq/icon48.png		(icons/prpl-qq-48.png)
-	skin/classic/prpl/qq/icon.png		(icons/prpl-qq.png)
 % skin prpl-meanwhile classic/1.0 %skin/classic/prpl/meanwhile/
 	skin/classic/prpl/meanwhile/icon32.png	(icons/prpl-meanwhile-32.png)
 	skin/classic/prpl/meanwhile/icon48.png	(icons/prpl-meanwhile-48.png)
