@@ -4,7 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 if CONFIG['OS_ARCH'] in ('WINNT', 'Darwin'):
-    PARALLEL_DIRS	+= [
+    DIRS	+= [
         'libraries/xml2',
         'libraries/glib'
     ]

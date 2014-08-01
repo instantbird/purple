@@ -9,7 +9,13 @@ EXTRA_LIBS += $(NSPR_LIBS)
 
 _RC_STRING += -SRCDIR .
 
-xpcomModule.cpp: $(srcdir)/../xpcomModule.cpp.in xpcomCid.h
+PURPLEXPCOM_PATH = ../../../purplexpcom/src
+PURPLEXPCOM_LIB = $(PURPLEXPCOM_PATH)/$(DLL_PREFIX)purplexpcom$(DLL_SUFFIX)
+
+$(PURPLEXPCOM_LIB):
+	$(MAKE) -C $(PURPLEXPCOM_PATH) compile
+
+xpcomModule.cpp: $(srcdir)/../xpcomModule.cpp.in xpcomCid.h $(PURPLEXPCOM_LIB)
 	sed 's/@PROTOCOL@/$(PROTOCOL)/g' $< > $@
 
 xpcomCid.h:
