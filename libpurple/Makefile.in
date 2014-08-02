@@ -71,8 +71,12 @@ ifeq ($(OS_ARCH),WINNT)
 # are part of EXPORTS_libpurple.
 EXPORTS_libpurple := $(shell egrep '.+\.h' '$(srcdir)/moz.build' |egrep -v '^\#' |cut -d "'" -f 2)
 
-purple.def: ../libraries/glib/glib.def $(EXPORTS_libpurple) $(GLOBAL_DEPS)
-	cat ../libraries/glib/glib.def > purple.def
+GLIB_PATH = ../libraries/glib
+$(GLIB_PATH)/glib.def: $(srcdir)/$(GLIB_PATH)/glib.symbols $(srcdir)/$(GLIB_PATH)/gobject.symbols $(GLOBAL_DEPS)
+	$(MAKE) -C $(GLIB_PATH) glib.def
+
+purple.def: $(GLIB_PATH)/glib.def $(EXPORTS_libpurple) $(GLOBAL_DEPS)
+	cat $(GLIB_PATH)/glib.def > purple.def
 	(cd $(srcdir); cat $(EXPORTS_libpurple)) |egrep '^[a-zA-Z].* \*?w?purple_[a-z_0-9]+\(' |sed -e 's/(.*//' -e 's/.* \*\?//' |sort |uniq >> purple.def
 	(cd $(srcdir); cat $(EXPORTS_libpurple)) |egrep '^w?purple_[a-z_0-9]+ ?\(' |sed -e 's/(.*//' |sort |uniq >> purple.def
 	cat $(srcdir)/server.h |egrep '^[a-zA-Z].* \*?serv_[a-z_0-9]+\(' |sed -e 's/(.*//' -e 's/.* \*\?//' |sort |uniq >> purple.def
