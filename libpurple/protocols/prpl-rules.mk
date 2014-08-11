@@ -5,7 +5,6 @@
 include $(topsrcdir)/config/rules.mk
 
 ifeq (,$(filter $(PROTOCOL),$(STATIC_PRPLS)))
-EXTRA_LIBS += $(NSPR_LIBS)
 
 _RC_STRING += -SRCDIR .
 

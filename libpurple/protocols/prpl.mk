@@ -6,12 +6,6 @@ include $(DEPTH)/config/autoconf.mk
 
 ifneq (,$(filter $(PROTOCOL),$(STATIC_PRPLS)))
 LIB_IS_C_ONLY   = 1
-else
-ifeq ($(OS_ARCH),WINNT)
-EXTRA_LIBS	= ../../../purplexpcom/src/$(LIB_PREFIX)purplexpcom.$(LIB_SUFFIX)
-else
-EXTRA_LIBS	= ../../../purplexpcom/src/$(DLL_PREFIX)purplexpcom$(DLL_SUFFIX) -lz
-endif
 endif
 VISIBILITY_FLAGS=
 

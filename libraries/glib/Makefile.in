@@ -21,12 +21,6 @@ endif
 
 DEFINES		+= -DGOBJECT_COMPILATION
 
-ifeq ($(OS_ARCH),WINNT)
-OS_LIBS	+= shell32.lib ws2_32.lib ole32.lib
-else
-OS_LIBS	+= -liconv
-endif
-
 include $(topsrcdir)/config/rules.mk
 
 export::

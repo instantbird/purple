@@ -9,9 +9,19 @@ else:
     IS_COMPONENT = True
     USE_LIBS += [
         'mozalloc',
+        'nspr',
         'xpcomglue_s',
         'xul',
     ]
+
+    OS_LIBS += [
+        '-L ../../../purplexpcom/src/',
+        'purplexpcom',
+    ]
+    if CONFIG['OS_ARCH'] != 'WINNT':
+        OS_LIBS += [
+            'z',
+        ]
 
 LIBRARY_NAME = protocol
 

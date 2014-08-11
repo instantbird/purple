@@ -85,6 +85,16 @@ elif CONFIG['GSSAPI']:
             'core/sip-sec-ntlm.c',
         ]
 
+if CONFIG['GSSAPI']:
+    OS_LIBS  += [
+        CONFIG['KRB5_LIBS'],
+    ]
+
+USE_LIBS += [
+    'nspr',
+    'nss',
+]
+
 protocol = 'sipe'
 
 include('../prpl.py')

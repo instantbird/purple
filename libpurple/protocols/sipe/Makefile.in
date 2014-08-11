@@ -25,8 +25,6 @@ DEFINES += \
     -DSIPE_TRANSLATIONS_URL=\"https://www.transifex.net/projects/p/pidgin-sipe/r/mob/\" \
     $(NULL)
 
-EXTRA_LIBS += $(NSS_LIBS) $(NSPR_LIBS)
-
 # On Windows, use native SSPI security package (Kerberos, NTLM; SSO).
 # Otherwise use SIPE custom NTLMv2 implementation only (No Kerberos; No
 # SSO).
@@ -38,7 +36,6 @@ endif
 ifdef GSSAPI
 DEFINES += -DHAVE_GSSAPI_GSSAPI_H=1
 LOCAL_INCLUDES	+= $(KRB5_CFLAGS)
-EXTRA_LIBS	+= $(KRB5_LIBS)
 ifdef GSSAPI_ONLY
 DEFINES += -DHAVE_GSSAPI_ONLY=1
 endif
