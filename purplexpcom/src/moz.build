@@ -46,6 +46,38 @@ LIBRARY_NAME = 'purplexpcom'
 
 USE_LIBS += [
     'mozalloc',
+    'nspr',
+    'nss',
     'xpcomglue_s',
     'xul',
 ]
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    OS_LIBS += [
+        'ws2_32',
+    ]
+
+    if CONFIG['PURPLE_BONJOUR']:
+        OS_LIBS += [
+            'netapi32',
+        ]
+elif CONFIG['OS_ARCH'] == 'Darwin':
+    OS_LIBS += [
+        'iconv',
+        'resolv',
+        'z',
+    ]
+
+    # For SIPE.
+    if CONFIG['GSSAPI']:
+        OS_LIBS += CONFIG['KRB5_LIBS'].split()
+else:
+    OS_LIBS += (CONFIG['GLIB_LIBS'] + CONFIG['GLIB_GMODULE_LIBS'] +
+               CONFIG['LIBXML2_LIBS'].split() + [
+        'z',
+    ])
+
+    if CONFIG['OS_ARCH'] != 'FreeBSD':
+        OS_LIBS += [
+            'resolv',
+        ]

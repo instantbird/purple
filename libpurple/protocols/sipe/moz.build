@@ -86,9 +86,7 @@ elif CONFIG['GSSAPI']:
         ]
 
 if CONFIG['GSSAPI']:
-    OS_LIBS  += [
-        CONFIG['KRB5_LIBS'],
-    ]
+    OS_LIBS += CONFIG['KRB5_LIBS'].split()
 
 USE_LIBS += [
     'nspr',

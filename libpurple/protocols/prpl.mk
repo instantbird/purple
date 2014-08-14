@@ -13,7 +13,6 @@ LOCAL_INCLUDES = -I$(DIST)/include/libpurple
 
 ifeq (,$(filter WINNT Darwin,$(OS_ARCH)))
 LOCAL_INCLUDES	+= $(GLIB_CFLAGS)
-EXTRA_LIBS	+= $(GLIB_LIBS) $(GLIB_GMODULE_LIBS) $(LIBXML2_LIBS)
 else
 LOCAL_INCLUDES  += -I$(DIST)/include/glib
 endif

@@ -17,12 +17,10 @@ DEFINES += -DLINK_DNS_SD_DIRECTLY
 else
 # Include the Bonjour SDK headers (distributed with Instantbird).
 LOCAL_INCLUDES += -I$(srcdir)/win32
-OS_LIBS += netapi32.lib ws2_32.lib
 endif
 else
 # Linux uses libavahi instead of Bonjour.
 LOCAL_INCLUDES	+= $(LIBXML2_CFLAGS) $(AVAHI_CFLAGS)
-EXTRA_LIBS	+= $(LIBXML2_LIBS) $(AVAHI_LIBS)
 endif
 
 include $(srcdir)/../prpl-rules.mk

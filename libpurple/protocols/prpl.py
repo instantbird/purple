@@ -23,5 +23,10 @@ else:
             'z',
         ]
 
+    if CONFIG['OS_ARCH'] != 'WINNT' and CONFIG['OS_ARCH'] != 'Darwin':
+        OS_LIBS += CONFIG['GLIB_LIBS']
+        OS_LIBS += CONFIG['GLIB_GMODULE_LIBS']
+        OS_LIBS += CONFIG['LIBXML2_LIBS'].split()
+
 LIBRARY_NAME = protocol
 

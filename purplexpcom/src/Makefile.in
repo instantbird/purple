@@ -13,32 +13,13 @@ include $(DEPTH)/config/autoconf.mk
 
 ifeq (,$(filter WINNT Darwin,$(OS_ARCH)))
 LOCAL_INCLUDES	= $(GLIB_CFLAGS)
-EXTRA_LIBS	= $(GLIB_LIBS) $(GLIB_GMODULE_LIBS) -lz $(LIBXML2_LIBS)
 else
 LOCAL_INCLUDES  += -I$(DIST)/include/glib
-ifneq ($(OS_ARCH),WINNT)
-EXTRA_LIBS	= -lz -liconv
-
-# For SIPE.
-ifdef GSSAPI
-EXTRA_LIBS	+= $(KRB5_LIBS)
-endif
-else
+ifeq ($(OS_ARCH),WINNT)
 DEFINES += -DGLIB_STATIC_COMPILATION
-EXTRA_LIBS	= ws2_32.lib
-
-ifdef PURPLE_BONJOUR
-EXTRA_LIBS	+= netapi32.lib
-endif
 
 DSO_LDOPTS	+= -DEF:../../libpurple/purple.def
 endif
-endif
-
-EXTRA_LIBS	+= $(NSS_LIBS) $(NSPR_LIBS)
-
-ifeq (,$(filter WINNT FreeBSD,$(OS_ARCH)))
-EXTRA_LIBS	+= -lresolv
 endif
 
 ifdef PURPLE_PLUGINS

@@ -23,6 +23,9 @@ else:
     # Linux uses libavahi instead of Bonjour.
     SOURCES += ['mdns_avahi.c']
 
+    OS_LIBS += CONFIG['LIBXML2_LIBS'].split()
+    OS_LIBS += CONFIG['AVAHI_LIBS'].split()
+
 protocol = 'bonjour'
 
 include('../prpl.py')
