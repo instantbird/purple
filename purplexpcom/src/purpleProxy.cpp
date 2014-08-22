@@ -9,9 +9,18 @@
 #include <nsIClassInfoImpl.h>
 #include <nsMemory.h>
 
+//NS_IMPL_ISUPPORTS_CI(purpleProxy, purpleIProxy, purpleIProxyInfo)
 NS_IMPL_CLASSINFO(purpleProxy, NULL, 0, PURPLE_PROXY_CID)
-NS_IMPL_THREADSAFE_CI(purpleProxy)
-NS_IMPL_ISUPPORTS_CI(purpleProxy, purpleIProxy, purpleIProxyInfo)
+NS_INTERFACE_MAP_BEGIN(purpleProxy)
+  NS_INTERFACE_MAP_ENTRY(purpleIProxy)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, purpleIProxy)
+  NS_IMPL_QUERY_CLASSINFO(purpleProxy)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_ADDREF(purpleProxy)
+NS_IMPL_RELEASE(purpleProxy)
+
+NS_IMPL_CI_INTERFACE_GETTER(purpleProxy, purpleIProxy, purpleIProxyInfo)
 
 purpleProxy::purpleProxy()
   : mType(0),
