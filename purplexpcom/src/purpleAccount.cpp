@@ -799,6 +799,13 @@ NS_IMETHODIMP purpleAccount::GetConnectionTarget(nsACString & aConnectionTarget)
   return NS_OK;
 }
 
+/* readonly attribute nsISSLStatus sslStatus; */
+NS_IMETHODIMP purpleAccount::GetSslStatus(nsISSLStatus * *aSslStatus)
+{
+  aSslStatus = nullptr;
+  return NS_OK;
+}
+
 nsresult purpleAccount::Disconnecting(PRInt16 aConnectionErrorReason,
                                       const nsACString & aConnectionErrorMessage)
 {
