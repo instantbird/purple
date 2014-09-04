@@ -139,6 +139,5 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'win32/wpurpleerror.h',
     ]
 
+Library('purple')
 FINAL_LIBRARY = 'purplexpcom'
-
-LIBRARY_NAME = 'purple'

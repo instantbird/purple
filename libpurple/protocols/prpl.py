@@ -3,16 +3,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 if protocol in CONFIG['STATIC_PRPLS'].split(" "):
+    Library(protocol)
     FINAL_LIBRARY = 'purplexpcom'
 else:
     GENERATED_SOURCES += ['xpcomModule.cpp']
-    IS_COMPONENT = True
-    USE_LIBS += [
-        'mozalloc',
-        'nspr',
-        'xpcomglue_s',
-        'xul',
-    ]
+    XPCOMBinaryComponent(protocol)
 
     OS_LIBS += [
         '-L ../../../purplexpcom/src/',
@@ -27,6 +22,3 @@ else:
         OS_LIBS += CONFIG['GLIB_LIBS']
         OS_LIBS += CONFIG['GLIB_GMODULE_LIBS']
         OS_LIBS += CONFIG['LIBXML2_LIBS'].split()
-
-LIBRARY_NAME = protocol
-

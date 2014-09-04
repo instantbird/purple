@@ -40,16 +40,10 @@ if CONFIG['OS_ARCH'] == 'WINNT' or CONFIG['OS_ARCH'] == 'Darwin':
 
 EXTRA_COMPONENTS += ['prpl.manifest']
 
-IS_COMPONENT = True
-
-LIBRARY_NAME = 'purplexpcom'
+XPCOMBinaryComponent('purplexpcom')
 
 USE_LIBS += [
-    'mozalloc',
-    'nspr',
     'nss',
-    'xpcomglue_s',
-    'xul',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':

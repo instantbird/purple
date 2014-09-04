@@ -183,6 +183,5 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 else:
     OS_LIBS += CONFIG['ICONV_LIBS']
 
+Library('glib')
 FINAL_LIBRARY = 'purplexpcom'
-
-LIBRARY_NAME = 'glib'

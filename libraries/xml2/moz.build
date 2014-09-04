@@ -65,6 +65,5 @@ EXPORTS.libxml += [
     'xpathInternals.h',
 ]
 
+Library('xml2')
 FINAL_LIBRARY = 'purplexpcom'
-
-LIBRARY_NAME = 'xml2'
