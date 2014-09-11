@@ -151,6 +151,18 @@ NS_IMETHODIMP purpleConversation::SendMsg(const nsACString& aMsg)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+/* void prepareForSending (in imIOutgoingMessage aMsg,
+                           [optional] out unsigned long aMsgCount,
+                           [array, size_is (aMsgCount), retval] out wstring aMsgs); */
+NS_IMETHODIMP purpleConversation::PrepareForSending(imIOutgoingMessage *aMsg,
+                                                    uint32_t *aMsgCount,
+                                                    char16_t * **aMsgs)
+{
+  *aMsgCount = 0;
+  *aMsgs = nullptr;
+  return NS_OK;
+}
+
 /* void sendTyping (in unsigned long aLength); */
 NS_IMETHODIMP purpleConversation::SendTyping(const nsACString & aString, int32_t *_retval)
 {
