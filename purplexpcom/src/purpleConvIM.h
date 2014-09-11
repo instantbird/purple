@@ -55,6 +55,9 @@ public:
   NS_IMETHOD RemoveObserver(nsIObserver *aObserver) {
     return purpleConversation::RemoveObserver(aObserver);
   }
+  NS_IMETHOD PrepareForSending(imIOutgoingMessage *message, uint32_t *messageCount, char16_t * **messages) {
+    return purpleConversation::PrepareForSending(message, messageCount, messages);
+  }
 
   // Keep the SendMsg and SendTyping methods here.
   NS_IMETHOD SendMsg(const nsACString & aMsg);
