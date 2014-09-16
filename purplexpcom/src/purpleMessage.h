@@ -41,7 +41,6 @@ protected:
   nsCString mOriginalMessage;
   nsCString mMessage;
   nsCString mWho, mAlias;
-  nsCString mColor;
   PurpleMessageFlags mFlags;
   time_t mTime;
 };
