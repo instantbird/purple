@@ -163,6 +163,12 @@ NS_IMETHODIMP purpleConversation::PrepareForSending(imIOutgoingMessage *aMsg,
   return NS_OK;
 }
 
+/* void prepareForDisplaying (in imIMessage aMsg); */
+NS_IMETHODIMP purpleConversation::PrepareForDisplaying(imIMessage *aMsg)
+{
+  return NS_OK;
+}
+
 /* void sendTyping (in unsigned long aLength); */
 NS_IMETHODIMP purpleConversation::SendTyping(const nsACString & aString, int32_t *_retval)
 {

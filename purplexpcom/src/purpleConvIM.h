@@ -59,6 +59,9 @@ public:
                                char16_t * **aMsgs) {
     return purpleConversation::PrepareForSending(aMsg, aMsgCount, aMsgs);
   }
+  NS_IMETHOD PrepareForDisplaying(imIMessage *aMsg) {
+    return purpleConversation::PrepareForDisplaying(aMsg);
+  }
 
   // Keep the SendMsg and SendTyping methods here.
   NS_IMETHOD SendMsg(const nsACString & aMsg);
