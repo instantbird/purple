@@ -19,6 +19,7 @@
 #include <nsIConsoleService.h>
 #include <nsIPrefService.h>
 #include <nsIProgrammingLanguage.h>
+#include <nsIScriptSecurityManager.h>
 #include <nsIClassInfoImpl.h>
 #include <nsComponentManagerUtils.h>
 #include <nsNetUtil.h>
@@ -1018,8 +1019,17 @@ nsresult purpleAccount::ApplyCurrentUserIcon()
 
   // Inspired from nsFaviconService::SetFaviconDataFromDataURL
   // (toolkit/components/places/nsFaviconService.cpp)
+  nsCOMPtr<nsIScriptSecurityManager> ssm =
+    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIPrincipal> principal;
+  ssm->GetSystemPrincipal(getter_AddRefs(principal));
+  NS_ENSURE_STATE(principal);
+
   nsCOMPtr<nsIChannel> channel;
-  NS_NewChannel(getter_AddRefs(channel), fileURL);
+  NS_NewChannel(getter_AddRefs(channel), fileURL, principal,
+                nsILoadInfo::SEC_NORMAL, nsIContentPolicy::TYPE_OTHER);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Let's say blocking stream is OK for local (small) files...
