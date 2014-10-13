@@ -158,7 +158,7 @@ nsresult purpleSocketInternal::PostEvent()
     do_QueryInterface(purpleSocketWatcher::getSts(), &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-#ifdef DEBUG
+#ifdef PR_LOGGING
   // 'this' may be released and freed on the socket thread before we
   // return from the Dispatch call, so cache the value of mId.
   PRUint32 id = mId;
@@ -352,7 +352,7 @@ PRUint32 purpleSocketWatcher::AddWatch(gint aFd, PurpleInputCondition aCondition
 
   sSockets->AppendElement(socket);
 
-#ifdef DEBUG
+#ifdef PR_LOGGING
   const char *mode = "none";
   if ((aCondition & PURPLE_INPUT_READ) && (aCondition & PURPLE_INPUT_WRITE))
     mode = "read/write";
