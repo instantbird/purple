@@ -430,7 +430,7 @@ xmlSaveUri(xmlURIPtr uri) {
 		(((p[1] >= 'a') && (p[1] <= 'z')) ||
 		 ((p[1] >= 'A') && (p[1] <= 'Z'))) &&
 		(p[2] == ':') &&
-	        (xmlStrEqual(uri->scheme, BAD_CAST "file"))) {
+	        (xmlStrEqual((xmlChar *)uri->scheme, BAD_CAST "file"))) {
 		if (len + 3 >= max) {
 		    max *= 2;
 		    ret = (xmlChar *) xmlRealloc(ret,

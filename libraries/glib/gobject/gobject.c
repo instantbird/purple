@@ -1724,7 +1724,7 @@ g_object_ref (gpointer _object)
 #endif  /* G_ENABLE_DEBUG */
 
 
-  old_val = g_atomic_int_exchange_and_add (&object->ref_count, 1);
+  old_val = g_atomic_int_exchange_and_add ((gint *)&object->ref_count, 1);
 
   if (old_val == 1 && OBJECT_HAS_TOGGLE_REF (object))
     toggle_refs_notify (object, FALSE);
@@ -1752,7 +1752,7 @@ g_object_unref (gpointer _object)
   old_ref = g_atomic_int_get (&object->ref_count);
   if (old_ref > 1)
     {
-      if (!g_atomic_int_compare_and_exchange (&object->ref_count, old_ref, old_ref - 1))
+      if (!g_atomic_int_compare_and_exchange ((gint *)&object->ref_count, old_ref, old_ref - 1))
 	goto retry_atomic_decrement1;
 
       /* if we went from 2->1 we need to notify toggle refs if any */
@@ -1769,7 +1769,7 @@ g_object_unref (gpointer _object)
       old_ref = g_atomic_int_get (&object->ref_count);
       if (old_ref > 1)
         {
-          if (!g_atomic_int_compare_and_exchange (&object->ref_count, old_ref, old_ref - 1))
+          if (!g_atomic_int_compare_and_exchange ((gint *)&object->ref_count, old_ref, old_ref - 1))
 	    goto retry_atomic_decrement2;
 
           /* if we went from 2->1 we need to notify toggle refs if any */
@@ -1785,7 +1785,7 @@ g_object_unref (gpointer _object)
       g_datalist_id_set_data (&object->qdata, quark_weak_refs, NULL);
       
       /* decrement the last reference */
-      is_zero = g_atomic_int_dec_and_test (&object->ref_count);
+      is_zero = g_atomic_int_dec_and_test ((gint *)&object->ref_count);
       
       /* may have been re-referenced meanwhile */
       if (G_LIKELY (is_zero)) 

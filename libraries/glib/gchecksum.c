@@ -1204,7 +1204,7 @@ g_checksum_update (GChecksum    *checksum,
   g_return_if_fail (data != NULL);
 
   if (length < 0)
-    length = strlen (data);
+    length = strlen ((char *)data);
 
   if (checksum->digest_str)
     {
