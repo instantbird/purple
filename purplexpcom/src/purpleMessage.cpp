@@ -113,7 +113,7 @@ NS_IMETHODIMP purpleMessage::GetIconURL(nsACString& aUserIconURL)
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!isChat) {
-    nsCOMPtr<imIAccountBuddy> buddy;
+    nsCOMPtr<prplIAccountBuddy> buddy;
     rv = static_cast<purpleConvIM *>(conv)->GetBuddy(getter_AddRefs(buddy));
     NS_ENSURE_SUCCESS(rv, rv);
 

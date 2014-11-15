@@ -82,7 +82,7 @@ static void buddy_added(PurpleBuddy *aBuddy, void *null)
     do_GetService("@mozilla.org/chat/contacts-service;1");
   NS_ENSURE_TRUE(contacts, );
 
-  nsCOMPtr<imIAccountBuddy> accountBuddy =
+  nsCOMPtr<prplIAccountBuddy> accountBuddy =
     new purpleAccountBuddy(aBuddy);
   contacts->AccountBuddyAdded(accountBuddy);
 }

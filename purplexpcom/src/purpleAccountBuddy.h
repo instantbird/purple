@@ -22,11 +22,11 @@
 #define GET_NODE_UI_DATA(aNode)                                 \
   purple_blist_node_get_ui_data(PURPLE_BLIST_NODE(aNode))
 
-class purpleAccountBuddy MOZ_FINAL : public imIAccountBuddy
+class purpleAccountBuddy MOZ_FINAL : public prplIAccountBuddy
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_IMIACCOUNTBUDDY
+  NS_DECL_PRPLIACCOUNTBUDDY
   NS_DECL_IMISTATUSINFO
 
   purpleAccountBuddy(PurpleBuddy *aPurpleBuddy, imIBuddy *aBuddy = nullptr);

@@ -85,8 +85,8 @@ NS_IMETHODIMP purpleConvIM::SendMsg(const nsACString& aMsg)
   return NS_OK;
 }
 
-/* readonly attribute imIAccountBuddy buddy; */
-NS_IMETHODIMP purpleConvIM::GetBuddy(imIAccountBuddy * *aBuddy)
+/* readonly attribute prplIAccountBuddy buddy; */
+NS_IMETHODIMP purpleConvIM::GetBuddy(prplIAccountBuddy * *aBuddy)
 {
   NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
 
@@ -98,7 +98,7 @@ NS_IMETHODIMP purpleConvIM::GetBuddy(imIAccountBuddy * *aBuddy)
     return NS_OK;
   }
 
-  imIAccountBuddy *pab = purpleAccountBuddy::fromPurpleBuddy(buddy);
+  prplIAccountBuddy *pab = purpleAccountBuddy::fromPurpleBuddy(buddy);
   NS_ENSURE_TRUE(pab, NS_ERROR_NOT_INITIALIZED);
 
   NS_ADDREF(*aBuddy = pab);

@@ -522,10 +522,10 @@ NS_IMETHODIMP purpleAccount::AddBuddy(imITag *aTag,
   return NS_OK;
 }
 
-/* imIAccountBuddy LoadBuddy (in imIBuddy aBuddy, in imITag aTag); */
+/* prplIAccountBuddy LoadBuddy (in imIBuddy aBuddy, in imITag aTag); */
 NS_IMETHODIMP purpleAccount::LoadBuddy(imIBuddy *aBuddy,
                                        imITag *aTag,
-                                       imIAccountBuddy **aResult)
+                                       prplIAccountBuddy **aResult)
 {
   NS_ENSURE_ARG_POINTER(aBuddy);
   NS_ENSURE_ARG_POINTER(aTag);
@@ -551,7 +551,7 @@ NS_IMETHODIMP purpleAccount::LoadBuddy(imIBuddy *aBuddy,
   if (!displayName.Equals(userName))
     buddy->server_alias = purple_utf8_strip_unprintables(displayName.get());
 
-  nsCOMPtr<imIAccountBuddy> accountBuddy =
+  nsCOMPtr<prplIAccountBuddy> accountBuddy =
     new purpleAccountBuddy(buddy, aBuddy);
 
   int previous_blist_signals_handle_value = blist_signals_handle;
