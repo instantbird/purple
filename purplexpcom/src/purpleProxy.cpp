@@ -12,6 +12,7 @@
 //NS_IMPL_ISUPPORTS_CI(purpleProxy, purpleIProxy, purpleIProxyInfo)
 NS_IMPL_CLASSINFO(purpleProxy, NULL, 0, PURPLE_PROXY_CID)
 NS_INTERFACE_MAP_BEGIN(purpleProxy)
+  NS_INTERFACE_MAP_ENTRY(purpleIProxyInfo)
   NS_INTERFACE_MAP_ENTRY(purpleIProxy)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, purpleIProxy)
   NS_IMPL_QUERY_CLASSINFO(purpleProxy)
