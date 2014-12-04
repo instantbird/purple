@@ -761,7 +761,7 @@ msn_user_passport_cmp(MsnUser *user, const char *passport)
 	str = purple_normalize_nocase(NULL, msn_user_get_passport(user));
 	pass = g_strdup(str);
 
-#if 0
+#if GLIB_CHECK_VERSION(2,16,0)
 	result = g_strcmp0(pass, purple_normalize_nocase(NULL, passport));
 #else
 	str = purple_normalize_nocase(NULL, passport);
