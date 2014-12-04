@@ -17,7 +17,10 @@ latestversion() {
 }
 
 getfilename() {
-  echo -n pidgin-$1.tar.bz2
+  # echo is a built-in in some shells (e.g. zsh) and for some reason my zsh
+  # takes over no matter what I run it as. Ensure we run the one, true echo
+  # below.
+  /bin/echo -n pidgin-$1.tar.bz2
 }
 getversion() {
   if [ $1 = "latest" ]; then
@@ -27,7 +30,7 @@ getversion() {
     filename=`getfilename $1`
   fi
 
-  if [ ! -f cache/$filename ]; then
+  if [ ! -f "cache/$filename" ]; then
     mkcd cache
     wget http://downloads.sourceforge.net/pidgin/$filename
     cd -
