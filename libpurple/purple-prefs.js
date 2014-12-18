@@ -3,7 +3,6 @@ pref("plugins.prpl.oscar.recent_buddies", false);
 pref("purple.away.auto_reply", "awayidle");
 pref("purple.contact.last_match", false);
 pref("purple.conversations.chat.show_nick_change", true);
-pref("purple.conversations.im.send_typing", true);
 pref("purple.network.auto_ip", true);
 pref("purple.network.map_ports", true);
 pref("purple.network.ports_range_end", 2048);
