@@ -48,6 +48,7 @@ USE_LIBS += [
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     OS_LIBS += [
+        'dnsapi',
         'ws2_32',
     ]
 
