@@ -139,5 +139,10 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'win32/wpurpleerror.h',
     ]
 
+
+JS_PREFERENCE_FILES += [
+    'purple-prefs.js',
+]
+
 Library('purple')
 FINAL_LIBRARY = 'purplexpcom'
