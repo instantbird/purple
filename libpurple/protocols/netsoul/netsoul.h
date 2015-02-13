@@ -66,7 +66,7 @@
 #define NETSOUL_DEFAULT_LOCATION "maison"
 #define NETSOUL_DEFAULT_COMMENT "Netsoul in Instantbird is Funky!"
 
-#define NETSOUL_PHOTO_URL "http://www.epitech.net/intra/photo.php?login="
+#define NETSOUL_PHOTO_URL "http://cdn.epitech.net/userprofil/profilview/%s.jpg"
 
 #define NS_BUF_LEN 4096
 
