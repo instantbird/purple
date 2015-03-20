@@ -15,6 +15,7 @@ SOURCES += [
     'chat.c',
     'data.c',
     'disco.c',
+    'facebook_roster.c',
     'google/gmail.c',
     'google/google.c',
     'google/google_presence.c',

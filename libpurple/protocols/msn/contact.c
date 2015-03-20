@@ -96,7 +96,8 @@ msn_callback_state_free(MsnCallbackState *state)
 	g_free(state->old_group_name);
 	g_free(state->new_group_name);
 	g_free(state->guid);
-	xmlnode_free(state->body);
+	if (state->body)
+		xmlnode_free(state->body);
 
 	g_free(state);
 }
@@ -474,7 +475,7 @@ msn_parse_each_service(MsnSession *session, xmlnode *service)
 }
 
 /*parse contact list*/
-static void
+static gboolean
 msn_parse_contact_list(MsnSession *session, xmlnode *node)
 {
 	xmlnode *fault, *faultnode;
@@ -487,25 +488,28 @@ msn_parse_contact_list(MsnSession *session, xmlnode *node)
 	 * this is not handled yet
 	 */
 	if ((fault = xmlnode_get_child(node, "Body/Fault"))) {
-		if ((faultnode = xmlnode_get_child(fault, "faultstring"))) {
-			char *faultstring = xmlnode_get_data(faultnode);
-			purple_debug_info("msn", "Retrieving contact list failed: %s\n",
-				faultstring);
-			g_free(faultstring);
-		}
 		if ((faultnode = xmlnode_get_child(fault, "detail/errorcode"))) {
 			char *errorcode = xmlnode_get_data(faultnode);
 
 			if (g_str_equal(errorcode, "ABDoesNotExist")) {
 				msn_create_address_book(session);
 				g_free(errorcode);
-				return;
+				return FALSE;
 			}
 
 			g_free(errorcode);
 		}
 
-		msn_get_contact_list(session, MSN_PS_INITIAL, NULL);
+		if ((faultnode = xmlnode_get_child(fault, "faultstring"))) {
+			char *faultstring = xmlnode_get_data(faultnode);
+			purple_debug_info("msn", "Retrieving contact list failed: %s\n",
+				faultstring);
+			msn_session_set_error(session, MSN_ERROR_BAD_BLIST, faultstring);
+			g_free(faultstring);
+		} else {
+			msn_session_set_error(session, MSN_ERROR_BAD_BLIST, NULL);
+		}
+		return FALSE;
 	} else {
 		xmlnode *service;
 
@@ -514,6 +518,7 @@ msn_parse_contact_list(MsnSession *session, xmlnode *node)
 			 service; service = xmlnode_get_next_twin(service)) {
 			msn_parse_each_service(session, service);
 		}
+		return TRUE;
 	}
 }
 
@@ -534,23 +539,24 @@ msn_get_contact_list_cb(MsnSoapMessage *req, MsnSoapMessage *resp,
 
 		purple_debug_misc("msn", "Got the contact list!\n");
 
-		msn_parse_contact_list(session, resp->xml);
+		if (msn_parse_contact_list(session, resp->xml)) {
 #ifdef MSN_PARTIAL_LISTS
-		abLastChange = purple_account_get_string(session->account,
-			"ablastChange", NULL);
-		dynamicItemLastChange = purple_account_get_string(session->account,
-			"DynamicItemLastChanged", NULL);
+			abLastChange = purple_account_get_string(session->account,
+				"ablastChange", NULL);
+			dynamicItemLastChange = purple_account_get_string(session->account,
+				"DynamicItemLastChanged", NULL);
 #endif
 
-		if (state->partner_scenario == MSN_PS_INITIAL) {
+			if (state->partner_scenario == MSN_PS_INITIAL) {
 #ifdef MSN_PARTIAL_LISTS
-			/* XXX: this should be enabled when we can correctly do partial
-			   syncs with the server. Currently we need to retrieve the whole
-			   list to detect sync issues */
-			msn_get_address_book(session, MSN_PS_INITIAL, abLastChange, dynamicItemLastChange);
+				/* XXX: this should be enabled when we can correctly do partial
+				   syncs with the server. Currently we need to retrieve the whole
+				   list to detect sync issues */
+				msn_get_address_book(session, MSN_PS_INITIAL, abLastChange, dynamicItemLastChange);
 #else
-			msn_get_address_book(session, MSN_PS_INITIAL, NULL, NULL);
+				msn_get_address_book(session, MSN_PS_INITIAL, NULL, NULL);
 #endif
+			}
 		}
 	}
 }
@@ -1691,6 +1697,7 @@ msn_del_contact_from_list(MsnSession *session, MsnCallbackState *state,
 	msn_callback_state_set_who(state, passport);
 
 	user = msn_userlist_find_user(session->userlist, passport);
+	g_return_if_fail(user != NULL);
 
 	if (list == MSN_LIST_PL) {
 		partner_scenario = MSN_PS_CONTACT_API;

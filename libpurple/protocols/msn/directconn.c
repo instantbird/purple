@@ -51,6 +51,9 @@ msn_dc_calculate_nonce_hash(MsnDirectConnNonceType type,
 		purple_cipher_context_destroy(context);
 	} else if (type == DC_NONCE_PLAIN) {
 		memcpy(digest, nonce, nonce_len);
+	} else {
+		nonce_hash[0] = '\0';
+		g_return_if_reached();
 	}
 
 	g_sprintf(nonce_hash,
@@ -403,7 +406,7 @@ msn_dc_send_cb(gpointer data, gint fd, PurpleInputCondition cond)
 	dc->progress = TRUE;
 
 	dc->msg_pos += bytes_sent;
-	if (dc->msg_pos == p->length) {
+	if ((guint32)dc->msg_pos == p->length) {
 		if (p->sent_cb != NULL)
 			p->sent_cb(p);
 
@@ -593,7 +596,9 @@ msn_dc_process_packet(MsnDirectConn *dc, guint32 packet_length)
 
 	case DC_STATE_ESTABLISHED:
 		if (packet_length) {
-			part = msn_slpmsgpart_new_from_data(dc->in_buffer + 4, packet_length);
+			MsnP2PVersion p2p;
+			p2p = msn_slplink_get_p2p_version(dc->slplink);
+			part = msn_slpmsgpart_new_from_data(p2p, dc->in_buffer + 4, packet_length);
 			if (part) {
 				msn_slplink_process_msg(dc->slplink, part);
 				msn_slpmsgpart_unref(part);
@@ -666,7 +671,7 @@ msn_dc_recv_cb(gpointer data, gint fd, PurpleInputCondition cond)
 		}
 
 		/* Wait for the whole packet to arrive */
-		if (dc->in_pos < 4 + packet_length)
+		if ((guint32)dc->in_pos < 4 + packet_length)
 			return;
 
 		switch (msn_dc_process_packet(dc, packet_length)) {
@@ -680,7 +685,7 @@ msn_dc_recv_cb(gpointer data, gint fd, PurpleInputCondition cond)
 
 		}
 
-		if (dc->in_pos > packet_length + 4) {
+		if ((guint32)dc->in_pos > packet_length + 4) {
 			g_memmove(dc->in_buffer, dc->in_buffer + 4 + packet_length, dc->in_pos - packet_length - 4);
 		}
 

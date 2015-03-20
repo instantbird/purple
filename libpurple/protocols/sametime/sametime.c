@@ -1331,13 +1331,11 @@ static void blist_menu_nab(PurpleBlistNode *node, gpointer data) {
 static void blist_node_menu_cb(PurpleBlistNode *node,
                                GList **menu, struct mwPurplePluginData *pd) {
   const char *owner;
-  PurpleGroup *group;
   PurpleAccount *acct;
   PurpleMenuAction *act;
 
   /* we only want groups */
   if(! PURPLE_BLIST_NODE_IS_GROUP(node)) return;
-  group = (PurpleGroup *) node;
 
   acct = purple_connection_get_account(pd->gc);
   g_return_if_fail(acct != NULL);
@@ -1558,6 +1556,7 @@ static void mw_session_stateChange(struct mwSession *session,
   case mwSession_LOGIN_CONT:
     msg = _("Forcing Login");
     purple_connection_update_progress(gc, msg, 7, MW_CONNECT_STEPS);
+    break;
 
   case mwSession_LOGIN_ACK:
     msg = _("Login Acknowledged");
@@ -2021,20 +2020,11 @@ static void mw_conf_closed(struct mwConference *conf, guint32 reason) {
 static void mw_conf_peer_joined(struct mwConference *conf,
 				struct mwLoginInfo *peer) {
 
-  struct mwServiceConference *srvc;
-  struct mwSession *session;
-  struct mwPurplePluginData *pd;
-  PurpleConnection *gc;
   PurpleConvChat *g_conf;
 
   const char *n = mwConference_getName(conf);
 
   DEBUG_INFO("%s joined conf %s\n", NSTR(peer->user_id), NSTR(n));
-
-  srvc = mwConference_getService(conf);
-  session = mwService_getSession(MW_SERVICE(srvc));
-  pd = mwSession_getClientData(session);
-  gc = pd->gc;
 
   g_conf = mwConference_getClientData(conf);
   g_return_if_fail(g_conf != NULL);
@@ -2047,20 +2037,11 @@ static void mw_conf_peer_joined(struct mwConference *conf,
 static void mw_conf_peer_parted(struct mwConference *conf,
 				struct mwLoginInfo *peer) {
 
-  struct mwServiceConference *srvc;
-  struct mwSession *session;
-  struct mwPurplePluginData *pd;
-  PurpleConnection *gc;
   PurpleConvChat *g_conf;
 
   const char *n = mwConference_getName(conf);
 
   DEBUG_INFO("%s left conf %s\n", NSTR(peer->user_id), NSTR(n));
-
-  srvc = mwConference_getService(conf);
-  session = mwService_getSession(MW_SERVICE(srvc));
-  pd = mwSession_getClientData(session);
-  gc = pd->gc;
 
   g_conf = mwConference_getClientData(conf);
   g_return_if_fail(g_conf != NULL);
@@ -2227,7 +2208,7 @@ static void ft_send(struct mwFileTransfer *ft, FILE *fp) {
   rem = mwFileTransfer_getRemaining(ft);
   if(rem < MW_FT_LEN) o.len = rem;
 
-  if(fread(buf, (size_t) o.len, 1, fp)) {
+  if (fread(buf, (size_t)o.len, 1, fp) == 1) {
 
     /* calculate progress and display it */
     xfer->bytes_sent += o.len;
@@ -2264,7 +2245,8 @@ static void mw_ft_opened(struct mwFileTransfer *ft) {
 
   if(purple_xfer_get_type(xfer) == PURPLE_XFER_SEND) {
     xfer->dest_fp = g_fopen(xfer->local_filename, "rb");
-    ft_send(ft, xfer->dest_fp);
+    if (xfer->dest_fp)
+      ft_send(ft, xfer->dest_fp);
   }
 }
 
@@ -3041,20 +3023,11 @@ static void mw_place_closed(struct mwPlace *place, guint32 code) {
 
 static void mw_place_peerJoined(struct mwPlace *place,
 				const struct mwIdBlock *peer) {
-  struct mwServicePlace *srvc;
-  struct mwSession *session;
-  struct mwPurplePluginData *pd;
-  PurpleConnection *gc;
   PurpleConversation *gconf;
 
   const char *n = mwPlace_getName(place);
 
   DEBUG_INFO("%s joined place %s\n", NSTR(peer->user), NSTR(n));
-
-  srvc = mwPlace_getService(place);
-  session = mwService_getSession(MW_SERVICE(srvc));
-  pd = mwSession_getClientData(session);
-  gc = pd->gc;
 
   gconf = mwPlace_getClientData(place);
   g_return_if_fail(gconf != NULL);
@@ -3066,20 +3039,11 @@ static void mw_place_peerJoined(struct mwPlace *place,
 
 static void mw_place_peerParted(struct mwPlace *place,
 				const struct mwIdBlock *peer) {
-  struct mwServicePlace *srvc;
-  struct mwSession *session;
-  struct mwPurplePluginData *pd;
-  PurpleConnection *gc;
   PurpleConversation *gconf;
 
   const char *n = mwPlace_getName(place);
 
   DEBUG_INFO("%s left place %s\n", NSTR(peer->user), NSTR(n));
-
-  srvc = mwPlace_getService(place);
-  session = mwService_getSession(MW_SERVICE(srvc));
-  pd = mwSession_getClientData(session);
-  gc = pd->gc;
 
   gconf = mwPlace_getClientData(place);
   g_return_if_fail(gconf != NULL);

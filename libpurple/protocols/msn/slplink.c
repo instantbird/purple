@@ -79,6 +79,7 @@ msn_slplink_new(MsnSession *session, const char *username)
 	slplink->slp_seq_id = rand() % 0xFFFFFF00 + 4;
 
 	slplink->remote_user = g_strdup(username);
+	slplink->p2p_version = MSN_P2P_VERSION_ONE;
 
 	slplink->slp_msg_queue = g_queue_new();
 
@@ -264,6 +265,12 @@ msn_slplink_find_slp_call_with_session_id(MsnSlpLink *slplink, long id)
 	return NULL;
 }
 
+MsnP2PVersion
+msn_slplink_get_p2p_version(MsnSlpLink *slplink)
+{
+	return slplink->p2p_version;
+}
+
 static void
 msn_slplink_send_part(MsnSlpLink *slplink, MsnSlpMessagePart *part)
 {
@@ -282,7 +289,7 @@ msn_slplink_send_msgpart(MsnSlpLink *slplink, MsnSlpMessage *slpmsg)
 {
 	MsnSlpMessagePart *part;
 	MsnP2PInfo *info;
-	long long real_size;
+	gsize real_size;
 	size_t len = 0;
 	guint64 offset;
 
@@ -292,7 +299,7 @@ msn_slplink_send_msgpart(MsnSlpLink *slplink, MsnSlpMessage *slpmsg)
 	part = msn_slpmsgpart_new(msn_p2p_info_dup(info));
 	part->ack_data = slpmsg;
 
-	real_size = (msn_p2p_info_get_flags(info) == P2P_ACK) ? 0 : slpmsg->size;
+	real_size = msn_p2p_info_is_ack(info) ? 0 : slpmsg->size;
 
 	offset = msn_p2p_info_get_offset(info);
 	if (offset < real_size)
@@ -330,15 +337,14 @@ msn_slplink_send_msgpart(MsnSlpLink *slplink, MsnSlpMessage *slpmsg)
 	msn_slplink_send_part(slplink, part);
 
 
-	if (msn_p2p_msg_is_data(msn_p2p_info_get_flags(info)) &&
-		(slpmsg->slpcall != NULL))
+	if (msn_p2p_msg_is_data(info) && slpmsg->slpcall != NULL)
 	{
 		slpmsg->slpcall->progress = TRUE;
 
 		if (slpmsg->slpcall->progress_cb != NULL)
 		{
 			slpmsg->slpcall->progress_cb(slpmsg->slpcall, slpmsg->size,
-										 len, offset);
+										 len);
 		}
 	}
 
@@ -358,7 +364,7 @@ msn_slplink_release_slpmsg(MsnSlpLink *slplink, MsnSlpMessage *slpmsg)
 	{
 		msn_p2p_info_set_ack_id(info, rand() % 0xFFFFFF00);
 	}
-	else if (msn_p2p_msg_is_data(flags))
+	else if (msn_p2p_msg_is_data(info))
 	{
 		MsnSlpCall *slpcall;
 		slpcall = slpmsg->slpcall;
@@ -406,28 +412,17 @@ msn_slplink_send_queued_slpmsgs(MsnSlpLink *slplink)
 	}
 }
 
-static MsnSlpMessage *
-msn_slplink_create_ack(MsnSlpLink *slplink, MsnP2PInfo *info)
-{
-	MsnSlpMessage *slpmsg;
-
-	slpmsg = msn_slpmsg_ack_new(info);
-	msn_slpmsg_set_slplink(slpmsg, slplink);
-
-	return slpmsg;
-}
-
 static void
 msn_slplink_send_ack(MsnSlpLink *slplink, MsnP2PInfo *info)
 {
-	MsnSlpMessage *slpmsg = msn_slplink_create_ack(slplink, info);
+	MsnSlpMessage *slpmsg = msn_slpmsg_ack_new(slplink, info);
 
 	msn_slplink_send_slpmsg(slplink, slpmsg);
 	msn_slpmsg_destroy(slpmsg);
 }
 
 static MsnSlpMessage *
-msn_slplink_message_find(MsnSlpLink *slplink, long session_id, long id)
+msn_slplink_message_find(MsnSlpLink *slplink, guint32 session_id, long id)
 {
 	GList *e;
 
@@ -447,22 +442,19 @@ init_first_msg(MsnSlpLink *slplink, MsnP2PInfo *info)
 {
 	MsnSlpMessage *slpmsg;
 	guint32 session_id;
-	guint32 flags;
 
-	slpmsg = msn_slpmsg_new(slplink);
+	slpmsg = msn_slpmsg_new(slplink, NULL);
 	slpmsg->id = msn_p2p_info_get_id(info);
 	session_id = msn_p2p_info_get_session_id(info);
-	msn_p2p_info_set_session_id(slpmsg->p2p_info, session_id);
 	slpmsg->size = msn_p2p_info_get_total_size(info);
-	flags = msn_p2p_info_get_flags(info);
-	msn_p2p_info_set_flags(slpmsg->p2p_info, flags);
+	msn_p2p_info_init_first(slpmsg->p2p_info, info);
 
 	if (session_id)
 	{
 		slpmsg->slpcall = msn_slplink_find_slp_call_with_session_id(slplink, session_id);
 		if (slpmsg->slpcall != NULL)
 		{
-			if (msn_p2p_msg_is_data(flags))
+			if (msn_p2p_msg_is_data(info))
 			{
 				PurpleXfer *xfer = slpmsg->slpcall->xfer;
 				if (xfer != NULL)
@@ -502,7 +494,6 @@ static void
 process_complete_msg(MsnSlpLink *slplink, MsnSlpMessage *slpmsg, MsnP2PInfo *info)
 {
 	MsnSlpCall *slpcall;
-	guint32 flags;
 
 	slpcall = msn_slp_process_msg(slplink, slpmsg);
 
@@ -513,10 +504,7 @@ process_complete_msg(MsnSlpLink *slplink, MsnSlpMessage *slpmsg, MsnP2PInfo *inf
 
 	purple_debug_info("msn", "msn_slplink_process_msg: slpmsg complete\n");
 
-	flags = msn_p2p_info_get_flags(slpmsg->p2p_info);
-
-	if (flags == P2P_NO_FLAG || flags == P2P_WLM2009_COMP ||
-	    msn_p2p_msg_is_data(flags))
+	if (msn_p2p_info_require_ack(slpmsg->p2p_info))
 	{
 		/* Release all the messages and send the ACK */
 
@@ -529,7 +517,7 @@ process_complete_msg(MsnSlpLink *slplink, MsnSlpMessage *slpmsg, MsnP2PInfo *inf
 			 */
 			purple_debug_info("msn", "msn_slplink_process_msg: save ACK\n");
 
-			slpcall->slplink->dc->prev_ack = msn_slplink_create_ack(slplink, info);
+			slpcall->slplink->dc->prev_ack = msn_slpmsg_ack_new(slplink, info);
 		} else if (!slpcall->wasted) {
 			purple_debug_info("msn", "msn_slplink_process_msg: send ACK\n");
 
@@ -558,8 +546,8 @@ slpmsg_add_part(MsnSlpMessage *slpmsg, MsnSlpMessagePart *part)
 				|| (offset + part->size) > slpmsg->size
 				|| msn_p2p_info_get_offset(slpmsg->p2p_info) != offset) {
 			purple_debug_error("msn",
-				"Oversized slpmsg - msgsize=%lld offset=%" G_GUINT64_FORMAT " len=%" G_GSIZE_FORMAT "\n",
-				slpmsg->size, offset, part->size);
+				"Oversized slpmsg - msgsize=%" G_GSIZE_FORMAT " offset=%" G_GUINT64_FORMAT " len=%" G_GSIZE_FORMAT "\n",
+				(gsize)slpmsg->size, offset, (gsize)part->size);
 			g_return_if_reached();
 		} else {
 			memcpy(slpmsg->buffer + offset, part->buffer, part->size);
@@ -573,7 +561,6 @@ msn_slplink_process_msg(MsnSlpLink *slplink, MsnSlpMessagePart *part)
 {
 	MsnSlpMessage *slpmsg;
 	MsnP2PInfo *info;
-	guint64 offset;
 
 	info = part->info;
 
@@ -586,9 +573,7 @@ msn_slplink_process_msg(MsnSlpLink *slplink, MsnSlpMessagePart *part)
 		return;
 	}
 
-	offset = msn_p2p_info_get_offset(info);
-
-	if (offset == 0)
+	if (msn_p2p_info_is_first(info))
 		slpmsg = init_first_msg(slplink, info);
 	else {
 		guint32 session_id, id;
@@ -605,15 +590,14 @@ msn_slplink_process_msg(MsnSlpLink *slplink, MsnSlpMessagePart *part)
 
 	slpmsg_add_part(slpmsg, part);
 
-	if (msn_p2p_msg_is_data(msn_p2p_info_get_flags(slpmsg->p2p_info)) &&
-		(slpmsg->slpcall != NULL))
+	if (msn_p2p_msg_is_data(slpmsg->p2p_info) && slpmsg->slpcall != NULL)
 	{
 		slpmsg->slpcall->progress = TRUE;
 
 		if (slpmsg->slpcall->progress_cb != NULL)
 		{
 			slpmsg->slpcall->progress_cb(slpmsg->slpcall, slpmsg->size,
-										 part->size, offset);
+										 part->size);
 		}
 	}
 

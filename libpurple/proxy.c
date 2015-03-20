@@ -744,8 +744,6 @@ clean_connect(gpointer data)
 static void
 proxy_connect_udp_none(PurpleProxyConnectData *connect_data, struct sockaddr *addr, socklen_t addrlen)
 {
-	int flags;
-
 	purple_debug_info("proxy", "UDP Connecting to %s:%d with no proxy\n",
 			connect_data->host, connect_data->port);
 
@@ -756,12 +754,7 @@ proxy_connect_udp_none(PurpleProxyConnectData *connect_data, struct sockaddr *ad
 				_("Unable to create socket: %s"), g_strerror(errno));
 		return;
 	}
-
-	flags = fcntl(connect_data->fd, F_GETFL);
-	fcntl(connect_data->fd, F_SETFL, flags | O_NONBLOCK);
-#ifndef _WIN32
-	fcntl(connect_data->fd, F_SETFD, FD_CLOEXEC);
-#endif
+	_purple_network_set_common_socket_flags(connect_data->fd);
 
 	if (connect(connect_data->fd, addr, addrlen) != 0)
 	{
@@ -806,8 +799,6 @@ proxy_connect_udp_none(PurpleProxyConnectData *connect_data, struct sockaddr *ad
 static void
 proxy_connect_none(PurpleProxyConnectData *connect_data, struct sockaddr *addr, socklen_t addrlen)
 {
-	int flags;
-
 	purple_debug_info("proxy", "Connecting to %s:%d with no proxy\n",
 			connect_data->host, connect_data->port);
 
@@ -818,12 +809,7 @@ proxy_connect_none(PurpleProxyConnectData *connect_data, struct sockaddr *addr, 
 				_("Unable to create socket: %s"), g_strerror(errno));
 		return;
 	}
-
-	flags = fcntl(connect_data->fd, F_GETFL);
-	fcntl(connect_data->fd, F_SETFL, flags | O_NONBLOCK);
-#ifndef _WIN32
-	fcntl(connect_data->fd, F_SETFD, FD_CLOEXEC);
-#endif
+	_purple_network_set_common_socket_flags(connect_data->fd);
 
 	if (connect(connect_data->fd, addr, addrlen) != 0)
 	{
@@ -894,7 +880,7 @@ proxy_do_write(gpointer data, gint source, PurpleInputCondition cond)
 		purple_proxy_connect_data_disconnect(connect_data, g_strerror(errno));
 		return;
 	}
-	if (ret < request_len) {
+	if ((gsize)ret < request_len) {
 		connect_data->written_len += ret;
 		return;
 	}
@@ -959,7 +945,7 @@ http_canread(gpointer data, gint source, PurpleInputCondition cond)
 	if (p != NULL) {
 		*p = '\0';
 		headers_len = (p - (char *)connect_data->read_buffer) + 4;
-	} else if(len == max_read)
+	} else if((gsize)len == max_read)
 		headers_len = len;
 	else
 		return;
@@ -979,6 +965,7 @@ http_canread(gpointer data, gint source, PurpleInputCondition cond)
 				p++;
 				status = strtol(p, &p, 10);
 				error = (*p != ' ');
+				(void)minor; /* we don't need its value */
 			}
 		}
 	}
@@ -1256,8 +1243,6 @@ http_canwrite(gpointer data, gint source, PurpleInputCondition cond) {
 static void
 proxy_connect_http(PurpleProxyConnectData *connect_data, struct sockaddr *addr, socklen_t addrlen)
 {
-	int flags;
-
 	purple_debug_info("proxy",
 			   "Connecting to %s:%d via %s:%d using HTTP\n",
 			   connect_data->host, connect_data->port,
@@ -1271,12 +1256,7 @@ proxy_connect_http(PurpleProxyConnectData *connect_data, struct sockaddr *addr, 
 				_("Unable to create socket: %s"), g_strerror(errno));
 		return;
 	}
-
-	flags = fcntl(connect_data->fd, F_GETFL);
-	fcntl(connect_data->fd, F_SETFL, flags | O_NONBLOCK);
-#ifndef _WIN32
-	fcntl(connect_data->fd, F_SETFD, FD_CLOEXEC);
-#endif
+	_purple_network_set_common_socket_flags(connect_data->fd);
 
 	if (connect(connect_data->fd, addr, addrlen) != 0) {
 		if (errno == EINPROGRESS || errno == EINTR) {
@@ -1450,8 +1430,6 @@ s4_canwrite(gpointer data, gint source, PurpleInputCondition cond)
 static void
 proxy_connect_socks4(PurpleProxyConnectData *connect_data, struct sockaddr *addr, socklen_t addrlen)
 {
-	int flags;
-
 	purple_debug_info("proxy",
 			   "Connecting to %s:%d via %s:%d using SOCKS4\n",
 			   connect_data->host, connect_data->port,
@@ -1465,12 +1443,7 @@ proxy_connect_socks4(PurpleProxyConnectData *connect_data, struct sockaddr *addr
 				_("Unable to create socket: %s"), g_strerror(errno));
 		return;
 	}
-
-	flags = fcntl(connect_data->fd, F_GETFL);
-	fcntl(connect_data->fd, F_SETFL, flags | O_NONBLOCK);
-#ifndef _WIN32
-	fcntl(connect_data->fd, F_SETFD, FD_CLOEXEC);
-#endif
+	_purple_network_set_common_socket_flags(connect_data->fd);
 
 	if (connect(connect_data->fd, addr, addrlen) != 0)
 	{
@@ -1494,7 +1467,7 @@ proxy_connect_socks4(PurpleProxyConnectData *connect_data, struct sockaddr *addr
 }
 
 static gboolean
-s5_ensure_buffer_length(PurpleProxyConnectData *connect_data, int len)
+s5_ensure_buffer_length(PurpleProxyConnectData *connect_data, guint len)
 {
 	if(connect_data->read_len < len) {
 		if(connect_data->read_buf_len < len) {
@@ -1749,6 +1722,11 @@ s5_parse_chap_msg(PurpleProxyConnectData *connect_data)
 	navas = *cmdbuf;
 
 	purple_debug_misc("socks5 proxy", "Expecting %d attribute(s).\n", navas);
+	if (G_UNLIKELY(navas < 0 || navas > 10000)) { /* XXX: what's the threshold? */
+		purple_proxy_connect_data_disconnect(connect_data,
+			_("Received invalid data on connection with server"));
+		return -1;
+	}
 
 	cmdbuf++;
 
@@ -2110,8 +2088,6 @@ s5_canwrite(gpointer data, gint source, PurpleInputCondition cond)
 static void
 proxy_connect_socks5(PurpleProxyConnectData *connect_data, struct sockaddr *addr, socklen_t addrlen)
 {
-	int flags;
-
 	purple_debug_info("proxy",
 			   "Connecting to %s:%d via %s:%d using SOCKS5\n",
 			   connect_data->host, connect_data->port,
@@ -2125,12 +2101,7 @@ proxy_connect_socks5(PurpleProxyConnectData *connect_data, struct sockaddr *addr
 				_("Unable to create socket: %s"), g_strerror(errno));
 		return;
 	}
-
-	flags = fcntl(connect_data->fd, F_GETFL);
-	fcntl(connect_data->fd, F_SETFL, flags | O_NONBLOCK);
-#ifndef _WIN32
-	fcntl(connect_data->fd, F_SETFD, FD_CLOEXEC);
-#endif
+	_purple_network_set_common_socket_flags(connect_data->fd);
 
 	if (connect(connect_data->fd, addr, addrlen) != 0)
 	{

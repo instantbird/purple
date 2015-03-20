@@ -539,7 +539,7 @@ msn_show_locations(PurplePluginAction *action)
 	for (l = session->user->endpoints; l; l = l->next) {
 		MsnUserEndpoint *ep = l->data;
 
-		if (ep->id[0] != '\0' && g_ascii_strncasecmp(ep->id + 1, session->guid, 36) == 0)
+		if (ep->id[0] != '\0' && strncasecmp(ep->id + 1, session->guid, 36) == 0)
 			/* Don't add myself to the list */
 			continue;
 
@@ -608,7 +608,7 @@ disable_mpop_cb(PurpleConnection *pc)
 		MsnUserEndpoint *ep = l->data;
 		char *user;
 
-		if (ep->id[0] != '\0' && g_ascii_strncasecmp(ep->id + 1, session->guid, 36) == 0)
+		if (ep->id[0] != '\0' && strncasecmp(ep->id + 1, session->guid, 36) == 0)
 			/* Don't kick myself */
 			continue;
 
@@ -1582,7 +1582,6 @@ msn_send_im(PurpleConnection *gc, const char *who, const char *message,
 	g_free(msgformat);
 	g_free(msgtext);
 
-	purple_debug_info("msn", "prepare to send online Message\n");
 	if (g_ascii_strcasecmp(who, username))
 	{
 		if (flags & PURPLE_MESSAGE_AUTO_RESP) {
@@ -1591,7 +1590,7 @@ msn_send_im(PurpleConnection *gc, const char *who, const char *message,
 
 		if (msn_user_is_yahoo(account, who) || !(msn_user_is_online(account, who) || swboard != NULL)) {
 			/*we send the online and offline Message to Yahoo User via UBM*/
-			purple_debug_info("msn", "send to Yahoo User\n");
+			purple_debug_info("msn", "send to offline or Yahoo user\n");
 			msn_notification_send_uum(session, msg);
 		} else {
 			purple_debug_info("msn", "send via switchboard\n");
@@ -3038,6 +3037,11 @@ init_plugin(PurplePlugin *plugin)
 
 	option = purple_account_option_string_new(_("HTTP Method Server"),
 										  "http_method_server", MSN_HTTPCONN_SERVER);
+	prpl_info.protocol_options = g_list_append(prpl_info.protocol_options,
+											   option);
+
+	option = purple_account_option_bool_new(_("Show custom smileys"),
+										  "custom_smileys", TRUE);
 	prpl_info.protocol_options = g_list_append(prpl_info.protocol_options,
 											   option);
 

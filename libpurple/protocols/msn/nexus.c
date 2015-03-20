@@ -26,6 +26,7 @@
 #include "cipher.h"
 #include "debug.h"
 
+#include "msnutils.h"
 #include "soap.h"
 #include "nexus.h"
 #include "notification.h"
@@ -55,7 +56,7 @@ MsnNexus *
 msn_nexus_new(MsnSession *session)
 {
 	MsnNexus *nexus;
-	int i;
+	gsize i;
 
 	nexus = g_new0(MsnNexus, 1);
 	nexus->session = session;
@@ -73,7 +74,7 @@ msn_nexus_new(MsnSession *session)
 void
 msn_nexus_destroy(MsnNexus *nexus)
 {
-	int i;
+	gsize i;
 	for (i = 0; i < nexus->token_len; i++) {
 		g_hash_table_destroy(nexus->tokens[i].token);
 		g_free(nexus->tokens[i].secret);
@@ -164,41 +165,45 @@ des3_cbc(const char *key, const char *iv, const char *data, int len, gboolean de
 	return out;
 }
 
+#define MSN_USER_KEY_SIZE (7*4 + 8 + 20 + 72)
 #define CRYPT_MODE_CBC 1
 #define CIPHER_TRIPLE_DES 0x6603
 #define HASH_SHA1 0x8004
 static char *
 msn_rps_encrypt(MsnNexus *nexus)
 {
-	MsnUsrKey *usr_key;
+	char usr_key_base[MSN_USER_KEY_SIZE], *usr_key;
 	const char magic1[] = "SESSION KEY HASH";
 	const char magic2[] = "SESSION KEY ENCRYPTION";
 	PurpleCipherContext *hmac;
 	size_t len;
-	guchar hash[20];
+	guchar *hash;
 	char *key1, *key2, *key3;
 	gsize key1_len;
-	int *iv;
+	const char *iv;
 	char *nonce_fixed;
 	char *cipher;
 	char *response;
 
-	usr_key = g_malloc(sizeof(MsnUsrKey));
-	usr_key->size = GUINT32_TO_LE(28);
-	usr_key->crypt_mode = GUINT32_TO_LE(CRYPT_MODE_CBC);
-	usr_key->cipher_type = GUINT32_TO_LE(CIPHER_TRIPLE_DES);
-	usr_key->hash_type = GUINT32_TO_LE(HASH_SHA1);
-	usr_key->iv_len = GUINT32_TO_LE(8);
-	usr_key->hash_len = GUINT32_TO_LE(20);
-	usr_key->cipher_len = GUINT32_TO_LE(72);
+	usr_key = &usr_key_base[0];
+	/* Header */
+	msn_push32le(usr_key, 28);                  /* Header size */
+	msn_push32le(usr_key, CRYPT_MODE_CBC);      /* Crypt mode */
+	msn_push32le(usr_key, CIPHER_TRIPLE_DES);   /* Cipher type */
+	msn_push32le(usr_key, HASH_SHA1);           /* Hash type */
+	msn_push32le(usr_key, 8);                   /* IV size */
+	msn_push32le(usr_key, 20);                  /* Hash size */
+	msn_push32le(usr_key, 72);                  /* Cipher size */
+	/* Data */
+	iv = usr_key;
+	msn_push32le(usr_key, rand());
+	msn_push32le(usr_key, rand());
+	hash = (guchar *)usr_key;
+	usr_key += 20;  /* Remaining is cipher data */
 
 	key1 = (char *)purple_base64_decode((const char *)nexus->tokens[MSN_AUTH_MESSENGER].secret, &key1_len);
 	key2 = rps_create_key(key1, key1_len, magic1, sizeof(magic1) - 1);
 	key3 = rps_create_key(key1, key1_len, magic2, sizeof(magic2) - 1);
-
-	iv = (int *)usr_key->iv;
-	iv[0] = rand();
-	iv[1] = rand();
 
 	len = strlen(nexus->nonce);
 	hmac = purple_cipher_context_new_by_name("hmac", NULL);
@@ -212,20 +217,17 @@ msn_rps_encrypt(MsnNexus *nexus)
 	nonce_fixed = g_malloc(len + 8);
 	memcpy(nonce_fixed, nexus->nonce, len);
 	memset(nonce_fixed + len, 0x08, 8);
-	cipher = des3_cbc(key3, usr_key->iv, nonce_fixed, len + 8, FALSE);
+	cipher = des3_cbc(key3, iv, nonce_fixed, len + 8, FALSE);
 	g_free(nonce_fixed);
 
-	memcpy(usr_key->hash, hash, 20);
-	memcpy(usr_key->cipher, cipher, 72);
+	memcpy(usr_key, cipher, 72);
 
 	g_free(key1);
 	g_free(key2);
 	g_free(key3);
 	g_free(cipher);
 
-	response = purple_base64_encode((guchar *)usr_key, sizeof(MsnUsrKey));
-
-	g_free(usr_key);
+	response = purple_base64_encode((guchar *)usr_key_base, MSN_USER_KEY_SIZE);
 
 	return response;
 }
@@ -267,7 +269,7 @@ nexus_parse_token(MsnNexus *nexus, int id, xmlnode *node)
 			return FALSE;
 
 		id = atol(id_str + 7) - 1;	/* 'Compact#' or 'PPToken#' */
-		if (id >= nexus->token_len)
+		if (id < 0 || (gsize)id >= nexus->token_len)
 			return FALSE;	/* Where did this come from? */
 	}
 
@@ -379,7 +381,7 @@ msn_nexus_connect(MsnNexus *nexus)
 	char *password_xml;
 	GString *domains;
 	char *request;
-	int i;
+	gsize i;
 
 	MsnSoapMessage *soap;
 
@@ -403,7 +405,7 @@ msn_nexus_connect(MsnNexus *nexus)
 	domains = g_string_new(NULL);
 	for (i = 0; i < nexus->token_len; i++) {
 		g_string_append_printf(domains, MSN_SSO_RST_TEMPLATE,
-		                       i+1,
+		                       (int)i+1,
 		                       ticket_domains[i][SSO_VALID_TICKET_DOMAIN],
 		                       ticket_domains[i][SSO_VALID_TICKET_POLICY] != NULL ?
 		                           ticket_domains[i][SSO_VALID_TICKET_POLICY] :

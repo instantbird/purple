@@ -13,17 +13,28 @@ SOURCES += [
     'lib/debug.c',
     'lib/deflate.c',
     'lib/encoding.c',
+    'lib/endian.c',
     'lib/events.c',
     'lib/handlers.c',
     'lib/http.c',
     'lib/libgadu.c',
     'lib/message.c',
+    'lib/network.c',
     'lib/obsolete.c',
+    'lib/packets.pb-c.c',
+    'lib/protobuf-c.c',
+    'lib/protobuf.c',
     'lib/pubdir.c',
     'lib/pubdir50.c',
     'lib/resolver.c',
     'lib/sha1.c',
+    'lib/tvbuff.c',
+    'lib/tvbuilder.c',
     'search.c',
+]
+
+USE_LIBS += [
+    'zlib',
 ]
 
 protocol = 'gg'

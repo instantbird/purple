@@ -263,8 +263,10 @@ msn_session_get_swboard(MsnSession *session, const char *username,
 	{
 		swboard = msn_switchboard_new(session);
 		swboard->im_user = g_strdup(username);
-		msn_switchboard_request(swboard);
-		msn_switchboard_request_add_user(swboard, username);
+		if (msn_switchboard_request(swboard))
+			msn_switchboard_request_add_user(swboard, username);
+		else
+			return NULL;
 	}
 
 	swboard->flag |= flag;
@@ -288,6 +290,8 @@ void
 msn_session_activate_login_timeout(MsnSession *session)
 {
 	if (!session->logged_in && session->connected) {
+		if (session->login_timeout)
+			purple_timeout_remove(session->login_timeout);
 		session->login_timeout =
 			purple_timeout_add_seconds(MSN_LOGIN_FQY_TIMEOUT,
 			                           msn_login_timeout_cb, session);
@@ -404,9 +408,9 @@ msn_session_set_error(MsnSession *session, MsnErrorType error,
 			break;
 		case MSN_ERROR_BAD_BLIST:
 			reason = PURPLE_CONNECTION_ERROR_NETWORK_ERROR;
-			msg = g_strdup(_("Your MSN buddy list is temporarily "
-							 "unavailable. Please wait and try "
-							 "again."));
+			msg = g_strdup_printf(_("Your MSN buddy list is temporarily "
+			                        "unavailable: %s"),
+			                      (info == NULL) ? _("Unknown error") : info);
 			break;
 		default:
 			reason = PURPLE_CONNECTION_ERROR_NETWORK_ERROR;
