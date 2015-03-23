@@ -43,8 +43,8 @@ static PRLogModuleInfo *gPurpleAccountLog = nullptr;
 
 extern int blist_signals_handle;
 
-class purpleChatRoomField MOZ_FINAL : public prplIChatRoomField,
-                                      public nsIClassInfo
+class purpleChatRoomField final : public prplIChatRoomField,
+                                  public nsIClassInfo
 {
 public:
   NS_DECL_ISUPPORTS
@@ -116,8 +116,8 @@ PURPLE_IMPL_GETFIELDVALUE(PRInt32 *, Max, *)
 
 #define MAX_KEYS 8
 
-class purpleChatRoomFieldValues MOZ_FINAL : public prplIChatRoomFieldValues,
-                                            public nsIClassInfo
+class purpleChatRoomFieldValues final : public prplIChatRoomFieldValues,
+                                        public nsIClassInfo
 {
 public:
   NS_DECL_ISUPPORTS

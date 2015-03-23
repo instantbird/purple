@@ -8,7 +8,7 @@
 #include <nsITimer.h>
 
 #include <nsIRunnable.h>
-class purpleTimeout MOZ_FINAL : public nsIRunnable
+class purpleTimeout final : public nsIRunnable
 {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS

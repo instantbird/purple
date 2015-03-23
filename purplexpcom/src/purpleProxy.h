@@ -37,7 +37,7 @@
 #define PROXY_TYPE_SOCKS4 "socks4"
 #define PROXY_TYPE_SOCKS5 "socks5"
 
-class purpleProxy MOZ_FINAL : public purpleIProxy
+class purpleProxy final : public purpleIProxy
 {
 public:
   NS_DECL_ISUPPORTS

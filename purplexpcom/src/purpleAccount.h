@@ -17,7 +17,7 @@
 
 #define UI_ID                  "instantbird"
 
-class purpleAccount MOZ_FINAL : public prplIAccount
+class purpleAccount final : public prplIAccount
 {
 public:
   NS_DECL_ISUPPORTS

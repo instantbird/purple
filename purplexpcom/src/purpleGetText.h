@@ -6,7 +6,7 @@
 #include <nsDataHashtable.h>
 #include <nsIObserver.h>
 
-class purpleGetText MOZ_FINAL : public nsIObserver
+class purpleGetText final : public nsIObserver
 {
  public:
   NS_DECL_ISUPPORTS

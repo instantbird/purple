@@ -28,7 +28,7 @@ NS_IMPL_ISUPPORTS(purpleSocket, nsIRunnable)
 PRUint32 purpleSocket::sLastSocket = 0;
 
 
-class purpleSocketNetworkStateObserver MOZ_FINAL : public nsIObserver
+class purpleSocketNetworkStateObserver final : public nsIObserver
 {
  public:
   NS_DECL_ISUPPORTS

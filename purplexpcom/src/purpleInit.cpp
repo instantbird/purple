@@ -119,7 +119,7 @@ PurpleGetTextUiOps gettext_uiops = {
   NULL, NULL, NULL, NULL
 };
 
-class prefsObserver MOZ_FINAL : public nsIObserver
+class prefsObserver final : public nsIObserver
 {
   public:
     NS_DECL_ISUPPORTS
