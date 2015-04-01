@@ -30,7 +30,7 @@ static gpointer g_moz_realloc(gpointer ptr, gsize n_bytes)
 static void g_moz_free(gpointer ptr)
 {
   allocated_size -= moz_malloc_usable_size(ptr);
-  moz_free(ptr);
+  free(ptr);
 }
 
 static gpointer g_moz_calloc(gsize n_blocks, gsize n_block_bytes)
@@ -42,7 +42,7 @@ static gpointer g_moz_calloc(gsize n_blocks, gsize n_block_bytes)
 
 static gpointer g_moz_try_malloc(gsize n_bytes)
 {
-  gpointer ptr = moz_malloc(n_bytes);
+  gpointer ptr = moz_xmalloc(n_bytes);
   allocated_size += moz_malloc_usable_size(ptr);
   return ptr;
 }
@@ -50,7 +50,7 @@ static gpointer g_moz_try_malloc(gsize n_bytes)
 static gpointer g_moz_try_realloc(gpointer ptr, gsize n_bytes)
 {
   allocated_size -= moz_malloc_usable_size(ptr);
-  ptr = moz_realloc(ptr, n_bytes);
+  ptr = moz_xrealloc(ptr, n_bytes);
   allocated_size += moz_malloc_usable_size(ptr);
   return ptr;
 }
@@ -81,12 +81,12 @@ static size_t allocated_xml_size = 0;
 static void moz_xml_free(void *mem)
 {
   allocated_xml_size -= moz_malloc_usable_size(mem);
-  moz_free(mem);
+  free(mem);
 }
 
 static void *moz_xml_malloc(size_t size)
 {
-  void *mem = moz_malloc(size);
+  void *mem = moz_xmalloc(size);
   allocated_xml_size += moz_malloc_usable_size(mem);
   return mem;
 }
@@ -94,14 +94,14 @@ static void *moz_xml_malloc(size_t size)
 static void *moz_xml_realloc(void *mem, size_t size)
 {
   allocated_xml_size -= moz_malloc_usable_size(mem);
-  mem = moz_realloc(mem, size);
+  mem = moz_xrealloc(mem, size);
   allocated_xml_size += moz_malloc_usable_size(mem);
   return mem;
 }
 
 static char *moz_xml_strdup(const char *str)
 {
-  char *dup = moz_strdup(str);
+  char *dup = moz_xstrdup(str);
   allocated_xml_size += moz_malloc_usable_size(dup);
   return dup;
 }
