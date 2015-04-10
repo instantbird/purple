@@ -10,7 +10,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIB_IS_C_ONLY	= 1
-# NO_DIST_INSTALL	= 1
 
 VISIBILITY_FLAGS=
 
