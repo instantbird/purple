@@ -71,7 +71,7 @@ SOURCES += [
 ]
 
 if not CONFIG['PURPLE_PLUGINS'] and CONFIG['STATIC_PRPLS']:
-    GENERATED_SOURCES += ['static_proto_init.c']
+    SOURCES += ['!static_proto_init.c']
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     SOURCES += [

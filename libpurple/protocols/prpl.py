@@ -6,7 +6,7 @@ if protocol in CONFIG['STATIC_PRPLS'].split(" "):
     Library(protocol)
     FINAL_LIBRARY = 'purplexpcom'
 else:
-    GENERATED_SOURCES += ['xpcomModule.cpp']
+    SOURCES += ['!xpcomModule.cpp']
     XPCOMBinaryComponent(protocol)
 
     OS_LIBS += [
