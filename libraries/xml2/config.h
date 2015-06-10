@@ -110,8 +110,6 @@ static int isnan (double d) {
 #if !defined(HAVE_PTHREAD_H) && !defined(HAVE_WIN32_THREADS) && !defined(_WIN32_WCE)
 #define HAVE_WIN32_THREADS
 #endif
-#else
-#undef HAVE_PTHREAD_H
 #endif
 
 /* Some third-party libraries far from our control assume the following
@@ -137,7 +135,7 @@ static int isnan (double d) {
 /* #undef HAVE_LIBHISTORY */
 /* #undef HAVE_LIBREADLINE */
 /* #undef HAVE_LIBPTHREAD */
-/* #undef HAVE_PTHREAD_H */
+#undef HAVE_PTHREAD_H
 
 /* Define if IPV6 support is there */
 /* #undef SUPPORT_IP6 */
