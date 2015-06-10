@@ -13,13 +13,11 @@
 #include <nsThreadUtils.h>
 #include <nsNetUtil.h>
 
-#ifdef PR_LOGGING
 //
 // NSPR_LOG_MODULES=purpleSockets:5
 //
 static PRLogModuleInfo *gPurpleSocketsLog = nullptr;
-#endif
-#define LOG(args) PR_LOG(gPurpleSocketsLog, PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(gPurpleSocketsLog, mozilla::LogLevel::Debug, args)
 
 NS_IMPL_ISUPPORTS(purpleSocket, nsIRunnable)
 
@@ -70,11 +68,7 @@ nsresult purpleSocket::Init(PurpleInputFunction aFunction, gpointer aData,
     pollFlags |= (PR_POLL_WRITE | PR_POLL_EXCEPT);
   }
 
-#ifdef PR_LOGGING
   mInternal = new purpleSocketInternal(mId);
-#else
-  mInternal = new purpleSocketInternal();
-#endif
   return mInternal->Init(PR_CreateSocketPollFd(mFd), this, pollFlags);
 }
 
@@ -109,13 +103,8 @@ NS_IMETHODIMP purpleSocket::Run()
 
 NS_IMPL_ISUPPORTS(purpleSocketInternal, nsIRunnable)
 
-#ifdef PR_LOGGING
 purpleSocketInternal::purpleSocketInternal(PRUint32 aId)
   : mId(aId),
-#else
-purpleSocketInternal::purpleSocketInternal()
-  :
-#endif
   mAttached(PR_FALSE),
   mDetached(PR_FALSE),
   mCanceled(PR_FALSE)
@@ -158,11 +147,9 @@ nsresult purpleSocketInternal::PostEvent()
     do_QueryInterface(purpleSocketWatcher::getSts(), &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-#ifdef PR_LOGGING
   // 'this' may be released and freed on the socket thread before we
   // return from the Dispatch call, so cache the value of mId.
   PRUint32 id = mId;
-#endif
   rv = eventTarget->Dispatch(this, NS_DISPATCH_NORMAL);
   LOG(("[%i]  Dispatch %s\n", id, NS_FAILED(rv) ? "Failed!!!" : "OK"));
   return rv;
@@ -268,10 +255,8 @@ nsCOMPtr<nsIObserver> purpleSocketWatcher::sObserver;
 
 void purpleSocketWatcher::init()
 {
-#ifdef PR_LOGGING
   if (!gPurpleSocketsLog)
     gPurpleSocketsLog = PR_NewLogModule("purpleSockets");
-#endif
   sSockets = new nsTArray<purpleSocket *>();
   sObserver = new purpleSocketNetworkStateObserver();
   nsCOMPtr<nsIObserverService> observerService =
@@ -352,7 +337,6 @@ PRUint32 purpleSocketWatcher::AddWatch(gint aFd, PurpleInputCondition aCondition
 
   sSockets->AppendElement(socket);
 
-#ifdef PR_LOGGING
   const char *mode = "none";
   if ((aCondition & PURPLE_INPUT_READ) && (aCondition & PURPLE_INPUT_WRITE))
     mode = "read/write";
@@ -363,7 +347,6 @@ PRUint32 purpleSocketWatcher::AddWatch(gint aFd, PurpleInputCondition aCondition
 
   LOG(("[%i]SOCKETADD fd = %i, accountId = %u, mode = %s\n",
        id, aFd, purpleAccountScoper::GetCurrentAccountId(), mode));
-#endif
 
   return id;
 }

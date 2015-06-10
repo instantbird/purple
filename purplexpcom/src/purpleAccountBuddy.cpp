@@ -23,13 +23,11 @@
 NS_IMPL_CLASSINFO(purpleAccountBuddy, NULL, 0, PURPLE_ACCOUNTBUDDY_CID)
 NS_IMPL_ISUPPORTS_CI(purpleAccountBuddy, prplIAccountBuddy)
 
-#ifdef PR_LOGGING
 //
 // NSPR_LOG_MODULES=purpleAccountBuddy:5
 //
 static PRLogModuleInfo *gPurpleAccountBuddyLog = nullptr;
-#endif
-#define LOG(args) PR_LOG(gPurpleAccountBuddyLog, PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(gPurpleAccountBuddyLog, mozilla::LogLevel::Debug, args)
 
 purpleAccountBuddy::purpleAccountBuddy(PurpleBuddy *aPurpleBuddy,
                                        imIBuddy *aBuddy)
@@ -38,10 +36,8 @@ purpleAccountBuddy::purpleAccountBuddy(PurpleBuddy *aPurpleBuddy,
 {
   /* member initializers and constructor code */
   MOZ_COUNT_CTOR(purpleAccountBuddy);
-#ifdef PR_LOGGING
   if (!gPurpleAccountBuddyLog)
     gPurpleAccountBuddyLog = PR_NewLogModule("purpleAccountBuddy");
-#endif
 
   purple_blist_node_set_ui_data(PURPLE_BLIST_NODE(aPurpleBuddy), this);
   PurpleAccount *account = purple_buddy_get_account(aPurpleBuddy);
@@ -221,12 +217,10 @@ NS_IMETHODIMP purpleAccountBuddy::GetTooltipInfo(nsISimpleEnumerator** aTooltipI
   NS_ENSURE_TRUE(mBuddy, NS_ERROR_NOT_INITIALIZED);
   NS_ENSURE_TRUE(mAccount, NS_ERROR_NOT_INITIALIZED);
 
-#ifdef PR_LOGGING
   nsCString name;
   mAccount->GetName(name);
   LOG(("purpleAccountBuddy::GetTooltipInfo buddy = %s, account = %s",
        mPurpleBuddy->name, name.get()));
-#endif
 
   PurpleAccount *pAccount = purple_buddy_get_account(mPurpleBuddy);
   NS_ENSURE_TRUE(pAccount, NS_ERROR_NOT_INITIALIZED);

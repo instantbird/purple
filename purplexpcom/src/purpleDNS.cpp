@@ -19,25 +19,21 @@
 #include <sys/un.h>
 #endif
 
-#ifdef PR_LOGGING
 #include <prnetdb.h>
 
 //
 // NSPR_LOG_MODULES=purpleDNS:5
 //
 static PRLogModuleInfo *gPurpleDNSLog = nullptr;
-#endif
-#define LOG(args) PR_LOG(gPurpleDNSLog, PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(gPurpleDNSLog, mozilla::LogLevel::Debug, args)
 
 /* Init static members */
 nsCOMArray<purpleDNSRequest> *purpleDNS::sRequests = nullptr;
 
 void purpleDNS::init()
 {
-#ifdef PR_LOGGING
   if (!gPurpleDNSLog)
     gPurpleDNSLog = PR_NewLogModule("purpleDNS");
-#endif
   sRequests = new nsCOMArray<purpleDNSRequest>();
 }
 

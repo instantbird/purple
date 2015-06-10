@@ -33,13 +33,11 @@
 #define PREF_OPTIONS            "options."
 #define PREF_PROXY              "proxy"
 
-#ifdef PR_LOGGING
 //
 // NSPR_LOG_MODULES=purpleAccount:5
 //
 static PRLogModuleInfo *gPurpleAccountLog = nullptr;
-#endif
-#define LOG(args) PR_LOG(gPurpleAccountLog, PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(gPurpleAccountLog, mozilla::LogLevel::Debug, args)
 
 extern int blist_signals_handle;
 
@@ -215,10 +213,8 @@ purpleAccount::purpleAccount()
     mStatus(PURPLE_STATUS_AVAILABLE)
 {
   /* member initializers and constructor code */
-#ifdef PR_LOGGING
   if (!gPurpleAccountLog)
     gPurpleAccountLog = PR_NewLogModule("purpleAccount");
-#endif
   LOG(("Creating purpleAccount @%x\n", this));
 }
 

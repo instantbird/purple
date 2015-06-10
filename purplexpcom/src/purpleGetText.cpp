@@ -12,13 +12,11 @@
 #include <nsNetCID.h>
 #include <nsNetUtil.h>
 
-#ifdef PR_LOGGING
 //
 // NSPR_LOG_MODULES=purpleGetText:5
 //
 static PRLogModuleInfo *gPurpleGetTextLog = nullptr;
-#endif
-#define LOG(args) PR_LOG(gPurpleGetTextLog, PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(gPurpleGetTextLog, mozilla::LogLevel::Debug, args)
 
 purpleGetText *purpleGetText::sInstance = nullptr;
 
@@ -471,10 +469,8 @@ purpleGetText::purpleGetText()
 
 nsresult purpleGetText::init()
 {
-#ifdef PR_LOGGING
   if (!gPurpleGetTextLog)
     gPurpleGetTextLog = PR_NewLogModule("purpleGetText");
-#endif
 
   if (!sInstance) {
     LOG(("creating a new instance of purpleGetText\n"));

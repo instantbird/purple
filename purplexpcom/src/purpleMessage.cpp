@@ -12,13 +12,11 @@
 #include <nsIClassInfoImpl.h>
 #include <nsMemory.h>
 
-#ifdef PR_LOGGING
 //
 // NSPR_LOG_MODULES=purpleMessage:5
 //
 static PRLogModuleInfo *gPurpleMessageLog = nullptr;
-#endif
-#define LOG(args) PR_LOG(gPurpleMessageLog, PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(gPurpleMessageLog, mozilla::LogLevel::Debug, args)
 
 NS_IMPL_CLASSINFO(purpleMessage, NULL, 0, PURPLE_MESSAGE_CID)
 NS_IMPL_ISUPPORTS_CI(purpleMessage, prplIMessage)
@@ -28,10 +26,8 @@ PRUint32 purpleMessage::sLastId = 0;
 purpleMessage::purpleMessage()
 {
   /* member initializers and constructor code */
-#ifdef PR_LOGGING
   if (!gPurpleMessageLog)
     gPurpleMessageLog = PR_NewLogModule("purpleMessage");
-#endif
   LOG(("Constructing purpleMessage @%x", this));
   mId = ++sLastId;
 }

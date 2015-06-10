@@ -15,13 +15,10 @@
 #include <nsIChromeRegistry.h>
 #include <nsIProgrammingLanguage.h>
 
-#ifdef PR_LOGGING
-//
 // NSPR_LOG_MODULES=purpleProtocol:5
 //
 static PRLogModuleInfo *gPurpleProtocolLog = nullptr;
-#endif
-#define LOG(args) PR_LOG(gPurpleProtocolLog, PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(gPurpleProtocolLog, mozilla::LogLevel::Debug, args)
 
 class purpleUsernameSplit final : public prplIUsernameSplit,
                                   public nsIClassInfo
@@ -84,10 +81,8 @@ purpleProtocol::purpleProtocol()
   :mInfo(nullptr)
 {
   /* member initializers and constructor code */
-#ifdef PR_LOGGING
   if (!gPurpleProtocolLog)
     gPurpleProtocolLog = PR_NewLogModule("purpleProtocol");
-#endif
   LOG(("Creating protocol @%x", this));
 }
 

@@ -34,14 +34,8 @@ class purpleSocketInternal final : public nsASocketHandler,
   nsresult PostEvent();
   nsresult Cancel();
   bool GetCanceled() { return mCanceled; }
-#ifdef PR_LOGGING
   purpleSocketInternal(PRUint32 aId);
-#else
-  purpleSocketInternal();
-#endif
-#ifdef PR_LOGGING
   PRUint32 mId;
-#endif
 
  private:
   ~purpleSocketInternal();

@@ -41,13 +41,11 @@ extern void init_libxml2_memory_reporter();
 #define PURPLE_PROTOCOL_PLUGIN_CATEGORY   "purple-protocol-plugin"
 
 
-#ifdef PR_LOGGING
 //
 // NSPR_LOG_MODULES=purpleInit:5
 //
 PRLogModuleInfo *gPurpleInitLog = nullptr;
-#endif
-#define LOG(args) PR_LOG(gPurpleInitLog, PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(gPurpleInitLog, mozilla::LogLevel::Debug, args)
 
 #if defined(PURPLE_PLUGINS) && defined(XP_UNIX) && !defined(XP_MACOSX)
 #include <nsILocalFile.h>
@@ -597,10 +595,8 @@ init_libpurple()
   rv = folder->GetPath(path);
   NS_ENSURE_SUCCESS(rv, rv);
 
-#ifdef PR_LOGGING
   if (!gPurpleInitLog)
     gPurpleInitLog = PR_NewLogModule("purpleInit");
-#endif
 
   nsCString cPath;
   CopyUTF16toUTF8(path, cPath);

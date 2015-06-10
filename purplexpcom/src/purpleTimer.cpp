@@ -4,7 +4,7 @@
 
 #include "purpleTimer.h"
 #include "purpleAccountScoper.h"
-#include <prlog.h>
+#include <mozilla/Logging.h>
 #include <nsComponentManagerUtils.h>
 #include <nsServiceManagerUtils.h>
 #include <nsIThreadManager.h>
@@ -12,13 +12,11 @@
 #include <nsThreadUtils.h>
 #include <nsXPCOMCIDInternal.h>
 
-#ifdef PR_LOGGING
 //
 // NSPR_LOG_MODULES=purpleTimer:5
 //
 static PRLogModuleInfo *gPurpleTimerLog = nullptr;
-#endif
-#define LOG(args) PR_LOG(gPurpleTimerLog, PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(gPurpleTimerLog, mozilla::LogLevel::Debug, args)
 
 /* Init static members */
 PRUint32 purpleTimer::sLastTimer = 0;
@@ -26,10 +24,8 @@ nsTArray<nsRefPtr<purpleTimeout> > *purpleTimer::sTimeouts = nullptr;
 
 void purpleTimer::init()
 {
-#ifdef PR_LOGGING
   if (!gPurpleTimerLog)
     gPurpleTimerLog = PR_NewLogModule("purpleTimer");
-#endif
   sTimeouts = new nsTArray<nsRefPtr<purpleTimeout> >();
 }
 

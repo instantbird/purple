@@ -11,13 +11,11 @@
 #include <nsIClassInfoImpl.h>
 #include <nsMemory.h>
 
-#ifdef PR_LOGGING
 //
 // NSPR_LOG_MODULES=purpleConversation:5
 //
 extern PRLogModuleInfo *gPurpleConvLog;
-#endif
-#define LOG(args) PR_LOG(gPurpleConvLog, PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(gPurpleConvLog, mozilla::LogLevel::Debug, args)
 
 //NS_IMPL_ISUPPORTS_CI(purpleConvIM, prplIConversation, prplIConvIM)
 NS_IMPL_CLASSINFO(purpleConvIM, NULL, 0, PURPLE_CONV_IM_CID)

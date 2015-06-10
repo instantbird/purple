@@ -13,13 +13,11 @@
 #include <libpurple/util.h>
 #pragma GCC visibility pop
 
-#ifdef PR_LOGGING
 //
 // NSPR_LOG_MODULES=purplePref:5
 //
 static PRLogModuleInfo *gPurplePrefLog = nullptr;
-#endif
-#define LOG(args) PR_LOG(gPurplePrefLog, PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(gPurplePrefLog, mozilla::LogLevel::Debug, args)
 
 class purpleKeyValuePair final : public prplIKeyValuePair,
                                  public nsIClassInfo
@@ -78,10 +76,8 @@ NS_IMPL_ISUPPORTS_CI(purplePref, prplIPref)
 purplePref::purplePref()
 {
   /* member initializers and constructor code */
-#ifdef PR_LOGGING
   if (!gPurplePrefLog)
     gPurplePrefLog = PR_NewLogModule("purplePref");
-#endif
   LOG(("Constructing purplePref @%x", this));
 }
 

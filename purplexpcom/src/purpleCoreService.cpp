@@ -33,14 +33,12 @@
 #include <nsAppDirectoryServiceDefs.h>
 #include <nsDirectoryServiceUtils.h>
 
-#ifdef PR_LOGGING
 #include <prprf.h>
 //
 // NSPR_LOG_MODULES=purpleCoreService:5
 //
 static PRLogModuleInfo *gPurpleCoreServiceLog = nullptr;
-#endif
-#define LOG(args) PR_LOG(gPurpleCoreServiceLog, PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(gPurpleCoreServiceLog, mozilla::LogLevel::Debug, args)
 
 NS_IMPL_CLASSINFO(purpleCoreService, NULL, nsIClassInfo::SINGLETON,
                   PURPLE_CORE_SERVICE_CID)
@@ -62,10 +60,8 @@ purpleCoreService::purpleCoreService()
   :mInitialized(PR_FALSE),
    mQuitting(PR_FALSE)
 {
-#ifdef PR_LOGGING
   if (!gPurpleCoreServiceLog)
     gPurpleCoreServiceLog = PR_NewLogModule("purpleCoreService");
-#endif
   mPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
   mPrefBranch2 = do_QueryInterface(mPrefService);
 }

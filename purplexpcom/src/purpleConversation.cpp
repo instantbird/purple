@@ -20,13 +20,11 @@
 #include <nsIObserverService.h>
 #include <prtime.h> // for PR_Now
 
-#ifdef PR_LOGGING
 //
 // NSPR_LOG_MODULES=purpleConversation:5
 //
 PRLogModuleInfo *gPurpleConvLog = nullptr;
-#endif
-#define LOG(args) PR_LOG(gPurpleConvLog, PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(gPurpleConvLog, mozilla::LogLevel::Debug, args)
 
 purpleConversation::purpleConversation()
   : mId(0),
@@ -34,10 +32,8 @@ purpleConversation::purpleConversation()
     mUninitialized(PR_FALSE)
 {
   /* member initializers and constructor code */
-#ifdef PR_LOGGING
   if (!gPurpleConvLog)
     gPurpleConvLog = PR_NewLogModule("purpleConversation");
-#endif
   LOG(("new purpleConversation @%x with id %i", this, mId));
 }
 

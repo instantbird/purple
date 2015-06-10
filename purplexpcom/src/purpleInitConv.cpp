@@ -20,13 +20,11 @@
 #include <nsComponentManagerUtils.h>
 #include <nsServiceManagerUtils.h>
 
-#ifdef PR_LOGGING
 //
 // NSPR_LOG_MODULES=purpleInit:5
 //
 extern PRLogModuleInfo *gPurpleInitLog;
-#endif
-#define LOG(args) PR_LOG(gPurpleInitLog, PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(gPurpleInitLog, mozilla::LogLevel::Debug, args)
 
 /*** Conversation uiops ***/
 static void create_conv(PurpleConversation *aConv)

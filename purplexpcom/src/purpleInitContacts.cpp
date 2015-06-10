@@ -13,13 +13,11 @@
 #include <nsCOMPtr.h>
 #include <nsStringAPI.h>
 
-#ifdef PR_LOGGING
 //
 // NSPR_LOG_MODULES=purpleInit:5
 //
 extern PRLogModuleInfo *gPurpleInitLog;
-#endif
-#define LOG(args) PR_LOG(gPurpleInitLog, PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(gPurpleInitLog, mozilla::LogLevel::Debug, args)
 
 /*
  * Used as handle to connect and then mass-disconnect the buddy list signals.

@@ -19,13 +19,11 @@
 
 #define LOGLEVEL_PREF "purple.debug.loglevel"
 
-#ifdef PR_LOGGING
 //
 // NSPR_LOG_MODULES=purpleDebug:5
 //
 static PRLogModuleInfo *gPurpleDebugLog = nullptr;
-#endif
-#define LOG(args) PR_LOG(gPurpleDebugLog, PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(gPurpleDebugLog, mozilla::LogLevel::Debug, args)
 
 purpleDebug *purpleDebug::sInstance = nullptr;
 
@@ -255,10 +253,8 @@ purpleDebug::purpleDebug()
 
 nsresult purpleDebug::init()
 {
-#ifdef PR_LOGGING
   if (!gPurpleDebugLog)
     gPurpleDebugLog = PR_NewLogModule("purpleDebug");
-#endif
 
 #ifdef DEBUG
   if (g_getenv("PURPLE_VERBOSE_DEBUG"))

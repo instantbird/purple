@@ -14,13 +14,11 @@
 #include <nsServiceManagerUtils.h>
 #include <nsStringAPI.h>
 
-#ifdef PR_LOGGING
 //
 // NSPR_LOG_MODULES=purpleInit:5
 //
 extern PRLogModuleInfo *gPurpleInitLog;
-#endif
-#define LOG(args) PR_LOG(gPurpleInitLog, PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(gPurpleInitLog, mozilla::LogLevel::Debug, args)
 
 NS_DEFINE_NAMED_CID(PURPLE_CONV_CHAT_CID);
 NS_DEFINE_NAMED_CID(PURPLE_CONV_IM_CID);

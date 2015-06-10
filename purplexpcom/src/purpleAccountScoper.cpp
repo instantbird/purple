@@ -5,13 +5,11 @@
 #include "purpleAccountScoper.h"
 #include "purpleAccount.h"
 
-#ifdef PR_LOGGING
 //
 // NSPR_LOG_MODULES=purpleAccountScoper:5
 //
 static PRLogModuleInfo *gPurpleAccountScoperLog = nullptr;
-#endif
-#define LOG(args) PR_LOG(gPurpleAccountScoperLog, PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(gPurpleAccountScoperLog, mozilla::LogLevel::Debug, args)
 
 PRUint32 purpleAccountScoper::sCurrentId = 0;
 
@@ -37,10 +35,8 @@ purpleAccountScoper::~purpleAccountScoper()
 
 void purpleAccountScoper::enterScope(PRUint32 aId)
 {
-#ifdef PR_LOGGING
   if (!gPurpleAccountScoperLog)
     gPurpleAccountScoperLog = PR_NewLogModule("purpleAccountScoper");
-#endif
 
   mPreviousId = sCurrentId;
   LOG(("purpleAccountScoper  %u -> %u\n", sCurrentId, aId));
