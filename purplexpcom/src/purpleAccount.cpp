@@ -22,6 +22,7 @@
 #include <nsIScriptSecurityManager.h>
 #include <nsIClassInfoImpl.h>
 #include <nsComponentManagerUtils.h>
+#include <nsCRTGlue.h>
 #include <nsNetUtil.h>
 #include <nsServiceManagerUtils.h>
 #include <nsStringStream.h>

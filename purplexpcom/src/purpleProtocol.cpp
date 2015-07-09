@@ -11,6 +11,7 @@
 #include <nsMemory.h>
 #include <nsCOMPtr.h>
 #include <nsComponentManagerUtils.h>
+#include <nsServiceManagerUtils.h>
 #include <nsNetUtil.h>
 #include <nsIChromeRegistry.h>
 #include <nsIProgrammingLanguage.h>
