@@ -91,3 +91,8 @@
 /* Defined if libgadu is GPL compliant (was not linked with OpenSSL or any
    other non-GPL compliant library support). */
 #define GG_CONFIG_IS_GPL_COMPLIANT
+
+#ifdef _MSC_VER
+#define snprintf _snprintf
+#define strncasecmp strnicmp
+#endif

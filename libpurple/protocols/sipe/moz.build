@@ -89,9 +89,12 @@ if CONFIG['GSSAPI']:
     OS_LIBS += CONFIG['KRB5_LIBS'].split()
 
 USE_LIBS += [
-    'nspr',
     'nss',
 ]
+if not CONFIG['MOZ_FOLD_LIBS']:
+    USE_LIBS += [
+        'nspr',
+    ]
 
 protocol = 'sipe'
 

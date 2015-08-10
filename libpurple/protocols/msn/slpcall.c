@@ -328,7 +328,7 @@ msn_slp_process_transresp(MsnSlpCall *slpcall, const char *content)
 			dc->remote_nonce[36] = '\0';
 		}
 
-		if (!strcasecmp(listening, "false")) {
+		if (!g_ascii_strcasecmp(listening, "false")) {
 			if (dc->listen_data != NULL) {
 				/*
 				 * We'll listen for incoming connections but

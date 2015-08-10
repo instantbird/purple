@@ -33,6 +33,11 @@ SOURCES += [
     'search.c',
 ]
 
+if CONFIG['OS_TARGET'] == 'WINNT':
+    DEFINES['inline'] = '__inline'
+    # Get rid of a ton of warnings.
+    DEFINES['_WINSOCK_DEPRECATED_NO_WARNINGS'] = ''
+
 USE_LIBS += [
     'zlib',
 ]
