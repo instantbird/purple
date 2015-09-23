@@ -13,8 +13,6 @@
 	locale/@AB_CD@/oscar/prpl.properties	(%oscar.properties)
 % locale jabber @AB_CD@ %locale/@AB_CD@/jabber/
 	locale/@AB_CD@/jabber/prpl.properties	(%jabber.properties)
-% locale msn @AB_CD@ %locale/@AB_CD@/msn/
-	locale/@AB_CD@/msn/prpl.properties	(%msn.properties)
 % locale yahoo @AB_CD@ %locale/@AB_CD@/yahoo/
 	locale/@AB_CD@/yahoo/prpl.properties	(%yahoo.properties)
 % locale myspace @AB_CD@ %locale/@AB_CD@/myspace/
