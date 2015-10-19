@@ -241,7 +241,7 @@ nsresult purpleCoreService::InitProxies()
 
   LOG(("InitProxies list = %s", proxyList.get()));
 
-  nsRefPtr<purpleProxy> proxy;
+  RefPtr<purpleProxy> proxy;
   char *newStr = proxyList.BeginWriting();
   nsAutoCString key;
   for (char *token = NS_strtok(",", &newStr);
@@ -347,7 +347,7 @@ NS_IMETHODIMP purpleCoreService::CreateProxy(PRInt16 aType, const nsACString & a
   } while (found);
 
   /* Actually create the new proxy */
-  nsRefPtr<purpleProxy> proxy = new purpleProxy();
+  RefPtr<purpleProxy> proxy = new purpleProxy();
   rv = proxy->Init(key, aType, aHost, aPort, aUsername, aPassword);
   NS_ENSURE_SUCCESS(rv, rv);
 

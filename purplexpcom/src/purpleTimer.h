@@ -40,6 +40,6 @@ class purpleTimer
   static nsresult CancelTimerFromAccountId(PRUint32 aAccountId);
 
  private:
-  static nsTArray<nsRefPtr<purpleTimeout> > *sTimeouts;
+  static nsTArray<RefPtr<purpleTimeout> > *sTimeouts;
   static PRUint32 sLastTimer;
 };

@@ -20,13 +20,13 @@ static PRLogModuleInfo *gPurpleTimerLog = nullptr;
 
 /* Init static members */
 PRUint32 purpleTimer::sLastTimer = 0;
-nsTArray<nsRefPtr<purpleTimeout> > *purpleTimer::sTimeouts = nullptr;
+nsTArray<RefPtr<purpleTimeout> > *purpleTimer::sTimeouts = nullptr;
 
 void purpleTimer::init()
 {
   if (!gPurpleTimerLog)
     gPurpleTimerLog = PR_NewLogModule("purpleTimer");
-  sTimeouts = new nsTArray<nsRefPtr<purpleTimeout> >();
+  sTimeouts = new nsTArray<RefPtr<purpleTimeout> >();
 }
 
 void purpleTimer::unInit()

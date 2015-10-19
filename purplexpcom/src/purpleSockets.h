@@ -72,7 +72,7 @@ class purpleSocket final : public nsIRunnable
   PurpleInputFunction mFunction;
   gpointer mData;
   PurpleInputCondition mCondition;
-  nsRefPtr<purpleSocketInternal> mInternal;
+  RefPtr<purpleSocketInternal> mInternal;
 };
 
 typedef void (purpleSocket:: *purpleSocketFunc)(void);

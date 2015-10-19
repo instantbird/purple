@@ -153,7 +153,7 @@ class purpleAuthorizationRequest final : public prplIBuddyRequest
 
   private:
     ~purpleAuthorizationRequest() {}
-    nsRefPtr<purpleAccount> mAccount;
+    RefPtr<purpleAccount> mAccount;
     nsCString mRemoteUser;
     PurpleAccountRequestAuthorizationCb mAuthorizeCb, mDenyCb;
     void *mUserData;
