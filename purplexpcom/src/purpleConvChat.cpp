@@ -74,6 +74,25 @@ NS_IMETHODIMP purpleConvChat::SendMsg(const nsACString& aMsg)
   return NS_OK;
 }
 
+/* prplIConvChatBuddy getParticipant(in AUTF8String aName); */
+NS_IMETHODIMP purpleConvChat::GetParticipant(const nsACString & aName,
+                                             prplIConvChatBuddy **aResult)
+{
+  NS_ENSURE_TRUE(mConv, NS_ERROR_NOT_INITIALIZED);
+
+  PurpleConvChat *chat = purple_conversation_get_chat_data(mConv);
+  NS_ENSURE_TRUE(chat, NS_ERROR_FAILURE);
+
+  PurpleConvChatBuddy *cb =
+    purple_conv_chat_cb_find(chat, PromiseFlatCString(aName).get());
+  if (cb) {
+    purpleConvChatBuddy *participant = new purpleConvChatBuddy();
+    participant->Init(cb);
+    NS_ADDREF(*aResult = static_cast<prplIConvChatBuddy *>(participant));
+  }
+  return NS_OK;
+}
+
 /* nsISimpleEnumerator GetParticipants (); */
 NS_IMETHODIMP purpleConvChat::GetParticipants(nsISimpleEnumerator **_retval)
 {

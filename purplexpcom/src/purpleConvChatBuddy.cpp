@@ -57,6 +57,14 @@ NS_IMETHODIMP purpleConvChatBuddy::GetBuddy(bool *aBuddy)
   return NS_OK;
 }
 
+/* readonly attribute AUTF8String buddyIconURI; */
+NS_IMETHODIMP
+purpleConvChatBuddy::GetBuddyIconFilename(nsACString & aBuddyURI)
+{
+  // This method is not supported by libpurple.
+  aBuddyURI = "";
+  return NS_OK;
+}
 
 /* Get flag from PurpleConvChatBuddyFlags */
 #define PURPLE_IMPL_GETFLAG(aName, aFlag)                               \
