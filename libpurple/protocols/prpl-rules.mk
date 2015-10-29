@@ -10,9 +10,10 @@ _RC_STRING += -SRCDIR .
 
 PURPLEXPCOM_PATH = ../../../purplexpcom/src
 PURPLEXPCOM_LIB = $(PURPLEXPCOM_PATH)/$(DLL_PREFIX)purplexpcom$(DLL_SUFFIX)
+PURPLEXPCOM_LOCK = $(PURPLEXPCOM_PATH)/lock
 
 $(PURPLEXPCOM_LIB):
-	$(MAKE) -C $(PURPLEXPCOM_PATH) compile
+	if [ -f $(PURPLEXPCOM_LOCK) ]; then sleep 30; else touch $(PURPLEXPCOM_LOCK); $(MAKE) -C $(PURPLEXPCOM_PATH) compile ; rm -f $(PURPLEXPCOM_LOCK) ; fi
 
 xpcomModule.cpp: $(srcdir)/../xpcomModule.cpp.in xpcomCid.h $(PURPLEXPCOM_LIB)
 	sed 's/@PROTOCOL@/$(PROTOCOL)/g' $< > $@
