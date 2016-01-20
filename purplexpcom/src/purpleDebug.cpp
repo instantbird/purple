@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "purpleDebug.h"
+#include "purpleLogging.h"
 #include "purpleAccountScoper.h"
 #include <imIAccountsService.h>
 #include <nsComponentManagerUtils.h>

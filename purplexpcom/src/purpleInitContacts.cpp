@@ -6,6 +6,7 @@
 #include <libpurple/blist.h>
 #pragma GCC visibility pop
 
+#include "purpleLogging.h"
 #include "purpleAccountBuddy.h"
 #include <imIContactsService.h>
 #include <nsServiceManagerUtils.h>

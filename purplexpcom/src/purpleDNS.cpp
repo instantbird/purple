@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "purpleDNS.h"
+#include "purpleLogging.h"
 #include "purpleAccountScoper.h"
 #include "mozilla/net/DNS.h"
 #include <nsComponentManagerUtils.h>

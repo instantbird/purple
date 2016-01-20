@@ -4,6 +4,7 @@
 
 #include "purpleConvIM.h"
 #include "purpleAccountBuddy.h"
+#include "purpleLogging.h"
 
 #include <nsIObserverService.h>
 #include <nsServiceManagerUtils.h>

@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "purpleGetText.h"
+#include "purpleLogging.h"
 #include <nsIChromeRegistry.h>
 #include <nsICryptoHash.h>
 #include <nsIObserverService.h>

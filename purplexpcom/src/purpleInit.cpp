@@ -8,6 +8,7 @@
 #include <libpurple/gettext.h>
 #pragma GCC visibility pop
 
+#include "purpleLogging.h"
 #include "purpleAccount.h"
 #include "purpleAccountBuddy.h"
 #include "purpleCoreService.h"

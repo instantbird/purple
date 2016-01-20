@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "purpleSockets.h"
+#include "purpleLogging.h"
 #include "purpleAccountScoper.h"
 #include <private/pprio.h>
 #include <nsComponentManagerUtils.h>

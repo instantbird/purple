@@ -5,6 +5,7 @@
 #include "purpleConversation.h"
 #include "purpleGListEnumerator.h"
 #include "purpleAccount.h"
+#include "purpleLogging.h"
 
 #pragma GCC visibility push(default)
 #include <libpurple/cmds.h>

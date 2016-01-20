@@ -5,6 +5,7 @@
 #include "purpleConvChat.h"
 #include "purpleConvChatBuddy.h"
 #include "purpleGListEnumerator.h"
+#include "purpleLogging.h"
 
 #include <nsXPCOM.h>
 #include <nsStringAPI.h>

@@ -4,7 +4,7 @@
 
 #include "purpleTimer.h"
 #include "purpleAccountScoper.h"
-#include <mozilla/Logging.h>
+#include "purpleLogging.h"
 #include <nsComponentManagerUtils.h>
 #include <nsServiceManagerUtils.h>
 #include <nsIThreadManager.h>

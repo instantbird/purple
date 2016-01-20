@@ -4,6 +4,7 @@
 
 #include "purpleAccountScoper.h"
 #include "purpleAccount.h"
+#include "purpleLogging.h"
 
 //
 // NSPR_LOG_MODULES=purpleAccountScoper:5

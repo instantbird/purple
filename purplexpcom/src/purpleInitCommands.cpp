@@ -5,6 +5,7 @@
 #include "imICommandsService.h"
 #include "purpleConvIM.h"
 #include "purpleConvChat.h"
+#include "purpleLogging.h"
 
 #pragma GCC visibility push(default)
 #include <libpurple/cmds.h>

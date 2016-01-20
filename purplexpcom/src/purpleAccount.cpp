@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "purpleAccount.h"
+#include "purpleLogging.h"
 #include "purpleAccountBuddy.h"
 #include "purpleCoreService.h"
 #include "purpleConversation.h"

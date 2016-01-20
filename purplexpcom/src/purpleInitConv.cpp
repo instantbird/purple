@@ -6,6 +6,7 @@
 #include <libpurple/conversation.h>
 #pragma GCC visibility pop
 
+#include "purpleLogging.h"
 #include "purpleConversation.h"
 #include "purpleConvChat.h"
 #include "purpleConvIM.h"

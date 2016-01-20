@@ -7,6 +7,7 @@
 #include <libpurple/core.h>
 #pragma GCC visibility pop
 
+#include "purpleLogging.h"
 #include "purpleAccount.h"
 #include "prplIRequest.h"
 #include <nsServiceManagerUtils.h>
