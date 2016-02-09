@@ -488,16 +488,6 @@ nsresult purpleGetText::init()
   return NS_OK;
 }
 
-// Used to delete all the elements of a nsDataHashtable
-static PLDHashOperator deleteEnumerator(const nsACString &aKey,
-                                        nsTArray<nsCString> *&aArray,
-                                        void *aUserArg)
-{
-  delete aArray;
-
-  return (PLDHashOperator) (PL_DHASH_REMOVE | PL_DHASH_NEXT);
-}
-
 void purpleGetText::unInit()
 {
   if (!sInstance)
@@ -509,9 +499,15 @@ void purpleGetText::unInit()
     os->RemoveObserver(sInstance, NS_CHROME_FLUSH_TOPIC);
 
   LOG(("purpleGetText::unInit\n"));
-  for (PRUint32 i = 0; i < sInstance->mStringCache.Length(); ++i)
-    if (sInstance->mStringCache[i].table)
-      sInstance->mStringCache[i].table->Enumerate(deleteEnumerator, nullptr);
+  for (PRUint32 i = 0; i < sInstance->mStringCache.Length(); ++i) {
+    if (sInstance->mStringCache[i].table) {
+      for (auto iter = sInstance->mStringCache[i].table->Iter();
+           !iter.Done(); iter.Next()) {
+        delete iter.Data();
+        iter.Remove();
+      }
+    }
+  }
 
   NS_RELEASE(sInstance);
   sInstance = nullptr;
