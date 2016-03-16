@@ -294,6 +294,12 @@ static void generate_federation_wsse(struct sipe_webticket *webticket,
 	if (!keydata)
 		keydata   = sipe_xml_extract_raw(raw, "saml1:Assertion", TRUE);
 
+	/* try other alternative names */
+	if (!timestamp)
+		timestamp = generate_timestamp(raw, "Lifetime");
+	if (!keydata)
+		keydata   = sipe_xml_extract_raw(raw, "ns1:Assertion", TRUE);
+
 	/* clear old ADFS token */
 	g_free(webticket->adfs_token);
 	webticket->adfs_token = NULL;
@@ -303,6 +309,11 @@ static void generate_federation_wsse(struct sipe_webticket *webticket,
 							     "wsu:Expires",
 							     FALSE);
 
+		/* try alternative names */
+		if (!expires_string)
+			expires_string = sipe_xml_extract_raw(timestamp,
+							      "ns3:Expires",
+							      FALSE);
 		if (expires_string) {
 
 			SIPE_DEBUG_INFO("generate_federation_wsse: found timestamp & keydata, expires %s",
@@ -548,13 +559,27 @@ static void webticket_token(struct sipe_core_private *sipe_private,
 
 	} else if (uri) {
 		/* Retry with federated authentication? */
-		if (wcd->webticket_fedbearer_uri && !wcd->tried_fedbearer) {
-			SIPE_DEBUG_INFO("webticket_token: anonymous authentication to service %s failed, retrying with federated authentication",
-					uri);
+		if (wcd->webticket_fedbearer_uri) {
 
-			if (initiate_fedbearer(sipe_private, wcd)) {
-				/* callback data passed down the line */
-				wcd = NULL;
+			/* Authentication against ADFS failed? */
+			if (wcd->token_state == TOKEN_STATE_FEDERATION) {
+				struct sipe_webticket *webticket = sipe_private->webticket;
+
+				SIPE_DEBUG_INFO_NOFORMAT("webticket_token: ADFS authentication failed - assuming Multi-Factor Authentication (MFA)");
+
+				/* forget ADFS URI */
+				g_free(webticket->webticket_adfs_uri);
+				webticket->webticket_adfs_uri = NULL;
+			}
+
+			if (!wcd->tried_fedbearer) {
+				SIPE_DEBUG_INFO("webticket_token: anonymous authentication to service %s failed, retrying with federated authentication",
+						uri);
+
+				if (initiate_fedbearer(sipe_private, wcd)) {
+					/* callback data passed down the line */
+					wcd = NULL;
+				}
 			}
 		}
 	}
@@ -692,6 +717,7 @@ static gboolean initiate_fedbearer(struct sipe_core_private *sipe_private,
 
 	if (sipe_private->webticket->retrieved_realminfo) {
 		/* skip retrieval and go to authentication */
+		wcd->tried_fedbearer = TRUE;
 		success = fedbearer_authentication(sipe_private, wcd);
 	} else {
 		success = sipe_svc_realminfo(sipe_private,
@@ -699,8 +725,6 @@ static gboolean initiate_fedbearer(struct sipe_core_private *sipe_private,
 					     realminfo,
 					     wcd);
 	}
-
-	wcd->tried_fedbearer = TRUE;
 
 	return(success);
 }

@@ -3,7 +3,7 @@
 *
  * pidgin-sipe
  *
- * Copyright (C) 2013 SIPE Project <http://sipe.sourceforge.net/>
+ * Copyright (C) 2013-2015 SIPE Project <http://sipe.sourceforge.net/>
  *
  *
  * This program is free software; you can redistribute it and/or modify
@@ -66,7 +66,6 @@ struct sipe_http_request {
 	gchar *content_type;   /* NULL if body == NULL */
 	gchar *authorization;
 
-	const gchar *domain;   /* not copied */
 	const gchar *user;     /* not copied */
 	const gchar *password; /* not copied */
 
@@ -286,6 +285,21 @@ static gboolean sipe_http_request_response_unauthorized(struct sipe_core_private
 			return(failed);
 		}
 
+		if (conn_public->cached_authorization) {
+			/*
+			 * The "Basic" scheme doesn't have any state.
+			 *
+			 * If we enter here then we have already tried "Basic"
+			 * authentication once for this request and it was
+			 * rejected by the server. As all future requests will
+			 * also be rejected, we need to abort here in order to
+			 * prevent an endless request/401/request/... loop.
+			 */
+			SIPE_DEBUG_INFO("sipe_http_request_response_unauthorized: Basic authentication has failed for host '%s', please check user name and password!",
+					conn_public->host);
+			return(failed);
+		}
+
 	} else {
 #if defined(HAVE_GSSAPI_GSSAPI_H) || defined(HAVE_SSPI)
 #define DEBUG_STRING ", NTLM and Negotiate"
@@ -317,7 +331,6 @@ static gboolean sipe_http_request_response_unauthorized(struct sipe_core_private
 			conn_public->context = sip_sec_create_context(type,
 								      !valid, /* Single Sign-On flag */
 								      TRUE,   /* connection-based for HTTP */
-								      valid ? req->domain   : NULL,
 								      valid ? req->user     : NULL,
 								      valid ? req->password : NULL);
 		}
@@ -552,7 +565,6 @@ struct sipe_http_request *sipe_http_request_new(struct sipe_core_private *sipe_p
 	/* default authentication */
 	if (!SIPE_CORE_PRIVATE_FLAG_IS(SSO))
 		sipe_http_request_authentication(req,
-						 sipe_private->authdomain,
 						 sipe_private->authuser,
 						 sipe_private->password);
 
@@ -610,12 +622,10 @@ void sipe_http_request_allow_redirect(struct sipe_http_request *request)
 }
 
 void sipe_http_request_authentication(struct sipe_http_request *request,
-				      const gchar *domain,
 				      const gchar *user,
 				      const gchar *password)
 {
 	request->flags   |= SIPE_HTTP_REQUEST_FLAG_AUTHDATA;
-	request->domain   = domain;
 	request->user     = user;
 	request->password = password;
 }

@@ -3,7 +3,7 @@
  *
  * pidgin-sipe
  *
- * Copyright (C) 2010-2013 SIPE Project <http://sipe.sourceforge.net/>
+ * Copyright (C) 2010-2014 SIPE Project <http://sipe.sourceforge.net/>
  * Copyright (C) 2008 Novell, Inc.
  * Copyright (C) 2005 Thomas Butter <butter@uni-mannheim.de>
  *
@@ -91,10 +91,19 @@ struct sipmsg *sipmsg_parse_header(const gchar *header) {
 			msg->bodylen = SIPMSG_BODYLEN_CHUNKED;
 		} else {
 			tmp = sipmsg_find_header(msg, "Content-Type");
-			if (tmp)
-				SIPE_DEBUG_FATAL_NOFORMAT("sipmsg_parse_header(): Content-Length header not found");
-			else
+			if (tmp) {
+				/*
+				 * This is a fatal error situation: the message
+				 * is corrupted and we can't proceed. Set the
+				 * response code to a special value so that the
+				 * caller can abort correctly.
+				 */
+				SIPE_DEBUG_ERROR_NOFORMAT("sipmsg_parse_header: Content-Length header not found. Aborting!");
+				msg->response = SIPMSG_RESPONSE_FATAL_ERROR;
+				return(msg);
+			} else {
 				msg->bodylen = 0;
+			}
 		}
 	}
 	if(msg->response) {
@@ -387,7 +396,7 @@ void sipmsg_parse_p_asserted_identity(const gchar *header, gchar **sip_uri,
 	}
 
 	parts = g_strsplit(header, ",", 0);
-	
+
 	for (p = parts; *p; p++) {
 		gchar *uri = sipmsg_find_part_of_header(*p, "<", ">", NULL);
 		if (!uri)
@@ -428,7 +437,14 @@ void sipmsg_parse_p_asserted_identity(const gchar *header, gchar **sip_uri,
 const gchar *sipmsg_find_auth_header(struct sipmsg *msg, const gchar *name) {
 	GSList *tmp;
 	struct sipnameval *elem;
-	int name_len = strlen(name);
+	int name_len;
+
+	if (!name) {
+		SIPE_DEBUG_INFO_NOFORMAT("sipmsg_find_auth_header: no authentication scheme specified");
+		return NULL;
+	}
+
+	name_len = strlen(name);
 	tmp = msg->headers;
 	while(tmp) {
 		elem = tmp->data;
@@ -444,7 +460,7 @@ const gchar *sipmsg_find_auth_header(struct sipmsg *msg, const gchar *name) {
 		/* SIPE_DEBUG_INFO_NOFORMAT("moving to next header"); */
 		tmp = g_slist_next(tmp);
 	}
-	SIPE_DEBUG_INFO("auth header '%s' not found.", name);
+	SIPE_DEBUG_INFO("sipmsg_find_auth_header: '%s' not found", name);
 	return NULL;
 }
 
@@ -872,6 +888,29 @@ sipe_parse_html(const char *html, char **attributes, char **message)
 	g_return_if_fail(attributes != NULL);
 	g_return_if_fail(message    != NULL);
 
+#define _HTML_UNESCAPE \
+	if (!g_ascii_strncasecmp(c, "&lt;", 4)) { \
+		msg[retcount++] = '<'; \
+		c += 4; \
+	} else if (!g_ascii_strncasecmp(c, "&gt;", 4)) { \
+		msg[retcount++] = '>'; \
+		c += 4; \
+	} else if (!g_ascii_strncasecmp(c, "&nbsp;", 6)) { \
+		msg[retcount++] = ' '; \
+		c += 6; \
+	} else if (!g_ascii_strncasecmp(c, "&quot;", 6)) { \
+		msg[retcount++] = '"'; \
+		c += 6; \
+	} else if (!g_ascii_strncasecmp(c, "&amp;", 5)) { \
+		msg[retcount++] = '&'; \
+		c += 5; \
+	} else if (!g_ascii_strncasecmp(c, "&apos;", 6)) { \
+		msg[retcount++] = '\''; \
+		c += 6; \
+	} else { \
+		msg[retcount++] = *c++; \
+	}
+
 	len = strlen(html);
 	msg = g_malloc0(len + 1);
 
@@ -933,7 +972,10 @@ sipe_parse_html(const char *html, char **attributes, char **message)
 					c += 7;
 
 				while ((*c != '\0') && g_ascii_strncasecmp(c, "\">", 2))
-					msg[retcount++] = *c++;
+					if (*c == '&') {
+						_HTML_UNESCAPE;
+					} else
+						msg[retcount++] = *c++;
 
 				if (*c != '\0')
 					c += 2;
@@ -1046,38 +1088,7 @@ sipe_parse_html(const char *html, char **attributes, char **message)
 		}
 		else if (*c == '&')
 		{
-			if (!g_ascii_strncasecmp(c, "&lt;", 4))
-			{
-				msg[retcount++] = '<';
-				c += 4;
-			}
-			else if (!g_ascii_strncasecmp(c, "&gt;", 4))
-			{
-				msg[retcount++] = '>';
-				c += 4;
-			}
-			else if (!g_ascii_strncasecmp(c, "&nbsp;", 6))
-			{
-				msg[retcount++] = ' ';
-				c += 6;
-			}
-			else if (!g_ascii_strncasecmp(c, "&quot;", 6))
-			{
-				msg[retcount++] = '"';
-				c += 6;
-			}
-			else if (!g_ascii_strncasecmp(c, "&amp;", 5))
-			{
-				msg[retcount++] = '&';
-				c += 5;
-			}
-			else if (!g_ascii_strncasecmp(c, "&apos;", 6))
-			{
-				msg[retcount++] = '\'';
-				c += 6;
-			}
-			else
-				msg[retcount++] = *c++;
+			_HTML_UNESCAPE;
 		}
 		else
 			msg[retcount++] = *c++;
@@ -1092,6 +1103,8 @@ sipe_parse_html(const char *html, char **attributes, char **message)
 	*message = msg;
 
 	g_free(fontface);
+
+#undef _HTML_UNESCAPE
 }
 // End of TEMP
 

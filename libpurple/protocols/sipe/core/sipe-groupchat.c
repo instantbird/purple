@@ -377,10 +377,12 @@ static gboolean groupchat_expired_session_response(struct sipe_core_private *sip
 		struct sip_dialog *dialog = sipe_dialog_find(session,
 							     session->with);
 
-		/* close dialog from our side */
-		sip_transport_bye(sipe_private, dialog);
-		sipe_dialog_remove(session, session->with);
-		/* dialog is no longer valid */
+		if (dialog) {
+			/* close dialog from our side */
+			sip_transport_bye(sipe_private, dialog);
+			sipe_dialog_remove(session, session->with);
+			/* dialog is no longer valid */
+		}
 
 		/* re-initialize groupchat session */
 		groupchat->session = NULL;
@@ -540,24 +542,27 @@ static struct sipe_groupchat_msg *chatserver_command(struct sipe_core_private *s
 						     const gchar *cmd)
 {
 	struct sipe_groupchat *groupchat = sipe_private->groupchat;
-	struct sip_dialog *dialog = sipe_dialog_find(groupchat->session,
-						     groupchat->session->with);
 	struct sipe_groupchat_msg *msg = NULL;
 
-	if (dialog) {
-		struct transaction_payload *payload = g_new0(struct transaction_payload, 1);
-		struct transaction *trans;
+	if (groupchat->session) {
+		struct sip_dialog *dialog = sipe_dialog_find(groupchat->session,
+							     groupchat->session->with);
 
-		msg = generate_xccos_message(groupchat, cmd);
-		trans = sip_transport_info(sipe_private,
-					   "Content-Type: text/plain\r\n",
-					   msg->xccos,
-					   dialog,
-					   chatserver_command_response);
+		if (dialog) {
+			struct transaction_payload *payload = g_new0(struct transaction_payload, 1);
+			struct transaction *trans;
 
-		payload->destroy = sipe_groupchat_msg_remove;
-		payload->data    = msg;
-		trans->payload   = payload;
+			msg = generate_xccos_message(groupchat, cmd);
+			trans = sip_transport_info(sipe_private,
+						   "Content-Type: text/plain\r\n",
+						   msg->xccos,
+						   dialog,
+						   chatserver_command_response);
+
+			payload->destroy = sipe_groupchat_msg_remove;
+			payload->data    = msg;
+			trans->payload   = payload;
+		}
 	}
 
 	return(msg);
