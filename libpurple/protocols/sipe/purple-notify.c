@@ -92,9 +92,6 @@ void sipe_backend_notify_error(struct sipe_core_public *sipe_public,
 	struct sipe_backend_private *purple_private = sipe_public->backend_private;
 
 	purple_notify_error(purple_private->gc, NULL, title, msg
-#if PURPLE_VERSION_CHECK(3,0,0)
-			    , NULL
-#endif
 			    );
 }
 

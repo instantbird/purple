@@ -483,9 +483,6 @@ void sipe_purple_add_buddy(PurpleConnection *gc,
 			purple_notify_error(gc, NULL,
 					    _("User name should be a valid SIP URI\nExample: user@company.com"),
 					    NULL
-#if PURPLE_VERSION_CHECK(3,0,0)
-					    , NULL
-#endif
 					    );
 		}
 	}
