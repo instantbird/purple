@@ -116,6 +116,7 @@ AC_SUBST($1)dnl
 ])
 
 
+# Forked from build/autoconf/pkg.m4
 # PKG_CHECK_MODULES(GSTUFF, gtk+-2.0 >= 1.3 glib = 1.3.4, action-if, action-not)
 # defines GSTUFF_LIBS, GSTUFF_CFLAGS, see pkg-config man page
 # also defines GSTUFF_PKG_ERRORS on error
@@ -217,8 +218,6 @@ if test "$PURPLE_BONJOUR"; then
             if test -z "$PURPLE_AVAHI"; then
                 AC_MSG_ERROR([Could not find avahi-client or avahi-glib. To build without Bonjour, reconfigure with --disable-bonjour.])
             fi
-            AC_SUBST(AVAHI_CFLAGS)
-            AC_SUBST(AVAHI_LIBS)
             ;;
     esac
 fi
