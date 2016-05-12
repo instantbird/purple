@@ -598,6 +598,13 @@ NS_IMETHODIMP purpleAccount::RequestRoomInfo(prplIRoomInfoCallback *aCallback)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+/* prplIRoomInfo getRoomInfo(in AUTF8String aRoomName); */
+NS_IMETHODIMP purpleAccount::GetRoomInfo(const nsACString & aRoomName,
+                                         prplIRoomInfo **aRoomInfo)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 /* readonly attribute boolean isRoomInfoStale; */
 NS_IMETHODIMP purpleAccount::GetIsRoomInfoStale(bool *aIsRoomInfoStale)
 {
