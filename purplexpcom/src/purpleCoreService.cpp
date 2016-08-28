@@ -102,13 +102,12 @@ purpleCoreService::CollectReports(nsIHandleReportCallback* aHandleReport,
     getAllocatedGLibMemory(),
     "Memory allocated by glib and libpurple.");
 
-  return MOZ_COLLECT_REPORT(
+  MOZ_COLLECT_REPORT(
     "explicit/purple/libraries/xml2", KIND_HEAP, UNITS_BYTES,
     getAllocatedXMLMemory(),
     "Memory allocated by libxml2 for libpurple.");
-#else
-  return NS_OK;
 #endif
+  return NS_OK;
 }
 
 /* boolean Init (); */
