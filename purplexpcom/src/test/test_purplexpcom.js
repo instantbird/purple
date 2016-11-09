@@ -29,7 +29,7 @@ function run_test() {
   do_check_true(core.getProtocols().hasMoreElements());
 
   try {
-    for each (let prplId in ["aim", "jabber", "yahoo"]) {
+    for each (let prplId in ["aim", "jabber", "simple"]) {
       let id = "prpl-" + prplId;
       let proto = core.getProtocolById(id);
       do_check_true(proto instanceof Ci.prplIProtocol);

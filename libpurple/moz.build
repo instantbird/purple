@@ -3,8 +3,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-prpls = ['jabber', 'gg', 'oscar', 'myspace', 'novell',
-         'sametime', 'simple', 'yahoo', 'netsoul', 'sipe']
+prpls = ['jabber', 'gg', 'oscar', 'novell',
+         'sametime', 'simple', 'netsoul', 'sipe']
 
 if CONFIG['PURPLE_BONJOUR']:
     prpls += ['bonjour']
